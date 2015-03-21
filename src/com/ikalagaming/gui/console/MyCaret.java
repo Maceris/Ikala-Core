@@ -19,6 +19,7 @@ public class MyCaret extends DefaultCaret {
 
 	private static final long serialVersionUID = -389070432822516041L;
 
+	@Override
 	protected synchronized void damage(Rectangle r) {
 		if (r == null)
 			return;
@@ -38,6 +39,7 @@ public class MyCaret extends DefaultCaret {
 		repaint(); // calls getComponent().repaint(x, y, width, height)
 	}
 
+	@Override
 	public void paint(Graphics g) {
 		JTextComponent comp = getComponent();
 		if (comp == null)

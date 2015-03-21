@@ -13,13 +13,13 @@ import com.ikalagaming.event.Listener;
  * @author Ches
  *
  */
-public class BasePackage implements Package{
+public class BasePackage implements Package {
 
 	private String packageName = "package-manager";
 	private final double version = 0.1;
 	private PackageState state = PackageState.DISABLED;
 	private Set<Listener> listeners;
-	
+
 	@Override
 	public boolean disable() {
 		setPackageState(PackageState.DISABLING);
@@ -91,7 +91,7 @@ public class BasePackage implements Package{
 
 	@Override
 	public Set<Listener> getListeners() {
-		if (listeners == null){
+		if (listeners == null) {
 			listeners = new HashSet<Listener>();
 		}
 		return listeners;
@@ -106,7 +106,7 @@ public class BasePackage implements Package{
 
 	@Override
 	public void setPackageState(PackageState newState) {
-		synchronized (state){
+		synchronized (state) {
 			state = newState;
 		}
 	}

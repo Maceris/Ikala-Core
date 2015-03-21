@@ -57,6 +57,7 @@ public class LogDispatcher extends Thread {
 	 * anything if {@link #terminate()} has been called.
 	 * 
 	 */
+	@Override
 	public void run() {
 		if (!running) {
 			return;

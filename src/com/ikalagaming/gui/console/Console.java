@@ -23,6 +23,7 @@ import javax.swing.ActionMap;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.WindowConstants;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 
@@ -200,7 +201,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	private CommandHistory history;
 	private String packageName = "console";
 	private PackageState state = PackageState.DISABLED;
-	private final double version = 0.1;
+	private final double version = 0.2;
 	private EventManager eventManager;
 
 	/**
@@ -327,6 +328,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		setPackageState(PackageState.ENABLING);
 
 		Runnable myrunnable = new Runnable() {
+			@Override
 			public void run() {
 				onEnable();
 			}
@@ -416,7 +418,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	private void init() {
 		frame = new JFrame(windowTitle);
 		frame.setSize(width, height);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		frame.setBackground(background);
 		frame.setForeground(foreground);
 

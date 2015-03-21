@@ -25,7 +25,7 @@ public class LoggingPackage implements Package, Listener {
 
 	private ResourceBundle resourceBundle;
 	private PackageState state = PackageState.DISABLED;
-	private final double version = 0.1;
+	private final double version = 0.2;
 	private String packageName = "logging";
 	private LogDispatcher dispatcher;
 	private String newLog = "";
@@ -102,7 +102,7 @@ public class LoggingPackage implements Package, Listener {
 					SafeResourceLoader.getString("level_prefix",
 							resourceBundle, "[")
 							+ level.getLocalizedName()
-							+  SafeResourceLoader.getString("level_postfix",
+							+ SafeResourceLoader.getString("level_postfix",
 									resourceBundle, "]")
 							+ " "
 							+ SafeResourceLoader.getString("name_prefix",

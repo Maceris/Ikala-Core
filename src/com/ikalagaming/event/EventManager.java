@@ -150,6 +150,7 @@ public class EventManager {
 
 			// creates a class to execute the listener for the event
 			EventExecutor executor = new EventExecutor() {
+				@Override
 				public void execute(Listener listener, Event event)
 						throws EventException {
 					try {

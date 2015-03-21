@@ -26,16 +26,17 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class PackageManager implements Package {
 
-	private ResourceBundle resourceBundle;
+	private CommandRegistry cmdRegistry;
 
+	private EventManager eventManager;
+	private PMEventListener listener;
+	private HashSet<Listener> listeners;
 	/** maps strings to packages loaded in memory */
 	private HashMap<String, Package> loadedPackages;
 	private String packageName = "package-manager";
-	private CommandRegistry cmdRegistry;
-	private PMEventListener listener;
+	private ResourceBundle resourceBundle;
 	private PackageState state = PackageState.ENABLED;
-	private HashSet<Listener> listeners;
-	private EventManager eventManager;
+	final double version = 0.2;
 
 	/**
 	 * Constructs a new {@link PackageManager} and initializes variables.
@@ -60,27 +61,146 @@ public class PackageManager implements Package {
 	}
 
 	/**
-	 * Registers commands with the registry that the package manager uses
+	 * Change the state of a given package. The operations allowed are
+	 * <ul>
+	 * <li>load</li>
+	 * <li>enable</li>
+	 * <li>disable</li>
+	 * <li>unload</li>
+	 * </ul>
+	 * If events fail and should be used, reverts to direct calling of methods.
+	 * 
+	 * @param toChange the package to change
+	 * @param operation what you want to do to the package
+	 * @param usingEvents true if you want to use events, otherwise false
 	 */
-	private void registerCommands() {
-		ArrayList<String> commands = new ArrayList<String>();
-		commands.add("COMMAND_ENABLE");
-		commands.add("COMMAND_DISABLE");
-		commands.add("COMMAND_LOAD");
-		commands.add("COMMAND_UNLOAD");
-		commands.add("COMMAND_LIST_PACKAGES");
-		commands.add("COMMAND_RELOAD");
-		commands.add("COMMAND_HELP");
-		commands.add("COMMAND_VERSION");
-
-		String tmp = "";
-
-		for (String s : commands) {
-
-			tmp = SafeResourceLoader.getString(s, resourceBundle, s);
-			cmdRegistry.registerCommand(tmp, this);
+	private void changeState(Package toChange, String operation,
+			boolean usingEvents) {
+		String toSend = "";
+		String localMethodName = "";
+		String backupMethodName = "";
+		boolean callDirectly = usingEvents;
+		if (operation == "load") {
+			localMethodName = "ARG_ON_LOAD";
+			backupMethodName = "onLoad";
+		}
+		else if (operation == "enable") {
+			localMethodName = "ARG_ENABLE";
+			backupMethodName = "enable";
+		}
+		else if (operation == "disable") {
+			localMethodName = "ARG_DISABLE";
+			backupMethodName = "disable";
+		}
+		else if (operation == "onUnload") {
+			localMethodName = "ARG_ON_UNLOAD";
+			backupMethodName = "onUnload";
 		}
 
+		else {
+			localMethodName = "";
+			backupMethodName = "";
+		}
+
+		if (!callDirectly) {
+			toSend =
+					SafeResourceLoader.getString("CMD_CALL", resourceBundle,
+							"call")
+							+ " "
+							+ SafeResourceLoader.getString(localMethodName,
+									resourceBundle, backupMethodName);
+
+			logMethodCall(backupMethodName, toChange.getName(), true);
+			/*
+			 * Tries to send the event. If the return value is false, it failed
+			 * and therefore we must load manually
+			 */
+			if (!firePackageEvent(toChange.getName(), toSend)) {
+				String failMsg =
+						SafeResourceLoader.getString("ALERT_CALL_EVENT_FAILED",
+								resourceBundle,
+								"Event failed. Calling method directly");
+				eventManager.fireEvent(new Log(failMsg, LoggingLevel.FINER,
+						this));
+				callDirectly = true;
+
+			}
+		}
+		// not an else, in case callDirectly was set earlier
+		if (callDirectly) {
+			logMethodCall(backupMethodName, toChange.getName(), false);
+			if (operation == "load") {
+				toChange.onLoad();
+			}
+			else if (operation == "enable") {
+				toChange.enable();
+			}
+			else if (operation == "disable") {
+				toChange.disable();
+			}
+			else if (operation == "unload") {
+				toChange.onUnload();
+			}
+		}
+	}
+
+	@Override
+	public boolean disable() {
+		return false;
+	}
+
+	@Override
+	public boolean enable() {
+		return true;
+	}
+
+	/**
+	 * Fires an event with a message to a package type from the package manager.
+	 * If an error occurs, this will return false. The event should not have
+	 * been sent if false was returned.
+	 * 
+	 * @param event the event to fire
+	 * 
+	 * @return true if the event was fired correctly
+	 */
+	public boolean fireEvent(Event event) {
+		if (!isLoaded("event-manager")) {
+			String err =
+					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+							resourceBundle, "Package $PACKAGE not loaded")
+							.replaceFirst("\\$PACKAGE", "event-manager");
+			System.err.println(err);
+			return false;
+		}
+
+		if (event != null) {// just in case the assignment failed
+			eventManager.fireEvent(event);
+
+		}
+
+		return true;
+	}
+
+	/**
+	 * Fires an event with a message to a package type from the package manager.
+	 * If an error occurs, this will return false. The event should not have
+	 * been sent if false was returned.
+	 * 
+	 * @param to the package to send the message to
+	 * @param content the message to transfer
+	 * @return true if the event was fired correctly
+	 */
+	private boolean firePackageEvent(String to, String content) {
+
+		PackageEvent tmpEvent;
+
+		tmpEvent = new PackageEvent(packageName, to, content);
+
+		if (tmpEvent != null) {// just in case the assignment failed
+			eventManager.fireEvent(tmpEvent);
+		}
+
+		return true;
 	}
 
 	/**
@@ -95,6 +215,77 @@ public class PackageManager implements Package {
 		return cmdRegistry;
 	}
 
+	@Override
+	public Set<Listener> getListeners() {
+		return listeners;
+	}
+
+	/**
+	 * Returns the map of package name to package of the currently loaded
+	 * packages.
+	 * 
+	 * @return the package map
+	 */
+	public HashMap<String, Package> getLoadedPackages() {
+		return loadedPackages;
+	}
+
+	/**
+	 * Returns the logger for the system. If one does not exist, it will be
+	 * created.
+	 * 
+	 * @deprecated Use events to log
+	 * @return a logger for the engine
+	 */
+	@Deprecated
+	public LoggingPackage getLogger() {
+		String loggingPackageName = "logging";
+
+		if (!loadedPackages.containsKey(loggingPackageName)) {
+			LoggingPackage pack = new LoggingPackage();
+			// store the new package
+			loadedPackages.put(loggingPackageName, pack);
+			// we don't know if there is an event system.
+			// this has to work properly
+			pack.onLoad();
+			// enable the package
+			pack.enable();
+
+		}
+		// safe cast since we know its a LoggingPackage
+		return (LoggingPackage) loadedPackages.get(loggingPackageName);
+
+	}
+
+	@Override
+	public String getName() {
+		return packageName;
+	}
+
+	/**
+	 * If a package of type exists ({@link #isLoaded(String)}), then the package
+	 * that is of that type is returned. If no package exists of that type, null
+	 * is returned.
+	 * 
+	 * @param type The package type
+	 * @return the Package with the given type or null if none exists
+	 */
+	public Package getPackage(String type) {
+		if (isLoaded(type)) {
+			return loadedPackages.get(type);
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public PackageState getPackageState() {
+		synchronized (state) {
+			return state;
+		}
+	}
+
 	/**
 	 * Returns the resource bundle for the package manager. This is not safe and
 	 * could be null.
@@ -103,6 +294,41 @@ public class PackageManager implements Package {
 	 */
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
+	}
+
+	@Override
+	public double getVersion() {
+		return version;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+	/**
+	 * Returns true if a package exists that has the same type as the provided
+	 * package (for example: "Graphics"). This is the same as calling
+	 * <code>{@link #isLoaded(String) isLoaded}(Package.getType())</code>
+	 * 
+	 * @param type the package type
+	 * @return true if the package is loaded in memory, false if it does not
+	 *         exist
+	 */
+	public boolean isLoaded(Package type) {
+		return loadedPackages.containsKey(type.getName());
+	}
+
+	/**
+	 * Returns true if a package exists with the given type (for example:
+	 * "Graphics")'
+	 * 
+	 * @param type the package type
+	 * @return true if the package is loaded in memory, false if it does not
+	 *         exist
+	 */
+	public boolean isLoaded(String type) {
+		return loadedPackages.containsKey(type);
 	}
 
 	/**
@@ -282,119 +508,6 @@ public class PackageManager implements Package {
 	}
 
 	/**
-	 * Logs a call to the given method of the given package. Uses the
-	 * ALERT_CALL_METHOD_EVENT or ALERT_CALL_METHOD_DIRECT depending on whether
-	 * usingEvents is true or false.
-	 * 
-	 * @param method the method being called
-	 * @param pack the package the method belongs to
-	 * @param usingEvents true if it is using the event system, false if direct
-	 */
-	private void logMethodCall(String method, String pack, boolean usingEvents) {
-		String call;
-		if (usingEvents) {
-			call =
-					SafeResourceLoader.getString("ALERT_CALL_METHOD_EVENT",
-							resourceBundle,
-							"Calling $METHOD of $PACKAGE using event system");
-		}
-		else {
-			call =
-					SafeResourceLoader.getString("ALERT_CALL_METHOD_DIRECT",
-							resourceBundle,
-							"Calling $METHOD of $PACKAGE directly");
-		}
-		call = call.replaceFirst("\\$METHOD", method);
-		call = call.replaceFirst("\\$PACKAGE", pack);
-
-		eventManager.fireEvent(new Log(call, LoggingLevel.FINER, this));
-	}
-
-	/**
-	 * Change the state of a given package. The operations allowed are
-	 * <ul>
-	 * <li>load</li>
-	 * <li>enable</li>
-	 * <li>disable</li>
-	 * <li>unload</li>
-	 * </ul>
-	 * If events fail and should be used, reverts to direct calling of methods.
-	 * 
-	 * @param toChange the package to change
-	 * @param operation what you want to do to the package
-	 * @param usingEvents true if you want to use events, otherwise false
-	 */
-	private void changeState(Package toChange, String operation,
-			boolean usingEvents) {
-		String toSend = "";
-		String localMethodName = "";
-		String backupMethodName = "";
-		boolean callDirectly = usingEvents;
-		if (operation == "load") {
-			localMethodName = "ARG_ON_LOAD";
-			backupMethodName = "onLoad";
-		}
-		else if (operation == "enable") {
-			localMethodName = "ARG_ENABLE";
-			backupMethodName = "enable";
-		}
-		else if (operation == "disable") {
-			localMethodName = "ARG_DISABLE";
-			backupMethodName = "disable";
-		}
-		else if (operation == "onUnload") {
-			localMethodName = "ARG_ON_UNLOAD";
-			backupMethodName = "onUnload";
-		}
-
-		else {
-			localMethodName = "";
-			backupMethodName = "";
-		}
-
-		if (!callDirectly) {
-			toSend =
-					SafeResourceLoader.getString("CMD_CALL", resourceBundle,
-							"call")
-							+ " "
-							+ SafeResourceLoader.getString(localMethodName,
-									resourceBundle, backupMethodName);
-
-			logMethodCall(backupMethodName, toChange.getName(), true);
-			/*
-			 * Tries to send the event. If the return value is false, it failed
-			 * and therefore we must load manually
-			 */
-			if (!firePackageEvent(toChange.getName(), toSend)) {
-				String failMsg =
-						SafeResourceLoader.getString("ALERT_CALL_EVENT_FAILED",
-								resourceBundle,
-								"Event failed. Calling method directly");
-				eventManager.fireEvent(new Log(failMsg, LoggingLevel.FINER,
-						this));
-				callDirectly = true;
-
-			}
-		}
-		// not an else, in case callDirectly was set earlier
-		if (callDirectly) {
-			logMethodCall(backupMethodName, toChange.getName(), false);
-			if (operation == "load") {
-				toChange.onLoad();
-			}
-			else if (operation == "enable") {
-				toChange.enable();
-			}
-			else if (operation == "disable") {
-				toChange.disable();
-			}
-			else if (operation == "unload") {
-				toChange.onUnload();
-			}
-		}
-	}
-
-	/**
 	 * Loads a plugin from a name
 	 * 
 	 * @param name the filename to load from
@@ -432,94 +545,105 @@ public class PackageManager implements Package {
 	}
 
 	/**
-	 * Fires an event with a message to a package type from the package manager.
-	 * If an error occurs, this will return false. The event should not have
-	 * been sent if false was returned.
+	 * Logs a call to the given method of the given package. Uses the
+	 * ALERT_CALL_METHOD_EVENT or ALERT_CALL_METHOD_DIRECT depending on whether
+	 * usingEvents is true or false.
 	 * 
-	 * @param to the package to send the message to
-	 * @param content the message to transfer
-	 * @return true if the event was fired correctly
+	 * @param method the method being called
+	 * @param pack the package the method belongs to
+	 * @param usingEvents true if it is using the event system, false if direct
 	 */
-	private boolean firePackageEvent(String to, String content) {
-
-		PackageEvent tmpEvent;
-
-		tmpEvent = new PackageEvent(packageName, to, content);
-
-		if (tmpEvent != null) {// just in case the assignment failed
-			eventManager.fireEvent(tmpEvent);
-		}
-
-		return true;
-	}
-
-	/**
-	 * Fires an event with a message to a package type from the package manager.
-	 * If an error occurs, this will return false. The event should not have
-	 * been sent if false was returned.
-	 * 
-	 * @param event the event to fire
-	 * 
-	 * @return true if the event was fired correctly
-	 */
-	public boolean fireEvent(Event event) {
-		if (!isLoaded("event-manager")) {
-			String err =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							resourceBundle, "Package $PACKAGE not loaded")
-							.replaceFirst("\\$PACKAGE", "event-manager");
-			System.err.println(err);
-			return false;
-		}
-
-		if (event != null) {// just in case the assignment failed
-			eventManager.fireEvent(event);
-
-		}
-
-		return true;
-	}
-
-	/**
-	 * Returns true if a package exists with the given type (for example:
-	 * "Graphics")'
-	 * 
-	 * @param type the package type
-	 * @return true if the package is loaded in memory, false if it does not
-	 *         exist
-	 */
-	public boolean isLoaded(String type) {
-		return loadedPackages.containsKey(type);
-	}
-
-	/**
-	 * Returns true if a package exists that has the same type as the provided
-	 * package (for example: "Graphics"). This is the same as calling
-	 * <code>{@link #isLoaded(String) isLoaded}(Package.getType())</code>
-	 * 
-	 * @param type the package type
-	 * @return true if the package is loaded in memory, false if it does not
-	 *         exist
-	 */
-	public boolean isLoaded(Package type) {
-		return loadedPackages.containsKey(type.getName());
-	}
-
-	/**
-	 * If a package of type exists ({@link #isLoaded(String)}), then the package
-	 * that is of that type is returned. If no package exists of that type, null
-	 * is returned.
-	 * 
-	 * @param type The package type
-	 * @return the Package with the given type or null if none exists
-	 */
-	public Package getPackage(String type) {
-		if (isLoaded(type)) {
-			return loadedPackages.get(type);
+	private void logMethodCall(String method, String pack, boolean usingEvents) {
+		String call;
+		if (usingEvents) {
+			call =
+					SafeResourceLoader.getString("ALERT_CALL_METHOD_EVENT",
+							resourceBundle,
+							"Calling $METHOD of $PACKAGE using event system");
 		}
 		else {
-			return null;
+			call =
+					SafeResourceLoader.getString("ALERT_CALL_METHOD_DIRECT",
+							resourceBundle,
+							"Calling $METHOD of $PACKAGE directly");
 		}
+		call = call.replaceFirst("\\$METHOD", method);
+		call = call.replaceFirst("\\$PACKAGE", pack);
+
+		eventManager.fireEvent(new Log(call, LoggingLevel.FINER, this));
+	}
+
+	@Override
+	public void onDisable() {}
+
+	@Override
+	public void onEnable() {}
+
+	@Override
+	public void onLoad() {}
+
+	@Override
+	public void onUnload() {}
+
+	/**
+	 * Registers commands with the registry that the package manager uses
+	 */
+	private void registerCommands() {
+		ArrayList<String> commands = new ArrayList<String>();
+		commands.add("COMMAND_ENABLE");
+		commands.add("COMMAND_DISABLE");
+		commands.add("COMMAND_LOAD");
+		commands.add("COMMAND_UNLOAD");
+		commands.add("COMMAND_LIST_PACKAGES");
+		commands.add("COMMAND_RELOAD");
+		commands.add("COMMAND_HELP");
+		commands.add("COMMAND_VERSION");
+
+		String tmp = "";
+
+		for (String s : commands) {
+
+			tmp = SafeResourceLoader.getString(s, resourceBundle, s);
+			cmdRegistry.registerCommand(tmp, this);
+		}
+
+	}
+
+	@Override
+	public boolean reload() {
+		return false;
+	}
+
+	@Override
+	public void setPackageState(PackageState newState) {
+		synchronized (state) {
+			state = newState;
+		}
+	}
+
+	/**
+	 * Attempts to unload the package from memory. Does nothing if the package
+	 * is not loaded. Packages are disabled before unloading. This calls
+	 * {@link #unloadPackage(String)} using the package type.
+	 * 
+	 * @param toUnload The type of package to unload
+	 */
+	public void unloadPackage(Package toUnload) {
+		/*
+		 * using a string the packages type to ensure the package that is stored
+		 * in this class is modified and not just the package passed to the
+		 * method.
+		 */
+		String type = toUnload.getName();
+		if (!isLoaded(type)) {
+			String notLoaded =
+					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+							resourceBundle, "Package $PACKAGE not loaded")
+							.replaceFirst("\\$PACKAGE", type);
+			eventManager.fireEvent(new Log(notLoaded, LoggingLevel.FINE, this));
+			return;
+		}
+		unloadPackage(type);
 	}
 
 	/**
@@ -584,127 +708,5 @@ public class PackageManager implements Package {
 		eventManager.fireEvent(new Log(unloaded, LoggingLevel.FINE, this));
 
 		return true;
-	}
-
-	/**
-	 * Attempts to unload the package from memory. Does nothing if the package
-	 * is not loaded. Packages are disabled before unloading. This calls
-	 * {@link #unloadPackage(String)} using the package type.
-	 * 
-	 * @param toUnload The type of package to unload
-	 */
-	public void unloadPackage(Package toUnload) {
-		/*
-		 * using a string the packages type to ensure the package that is stored
-		 * in this class is modified and not just the package passed to the
-		 * method.
-		 */
-		String type = toUnload.getName();
-		if (!isLoaded(type)) {
-			String notLoaded =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							resourceBundle, "Package $PACKAGE not loaded")
-							.replaceFirst("\\$PACKAGE", type);
-			eventManager.fireEvent(new Log(notLoaded, LoggingLevel.FINE, this));
-			return;
-		}
-		unloadPackage(type);
-	}
-
-	/**
-	 * Returns the logger for the system. If one does not exist, it will be
-	 * created.
-	 * 
-	 * @deprecated Use events to log
-	 * @return a logger for the engine
-	 */
-	public LoggingPackage getLogger() {
-		String loggingPackageName = "logging";
-
-		if (!loadedPackages.containsKey(loggingPackageName)) {
-			LoggingPackage pack = new LoggingPackage();
-			// store the new package
-			loadedPackages.put(loggingPackageName, pack);
-			// we don't know if there is an event system.
-			// this has to work properly
-			pack.onLoad();
-			// enable the package
-			pack.enable();
-
-		}
-		// safe cast since we know its a LoggingPackage
-		return (LoggingPackage) loadedPackages.get(loggingPackageName);
-
-	}
-
-	/**
-	 * Returns the map of package name to package of the currently loaded
-	 * packages.
-	 * 
-	 * @return the package map
-	 */
-	public HashMap<String, Package> getLoadedPackages() {
-		return loadedPackages;
-	}
-
-	@Override
-	public boolean disable() {
-		return false;
-	}
-
-	@Override
-	public boolean enable() {
-		return true;
-	}
-
-	@Override
-	public String getName() {
-		return packageName;
-	}
-
-	@Override
-	public double getVersion() {
-		return version;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return true;
-	}
-
-	@Override
-	public void onDisable() {}
-
-	@Override
-	public void onEnable() {}
-
-	@Override
-	public void onLoad() {}
-
-	@Override
-	public void onUnload() {}
-
-	@Override
-	public boolean reload() {
-		return false;
-	}
-
-	@Override
-	public Set<Listener> getListeners() {
-		return listeners;
-	}
-
-	@Override
-	public PackageState getPackageState() {
-		synchronized (state) {
-			return state;
-		}
-	}
-
-	@Override
-	public void setPackageState(PackageState newState) {
-		synchronized (state) {
-			state = newState;
-		}
 	}
 }

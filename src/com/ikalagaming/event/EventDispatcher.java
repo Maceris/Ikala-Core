@@ -91,6 +91,7 @@ public class EventDispatcher extends Thread {
 	 * Checks for events in the queue, and dispatches them if possible. Does not
 	 * do anything if {@link #terminate()} has been called.
 	 */
+	@Override
 	public void run() {
 		if (!running) {
 			return;
