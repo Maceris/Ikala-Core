@@ -212,7 +212,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * @param evtManager the event manager to use with the console
 	 */
 	public Console(EventManager evtManager) {
-		this.eventManager = new EventManager();
+		this.eventManager = evtManager;
 	}
 
 	/**
