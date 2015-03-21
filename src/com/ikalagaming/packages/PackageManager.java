@@ -164,7 +164,7 @@ public class PackageManager implements Package {
 	 * @return true if the event was fired correctly
 	 */
 	public boolean fireEvent(Event event) {
-		if (!isLoaded("event-manager")) {
+		if (eventManager == null) {
 			String err =
 					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
 							resourceBundle, "Package $PACKAGE not loaded")
@@ -350,6 +350,7 @@ public class PackageManager implements Package {
 		for (Listener l : getListeners()) {
 			eventManager.registerEventListeners(l);
 		}
+		
 		for (Listener l : loggingPack.getListeners()) {
 			eventManager.registerEventListeners(l);
 		}
@@ -488,22 +489,6 @@ public class PackageManager implements Package {
 		loaded = loaded.replaceFirst("\\$PACKAGE", toLoad.getName());
 		loaded = loaded.replaceFirst("\\$VERSION", "" + toLoad.getVersion());
 		eventManager.fireEvent(new Log(loaded, LoggingLevel.FINE, this));
-
-		if (toLoad.getName() == "event-manager") {
-			/*
-			 * ensures the event manager can have its listeners registered after
-			 * being loaded.
-			 */
-			for (Listener l : getListeners()) {
-				eventManager.registerEventListeners(l);
-			}
-			String msg =
-					SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
-							resourceBundle,
-							"Registered event listeners for $PACKAGE")
-							.replaceFirst("\\$PACKAGE", getName());
-			eventManager.fireEvent(new Log(msg, LoggingLevel.FINER, this));
-		}
 		return true;
 	}
 
