@@ -208,7 +208,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * receiving events. It is not visible or set up and must be loaded with the
 	 * package manager before it can be used.
 	 * 
-	 * @param evtManager
+	 * @param evtManager the event manager to use with the console
 	 */
 	public Console(EventManager evtManager) {
 		this.eventManager = new EventManager();
