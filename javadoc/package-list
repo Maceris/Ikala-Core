@@ -7,3 +7,5 @@ com.ikalagaming.logging.events
 com.ikalagaming.packages
 com.ikalagaming.packages.events
 com.ikalagaming.util
+event
+gui.console

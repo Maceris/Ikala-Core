@@ -139,8 +139,8 @@ public class LoggingPackage implements Package, Listener {
 			logError(packageName, SafeResourceLoader.getString(
 					"package_enable_fail",
 					"com.ikalagaming.packages.resources.PackageManager",
-					"Package failed to enable"), LoggingLevel.SEVERE,
-					"LoggingPackage.enable()");
+					"Package failed to enable"),
+					LoggingLevel.SEVERE, "LoggingPackage.enable()");
 			// better safe than sorry (probably did not initialize correctly)
 			setPackageState(PackageState.CORRUPTED);
 			return false;
@@ -158,8 +158,8 @@ public class LoggingPackage implements Package, Listener {
 			logError(packageName, SafeResourceLoader.getString(
 					"package_disable_fail",
 					"com.ikalagaming.packages.resources.PackageManager",
-					"Package failed to disable"), LoggingLevel.SEVERE,
-					"LoggingPackage.enable()");
+					"Package failed to disable"),
+					LoggingLevel.SEVERE, "LoggingPackage.enable()");
 			setPackageState(PackageState.CORRUPTED);
 			return false;
 		}

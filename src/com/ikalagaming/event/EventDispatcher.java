@@ -1,12 +1,11 @@
 
 package com.ikalagaming.event;
 
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
 import com.ikalagaming.logging.LoggingLevel;
-import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.logging.events.LogError;
+import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * Holds an EventQueue and dispatches the events in order when possible.
@@ -16,9 +15,8 @@ import com.ikalagaming.logging.events.LogError;
  */
 public class EventDispatcher extends Thread {
 
-	private LinkedList<Event> queue;
+	private IkEventQueue<Event> queue;
 
-	private Event currentEvent;
 	private HandlerList handlers;
 	private EventListener[] listeners;
 	private EventManager manager;
@@ -34,7 +32,7 @@ public class EventDispatcher extends Thread {
 	 */
 	public EventDispatcher(EventManager manager) {
 		setName("EventDispatcher");
-		queue = new LinkedList<Event>();
+		queue = new IkEventQueue<Event>();
 		this.manager = manager;
 		this.hasEvents = false;
 		this.running = true;
@@ -59,31 +57,7 @@ public class EventDispatcher extends Thread {
 			;// do nothing since its a null event
 		}
 		catch (Exception e) {
-			if (event instanceof Log) {
-				System.err.println(e.toString());
-			}
-			else if (event instanceof LogError) {
-				System.err.println(e.toString());
-			}
-			else {
-				/*
-				 * It was not a problem with the logging, so try to log the
-				 * error. If that fails, logging is broken so print to
-				 * System.err for the devs.
-				 */
-				// TODO This code is in need of major cleanup.
-				try {
-					// TODO Localize this error message
-					manager.fireEvent(new LogError(
-							"Error occurred firing event",
-							LoggingLevel.WARNING, "event-manager"));
-				}
-				catch (Exception messyErrorHandling) {
-					System.err.println(messyErrorHandling.toString());
-				}
-
-			}
-
+			e.printStackTrace(System.err);
 		}
 	}
 
@@ -110,44 +84,48 @@ public class EventDispatcher extends Thread {
 	}
 
 	private void handleEvent() {
-		try {
-			if (queue.isEmpty()) {
+
+		if (queue.isEmpty()) {
+			hasEvents = false;
+		}
+		else if (queue.peek() != null) {
+			Event event;
+			try {
+				event = queue.remove();
+			}
+			catch (NoSuchElementException noElement) {
+				// the queue is empty
 				hasEvents = false;
-			}
-			else if (queue.peek() != null) {
-				currentEvent = queue.remove();
-				handlers = manager.getHandlers(currentEvent);
-				if (handlers != null) {
-					listeners = handlers.getRegisteredListeners();
-					for (EventListener registration : listeners) {
-						try {
-							registration.callEvent(currentEvent);
-						}
-						catch (EventException e) {
-							throw e;
-						}
-					}
-				}
-			}
-			else {
+				System.err.println(noElement.toString());
 				return;
 			}
+			dispatch(event);
 		}
-		catch (NoSuchElementException noElement) {
-			// the queue is empty
-			// hasEvents = false;
-			System.err.println(noElement.toString());
+		else {
 			return;
 		}
-		catch (Exception e) {
-			// TODO Localize this error message
-			String error = "Error running event dispatcher";
-			manager.fireEvent(new LogError(error, LoggingLevel.WARNING,
-					"event-manager"));
-			e.printStackTrace();
 
-			System.err.println(e.toString());
+	}
 
+	private void dispatch(Event event) {
+		handlers = manager.getHandlers(event);
+		if (handlers != null) {
+			listeners = handlers.getRegisteredListeners();
+			for (EventListener registration : listeners) {
+				try {
+					registration.callEvent(event);
+				}
+				catch (EventException e) {
+					String error =
+							SafeResourceLoader.getString("DISPATCH_ERROR",
+									"com.ikalagaming.event.resources.strings",
+									"There was a problem sending an event");
+					manager.fireEvent(new LogError(error, LoggingLevel.WARNING,
+							"event-manager"));
+					System.err.println(e.toString());
+					e.printStackTrace(System.err);
+				}
+			}
 		}
 	}
 

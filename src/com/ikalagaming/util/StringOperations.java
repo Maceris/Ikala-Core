@@ -9,8 +9,9 @@ package com.ikalagaming.util;
  */
 public class StringOperations {
 	/**
-	 * Counts the number of times the given string (toFind) occurs in str. If
-	 * str is empty or does not contain the substring, 0 is returned.
+	 * Counts the number of times the given string (toFind) occurs in the first
+	 * string. If toSearch is empty or does not contain the substring, 0 is
+	 * returned.
 	 * 
 	 * @param toSearch the string to search
 	 * @param toFind the string to count
@@ -28,8 +29,9 @@ public class StringOperations {
 	}
 
 	/**
-	 * Counts the number of times the given character (toFind) occurs in str. If
-	 * str is empty or does not contain the substring, 0 is returned.
+	 * Counts the number of times the given character (toFind) occurs in the
+	 * first string. If toSearch is empty or does not contain the substring, 0
+	 * is returned.
 	 * 
 	 * @param toSearch the string to search
 	 * @param toFind the character to count

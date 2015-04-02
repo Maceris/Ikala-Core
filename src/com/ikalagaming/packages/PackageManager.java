@@ -60,6 +60,8 @@ public class PackageManager implements Package {
 		registerCommands();
 	}
 
+	// TODO do this with scripting.
+
 	/**
 	 * Change the state of a given package. The operations allowed are
 	 * <ul>
@@ -102,45 +104,52 @@ public class PackageManager implements Package {
 			backupMethodName = "";
 		}
 
+		toSend =
+				SafeResourceLoader
+						.getString("CMD_CALL", resourceBundle, "call")
+						+ " "
+						+ SafeResourceLoader.getString(localMethodName,
+								resourceBundle, backupMethodName);
+
+		logMethodCall(backupMethodName, toChange.getName(), true);
 		if (!callDirectly) {
-			toSend =
-					SafeResourceLoader.getString("CMD_CALL", resourceBundle,
-							"call")
-							+ " "
-							+ SafeResourceLoader.getString(localMethodName,
-									resourceBundle, backupMethodName);
-
-			logMethodCall(backupMethodName, toChange.getName(), true);
-			/*
-			 * Tries to send the event. If the return value is false, it failed
-			 * and therefore we must load manually
-			 */
-			if (!firePackageEvent(toChange.getName(), toSend)) {
-				String failMsg =
-						SafeResourceLoader.getString("ALERT_CALL_EVENT_FAILED",
-								resourceBundle,
-								"Event failed. Calling method directly");
-				eventManager.fireEvent(new Log(failMsg, LoggingLevel.FINER,
-						this));
-				callDirectly = true;
-
-			}
+			callDirectly = !callUsingEvents(toChange, toSend);
 		}
-		// not an else, in case callDirectly was set earlier
 		if (callDirectly) {
 			logMethodCall(backupMethodName, toChange.getName(), false);
-			if (operation == "load") {
-				toChange.onLoad();
-			}
-			else if (operation == "enable") {
-				toChange.enable();
-			}
-			else if (operation == "disable") {
-				toChange.disable();
-			}
-			else if (operation == "unload") {
-				toChange.onUnload();
-			}
+			callDirectly(toChange, operation);
+		}
+	}
+
+	private boolean callUsingEvents(Package recipient, String message) {
+
+		/*
+		 * Tries to send the event. If the return value is false, it failed and
+		 * therefore we must load manually
+		 */
+		if (!firePackageEvent(recipient.getName(), message)) {
+			String failMsg =
+					SafeResourceLoader.getString("ALERT_CALL_EVENT_FAILED",
+							resourceBundle,
+							"Event failed. Calling method directly");
+			eventManager.fireEvent(new Log(failMsg, LoggingLevel.FINER, this));
+			return false;
+		}
+		return true;
+	}
+
+	private void callDirectly(Package recipient, String operation) {
+		if (operation == "load") {
+			recipient.onLoad();
+		}
+		else if (operation == "enable") {
+			recipient.enable();
+		}
+		else if (operation == "disable") {
+			recipient.disable();
+		}
+		else if (operation == "unload") {
+			recipient.onUnload();
 		}
 	}
 
@@ -350,7 +359,7 @@ public class PackageManager implements Package {
 		for (Listener l : getListeners()) {
 			eventManager.registerEventListeners(l);
 		}
-		
+
 		for (Listener l : loggingPack.getListeners()) {
 			eventManager.registerEventListeners(l);
 		}
@@ -507,11 +516,11 @@ public class PackageManager implements Package {
 		 */
 		/*
 		 * File pluginFolder = Game.getPluginFolder(); if
-		 * (!pluginFolder.exists()) { // TODO log error return false; } if
-		 * (!pluginFolder.isDirectory()) { // TODO log error return false; }
+		 * (!pluginFolder.exists()) { // TOD O log error return false; } if
+		 * (!pluginFolder.isDirectory()) { // TO DO log error return false; }
 		 * String[] filenames; filenames = pluginFolder.list(); if (filenames ==
-		 * null) { // TODO log error return false; } if (filenames.length == 0)
-		 * { // empty // TODO log error return false; } filenames = null;
+		 * null) { // TOD O log error return false; } if (filenames.length == 0)
+		 * { // empty // TO DO log error return false; } filenames = null;
 		 * 
 		 * ArrayList<File> files = new ArrayList<File>();
 		 * 
@@ -520,7 +529,7 @@ public class PackageManager implements Package {
 		 * folder } if (!f.getName().toLowerCase().endsWith(".jar")) {
 		 * continue;// its not a jar file } files.add(f); }
 		 * 
-		 * if (files.size() == 0) { // TODO log error return false; }
+		 * if (files.size() == 0) { // TOD O log error return false; }
 		 */
 		/*
 		 * ListIterator<File> iterator = files.listIterator(); File tmp; while

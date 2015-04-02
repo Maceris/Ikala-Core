@@ -14,15 +14,32 @@ import java.io.IOException;
 public class FileUtils {
 
 	/**
-	 * Returns true if a file exists at the given path.
+	 * Returns true if a file or directory exists at the given path.
 	 * 
-	 * @param path the path to the file
-	 * @return true if the supplied file exists
+	 * @param path the path to the file/directory
+	 * @return true if the supplied file/directory exists
 	 */
 	public static boolean fileExists(String path) {
+		if (path == null) {
+			return false;
+		}
 		File f;
+		/*
+		 * Will not throw an exception because path can't be null
+		 */
 		f = new File(path);
-		return f.exists();
+		boolean exists = false;
+		try {
+			exists = f.exists();
+		}
+		catch (SecurityException e) {
+			/*
+			 * Cannot read that location due to security manager, so just assume
+			 * it does not exist.
+			 */
+			exists = false;
+		}
+		return exists;
 	}
 
 	/**
@@ -33,6 +50,9 @@ public class FileUtils {
 	 * @return the file requested
 	 */
 	public static File getFile(String path) {
+		if (path == null) {
+			return null;
+		}
 		File f;
 		f = new File(path);
 		return f;
@@ -51,11 +71,14 @@ public class FileUtils {
 		File f;
 		boolean success = true;
 		f = new File(path + filename);
-		if (!f.exists()) {
+		if (!fileExists(path + filename)) {
 			try {
 				f.createNewFile();
 			}
 			catch (IOException e) {
+				success = false;
+			}
+			catch (SecurityException e2) {
 				success = false;
 			}
 		}
@@ -78,8 +101,13 @@ public class FileUtils {
 		File f;
 		boolean success = true;
 		f = new File(path);
-		if (!f.exists()) {
-			f.mkdirs();
+		if (!fileExists(path)) {
+			try {
+				f.mkdirs();
+			}
+			catch (SecurityException e) {
+				success = false;
+			}
 		}
 		else {
 			success = false;
@@ -94,21 +122,29 @@ public class FileUtils {
 	 * @param path the path of the file
 	 */
 	public static void deleteFile(String path) {
+		if (path == null) {
+			return;
+		}
 		File f;
 		f = new File(path);
-		if (!f.exists()) {
-			return;
+		try {
+			if (!f.exists()) {
+				return;
+			}
+			if (!f.isFile()) {
+				return;
+			}
+			if (!f.canRead()) {
+				return;
+			}
+			if (!f.canWrite()) {
+				return;
+			}
+			f.delete();
 		}
-		if (!f.isFile()) {
-			return;
+		catch (SecurityException e) {
+			return;// if it can't be accessed, then it can't be deleted.
 		}
-		if (!f.canRead()) {
-			return;
-		}
-		if (!f.canWrite()) {
-			return;
-		}
-		f.delete();
 	}
 
 	/**
@@ -118,23 +154,31 @@ public class FileUtils {
 	 * @param path the path of the folder
 	 */
 	public static void deleteFolder(String path) {
+		if (path == null) {
+			return;
+		}
 		File f;
 		f = new File(path);
-		if (!f.exists()) {
-			return;
+		try {
+			if (!f.exists()) {
+				return;
+			}
+			if (!f.isDirectory()) {
+				return;
+			}
+			if (!f.canRead()) {
+				return;
+			}
+			if (!f.canWrite()) {
+				return;
+			}
+			if (!(f.list().length == 0)) {
+				return;// it contains files
+			}
+			f.delete();
 		}
-		if (!f.isDirectory()) {
-			return;
+		catch (SecurityException e) {
+			return;// if it can't be accessed, then it can't be deleted.
 		}
-		if (!f.canRead()) {
-			return;
-		}
-		if (!f.canWrite()) {
-			return;
-		}
-		if (!(f.list().length == 0)) {
-			return;// it contains files
-		}
-		f.delete();
 	}
 }

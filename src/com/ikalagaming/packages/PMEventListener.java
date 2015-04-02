@@ -93,6 +93,7 @@ public class PMEventListener implements Listener {
 
 	}
 
+	// TODO handle these with scripting
 	/**
 	 * Called when a command event is sent.
 	 * 
@@ -133,7 +134,6 @@ public class PMEventListener implements Listener {
 				name = event.getArgs()[0];
 			}
 			printVersion(name);
-
 		}
 
 	}

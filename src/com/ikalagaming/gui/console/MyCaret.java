@@ -72,32 +72,11 @@ public class MyCaret extends DefaultCaret {
 		g.setColor(comp.getCaretColor());
 		g.setXORMode(comp.getBackground()); // do this to draw in XOR mode
 
-		if (dotChar == '\n') {
-			int diam = r.height;
-			if (isVisible())
-				g.fillRect(r.x, r.y, width, r.height);
-			width = diam / 2 + 2;
-			return;
-		}
-
-		if (dotChar == '\t')
-			try {
-				Rectangle nextr = comp.modelToView(dot + 1);
-				if ((r.y == nextr.y) && (r.x < nextr.x)) {
-					width = nextr.x - r.x;
-					if (isVisible())
-						g.fillRect(r.x, r.y, width, r.height);
-					return;
-				}
-				else
-					dotChar = ' ';
-			}
-			catch (BadLocationException e) {
-				dotChar = ' ';
-			}
+		dotChar = ' ';
 
 		width = g.getFontMetrics().charWidth(dotChar);
-		if (isVisible())
+		if (isVisible()) {
 			g.fillRect(r.x, r.y, width, r.height);
+		}
 	}
 }

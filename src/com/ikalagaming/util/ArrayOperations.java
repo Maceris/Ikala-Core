@@ -9,10 +9,6 @@ package com.ikalagaming.util;
  */
 public class ArrayOperations {
 
-	private final static String start = "[";
-	private final static String end = "]";
-	private final static String separator = ",";
-
 	/**
 	 * Converts the given array into a String that can be output. The String
 	 * will start with '[', end with ']' and have values separated by ','. Empty
@@ -26,18 +22,18 @@ public class ArrayOperations {
 		String output = "";
 
 		if (array == null) {
-			return start + end;
+			return "[" + "]";
 		}
 		if (array.length <= 0) {
-			return start + end;
+			return "[" + "]";
 		}
-		output = output.concat(start);
+		output = output.concat("[");
 		for (int i = 0; i <= array.length - 2; ++i) {
 			output = output.concat(array[i].toString());
-			output = output.concat(separator);
+			output = output.concat(",");
 		}
 		output = output.concat(array[array.length - 1].toString());
-		output = output.concat(end);
+		output = output.concat("]");
 
 		return output;
 	}
