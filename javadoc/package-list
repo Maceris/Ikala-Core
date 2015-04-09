@@ -6,6 +6,8 @@ com.ikalagaming.logging
 com.ikalagaming.logging.events
 com.ikalagaming.packages
 com.ikalagaming.packages.events
+com.ikalagaming.scripting
 com.ikalagaming.util
 event
 gui.console
+scripting
