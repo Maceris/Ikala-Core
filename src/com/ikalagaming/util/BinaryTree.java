@@ -52,7 +52,7 @@ public class BinaryTree<T extends Comparable<T>> {
 			return treeRoot;
 		}
 
-		if (theRoot == null) {
+		if (theRoot == null || theRoot.key == null) {
 			theRoot = new BinaryTreeNode<T>(ins, null, null, null);
 			return theRoot;
 		}
@@ -88,40 +88,44 @@ public class BinaryTree<T extends Comparable<T>> {
 
 		// single right, because its larger on the left and inserting on
 		// left.left
-		if (balance > 1 && ins.compareTo(theRoot.left.key) < 1) {
-			theRoot = rightRotate(theRoot);
-			if (theRoot.parent == null) {
-				treeRoot = theRoot;
+		if (theRoot.left != null && theRoot.left.key != null) {
+			if (balance > 1 && ins.compareTo(theRoot.left.key) < 1) {
+				theRoot = rightRotate(theRoot);
+				if (theRoot.parent == null) {
+					treeRoot = theRoot;
+				}
+				return theRoot;
 			}
-			return theRoot;
-		}
-		// double right, because its larger on the left and inserting on
-		// left.right
-		if (balance > 1 && ins.compareTo(theRoot.left.key) > 1) {
-			theRoot.left = leftRotate(theRoot.left);
-			theRoot = rightRotate(theRoot);
-			if (theRoot.parent == null) {
-				treeRoot = theRoot;
+			// double right, because its larger on the left and inserting on
+			// left.right
+			if (balance > 1 && ins.compareTo(theRoot.left.key) > 1) {
+				theRoot.left = leftRotate(theRoot.left);
+				theRoot = rightRotate(theRoot);
+				if (theRoot.parent == null) {
+					treeRoot = theRoot;
+				}
+				return theRoot;
 			}
-			return theRoot;
 		}
 		// single left, because its larger on the right and its inserting on
 		// right.right
-		if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
-			theRoot = leftRotate(theRoot);
-			if (theRoot.parent == null) {
-				treeRoot = theRoot;
+		if (theRoot.right != null && theRoot.right.key != null) {
+			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
+				theRoot = leftRotate(theRoot);
+				if (theRoot.parent == null) {
+					treeRoot = theRoot;
+				}
+				return theRoot;
 			}
-			return theRoot;
-		}
-		// double left
-		if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
-			theRoot.right = rightRotate(theRoot.right);
-			theRoot = leftRotate(theRoot);
-			if (theRoot.parent == null) {
-				treeRoot = theRoot;
+			// double left
+			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
+				theRoot.right = rightRotate(theRoot.right);
+				theRoot = leftRotate(theRoot);
+				if (theRoot.parent == null) {
+					treeRoot = theRoot;
+				}
+				return theRoot;
 			}
-			return theRoot;
 		}
 
 		return theRoot;// No rebalancing needed
@@ -349,7 +353,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	}
 
 	/**
-	 * Recursively searches for the entry and returns teh node that contains it
+	 * Recursively searches for the entry and returns the node that contains it
 	 * or null if it is not found.
 	 * 
 	 * @param toFind the entry to search for
@@ -357,7 +361,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @return null or the node that has toFind as its key
 	 */
 	protected BinaryTreeNode<T> find(T toFind, BinaryTreeNode<T> root) {
-		if (root == null) {
+		if (root == null || root.key == null) {
 			return null;
 		}
 		int compareVal = toFind.compareTo(root.key);
