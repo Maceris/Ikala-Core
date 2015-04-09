@@ -60,8 +60,6 @@ public class PackageManager implements Package {
 		registerCommands();
 	}
 
-	// TODO do this with scripting.
-
 	/**
 	 * Change the state of a given package. The operations allowed are
 	 * <ul>

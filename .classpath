@@ -4,5 +4,10 @@
 	<classpathentry kind="src" path="tests"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre1.8.0_40"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="thirdParty/luaj-jse-3.0.jar" sourcepath="thirdParty/luaj-sources-3.0.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/IkalaCore/thirdParty/luaj-doc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
