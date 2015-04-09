@@ -8,8 +8,8 @@ package com.ikalagaming.util;
  * @param <T> the type of object to store. Must extend {@link Comparable}
  */
 public class BinaryTree<T extends Comparable<T>> {
-	private BinaryTreeNode<T> treeRoot;
-	private int size;
+	protected BinaryTreeNode<T> treeRoot;
+	protected int size;
 
 	/**
 	 * Inserts the given value into the tree.
@@ -45,7 +45,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @return the new root of the tree (where theRoot was before)
 	 * @throws DuplicateEntry if the entry already exists in the tree
 	 */
-	private BinaryTreeNode<T> insert(BinaryTreeNode<T> theRoot, T ins)
+	protected BinaryTreeNode<T> insert(BinaryTreeNode<T> theRoot, T ins)
 			throws DuplicateEntry {
 		if (treeRoot == null) {
 			treeRoot = new BinaryTreeNode<T>(ins, null, null, null);
@@ -132,7 +132,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * 
 	 * @param toRemove the node to remove
 	 */
-	private void remove(BinaryTreeNode<T> toRemove) {
+	protected void remove(BinaryTreeNode<T> toRemove) {
 		if (toRemove == null) {
 			return;// just ignore it
 		}
@@ -322,7 +322,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		return (find(toFind, treeRoot) != null);
 	}
 
-	private void rebalance(BinaryTreeNode<T> smallest) {
+	protected void rebalance(BinaryTreeNode<T> smallest) {
 		if (smallest == null) {
 			return;
 		}
@@ -340,7 +340,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		rebalance(smallest.parent);
 	}
 
-	private BinaryTreeNode<T> getSmallestSubnode(BinaryTreeNode<T> root) {
+	protected BinaryTreeNode<T> getSmallestSubnode(BinaryTreeNode<T> root) {
 		BinaryTreeNode<T> node = root;
 		while (node.left != null) {
 			node = node.left;
@@ -356,7 +356,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param root where to start looking
 	 * @return null or the node that has toFind as its key
 	 */
-	private BinaryTreeNode<T> find(T toFind, BinaryTreeNode<T> root) {
+	protected BinaryTreeNode<T> find(T toFind, BinaryTreeNode<T> root) {
 		if (root == null) {
 			return null;
 		}
@@ -394,7 +394,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param node the node to get the height of
 	 * @return the tree's (with node as the root) maximum height
 	 */
-	private int getHeight(BinaryTreeNode<T> node) {
+	protected int getHeight(BinaryTreeNode<T> node) {
 		if (node == null) {
 			return -1;
 		}
@@ -408,7 +408,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param b the second number
 	 * @return whichever number is largest
 	 */
-	private int max(int a, int b) {
+	protected int max(int a, int b) {
 		/*
 		 * If a is less than b, return b. otherwise, return a.
 		 */
@@ -425,7 +425,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @return the new root
 	 * 
 	 */
-	private BinaryTreeNode<T> leftRotate(BinaryTreeNode<T> root) {
+	protected BinaryTreeNode<T> leftRotate(BinaryTreeNode<T> root) {
 		BinaryTreeNode<T> rightChild = root.right;
 		if (rightChild == null) {
 			return root;
@@ -471,7 +471,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param root the root of the three nodes to rotate
 	 * @return the new root
 	 */
-	private BinaryTreeNode<T> rightRotate(BinaryTreeNode<T> root) {
+	protected BinaryTreeNode<T> rightRotate(BinaryTreeNode<T> root) {
 		BinaryTreeNode<T> leftChild = root.left;
 		if (leftChild == null) {
 			return root;
@@ -513,7 +513,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * 
 	 * @param changed the lowest node that needs to be updated
 	 */
-	private void updateHeight(BinaryTreeNode<T> changed) {
+	protected void updateHeight(BinaryTreeNode<T> changed) {
 		if (changed == null) {
 			return;
 		}
@@ -534,7 +534,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param node the node to find the balance of
 	 * @return the nodes AVL balance factor
 	 */
-	private int getBalance(BinaryTreeNode<T> node) {
+	protected int getBalance(BinaryTreeNode<T> node) {
 		if (node == null) {
 			return 0;
 		}
