@@ -1,8 +1,10 @@
-
 package com.ikalagaming.logging;
 
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+
+import com.ikalagaming.event.EventManager;
+import com.ikalagaming.logging.events.DisplayLog;
 
 /**
  * Holds an internal queue and dispatches the events in order when possible.
@@ -16,14 +18,18 @@ public class LogDispatcher extends Thread {
 	private String currentStr;
 	private boolean running;
 	private boolean hasLogs;
+	private EventManager manager;
 
 	/**
 	 * Creates and starts the thread. It will begin attempting to dispatch
 	 * events immediately if there are any available.
 	 * 
+	 * @param eventManager the event manager to use in dispatching events
+	 * 
 	 */
-	public LogDispatcher() {
+	public LogDispatcher(EventManager eventManager) {
 		setName("LogDispatcher");
+		this.manager = eventManager;
 		queue = new LinkedList<String>();
 		this.hasLogs = false;
 		this.running = true;
@@ -83,6 +89,8 @@ public class LogDispatcher extends Thread {
 			else if (queue.peek() != null) {
 				currentStr = queue.remove();
 				// log it to the system output stream
+				DisplayLog log = new DisplayLog(currentStr);
+				manager.fireEvent(log);
 				System.out.println(currentStr);
 			}
 			else {

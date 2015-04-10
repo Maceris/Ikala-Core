@@ -1,4 +1,3 @@
-
 package gui.console;
 
 import static org.junit.Assert.fail;
@@ -8,6 +7,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import sun.misc.Cleaner;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.gui.console.Console;

@@ -1,4 +1,3 @@
-
 package com.ikalagaming.packages;
 
 import java.util.ArrayList;
@@ -237,33 +236,6 @@ public class PackageManager implements Package {
 		return loadedPackages;
 	}
 
-	/**
-	 * Returns the logger for the system. If one does not exist, it will be
-	 * created.
-	 * 
-	 * @deprecated Use events to log
-	 * @return a logger for the engine
-	 */
-	@Deprecated
-	public LoggingPackage getLogger() {
-		String loggingPackageName = "logging";
-
-		if (!loadedPackages.containsKey(loggingPackageName)) {
-			LoggingPackage pack = new LoggingPackage();
-			// store the new package
-			loadedPackages.put(loggingPackageName, pack);
-			// we don't know if there is an event system.
-			// this has to work properly
-			pack.onLoad();
-			// enable the package
-			pack.enable();
-
-		}
-		// safe cast since we know its a LoggingPackage
-		return (LoggingPackage) loadedPackages.get(loggingPackageName);
-
-	}
-
 	@Override
 	public String getName() {
 		return packageName;
@@ -343,7 +315,7 @@ public class PackageManager implements Package {
 	 * initialization.
 	 */
 	private void loadCorePackages() {
-		LoggingPackage loggingPack = new LoggingPackage();
+		LoggingPackage loggingPack = new LoggingPackage(eventManager);
 
 		loadedPackages.put(loggingPack.getName(), loggingPack);
 

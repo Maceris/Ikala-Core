@@ -1,4 +1,3 @@
-
 package event;
 
 import com.ikalagaming.event.Event;

@@ -1,4 +1,3 @@
-
 package com.ikalagaming.gui.console;
 
 import java.awt.Color;
@@ -28,14 +27,11 @@ import javax.swing.WindowConstants;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 
-import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleCommandEntered;
-import com.ikalagaming.gui.console.events.ReportUnknownCommand;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.LoggingLevel;
-import com.ikalagaming.logging.LoggingPackage;
 import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.logging.events.LogError;
 import com.ikalagaming.packages.Package;
@@ -210,8 +206,8 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	public synchronized void appendMessage(String message) {
 		if (!isEnabled()) {
 			eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"not_enabled", resourceBundle, "Console is not enabled"),
-					LoggingLevel.SEVERE, this));
+					"not_enabled", getResourceBundle(),
+					"Console is not enabled"), LoggingLevel.SEVERE, this));
 			return;
 		}
 		// should this not be synchronized?
@@ -239,6 +235,16 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		while (textArea.getLineCount() > maxLineCount) {
 			removeTopLine();
 		}
+	}
+
+	/**
+	 * Clears the console.
+	 */
+	public void clear() {
+		while (textArea.getLineCount() > 0) {
+			removeTopLine();
+		}
+		appendIndicatorChar();
 	}
 
 	/**
@@ -340,7 +346,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		}
 		catch (BadLocationException e) {
 			eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"error_bad_location", resourceBundle, "Bad location"),
+					"error_bad_location", getResourceBundle(), "Bad location"),
 					LoggingLevel.WARNING, this));
 		}
 		return 0;
@@ -550,10 +556,9 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		setPackageState(PackageState.LOADING);
 
 		try {
-			resourceBundle =
-					ResourceBundle.getBundle(
-							"com.ikalagaming.gui.console.resources.Console",
-							Localization.getLocale());
+			setResourceBundle(ResourceBundle.getBundle(
+					"com.ikalagaming.gui.console.resources.Console",
+					Localization.getLocale()));
 		}
 		catch (MissingResourceException missingResource) {
 			// don't localize this since it would fail anyways
@@ -562,122 +567,10 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 					LoggingLevel.WARNING, this));
 		}
 		windowTitle =
-				SafeResourceLoader
-						.getString("title", resourceBundle, "Console");
+				SafeResourceLoader.getString("title", getResourceBundle(),
+						"Console");
 
 		setPackageState(PackageState.DISABLED);
-
-	}
-
-	/**
-	 * Outputs the given log to the console.
-	 * 
-	 * @param event the Event to record
-	 */
-	@EventHandler
-	public void onLogEvent(Log event) {
-		String newLog = "";
-		if (!isEnabled()) {
-			return;
-		}
-		if (event.getLevel().intValue() < LoggingPackage.threshold.intValue()) {
-			return;
-		}
-
-		newLog =
-				SafeResourceLoader
-						.getString(
-								"level_prefix",
-								"com.ikalagaming.logging.resources.LoggingPackage",
-								"[")
-						+ event.getLevel().getLocalizedName()
-						+ SafeResourceLoader
-								.getString(
-										"level_postfix",
-										"com.ikalagaming.logging.resources.LoggingPackage",
-										"]")
-						+ " "
-						+ SafeResourceLoader
-								.getString(
-										"name_prefix",
-										"com.ikalagaming.logging.resources.LoggingPackage",
-										"<")
-						+ event.getSender()
-						+ SafeResourceLoader
-								.getString(
-										"name_postfix",
-										"com.ikalagaming.logging.resources.LoggingPackage",
-										">") + " " + event.getDetails();
-
-		appendMessage(newLog);
-	}
-
-	/**
-	 * Outputs the given error log to the console
-	 * 
-	 * @param event the Event to record
-	 */
-	@EventHandler
-	public void onLogErrorEvent(LogError event) {
-		String newLog = "";
-		if (!isEnabled()) {
-			return;
-		}
-		if (event.getLevel().intValue() < LoggingPackage.threshold.intValue()) {
-			return;
-		}
-
-		newLog =
-				SafeResourceLoader
-						.getString(
-								"level_prefix",
-								"com.ikalagaming.logging.resources.LoggingPackage",
-								"[")
-						+ event.getLevel().getLocalizedName()
-						+ SafeResourceLoader
-								.getString(
-										"level_postfix",
-										"com.ikalagaming.logging.resources.LoggingPackage",
-										"]")
-						+ " "
-						+ SafeResourceLoader
-								.getString(
-										"name_prefix",
-										"com.ikalagaming.logging.resources.LoggingPackage",
-										"<")
-						+ event.getSender()
-						+ SafeResourceLoader
-								.getString(
-										"name_postfix",
-										"com.ikalagaming.logging.resources.LoggingPackage",
-										">")
-						+ " "
-						+ event.getError()
-						+ " "
-						+ event.getDetails();
-
-		appendMessage(newLog);
-	}
-
-	/**
-	 * Appends a message stating the last command was incorrect and a help
-	 * message informing the user of the help command.
-	 * 
-	 * @param event the command that was reported as unknown
-	 */
-	@EventHandler
-	public void onReportUnknownCommand(ReportUnknownCommand event) {
-		appendMessage(SafeResourceLoader.getString("unknown_command",
-				resourceBundle, "Unknown command")
-				+ " '"
-				+ event.getCommand()
-				+ "'. "
-				+ SafeResourceLoader.getString("try_cmd", resourceBundle,
-						"For a list of available commands, type")
-				+ " '"
-				+ SafeResourceLoader.getString("COMMAND_HELP",
-						"com.ikalagaming.packages.resources.PackageManager",
-						"help") + "'");
 
 	}
 
@@ -698,7 +591,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			frame.dispose();
 			frame = null;
 		}
-		resourceBundle = null;
+		setResourceBundle(null);
 		history = null;
 
 		setPackageState(PackageState.PENDING_REMOVAL);
@@ -715,7 +608,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			frame.dispose();
 			frame = null;
 		}
-		resourceBundle = null;
+		setResourceBundle(null);
 		history = null;
 
 		onLoad();
@@ -741,7 +634,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		}
 		catch (BadLocationException e) {
 			eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"error_bad_location", resourceBundle, "Bad location"),
+					"error_bad_location", getResourceBundle(), "Bad location"),
 					LoggingLevel.WARNING, this));
 
 		}
@@ -921,13 +814,26 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			}
 			catch (UnsupportedFlavorException | IOException ex) {
 				eventManager.fireEvent(new LogError(SafeResourceLoader
-						.getString("invalid_clipboard", resourceBundle,
+						.getString("invalid_clipboard", getResourceBundle(),
 								"Invalid clipboard contents").concat(
 								ex.getLocalizedMessage()),
 						LoggingLevel.WARNING, this));
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Returns the resource bundle for this console
+	 * 
+	 * @return the resource bundle
+	 */
+	public ResourceBundle getResourceBundle() {
+		return resourceBundle;
+	}
+
+	private void setResourceBundle(ResourceBundle resourceBundle) {
+		this.resourceBundle = resourceBundle;
 	}
 
 }

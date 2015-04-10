@@ -1,4 +1,3 @@
-
 package scripting;
 
 import javax.script.ScriptEngineFactory;

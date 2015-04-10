@@ -1,10 +1,12 @@
-
 package com.ikalagaming.gui.console;
 
 import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleMessage;
+import com.ikalagaming.gui.console.events.ReportUnknownCommand;
+import com.ikalagaming.logging.events.DisplayLog;
 import com.ikalagaming.packages.events.PackageCommandSent;
+import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * The listener for the console gui. This handles events for the console.
@@ -45,5 +47,37 @@ public class ConsoleListener implements Listener {
 			return;
 		}
 
+	}
+
+	/**
+	 * Displays messages created by the logger.
+	 * 
+	 * @param event logs and errors received
+	 */
+	@EventHandler
+	public void onDisplayLog(DisplayLog event) {
+		console.appendMessage(event.getMessage());
+	}
+
+	/**
+	 * Appends a message stating the last command was incorrect and a help
+	 * message informing the user of the help command.
+	 * 
+	 * @param event the command that was reported as unknown
+	 */
+	@EventHandler
+	public void onReportUnknownCommand(ReportUnknownCommand event) {
+		console.appendMessage(SafeResourceLoader.getString("unknown_command",
+				console.getResourceBundle(), "Unknown command")
+				+ " '"
+				+ event.getCommand()
+				+ "'. "
+				+ SafeResourceLoader.getString("try_cmd",
+						console.getResourceBundle(),
+						"For a list of available commands, type")
+				+ " '"
+				+ SafeResourceLoader.getString("COMMAND_HELP",
+						"com.ikalagaming.packages.resources.PackageManager",
+						"help") + "'");
 	}
 }

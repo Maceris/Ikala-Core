@@ -1,4 +1,3 @@
-
 package event;
 
 import static org.junit.Assert.assertEquals;

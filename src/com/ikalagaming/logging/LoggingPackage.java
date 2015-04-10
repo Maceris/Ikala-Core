@@ -1,4 +1,3 @@
-
 package com.ikalagaming.logging;
 
 import java.util.HashSet;
@@ -7,6 +6,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import com.ikalagaming.event.EventHandler;
+import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.events.Log;
@@ -30,10 +30,20 @@ public class LoggingPackage implements Package, Listener {
 	private LogDispatcher dispatcher;
 	private String newLog = "";
 	private Set<Listener> listeners;
+	private EventManager manager;
 	/**
 	 * Only logs events that are of this level or higher
 	 */
 	public static LoggingLevel threshold = LoggingLevel.ALL;
+
+	/**
+	 * Creates a logging package for the given event manager
+	 * 
+	 * @param eventManager the event manager to use in firing events
+	 */
+	public LoggingPackage(EventManager eventManager) {
+		this.manager = eventManager;
+	}
 
 	/**
 	 * Logs the provided error. Attempts to use localized names for the error
@@ -139,8 +149,8 @@ public class LoggingPackage implements Package, Listener {
 			logError(packageName, SafeResourceLoader.getString(
 					"package_enable_fail",
 					"com.ikalagaming.packages.resources.PackageManager",
-					"Package failed to enable"),
-					LoggingLevel.SEVERE, "LoggingPackage.enable()");
+					"Package failed to enable"), LoggingLevel.SEVERE,
+					"LoggingPackage.enable()");
 			// better safe than sorry (probably did not initialize correctly)
 			setPackageState(PackageState.CORRUPTED);
 			return false;
@@ -158,8 +168,8 @@ public class LoggingPackage implements Package, Listener {
 			logError(packageName, SafeResourceLoader.getString(
 					"package_disable_fail",
 					"com.ikalagaming.packages.resources.PackageManager",
-					"Package failed to disable"),
-					LoggingLevel.SEVERE, "LoggingPackage.enable()");
+					"Package failed to disable"), LoggingLevel.SEVERE,
+					"LoggingPackage.enable()");
 			setPackageState(PackageState.CORRUPTED);
 			return false;
 		}
@@ -211,7 +221,7 @@ public class LoggingPackage implements Package, Listener {
 			logError(packageName, "locale not found", LoggingLevel.SEVERE,
 					"LoggingPackage.onLoad()");
 		}
-		dispatcher = new LogDispatcher();
+		dispatcher = new LogDispatcher(manager);
 		dispatcher.start();
 		setPackageState(PackageState.DISABLED);
 	}
