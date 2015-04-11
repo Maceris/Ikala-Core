@@ -1,11 +1,10 @@
-
 package com.ikalagaming.util;
 
 /**
  * Methods useful for Arrays.
- * 
+ *
  * @author Ches Burks
- * 
+ *
  */
 public class ArrayOperations {
 
@@ -14,7 +13,7 @@ public class ArrayOperations {
 	 * will start with '[', end with ']' and have values separated by ','. Empty
 	 * arrays will output "[]". The values are determined by the objects
 	 * {@code toString()} method.
-	 * 
+	 *
 	 * @param array the array to convert
 	 * @return the formatted string
 	 */

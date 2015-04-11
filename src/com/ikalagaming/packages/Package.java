@@ -1,4 +1,3 @@
-
 package com.ikalagaming.packages;
 
 import java.util.Set;
@@ -8,16 +7,11 @@ import com.ikalagaming.event.Listener;
 /**
  * A distinct chunk of the program with a specific purpose and methods for
  * managing its state and interacting with the main program.
- * 
+ *
  * @author Ches Burks
- * 
+ *
  */
 public interface Package {
-	/**
-	 * Which version of the package this is. This changes periodically for each
-	 * package subclass as they are changed and updated.
-	 */
-	final double version = 0.0;
 
 	/**
 	 * Deactivates the package and halts all of its operations. The package is
@@ -27,7 +21,7 @@ public interface Package {
 	 * {@link #onDisable()} method, the package state should be changed to
 	 * {@link PackageState#DISABLED DISABLED} after completion. Otherwise the
 	 * change to DISABLED is handled in the onDisable method.
-	 * 
+	 *
 	 * @return true if the package has been successfully disabled
 	 */
 	public boolean disable();
@@ -39,23 +33,42 @@ public interface Package {
 	 * and not in the {@link #onEnable()} method, the package state should be
 	 * changed to {@link PackageState#ENABLED ENABLED} after completion.
 	 * Otherwise the change to ENABLED is handled in the onEnable method.
-	 * 
+	 *
 	 * @return true if the package was successfully enabled
 	 */
 	public boolean enable();
 
 	/**
+	 * Returns a list of listeners for this package. These listeners will be
+	 * used with the event system.
+	 *
+	 * @return a list of listeners for the package.
+	 */
+	public Set<Listener> getListeners();
+
+	/**
 	 * Returns the type of package this is. This is a string that describes the
 	 * package, such as "Graphics" or "AI".
-	 * 
+	 *
 	 * @return a string descriptor of the package
 	 */
 	public String getName();
 
 	/**
+	 * Returns the {@link PackageState current state} of the package. This
+	 * should be updated as the package is interacted with, and is recommended
+	 * to default to {@link PackageState#DISABLED DISABLED} if the state is not
+	 * set yet. This is to prevent the package from being accessed
+	 * inappropriately.
+	 *
+	 * @return a PackageState representing the status of this package
+	 */
+	public PackageState getPackageState();// TODO handle this in the manager
+
+	/**
 	 * Returns this classes version number. This changes periodically for each
 	 * package subclass as they are changed and updated.
-	 * 
+	 *
 	 * @return the version
 	 */
 	public double getVersion();
@@ -64,7 +77,7 @@ public interface Package {
 	 * Returns true if the package is enabled, and false otherwise. A state of
 	 * {@link PackageState#ENABLED ENABLED} returns true, any other states will
 	 * return false.
-	 * 
+	 *
 	 * @return true if the package is fully ready to operate
 	 */
 	public boolean isEnabled();
@@ -108,26 +121,6 @@ public interface Package {
 	public void onUnload();
 
 	/**
-	 * Returns the {@link PackageState current state} of the package. This
-	 * should be updated as the package is interacted with, and is recommended
-	 * to default to {@link PackageState#DISABLED DISABLED} if the state is not
-	 * set yet. This is to prevent the package from being accessed
-	 * inappropriately.
-	 * 
-	 * @return a PackageState representing the status of this package
-	 */
-	public PackageState getPackageState();
-
-	/**
-	 * Sets the {@link PackageState current state} of the package. This should
-	 * be used to update the package state as it is interacted with, This exists
-	 * to assist with thread safety.
-	 * 
-	 * @param newState The state the package should now be
-	 */
-	public void setPackageState(PackageState newState);
-
-	/**
 	 * This is essentially restarting the package. The general flow is as
 	 * follows: <br>
 	 * <ol>
@@ -143,17 +136,18 @@ public interface Package {
 	 * operations it carries out which are applicable at this time</li>
 	 * <li>The package is enabled using {@link #enable()}</li>
 	 * </ol>
-	 * 
+	 *
 	 * @return true if the package reloaded successfully
 	 */
 	public boolean reload();
 
 	/**
-	 * Returns a list of listeners for this package. These listeners will be
-	 * used with the event system.
-	 * 
-	 * @return a list of listeners for the package.
+	 * Sets the {@link PackageState current state} of the package. This should
+	 * be used to update the package state as it is interacted with, This exists
+	 * to assist with thread safety.
+	 *
+	 * @param newState The state the package should now be
 	 */
-	public Set<Listener> getListeners();
+	public void setPackageState(PackageState newState);
 
 }

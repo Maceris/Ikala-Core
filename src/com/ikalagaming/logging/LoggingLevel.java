@@ -1,4 +1,3 @@
-
 package com.ikalagaming.logging;
 
 import java.util.Locale;
@@ -10,10 +9,10 @@ import com.ikalagaming.util.SafeResourceLoader;
 /**
  * A set of levels for logging. This is the standard java logging list in an
  * enum form, with the values changed.
- * 
+ *
  * @see Level
  * @author Ches Burks
- * 
+ *
  */
 public enum LoggingLevel {
 
@@ -95,8 +94,8 @@ public enum LoggingLevel {
 	 */
 	ALL("ALL", -10);
 
-	private String name;
-	private int value;
+	private String levelName;
+	private int levelValue;
 
 	// for caching the names
 	private transient String localizedLevelName;
@@ -104,70 +103,71 @@ public enum LoggingLevel {
 
 	/**
 	 * Constructs a named logging level with the given integer value.
-	 * 
+	 *
 	 * @param name the name of the level
 	 * @param value an integer value for the level
 	 */
 	private LoggingLevel(String name, int value) {
-		this.name = name;
-		this.value = value;
-	}
-
-	/**
-	 * Returns the (non-localized) name of the logging level.
-	 * 
-	 * @return the non-localized name of the logging level
-	 */
-	public String getName() {
-		return this.name;
-	}
-
-	/**
-	 * Attempts to find the localized name for the logging level. If none
-	 * exists, the default level will be returned.
-	 * 
-	 * @return the localized name of the logging level
-	 */
-	public String getLocalizedName() {
-		return getCachedLocalizedLevelName();
+		this.levelName = name;
+		this.levelValue = value;
 	}
 
 	// Avoid looking up the localizedLevelName twice if we already have it
 	/**
 	 * Returns the cached localized name for the given Level. If it has changed,
 	 * it updates it and then returns it.
-	 * 
+	 *
 	 * @see Level
 	 * @return The cached name for this level
 	 */
 	private final String getCachedLocalizedLevelName() {
 
-		if (localizedLevelName != null) {
-			if (cachedLocale != null) {
-				if (cachedLocale.equals(Localization.getLocale())) {
+		if (this.localizedLevelName != null) {
+			if (this.cachedLocale != null) {
+				if (this.cachedLocale.equals(Localization.getLocale())) {
 					// OK: our cached value was looked up with the same
 					// locale. We can use it.
-					return localizedLevelName;
+					return this.localizedLevelName;
 				}
 			}
 		}
 		// We need to compute the localized name.
 		// Either because it's the first time, or because our cached
 		// value is for a different locale.
-		localizedLevelName =
-				SafeResourceLoader.getString(name,
-						"com.ikalagaming.logging.resources.LoggingLevel", name);
-		cachedLocale = Localization.getLocale();
+		this.localizedLevelName =
+				SafeResourceLoader.getString(this.levelName,
+						"com.ikalagaming.logging.resources.LoggingLevel",
+						this.levelName);
+		this.cachedLocale = Localization.getLocale();
 
-		return localizedLevelName;
+		return this.localizedLevelName;
+	}
+
+	/**
+	 * Attempts to find the localized name for the logging level. If none
+	 * exists, the default level will be returned.
+	 *
+	 * @return the localized name of the logging level
+	 */
+	public String getLocalizedName() {
+		return this.getCachedLocalizedLevelName();
+	}
+
+	/**
+	 * Returns the (non-localized) name of the logging level.
+	 *
+	 * @return the non-localized name of the logging level
+	 */
+	public String getName() {
+		return this.levelName;
 	}
 
 	/**
 	 * Returns the integer value assigned to the level.
-	 * 
+	 *
 	 * @return the integer value for this level
 	 */
 	public int intValue() {
-		return this.value;
+		return this.levelValue;
 	}
 }

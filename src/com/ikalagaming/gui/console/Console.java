@@ -40,11 +40,70 @@ import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * A simple console.
- * 
+ *
  * @author Ches Burks
- * 
+ *
  */
 public class Console extends WindowAdapter implements Package, ClipboardOwner {
+
+	private class ConsoleKeyListener extends KeyAdapter {
+
+		private Console parent;
+
+		public ConsoleKeyListener(Console parentConsole) {
+			this.parent = parentConsole;
+		}
+
+		private void handleArrow(int keyCode) {
+			if (Console.ARROW_LEFT.contains(keyCode)) {
+				this.parent.moveLeft();
+			}
+			else if (Console.ARROW_RIGHT.contains(keyCode)) {
+				this.parent.moveRight();
+			}
+			else if (Console.ARROW_UP.contains(keyCode)) {
+				if (this.parent.history.hasPrevious()) {
+					this.parent.setCurrentText(this.parent.history
+							.getPrevious());
+				}
+			}
+			else if (Console.ARROW_DOWN.contains(keyCode)) {
+				if (this.parent.history.hasNext()) {
+					this.parent.setCurrentText(this.parent.history.getNext());
+				}
+			}
+		}
+
+		@Override
+		public void keyPressed(KeyEvent event) {
+			int keyCode = event.getKeyCode();
+
+			if (Console.ARROWS.contains(keyCode)) {
+				this.handleArrow(keyCode);
+			}
+			else if (keyCode == KeyEvent.VK_ENTER) {
+				this.parent.runLine();
+			}
+			else if (keyCode == KeyEvent.VK_BACK_SPACE) {
+				this.parent.delChar();
+			}
+			else if (keyCode == KeyEvent.VK_V && event.isControlDown()) {
+				this.parent.setCurrentText(this.parent.getClipboardContents());
+			}
+			else if (keyCode == KeyEvent.VK_C && event.isControlDown()) {
+				if (this.parent.textArea.getSelectedText() != null) {
+					this.parent.setClipboardContents(this.parent.textArea
+							.getSelectedText());
+				}
+			}
+			else if (Console.LETTERS.contains(keyCode)) {
+				this.parent.addChar(event.getKeyChar());
+			}
+		}
+
+		@Override
+		public void keyReleased(KeyEvent event) {}
+	}
 
 	private static final Integer[] LETTER_VALUES = new Integer[] {
 			KeyEvent.VK_0, KeyEvent.VK_0, KeyEvent.VK_1, KeyEvent.VK_2,
@@ -70,73 +129,41 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			KeyEvent.VK_PERIOD, KeyEvent.VK_PLUS, KeyEvent.VK_QUOTE,
 			KeyEvent.VK_QUOTEDBL, KeyEvent.VK_RIGHT_PARENTHESIS,
 			KeyEvent.VK_SEMICOLON, KeyEvent.VK_SLASH, KeyEvent.VK_SPACE};
-	private static final HashSet<Integer> LETTERS = new HashSet<Integer>(
-			Arrays.asList(LETTER_VALUES));
 
-	private static final HashSet<Integer> ARROW_LEFT = new HashSet<Integer>(
-			Arrays.asList(KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT));
-	private static final HashSet<Integer> ARROW_RIGHT = new HashSet<Integer>(
-			Arrays.asList(KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT));
-	private static final HashSet<Integer> ARROW_UP = new HashSet<Integer>(
-			Arrays.asList(KeyEvent.VK_UP, KeyEvent.VK_KP_UP));
-	private static final HashSet<Integer> ARROW_DOWN = new HashSet<Integer>(
-			Arrays.asList(KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
+	/**
+	 * All characters that are permitted to be typed into the console.
+	 */
+	static final HashSet<Integer> LETTERS = new HashSet<>(
+			Arrays.asList(Console.LETTER_VALUES));
+	/**
+	 * Keys that represent the left arrow on the keyboard.
+	 */
+	static final HashSet<Integer> ARROW_LEFT = new HashSet<>(Arrays.asList(
+			KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT));
+	/**
+	 * Keys that represent the right arrow on the keyboard.
+	 */
+	static final HashSet<Integer> ARROW_RIGHT = new HashSet<>(Arrays.asList(
+			KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT));
+	/**
+	 * Keys that represent the up arrow on the keyboard.
+	 */
+	static final HashSet<Integer> ARROW_UP = new HashSet<>(Arrays.asList(
+			KeyEvent.VK_UP, KeyEvent.VK_KP_UP));
 
-	private static final HashSet<Integer> ARROWS = new HashSet<Integer>(
-			Arrays.asList(KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT,
-					KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT, KeyEvent.VK_UP,
-					KeyEvent.VK_KP_UP, KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
+	/**
+	 * Keys that represent the down arrow on the keyboard.
+	 */
+	static final HashSet<Integer> ARROW_DOWN = new HashSet<>(Arrays.asList(
+			KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
 
-	private class ConsoleKeyListener extends KeyAdapter {
-
-		@Override
-		public void keyPressed(KeyEvent event) {
-			int keyCode = event.getKeyCode();
-
-			if (ARROWS.contains(keyCode)) {
-				handleArrow(keyCode);
-			}
-			else if (keyCode == KeyEvent.VK_ENTER) {
-				runLine();
-			}
-			else if (keyCode == KeyEvent.VK_BACK_SPACE) {
-				delChar();
-			}
-			else if (keyCode == KeyEvent.VK_V && event.isControlDown()) {
-				setCurrentText(getClipboardContents());
-			}
-			else if (keyCode == KeyEvent.VK_C && event.isControlDown()) {
-				if (textArea.getSelectedText() != null) {
-					setClipboardContents(textArea.getSelectedText());
-				}
-			}
-			else if (LETTERS.contains(keyCode)) {
-				addChar(event.getKeyChar());
-			}
-		}
-
-		private void handleArrow(int keyCode) {
-			if (ARROW_LEFT.contains(keyCode)) {
-				moveLeft();
-			}
-			else if (ARROW_RIGHT.contains(keyCode)) {
-				moveRight();
-			}
-			else if (ARROW_UP.contains(keyCode)) {
-				if (history.hasPrevious()) {
-					setCurrentText(history.getPrevious());
-				}
-			}
-			else if (ARROW_DOWN.contains(keyCode)) {
-				if (history.hasNext()) {
-					setCurrentText(history.getNext());
-				}
-			}
-		}
-
-		@Override
-		public void keyReleased(KeyEvent event) {}
-	}
+	/**
+	 * Up, down, left, and right arrows.
+	 */
+	static final HashSet<Integer> ARROWS = new HashSet<>(Arrays.asList(
+			KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT, KeyEvent.VK_RIGHT,
+			KeyEvent.VK_KP_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_KP_UP,
+			KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
 
 	private ResourceBundle resourceBundle;
 	private ConsoleListener listener = new ConsoleListener(this);
@@ -149,14 +176,20 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	private Color foreground = new Color(2, 200, 2);
 	private JFrame frame;
 
-	private JTextArea textArea;
+	/**
+	 * The main area of the console where text is shown.
+	 */
+	JTextArea textArea;
 	private int posInString = 0;// where the cursor is in the string
 	private char inputIndicator = '>';
 	private String currentLine = "";
 	private int currentIndicatorLine = 0;
 	private final int maxHistory = 30;
 
-	private CommandHistory history;
+	/**
+	 * The previous commands typed in the console.
+	 */
+	CommandHistory history;
 	private String packageName = "console";
 	private PackageState state = PackageState.DISABLED;
 	private final double version = 0.2;
@@ -166,7 +199,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * Constructs a console that uses the given EventManager for sending and
 	 * receiving events. It is not visible or set up and must be loaded with the
 	 * package manager before it can be used.
-	 * 
+	 *
 	 * @param evtManager the event manager to use with the console
 	 */
 	public Console(EventManager evtManager) {
@@ -175,65 +208,69 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 
 	/**
 	 * Adds a char to the end of the current string and console line
-	 * 
+	 *
 	 * @param c the char to add
 	 */
-	private void addChar(char c) {
-		textArea.insert("" + c, getSafeLineStartOffset(currentIndicatorLine)
-				+ (posInString) + 1);
+	void addChar(char c) {
+		this.textArea.insert("" + c,
+				this.getSafeLineStartOffset(this.currentIndicatorLine)
+						+ (this.posInString) + 1);
 		// how many lines the current line takes up
-		currentLine =
-				currentLine.substring(0, posInString) + c
-						+ currentLine.substring(posInString);
-		moveRight();
+		this.currentLine =
+				this.currentLine.substring(0, this.posInString) + c
+						+ this.currentLine.substring(this.posInString);
+		this.moveRight();
 	}
 
 	/**
 	 * Appends the input indicator char to the console
 	 */
 	private void appendIndicatorChar() {
-		textArea.append("" + inputIndicator);
-		++posInString;
-		moveRight();
+		this.textArea.append("" + this.inputIndicator);
+		++this.posInString;
+		this.moveRight();
 	}
 
 	/**
 	 * Adds a String to the bottom of the console. Removes the top lines
 	 * if/while they exceed the maximum line count.
-	 * 
+	 *
 	 * @param message The message to append
 	 */
 	public synchronized void appendMessage(String message) {
-		if (!isEnabled()) {
-			eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"not_enabled", getResourceBundle(),
+		if (!this.isEnabled()) {
+			this.eventManager.fireEvent(new Log(SafeResourceLoader.getString(
+					"not_enabled", this.getResourceBundle(),
 					"Console is not enabled"), LoggingLevel.SEVERE, this));
 			return;
 		}
 		// should this not be synchronized?
 		// it seems like it could be a choke point for speed. -CB
 
-		int p = posInString;
-		clearCurrentText();
-		removeIndicatorChar();
+		int p = this.posInString;
+		this.clearCurrentText();
+		this.removeIndicatorChar();
 		// the double spacing and removal of space is there to have an
 		// extra gap just before the input line and any previous lines for
 		// visibility
-		if (textArea.getText().endsWith(System.lineSeparator())) {
-			textArea.replaceRange("", textArea.getText().length() - 1, textArea
-					.getText().length());// removes the last newline if it
-											// exists
+		if (this.textArea.getText().endsWith(System.lineSeparator())) {
+			this.textArea.replaceRange("",
+					this.textArea.getText().length() - 1, this.textArea
+							.getText().length());// removes the last newline if
+			// it
+			// exists
 		}
-		textArea.append(message);
-		textArea.append(System.lineSeparator());// extra space to be removed
-		textArea.append(System.lineSeparator());
-		updateInputLine();
-		textArea.append(currentLine);
-		posInString = p;
-		validatePositions();
-		updateCaretPosition();
-		while (textArea.getLineCount() > maxLineCount) {
-			removeTopLine();
+		this.textArea.append(message);
+		this.textArea.append(System.lineSeparator());// extra space to be
+		// removed
+		this.textArea.append(System.lineSeparator());
+		this.updateInputLine();
+		this.textArea.append(this.currentLine);
+		this.posInString = p;
+		this.validatePositions();
+		this.updateCaretPosition();
+		while (this.textArea.getLineCount() > this.maxLineCount) {
+			this.removeTopLine();
 		}
 	}
 
@@ -241,10 +278,10 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * Clears the console.
 	 */
 	public void clear() {
-		while (textArea.getLineCount() > 0) {
-			removeTopLine();
+		while (this.textArea.getLineCount() > 0) {
+			this.removeTopLine();
 		}
-		appendIndicatorChar();
+		this.appendIndicatorChar();
 	}
 
 	/**
@@ -256,49 +293,52 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 
 		int start;
 		// fetch the index of the last line of text
-		start = getSafeLineStartOffset(currentIndicatorLine);
+		start = this.getSafeLineStartOffset(this.currentIndicatorLine);
 		// add one to account for the input indicator char
 		++start;
-		textArea.replaceRange("", start, start + currentLine.length());
-		posInString = 0;
-		currentLine = "";
-		validatePositions();
-		updateCaretPosition();
+		this.textArea
+				.replaceRange("", start, start + this.currentLine.length());
+		this.posInString = 0;
+		this.currentLine = "";
+		this.validatePositions();
+		this.updateCaretPosition();
 	}
 
 	/**
 	 * Removes a char from the end of the current string and console line
 	 */
-	private void delChar() {
-		if (posInString <= 0) {
+	void delChar() {
+		if (this.posInString <= 0) {
 			return;
 		}
-		int pos = getSafeLineStartOffset(currentIndicatorLine) + posInString;
-		textArea.replaceRange("", pos, pos + 1);
+		int pos =
+				this.getSafeLineStartOffset(this.currentIndicatorLine)
+						+ this.posInString;
+		this.textArea.replaceRange("", pos, pos + 1);
 
-		currentLine =
-				currentLine.substring(0, posInString - 1)
-						+ currentLine.substring(posInString);
-		moveLeft();
+		this.currentLine =
+				this.currentLine.substring(0, this.posInString - 1)
+						+ this.currentLine.substring(this.posInString);
+		this.moveLeft();
 	}
 
 	@Override
 	public boolean disable() {
-		setPackageState(PackageState.DISABLING);
+		this.setPackageState(PackageState.DISABLING);
 
-		onDisable();
+		this.onDisable();
 		return true;
 	}
 
 	@Override
 	public boolean enable() {
 
-		setPackageState(PackageState.ENABLING);
+		this.setPackageState(PackageState.ENABLING);
 
 		Runnable myrunnable = new Runnable() {
 			@Override
 			public void run() {
-				onEnable();
+				Console.this.onEnable();
 			}
 		};
 		new Thread(myrunnable).start();// Call it when you need to run the
@@ -308,100 +348,157 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	}
 
 	/**
+	 * Get the String from the clipboard.
+	 *
+	 * @return any text found on the Clipboard. If one is not found, returns an
+	 *         empty String.
+	 */
+	String getClipboardContents() {
+		String result = "";
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		Transferable contents = clipboard.getContents(this);
+		if (contents == null) {
+			return "";
+		}
+		boolean hasTransferableText =
+				contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+		if (hasTransferableText) {
+			try {
+				result =
+						(String) contents
+								.getTransferData(DataFlavor.stringFlavor);
+			}
+			catch (UnsupportedFlavorException | IOException ex) {
+				this.eventManager.fireEvent(new LogError(SafeResourceLoader
+						.getString("invalid_clipboard",
+								this.getResourceBundle(),
+								"Invalid clipboard contents").concat(
+								ex.getLocalizedMessage()),
+						LoggingLevel.WARNING, this));
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Returns the window height. This is the height of the frame the console is
 	 * in.
-	 * 
+	 *
 	 * @return the height of the frame
 	 */
 	public int getHeight() {
-		return height;
+		return this.height;
+	}
+
+	@Override
+	public Set<Listener> getListeners() {
+		HashSet<Listener> listeners = new HashSet<>();
+		listeners.add(this.listener);
+		return listeners;
 	}
 
 	/**
 	 * Returns the maximum number of lines that are stored in the window.
-	 * 
+	 *
 	 * @return the max number of lines
 	 */
 	public int getMaxLineCount() {
-		return maxLineCount;
+		return this.maxLineCount;
+	}
+
+	@Override
+	public String getName() {
+		return this.packageName;
+	}
+
+	@Override
+	public PackageState getPackageState() {
+		synchronized (this.state) {
+			return this.state;
+		}
+	}
+
+	/**
+	 * Returns the resource bundle for this console
+	 *
+	 * @return the resource bundle
+	 */
+	public ResourceBundle getResourceBundle() {
+		return this.resourceBundle;
 	}
 
 	/**
 	 * Returns the lineStartOffset of the given line and handles errors.
-	 * 
+	 *
 	 * @param line the line to find
 	 * @return the offset of the start of the line
 	 */
 	private int getSafeLineStartOffset(int line) {
-		if (line >= textArea.getLineCount()) {
-			if (textArea.getLineCount() >= 1) {
-				line = textArea.getLineCount() - 1;
+		int theLine = line;
+		if (theLine >= this.textArea.getLineCount()) {
+			if (this.textArea.getLineCount() >= 1) {
+				theLine = this.textArea.getLineCount() - 1;
 			}
 			else {
-				line = 0;
+				theLine = 0;
 			}
 		}
 		try {
-			return line <= 0 ? 0 : textArea.getLineStartOffset(line);
+			return theLine <= 0 ? 0 : this.textArea.getLineStartOffset(theLine);
 		}
 		catch (BadLocationException e) {
-			eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"error_bad_location", getResourceBundle(), "Bad location"),
-					LoggingLevel.WARNING, this));
+			this.eventManager.fireEvent(new Log(SafeResourceLoader.getString(
+					"error_bad_location", this.getResourceBundle(),
+					"Bad location"), LoggingLevel.WARNING, this));
 		}
 		return 0;
 	}
 
 	@Override
-	public String getName() {
-		return packageName;
-	}
-
-	@Override
 	public double getVersion() {
-		return version;
+		return this.version;
 	}
 
 	/**
 	 * Returns window width. This is the width of the frame the console is in.
-	 * 
+	 *
 	 * @return the width of the frame
 	 */
 	public int getWidth() {
-		return width;
+		return this.width;
 	}
 
 	/**
 	 * Returns the window title.
-	 * 
+	 *
 	 * @return the String that is used as the title
 	 */
 	public String getWindowTitle() {
-		return windowTitle;
+		return this.windowTitle;
 	}
 
 	private void init() {
-		frame = new JFrame(windowTitle);
-		frame.setSize(width, height);
-		frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		frame.setBackground(background);
-		frame.setForeground(foreground);
+		this.frame = new JFrame(this.windowTitle);
+		this.frame.setSize(this.width, this.height);
+		this.frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		this.frame.setBackground(this.background);
+		this.frame.setForeground(this.foreground);
 
-		textArea = new JTextArea();
-		textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
-		textArea.setEditable(false);
-		textArea.setLineWrap(true);
-		textArea.setBackground(background);
-		textArea.setForeground(foreground);
-		textArea.setCaret(new MyCaret());
-		MyCaret caret = (MyCaret) textArea.getCaret();
+		this.textArea = new JTextArea();
+		this.textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
+		this.textArea.setEditable(false);
+		this.textArea.setLineWrap(true);
+		this.textArea.setBackground(this.background);
+		this.textArea.setForeground(this.foreground);
+		this.textArea.setCaret(new MyCaret());
+		MyCaret caret = (MyCaret) this.textArea.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
 		caret.setBlinkRate(500);
 		caret.setVisible(true);
-		textArea.setCaretColor(foreground);
+		this.textArea.setCaretColor(this.foreground);
 
 		// unbind caret bindings
-		ActionMap am = textArea.getActionMap();
+		ActionMap am = this.textArea.getActionMap();
 		am.get("caret-down").setEnabled(false);
 		am.get("caret-up").setEnabled(false);
 		am.get("selection-up").setEnabled(false);// shift pressed UP
@@ -460,316 +557,24 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		// KP_RIGHT
 		am.get("page-up").setEnabled(false);// pressed PAGE_UP
 
-		history = new CommandHistory();
-		history.setMaxLines(maxHistory);
+		this.history = new CommandHistory();
+		this.history.setMaxLines(this.maxHistory);
 
-		textArea.addKeyListener(new ConsoleKeyListener());
+		this.textArea.addKeyListener(new ConsoleKeyListener(this));
 
-		frame.getContentPane().add(new JScrollPane(textArea));
+		this.frame.getContentPane().add(new JScrollPane(this.textArea));
 
-		frame.setVisible(true);
+		this.frame.setVisible(true);
 	}
 
 	@Override
 	public boolean isEnabled() {
 
-		if (getPackageState() == PackageState.ENABLED) {
+		if (this.getPackageState() == PackageState.ENABLED) {
 			return true;
 		}
 		return false;
 
-	}
-
-	private void moveLeft() {
-		if (posInString <= 0) {
-			return;
-		}
-		--posInString;
-		validatePositions();
-		updateCaretPosition();
-
-	}
-
-	private void moveRight() {
-		if (currentLine.length() <= 0) {
-			validatePositions();
-			updateCaretPosition();
-			return;// do not do anything
-		}
-		if (posInString >= currentLine.length()) {
-			validatePositions();
-			updateCaretPosition();
-			return;// do not do anything
-		}
-		if (posInString < 0) {
-			posInString = 0;
-			validatePositions();
-			updateCaretPosition();
-		}
-		else if (posInString >= 0) {
-			++posInString;
-			validatePositions();
-			updateCaretPosition();
-		}
-		/*
-		 * else if (cursorX >= charWidth) { cursorX = 0; ++cursorY;
-		 * ++posInString; validatePositions(); updateCaretPosition(); }
-		 */
-	}
-
-	/**
-	 * Moves the cursor to the next line, then shows the line indicator char.
-	 */
-	private void newLine() {
-		posInString = 0;
-		currentLine = "";
-		textArea.append(System.lineSeparator());// this extra space is removed
-		textArea.append(System.lineSeparator());
-		updateInputLine();
-		while (textArea.getLineCount() > maxLineCount) {
-			removeTopLine();
-		}
-		updateCaretPosition();
-	}
-
-	@Override
-	public void onDisable() {
-		frame.setVisible(false);
-		frame.dispose();
-
-		setPackageState(PackageState.DISABLED);
-
-	}
-
-	@Override
-	public void onEnable() {
-		init();
-		appendIndicatorChar();
-
-		setPackageState(PackageState.ENABLED);
-
-	}
-
-	@Override
-	public void onLoad() {
-
-		setPackageState(PackageState.LOADING);
-
-		try {
-			setResourceBundle(ResourceBundle.getBundle(
-					"com.ikalagaming.gui.console.resources.Console",
-					Localization.getLocale()));
-		}
-		catch (MissingResourceException missingResource) {
-			// don't localize this since it would fail anyways
-			// TODO handle this better
-			eventManager.fireEvent(new LogError("Locale not found for Console",
-					LoggingLevel.WARNING, this));
-		}
-		windowTitle =
-				SafeResourceLoader.getString("title", getResourceBundle(),
-						"Console");
-
-		setPackageState(PackageState.DISABLED);
-
-	}
-
-	@Override
-	public void onUnload() {
-
-		setPackageState(PackageState.UNLOADING);
-
-		if (getPackageState() == PackageState.ENABLED) {
-			disable();
-
-			setPackageState(PackageState.UNLOADING);
-
-		}
-
-		if (frame != null) {
-			frame.setVisible(false);
-			frame.dispose();
-			frame = null;
-		}
-		setResourceBundle(null);
-		history = null;
-
-		setPackageState(PackageState.PENDING_REMOVAL);
-
-	}
-
-	@Override
-	public boolean reload() {
-		// TODO does this even work?
-		setPackageState(PackageState.UNLOADING);
-
-		if (frame != null) {
-			frame.setVisible(false);
-			frame.dispose();
-			frame = null;
-		}
-		setResourceBundle(null);
-		history = null;
-
-		onLoad();
-		return true;
-	}
-
-	/**
-	 * Replaces the input indicator char to the console
-	 */
-	private void removeIndicatorChar() {
-		int offset = getSafeLineStartOffset(currentIndicatorLine);
-		textArea.replaceRange("", offset, offset + 1);
-	}
-
-	/**
-	 * Removes the top line of the input.
-	 */
-	private void removeTopLine() {
-		int end;
-		try {
-			end = textArea.getLineEndOffset(0);
-			textArea.replaceRange("", 0, end);
-		}
-		catch (BadLocationException e) {
-			eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"error_bad_location", getResourceBundle(), "Bad location"),
-					LoggingLevel.WARNING, this));
-
-		}
-	}
-
-	/**
-	 * Attempts to execute the current line of input. If none exists, it does
-	 * nothing.
-	 */
-	private void runLine() {
-		String line = currentLine;
-		newLine();
-
-		if (line.isEmpty()) {
-			// don't do anything with an empty line
-			return;
-		}
-
-		history.addItem(line);
-
-		ConsoleCommandEntered cmd = new ConsoleCommandEntered(line);
-		eventManager.fireEvent(cmd);
-	}
-
-	/**
-	 * Sets the current text. This assumes that the indicator char is already in
-	 * place. This will clear out the current text if it is not already cleared.
-	 */
-	private void setCurrentText(String s) {
-		if (!currentLine.isEmpty()) {
-			clearCurrentText();
-		}
-		textArea.append(s);
-		posInString = s.length();
-		currentLine = s;
-		validatePositions();
-		updateCaretPosition();
-	}
-
-	/**
-	 * Sets the frame height. This is the height of the frame the console is in.
-	 * 
-	 * @param height The new height
-	 */
-	public void setHeight(int height) {
-		this.height = height;
-		frame.setSize(frame.getWidth(), height);
-	}
-
-	/**
-	 * Sets the maximum number of lines stored in the window.
-	 * 
-	 * @param maxLineCount the maximum number of lines to store
-	 */
-	public void setMaxLineCount(int maxLineCount) {
-		this.maxLineCount = maxLineCount;
-	}
-
-	/**
-	 * Sets the frame width. This is the width of the frame the console is in.
-	 * 
-	 * @param width The new width
-	 */
-	public void setWidth(int width) {
-		this.width = width;
-		frame.setSize(width, frame.getHeight());
-	}
-
-	/**
-	 * Sets the title of the window.
-	 * 
-	 * @param windowTitle the String to use as the title
-	 */
-	public void setWindowTitle(String windowTitle) {
-		this.windowTitle = windowTitle;
-		frame.setTitle(windowTitle);
-	}
-
-	/**
-	 * Moves the caret to the correct position.
-	 */
-	private void updateCaretPosition() {
-		int position =
-				getSafeLineStartOffset(currentIndicatorLine) + posInString + 1;
-		if (position >= textArea.getText().length()) {
-			position = textArea.getText().length();
-		}
-		textArea.setCaretPosition(position);
-		if (!textArea.getCaret().isVisible()) {
-			textArea.getCaret().setVisible(true);
-		}
-	}
-
-	/**
-	 * Adds a new indicator character to the beginning of the last line.
-	 */
-	private void updateInputLine() {
-		currentIndicatorLine = textArea.getLineCount() - 1;
-		appendIndicatorChar();
-		validatePositions();
-		updateCaretPosition();
-	}
-
-	/**
-	 * Checks that the cursor and string positions are valid, and fixes them if
-	 * they are not.
-	 */
-	private void validatePositions() {
-		if (posInString < 0) {
-			posInString = 0;
-		}
-		if (posInString > currentLine.length()) {
-			posInString = currentLine.length();
-		}
-	}
-
-	@Override
-	public Set<Listener> getListeners() {
-		HashSet<Listener> listeners = new HashSet<Listener>();
-		listeners.add(listener);
-		return listeners;
-	}
-
-	@Override
-	public PackageState getPackageState() {
-		synchronized (state) {
-			return state;
-		}
-	}
-
-	@Override
-	public void setPackageState(PackageState newState) {
-		synchronized (state) {
-			state = newState;
-		}
 	}
 
 	/**
@@ -781,59 +586,306 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	}
 
 	/**
+	 * Moves the cursor left one position in the string if possible, and then
+	 * updates the caret.
+	 */
+	void moveLeft() {
+		if (this.posInString <= 0) {
+			return;
+		}
+		--this.posInString;
+		this.validatePositions();
+		this.updateCaretPosition();
+
+	}
+
+	/**
+	 * Moves the cursor right one position in the string if possible, and then
+	 * updates the caret.
+	 */
+	void moveRight() {
+		if (this.currentLine.length() <= 0) {
+			this.validatePositions();
+			this.updateCaretPosition();
+			return;// do not do anything
+		}
+		if (this.posInString >= this.currentLine.length()) {
+			this.validatePositions();
+			this.updateCaretPosition();
+			return;// do not do anything
+		}
+		if (this.posInString < 0) {
+			this.posInString = 0;
+			this.validatePositions();
+			this.updateCaretPosition();
+		}
+		else if (this.posInString >= 0) {
+			++this.posInString;
+			this.validatePositions();
+			this.updateCaretPosition();
+		}
+	}
+
+	/**
+	 * Moves the cursor to the next line, then shows the line indicator char.
+	 */
+	private void newLine() {
+		this.posInString = 0;
+		this.currentLine = "";
+		this.textArea.append(System.lineSeparator());// this extra space is
+		// removed
+		this.textArea.append(System.lineSeparator());
+		this.updateInputLine();
+		while (this.textArea.getLineCount() > this.maxLineCount) {
+			this.removeTopLine();
+		}
+		this.updateCaretPosition();
+	}
+
+	@Override
+	public void onDisable() {
+		this.frame.setVisible(false);
+		this.frame.dispose();
+
+		this.setPackageState(PackageState.DISABLED);
+
+	}
+
+	@Override
+	public void onEnable() {
+		this.init();
+		this.appendIndicatorChar();
+
+		this.setPackageState(PackageState.ENABLED);
+
+	}
+
+	@Override
+	public void onLoad() {
+
+		this.setPackageState(PackageState.LOADING);
+
+		try {
+			this.setResourceBundle(ResourceBundle.getBundle(
+					"com.ikalagaming.gui.console.resources.Console",
+					Localization.getLocale()));
+		}
+		catch (MissingResourceException missingResource) {
+			// don't localize this since it would fail anyways
+			// TODO handle this better
+			this.eventManager
+					.fireEvent(new LogError("Locale not found for Console",
+							LoggingLevel.WARNING, this));
+		}
+		this.windowTitle =
+				SafeResourceLoader.getString("title", this.getResourceBundle(),
+						"Console");
+
+		this.setPackageState(PackageState.DISABLED);
+
+	}
+
+	@Override
+	public void onUnload() {
+
+		this.setPackageState(PackageState.UNLOADING);
+
+		if (this.getPackageState() == PackageState.ENABLED) {
+			this.disable();
+
+			this.setPackageState(PackageState.UNLOADING);
+
+		}
+
+		if (this.frame != null) {
+			this.frame.setVisible(false);
+			this.frame.dispose();
+			this.frame = null;
+		}
+		this.setResourceBundle(null);
+		this.history = null;
+
+		this.setPackageState(PackageState.PENDING_REMOVAL);
+
+	}
+
+	@Override
+	public boolean reload() {
+		// TODO does this even work?
+		this.setPackageState(PackageState.UNLOADING);
+
+		if (this.frame != null) {
+			this.frame.setVisible(false);
+			this.frame.dispose();
+			this.frame = null;
+		}
+		this.setResourceBundle(null);
+		this.history = null;
+
+		this.onLoad();
+		return true;
+	}
+
+	/**
+	 * Replaces the input indicator char to the console
+	 */
+	private void removeIndicatorChar() {
+		int offset = this.getSafeLineStartOffset(this.currentIndicatorLine);
+		this.textArea.replaceRange("", offset, offset + 1);
+	}
+
+	/**
+	 * Removes the top line of the input.
+	 */
+	private void removeTopLine() {
+		int end;
+		try {
+			end = this.textArea.getLineEndOffset(0);
+			this.textArea.replaceRange("", 0, end);
+		}
+		catch (BadLocationException e) {
+			this.eventManager.fireEvent(new Log(SafeResourceLoader.getString(
+					"error_bad_location", this.getResourceBundle(),
+					"Bad location"), LoggingLevel.WARNING, this));
+
+		}
+	}
+
+	/**
+	 * Attempts to execute the current line of input. If none exists, it does
+	 * nothing.
+	 */
+	void runLine() {
+		String line = this.currentLine;
+		this.newLine();
+
+		if (line.isEmpty()) {
+			// don't do anything with an empty line
+			return;
+		}
+
+		this.history.addItem(line);
+
+		ConsoleCommandEntered cmd = new ConsoleCommandEntered(line);
+		this.eventManager.fireEvent(cmd);
+	}
+
+	/**
 	 * Copy a String to the clipboard, and make this class the owner of the
 	 * Clipboard's contents.
-	 * 
+	 *
 	 * @param contents the new contents of the clipboard
 	 */
-	private void setClipboardContents(String contents) {
+	void setClipboardContents(String contents) {
 		StringSelection stringSelection = new StringSelection(contents);
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, this);
 	}
 
 	/**
-	 * Get the String from the clipboard.
+	 * Sets the current text. This assumes that the indicator char is already in
+	 * place. This will clear out the current text if it is not already cleared.
 	 *
-	 * @return any text found on the Clipboard. If one is not found, returns an
-	 *         empty String.
+	 * @param s the string to set the last line to
 	 */
-	private String getClipboardContents() {
-		String result = "";
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		Transferable contents = clipboard.getContents(this);
-		boolean hasTransferableText =
-				(contents != null)
-						&& contents
-								.isDataFlavorSupported(DataFlavor.stringFlavor);
-		if (hasTransferableText) {
-			try {
-				result =
-						(String) contents
-								.getTransferData(DataFlavor.stringFlavor);
-			}
-			catch (UnsupportedFlavorException | IOException ex) {
-				eventManager.fireEvent(new LogError(SafeResourceLoader
-						.getString("invalid_clipboard", getResourceBundle(),
-								"Invalid clipboard contents").concat(
-								ex.getLocalizedMessage()),
-						LoggingLevel.WARNING, this));
-			}
+	void setCurrentText(String s) {
+		if (!this.currentLine.isEmpty()) {
+			this.clearCurrentText();
 		}
-		return result;
+		this.textArea.append(s);
+		this.posInString = s.length();
+		this.currentLine = s;
+		this.validatePositions();
+		this.updateCaretPosition();
 	}
 
 	/**
-	 * Returns the resource bundle for this console
-	 * 
-	 * @return the resource bundle
+	 * Sets the frame height. This is the height of the frame the console is in.
+	 *
+	 * @param newHeight The new height
 	 */
-	public ResourceBundle getResourceBundle() {
-		return resourceBundle;
+	public void setHeight(int newHeight) {
+		this.height = newHeight;
+		this.frame.setSize(this.frame.getWidth(), newHeight);
 	}
 
-	private void setResourceBundle(ResourceBundle resourceBundle) {
-		this.resourceBundle = resourceBundle;
+	/**
+	 * Sets the maximum number of lines stored in the window.
+	 *
+	 * @param newMaxLines the maximum number of lines to store
+	 */
+	public void setMaxLineCount(int newMaxLines) {
+		this.maxLineCount = newMaxLines;
+	}
+
+	@Override
+	public void setPackageState(PackageState newState) {
+		synchronized (this.state) {
+			this.state = newState;
+		}
+	}
+
+	private void setResourceBundle(ResourceBundle newBundle) {
+		this.resourceBundle = newBundle;
+	}
+
+	/**
+	 * Sets the frame width. This is the width of the frame the console is in.
+	 *
+	 * @param newWidth The new width
+	 */
+	public void setWidth(int newWidth) {
+		this.width = newWidth;
+		this.frame.setSize(newWidth, this.frame.getHeight());
+	}
+
+	/**
+	 * Sets the title of the window.
+	 *
+	 * @param newTitle the String to use as the title
+	 */
+	public void setWindowTitle(String newTitle) {
+		this.windowTitle = newTitle;
+		this.frame.setTitle(newTitle);
+	}
+
+	/**
+	 * Moves the caret to the correct position.
+	 */
+	private void updateCaretPosition() {
+		int position =
+				this.getSafeLineStartOffset(this.currentIndicatorLine)
+						+ this.posInString + 1;
+		if (position >= this.textArea.getText().length()) {
+			position = this.textArea.getText().length();
+		}
+		this.textArea.setCaretPosition(position);
+		if (!this.textArea.getCaret().isVisible()) {
+			this.textArea.getCaret().setVisible(true);
+		}
+	}
+
+	/**
+	 * Adds a new indicator character to the beginning of the last line.
+	 */
+	private void updateInputLine() {
+		this.currentIndicatorLine = this.textArea.getLineCount() - 1;
+		this.appendIndicatorChar();
+		this.validatePositions();
+		this.updateCaretPosition();
+	}
+
+	/**
+	 * Checks that the cursor and string positions are valid, and fixes them if
+	 * they are not.
+	 */
+	private void validatePositions() {
+		if (this.posInString < 0) {
+			this.posInString = 0;
+		}
+		if (this.posInString > this.currentLine.length()) {
+			this.posInString = this.currentLine.length();
+		}
 	}
 
 }

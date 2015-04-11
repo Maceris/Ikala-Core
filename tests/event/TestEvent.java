@@ -4,31 +4,31 @@ import com.ikalagaming.event.Event;
 
 /**
  * An event for testing purposes.
- * 
+ *
  * @author Ches Burks
- * 
+ *
  */
 public class TestEvent extends Event {
 
-	private final int i;
+	private final int value;
 
 	/**
 	 * An event for testing
-	 * 
-	 * @param i a value for ensuring proper ordering of events
-	 * 
+	 *
+	 * @param val a value for ensuring proper ordering of events
+	 *
 	 */
-	public TestEvent(int i) {
-		this.i = i;
+	public TestEvent(int val) {
+		this.value = val;
 	}
 
 	/**
 	 * Returns the value this event is assigned
-	 * 
+	 *
 	 * @return the value stored in this event
 	 */
 	public int getValue() {
-		return i;
+		return this.value;
 	}
 
 }

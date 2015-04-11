@@ -1,4 +1,3 @@
-
 package com.ikalagaming.packages;
 
 import java.util.HashSet;
@@ -9,7 +8,7 @@ import com.ikalagaming.event.Listener;
 /**
  * A basic implementation of the {@link Package} interface. This allows you to
  * only implement some of the methods yourself.
- * 
+ *
  * @author Ches
  *
  */
@@ -22,31 +21,46 @@ public class BasePackage implements Package {
 
 	@Override
 	public boolean disable() {
-		setPackageState(PackageState.DISABLING);
-		onDisable();
+		this.setPackageState(PackageState.DISABLING);
+		this.onDisable();
 		return true;
 	}
 
 	@Override
 	public boolean enable() {
-		setPackageState(PackageState.ENABLING);
-		onEnable();
+		this.setPackageState(PackageState.ENABLING);
+		this.onEnable();
 		return true;
 	}
 
 	@Override
+	public Set<Listener> getListeners() {
+		if (this.listeners == null) {
+			this.listeners = new HashSet<>();
+		}
+		return this.listeners;
+	}
+
+	@Override
 	public String getName() {
-		return packageName;
+		return this.packageName;
+	}
+
+	@Override
+	public PackageState getPackageState() {
+		synchronized (this.state) {
+			return this.state;
+		}
 	}
 
 	@Override
 	public double getVersion() {
-		return version;
+		return this.version;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		if (getPackageState() == PackageState.ENABLED) {
+		if (this.getPackageState() == PackageState.ENABLED) {
 			return true;
 		}
 		return false;
@@ -54,60 +68,45 @@ public class BasePackage implements Package {
 
 	@Override
 	public void onDisable() {
-		setPackageState(PackageState.DISABLED);
+		this.setPackageState(PackageState.DISABLED);
 	}
 
 	@Override
 	public void onEnable() {
-		setPackageState(PackageState.ENABLED);
+		this.setPackageState(PackageState.ENABLED);
 	}
 
 	@Override
 	public void onLoad() {
-		setPackageState(PackageState.LOADING);
-		setPackageState(PackageState.DISABLED);
+		this.setPackageState(PackageState.LOADING);
+		this.setPackageState(PackageState.DISABLED);
 	}
 
 	@Override
 	public void onUnload() {
-		setPackageState(PackageState.UNLOADING);
-		if (getPackageState() == PackageState.ENABLED) {
-			disable();
-			setPackageState(PackageState.UNLOADING);
+		this.setPackageState(PackageState.UNLOADING);
+		if (this.getPackageState() == PackageState.ENABLED) {
+			this.disable();
+			this.setPackageState(PackageState.UNLOADING);
 		}
-		setPackageState(PackageState.PENDING_REMOVAL);
+		this.setPackageState(PackageState.PENDING_REMOVAL);
 	}
 
 	@Override
 	public boolean reload() {
-		setPackageState(PackageState.UNLOADING);
-		if (getPackageState() == PackageState.ENABLED) {
-			disable();
-			setPackageState(PackageState.UNLOADING);
+		this.setPackageState(PackageState.UNLOADING);
+		if (this.getPackageState() == PackageState.ENABLED) {
+			this.disable();
+			this.setPackageState(PackageState.UNLOADING);
 		}
-		onLoad();
+		this.onLoad();
 		return false;
 	}
 
 	@Override
-	public Set<Listener> getListeners() {
-		if (listeners == null) {
-			listeners = new HashSet<Listener>();
-		}
-		return listeners;
-	}
-
-	@Override
-	public PackageState getPackageState() {
-		synchronized (state) {
-			return state;
-		}
-	}
-
-	@Override
 	public void setPackageState(PackageState newState) {
-		synchronized (state) {
-			state = newState;
+		synchronized (this.state) {
+			this.state = newState;
 		}
 	}
 

@@ -1,16 +1,15 @@
-
 package com.ikalagaming.packages;
 
 /**
  * The package state is a simple way of determining what a package is doing and
  * whether or not it can be interacted with or perform tasks. When each value
  * should be used is described in the appropriate Package methods.
- * 
+ *
  * <br>
  * These values do not strictly have to be set as suggested, but it is optimal
  * if they are as changing the flow of how a package is operated will likely
  * cause problems.
- * 
+ *
  * @author Ches Burks
  *
  */

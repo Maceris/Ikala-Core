@@ -8,9 +8,9 @@ import com.ikalagaming.logging.events.DisplayLog;
 
 /**
  * Holds an internal queue and dispatches the events in order when possible.
- * 
+ *
  * @author Ches Burks
- * 
+ *
  */
 public class LogDispatcher extends Thread {
 
@@ -23,75 +23,29 @@ public class LogDispatcher extends Thread {
 	/**
 	 * Creates and starts the thread. It will begin attempting to dispatch
 	 * events immediately if there are any available.
-	 * 
+	 *
 	 * @param eventManager the event manager to use in dispatching events
-	 * 
+	 *
 	 */
 	public LogDispatcher(EventManager eventManager) {
-		setName("LogDispatcher");
+		this.setName("LogDispatcher");
 		this.manager = eventManager;
-		queue = new LinkedList<String>();
+		this.queue = new LinkedList<>();
 		this.hasLogs = false;
 		this.running = true;
 	}
 
-	/**
-	 * Adds the String to the queue pending logging.
-	 * 
-	 * @param log The log message to record
-	 * @throws IllegalStateException if the element cannot be added at this time
-	 *             due to capacity restrictions
-	 */
-	protected void log(String log) throws IllegalStateException {
-		try {
-			queue.add(log);
-			hasLogs = true;
-		}
-		catch (IllegalStateException illegalState) {
-			throw illegalState;
-		}
-		catch (NullPointerException nullPointer) {
-			;// do nothing since its a null event
-		}
-		catch (Exception e) {
-			System.err.println(e.toString());
-		}
-	}
-
-	/**
-	 * Checks for Strings in the queue, and logs them if possible. Does not do
-	 * anything if {@link #terminate()} has been called.
-	 * 
-	 */
-	@Override
-	public void run() {
-		if (!running) {
-			return;
-		}
-		while (running) {
-			try {
-				sleep(5);
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			if (hasEvents()) {
-				handleEvent();
-			}
-		}
-	}
-
 	private void handleEvent() {
 		try {
-			if (queue.isEmpty()) {
-				hasLogs = false;
+			if (this.queue.isEmpty()) {
+				this.hasLogs = false;
 			}
-			else if (queue.peek() != null) {
-				currentStr = queue.remove();
+			else if (this.queue.peek() != null) {
+				this.currentStr = this.queue.remove();
 				// log it to the system output stream
-				DisplayLog log = new DisplayLog(currentStr);
-				manager.fireEvent(log);
-				System.out.println(currentStr);
+				DisplayLog log = new DisplayLog(this.currentStr);
+				this.manager.fireEvent(log);
+				System.out.println(this.currentStr);
 			}
 			else {
 				return;
@@ -108,7 +62,53 @@ public class LogDispatcher extends Thread {
 	}
 
 	private boolean hasEvents() {
-		return hasLogs;
+		return this.hasLogs;
+	}
+
+	/**
+	 * Adds the String to the queue pending logging.
+	 *
+	 * @param log The log message to record
+	 * @throws IllegalStateException if the element cannot be added at this time
+	 *             due to capacity restrictions
+	 */
+	protected void log(String log) throws IllegalStateException {
+		try {
+			this.queue.add(log);
+			this.hasLogs = true;
+		}
+		catch (IllegalStateException illegalState) {
+			throw illegalState;
+		}
+		catch (NullPointerException nullPointer) {
+			;// do nothing since its a null event
+		}
+		catch (Exception e) {
+			System.err.println(e.toString());
+		}
+	}
+
+	/**
+	 * Checks for Strings in the queue, and logs them if possible. Does not do
+	 * anything if {@link #terminate()} has been called.
+	 *
+	 */
+	@Override
+	public void run() {
+		if (!this.running) {
+			return;
+		}
+		while (this.running) {
+			try {
+				Thread.sleep(5);
+			}
+			catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if (this.hasEvents()) {
+				this.handleEvent();
+			}
+		}
 	}
 
 	/**
@@ -116,7 +116,7 @@ public class LogDispatcher extends Thread {
 	 * shutting down the thread.
 	 */
 	public void terminate() {
-		hasLogs = false;
-		running = false;
+		this.hasLogs = false;
+		this.running = false;
 	}
 }

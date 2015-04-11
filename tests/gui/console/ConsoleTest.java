@@ -1,31 +1,28 @@
 package gui.console;
 
-import static org.junit.Assert.fail;
-
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import sun.misc.Cleaner;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.gui.console.Console;
 
 public class ConsoleTest {
 
-	static EventManager manager;
-
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		manager = new EventManager();
+		ConsoleTest.manager = new EventManager();
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		manager.shutdown();
+		ConsoleTest.manager.shutdown();
 	}
+
+	static EventManager manager;
 
 	@Before
 	public void setUp() throws Exception {}
@@ -34,196 +31,196 @@ public class ConsoleTest {
 	public void tearDown() throws Exception {}
 
 	@Test
-	public void testConsole() {
-		Console console = new Console(manager);
-		console.onLoad();
-		console.enable();
-		fail("Not yet implemented"); // TODO
+	public void testAppendMessage() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testAppendMessage() {
-		fail("Not yet implemented"); // TODO
+	public void testConsole() {
+		Console console = new Console(ConsoleTest.manager);
+		console.onLoad();
+		console.enable();
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testDisable() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testEnable() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testGetHeight() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testGetMaxLineCount() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testGetName() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testGetVersion() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testGetWidth() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testGetWindowTitle() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testIsEnabled() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnDisable() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnEnable() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnLoad() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnLogEvent() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnLogErrorEvent() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnReportUnknownCommand() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testOnUnload() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testReload() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testSetHeight() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testSetMaxLineCount() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testSetWidth() {
-		fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testSetWindowTitle() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testGetListeners() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testGetMaxLineCount() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testGetName() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testGetPackageState() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testSetPackageState() {
-		fail("Not yet implemented"); // TODO
+	public void testGetVersion() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testGetWidth() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testGetWindowTitle() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testIsEnabled() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testLostOwnership() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowAdapter() {
-		fail("Not yet implemented"); // TODO
+	public void testOnDisable() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowOpened() {
-		fail("Not yet implemented"); // TODO
+	public void testOnEnable() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowClosing() {
-		fail("Not yet implemented"); // TODO
+	public void testOnLoad() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowClosed() {
-		fail("Not yet implemented"); // TODO
+	public void testOnLogErrorEvent() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowIconified() {
-		fail("Not yet implemented"); // TODO
+	public void testOnLogEvent() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowDeiconified() {
-		fail("Not yet implemented"); // TODO
+	public void testOnReportUnknownCommand() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testOnUnload() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testReload() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testSetHeight() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testSetMaxLineCount() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testSetPackageState() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testSetWidth() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testSetWindowTitle() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testWindowActivated() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testWindowAdapter() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testWindowClosed() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testWindowClosing() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testWindowDeactivated() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
-	public void testWindowStateChanged() {
-		fail("Not yet implemented"); // TODO
+	public void testWindowDeiconified() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testWindowGainedFocus() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testWindowIconified() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test
 	public void testWindowLostFocus() {
-		fail("Not yet implemented"); // TODO
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testWindowOpened() {
+		Assert.fail("Not yet implemented"); // TODO
+	}
+
+	@Test
+	public void testWindowStateChanged() {
+		Assert.fail("Not yet implemented"); // TODO
 	}
 
 }

@@ -1,4 +1,3 @@
-
 package com.ikalagaming.event;
 
 import java.lang.annotation.ElementType;

@@ -1,4 +1,3 @@
-
 package com.ikalagaming.event;
 
 import java.lang.reflect.Method;
@@ -25,57 +24,95 @@ public class EventManager {
 	 * dispatching thread
 	 */
 	public EventManager() {
-		dispatcher = new EventDispatcher(this);
-		handlerMap = new HashMap<Class<? extends Event>, HandlerList>();
-		dispatcher.start();
+		this.dispatcher = new EventDispatcher(this);
+		this.handlerMap = new HashMap<>();
+		this.dispatcher.start();
 	}
 
 	/**
-	 * Registers event listeners in the supplied listener.
-	 * 
-	 * @param listener The listener to register
+	 * Creates {@link EventListener EventListeners} for a given {@link Listener
+	 * listener}.
+	 *
+	 * @param listener The listener to create EventListenrs for
+	 * @return A map of events to a set of EventListeners belonging to it
 	 */
-	public void registerEventListeners(Listener listener) {
-		for (Map.Entry<Class<? extends Event>, Set<EventListener>> entry : createRegisteredListeners(
-				listener).entrySet()) {
-			getEventListeners(entry.getKey()).registerAll(entry.getValue());
-		}
-	}
+	private Map<Class<? extends Event>, Set<EventListener>> createRegisteredListeners(
+			Listener listener) {
 
-	/**
-	 * Unregisters event listeners in the supplied listener.
-	 * 
-	 * @param listener The listener to unregister
-	 */
-	public void unregisterEventListeners(Listener listener) {
-		for (HandlerList list : handlerMap.values()) {
-			list.unregisterAll(listener);
+		Map<Class<? extends Event>, Set<EventListener>> toReturn =
+				new HashMap<>();
+		Set<Method> methods;
+		try {
+			Method[] publicMethods = listener.getClass().getMethods();
+			methods = new HashSet<>(publicMethods.length, Float.MAX_VALUE);
+			for (Method method : publicMethods) {
+				methods.add(method);
+			}
+			for (Method method : listener.getClass().getDeclaredMethods()) {
+				methods.add(method);
+			}
 		}
-	}
+		catch (NoClassDefFoundError e) {
+			return toReturn;
+		}
 
-	/**
-	 * Returns a {@link HandlerList} for a give event type. Creates one if none
-	 * exist.
-	 * 
-	 * @param type the type of event to find handlers for
-	 */
-	private HandlerList getEventListeners(Class<? extends Event> type) {
-		if (!handlerMap.containsKey(type)) {
-			handlerMap.put(type, new HandlerList());
+		// search the methods for listeners
+		for (final Method method : methods) {
+			final EventHandler handlerAnnotation =
+					method.getAnnotation(EventHandler.class);
+			if (handlerAnnotation == null) {
+				continue;
+			}
+			final Class<?> checkClass;
+			if (method.getParameterTypes().length != 1
+					|| !Event.class.isAssignableFrom(checkClass =
+							method.getParameterTypes()[0])) {
+				continue;
+			}
+			final Class<? extends Event> eventClass =
+					checkClass.asSubclass(Event.class);
+			method.setAccessible(true);
+			Set<EventListener> eventSet = toReturn.get(eventClass);
+			if (eventSet == null) {
+				eventSet = new HashSet<>();
+				// add the listener methods to the list of events
+				toReturn.put(eventClass, eventSet);
+			}
+
+			// creates a class to execute the listener for the event
+			EventExecutor executor = new EventExecutor() {
+				@Override
+				public void execute(Listener listener1, Event event)
+						throws EventException {
+					try {
+						if (!eventClass.isAssignableFrom(event.getClass())) {
+							return;
+						}
+						method.invoke(listener1, event);
+					}
+					catch (Throwable t) {
+						EventException evtExcept = new EventException(t);
+						throw evtExcept;
+					}
+				}
+			};
+
+			eventSet.add(new EventListener(listener, executor));
+
 		}
-		return handlerMap.get(type);
+		return toReturn;
 	}
 
 	/**
 	 * Sends the {@link Event event} to all of its listeners.
-	 * 
+	 *
 	 * @param event The event to fire
 	 * @throws IllegalStateException if the element cannot be added at this time
 	 *             due to capacity restrictions
 	 */
 	public void fireEvent(Event event) throws IllegalStateException {
 		try {
-			dispatcher.dispatchEvent(event);
+			this.dispatcher.dispatchEvent(event);
 		}
 		catch (IllegalStateException illegalState) {
 			throw illegalState;
@@ -92,111 +129,63 @@ public class EventManager {
 								"Event queue full"),
 								"EventManager.fireEvent(Event)",
 								LoggingLevel.WARNING, "event-manager");
-				dispatcher.dispatchEvent(err);
+				this.dispatcher.dispatchEvent(err);
 			}
 
 		}
 	}
 
 	/**
-	 * Creates {@link EventListener EventListeners} for a given {@link Listener
-	 * listener}.
-	 * 
-	 * @param listener The listener to create EventListenrs for
-	 * @return A map of events to a set of EventListeners belonging to it
+	 * Returns a {@link HandlerList} for a give event type. Creates one if none
+	 * exist.
+	 *
+	 * @param type the type of event to find handlers for
+	 * @return the map of handlers for the given type
 	 */
-	private Map<Class<? extends Event>, Set<EventListener>> createRegisteredListeners(
-			Listener listener) {
-
-		Map<Class<? extends Event>, Set<EventListener>> toReturn =
-				new HashMap<Class<? extends Event>, Set<EventListener>>();
-		Set<Method> methods;
-		try {
-			Method[] publicMethods = listener.getClass().getMethods();
-			methods =
-					new HashSet<Method>(publicMethods.length, Float.MAX_VALUE);
-			for (Method method : publicMethods) {
-				methods.add(method);
-			}
-			for (Method method : listener.getClass().getDeclaredMethods()) {
-				methods.add(method);
-			}
+	private HandlerList getEventListeners(Class<? extends Event> type) {
+		if (!this.handlerMap.containsKey(type)) {
+			this.handlerMap.put(type, new HandlerList());
 		}
-		catch (NoClassDefFoundError e) {
-			return toReturn;
-		}
-
-		// search the methods for listeners
-		for (final Method method : methods) {
-			final EventHandler handlerAnnotation =
-					method.getAnnotation(EventHandler.class);
-			if (handlerAnnotation == null)
-				continue;
-			final Class<?> checkClass;
-			if (method.getParameterTypes().length != 1
-					|| !Event.class.isAssignableFrom(checkClass =
-							method.getParameterTypes()[0])) {
-				continue;
-			}
-			final Class<? extends Event> eventClass =
-					checkClass.asSubclass(Event.class);
-			method.setAccessible(true);
-			Set<EventListener> eventSet = toReturn.get(eventClass);
-			if (eventSet == null) {
-				eventSet = new HashSet<EventListener>();
-				// add the listener methods to the list of events
-				toReturn.put(eventClass, eventSet);
-			}
-
-			// creates a class to execute the listener for the event
-			EventExecutor executor = new EventExecutor() {
-				@Override
-				public void execute(Listener listener, Event event)
-						throws EventException {
-					try {
-						if (!eventClass.isAssignableFrom(event.getClass())) {
-							return;
-						}
-						method.invoke(listener, event);
-					}
-					catch (Throwable t) {
-						EventException evtExcept = new EventException(t);
-						throw evtExcept;
-					}
-				}
-			};
-
-			eventSet.add(new EventListener(listener, executor));
-
-		}
-		return toReturn;
+		return this.handlerMap.get(type);
 	}
 
 	/**
 	 * Returns the handlerlist for the given event.
-	 * 
+	 *
 	 * @param event the class to find handlers for
 	 * @return the handlerlist for that class
 	 */
 	public HandlerList getHandlers(Event event) {
-		return getEventListeners(event.getClass());
+		return this.getEventListeners(event.getClass());
 	}
 
-	// TODO make sure this is called
+	/**
+	 * Registers event listeners in the supplied listener.
+	 *
+	 * @param listener The listener to register
+	 */
+	public void registerEventListeners(Listener listener) {
+		for (Map.Entry<Class<? extends Event>, Set<EventListener>> entry : this
+				.createRegisteredListeners(listener).entrySet()) {
+			this.getEventListeners(entry.getKey())
+					.registerAll(entry.getValue());
+		}
+	}
+
 	/**
 	 * Clears up the handlers and stops the dispatching thread. Acts like an
 	 * onUnload method.
 	 */
 	public void shutdown() {
-
-		for (HandlerList l : handlerMap.values()) {
+		// TODO make sure this is called
+		for (HandlerList l : this.handlerMap.values()) {
 			l.unregisterAll();
 		}
-		handlerMap.clear();
+		this.handlerMap.clear();
 
-		dispatcher.terminate();
+		this.dispatcher.terminate();
 		try {
-			dispatcher.join();
+			this.dispatcher.join();
 		}
 		catch (InterruptedException e) {
 			LogError err =
@@ -205,8 +194,19 @@ public class EventManager {
 							"com.ikalagaming.event.resources.strings",
 							"Thread interrupted"), "EventManager.onDisable()",
 							LoggingLevel.SEVERE, "event-manager");
-			dispatcher.dispatchEvent(err);
+			this.dispatcher.dispatchEvent(err);
 			e.printStackTrace(System.err);
+		}
+	}
+
+	/**
+	 * Unregisters event listeners in the supplied listener.
+	 *
+	 * @param listener The listener to unregister
+	 */
+	public void unregisterEventListeners(Listener listener) {
+		for (HandlerList list : this.handlerMap.values()) {
+			list.unregisterAll(listener);
 		}
 	}
 }

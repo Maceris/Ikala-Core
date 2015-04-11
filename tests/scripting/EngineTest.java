@@ -2,14 +2,14 @@ package scripting;
 
 import javax.script.ScriptEngineFactory;
 
+import org.junit.Assert;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
 
 import com.ikalagaming.scripting.Engine;
 
 /**
  * Tests the functionality of the scripting engine class.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -22,7 +22,7 @@ public class EngineTest {
 	@Test
 	public void showLuaEngineInfo() {
 		ScriptEngineFactory f = Engine.getLuaEngine().getFactory();
-		assertNotNull(f);
+		Assert.assertNotNull(f);
 		System.out.println("Engine name: " + f.getEngineName());
 		System.out.println("Engine Version: " + f.getEngineVersion());
 		System.out.println("LanguageName: " + f.getLanguageName());

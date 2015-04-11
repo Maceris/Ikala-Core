@@ -1,4 +1,3 @@
-
 package com.ikalagaming.event;
 
 /**
@@ -9,14 +8,14 @@ public abstract class Event {
 
 	/**
 	 * Returns the name of the event.
-	 * 
+	 *
 	 * @return The events name (simple class name if no name is specified)
 	 */
 	public String getEventName() {
-		if (name == null) {
-			name = getClass().getSimpleName();
+		if (this.name == null) {
+			this.name = this.getClass().getSimpleName();
 		}
-		return name;
+		return this.name;
 	}
 
 }

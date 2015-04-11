@@ -1,11 +1,10 @@
-
 package com.ikalagaming.packages;
 
 /**
  * Configurable settings that allow changing the behavior of the package system.
- * 
+ *
  * @author Ches Burks
- * 
+ *
  */
 public class PackageSettings {
 	/**

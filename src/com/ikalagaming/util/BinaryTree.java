@@ -2,59 +2,145 @@ package com.ikalagaming.util;
 
 /**
  * A binary AVL tree for storing (comparable) objects.
- * 
+ *
  * @author Ches Burks
  *
  * @param <T> the type of object to store. Must extend {@link Comparable}
  */
 public class BinaryTree<T extends Comparable<T>> {
+	/**
+	 * The base of the tree. This is null if the tree is empty.
+	 */
 	protected BinaryTreeNode<T> treeRoot;
+	/**
+	 * How many elements are stored in the tree.
+	 */
 	protected int size;
 
 	/**
-	 * Inserts the given value into the tree.
-	 * 
-	 * @param toInsert the object to store
-	 * @throws DuplicateEntry if the entry already exists in the tree
+	 * Removes all objects from the tree.
 	 */
-	public void insert(T toInsert) throws DuplicateEntry {
-		treeRoot = insert(treeRoot, toInsert);
-		++size;
+	public void clear() {
+		if (this.treeRoot != null) {
+			this.treeRoot.delete();
+		}
+		this.treeRoot = null;
+		this.size = 0;
 	}
 
 	/**
-	 * Removes the object form the tree if it exists.
-	 * 
-	 * @param toRemove the object to remove
+	 * Returns true if the tree contains the given object
+	 *
+	 * @param toFind the entry to search for
+	 * @return true if the object exists or false if it is not in the tree
 	 */
-	public void remove(T toRemove) {
-		BinaryTreeNode<T> to_remove = find(toRemove, treeRoot);
-		if (to_remove != null) {
-			remove(to_remove);
+	public boolean contains(T toFind) {
+		// true if the find method returns something that is not null
+		// (that is, it exists in the tree)
+		return (this.find(toFind, this.treeRoot) != null);
+	}
+
+	/**
+	 * Recursively searches for the entry and returns the node that contains it
+	 * or null if it is not found.
+	 *
+	 * @param toFind the entry to search for
+	 * @param root where to start looking
+	 * @return null or the node that has toFind as its key
+	 */
+	protected BinaryTreeNode<T> find(T toFind, BinaryTreeNode<T> root) {
+		if (root == null || root.key == null) {
+			return null;
 		}
-		--size;
+		int compareVal = toFind.compareTo(root.key);
+		if (compareVal == 0) {
+			// they match
+			return root;
+		}
+		else if (compareVal < 0) {
+			// less than the roots value, so in the left subtree
+			return this.find(toFind, root.left);
+		}
+		else if (compareVal > 0) {
+			// greater than the roots value, so in the right subtree
+			return this.find(toFind, root.right);
+		}
+		// won't reach here but just in case.
+		return null;
+	}
+
+	/**
+	 * Returns the AVL balance factor of the node. That is, 0 if the node is
+	 * null, or the height of the left subtree minus the height of the right
+	 * subtree. This should be -1, 0, or 1 unless the node needs to be
+	 * rebalanced.
+	 *
+	 * @see #getHeight(BinaryTreeNode)
+	 * @param node the node to find the balance of
+	 * @return the nodes AVL balance factor
+	 */
+	protected int getBalance(BinaryTreeNode<T> node) {
+		if (node == null) {
+			return 0;
+		}
+		return this.getHeight(node.left) - this.getHeight(node.right);
+	}
+
+	/**
+	 * Returns the height of the node, or -1 if it is null.
+	 *
+	 * @param node the node to get the height of
+	 * @return the tree's (with node as the root) maximum height
+	 */
+	protected int getHeight(BinaryTreeNode<T> node) {
+		if (node == null) {
+			return -1;
+		}
+		return node.height;
+	}
+
+	/**
+	 * Returns the smallest child node of the tree that has root as its parent.
+	 * If root is null it just returns null. If root has no children, it returns
+	 * itself.
+	 *
+	 * @param root the root of the tree to search
+	 * @return the smallest node in that subtree
+	 */
+	protected BinaryTreeNode<T> getSmallestSubnode(BinaryTreeNode<T> root) {
+		if (root == null) {
+			return null;
+		}
+		BinaryTreeNode<T> node = root;
+		while (node.left != null) {
+			node = node.left;
+		}
+		return node;
 	}
 
 	/**
 	 * Inserts an object into the tree using recursive calls, with a root at
 	 * theRoot. Returns the new root of the tree. The root of the tree should be
 	 * passed as theRoot and then set to the return value.
-	 * 
+	 *
 	 * @param theRoot the root of the tree to insert into
 	 * @param ins the value to insert
 	 * @return the new root of the tree (where theRoot was before)
 	 * @throws DuplicateEntry if the entry already exists in the tree
+	 *
 	 */
+	@SuppressWarnings("all")
 	protected BinaryTreeNode<T> insert(BinaryTreeNode<T> theRoot, T ins)
 			throws DuplicateEntry {
-		if (treeRoot == null) {
-			treeRoot = new BinaryTreeNode<T>(ins, null, null, null);
-			return treeRoot;
+		if (this.treeRoot == null) {
+			this.treeRoot = new BinaryTreeNode<>(ins, null, null, null);
+			return this.treeRoot;
 		}
 
 		if (theRoot == null || theRoot.key == null) {
-			theRoot = new BinaryTreeNode<T>(ins, null, null, null);
-			return theRoot;
+			BinaryTreeNode<T> newRoot =
+					new BinaryTreeNode<>(ins, null, null, null);
+			return newRoot;
 		}
 
 		// insert node, looking for it recursively
@@ -63,12 +149,12 @@ public class BinaryTree<T extends Comparable<T>> {
 		}
 		else if (ins.compareTo(theRoot.key) < 1) {
 			// inserting on the left of this node
-			theRoot.left = insert(theRoot.left, ins);
+			theRoot.left = this.insert(theRoot.left, ins);
 			theRoot.left.parent = theRoot;
 		}
 		else {
 			// inserting on the right of this node
-			theRoot.right = insert(theRoot.right, ins);
+			theRoot.right = this.insert(theRoot.right, ins);
 			theRoot.right.parent = theRoot;
 		}
 
@@ -80,9 +166,10 @@ public class BinaryTree<T extends Comparable<T>> {
 		 * height appropriately
 		 */
 		theRoot.height =
-				max(getHeight(theRoot.left), getHeight(theRoot.right)) + 1;
+				this.max(this.getHeight(theRoot.left),
+						this.getHeight(theRoot.right)) + 1;
 
-		int balance = getBalance(theRoot);
+		int balance = this.getBalance(theRoot);
 
 		// if it is unbalanced, handle the 4 special cases
 
@@ -90,19 +177,19 @@ public class BinaryTree<T extends Comparable<T>> {
 		// left.left
 		if (theRoot.left != null && theRoot.left.key != null) {
 			if (balance > 1 && ins.compareTo(theRoot.left.key) < 1) {
-				theRoot = rightRotate(theRoot);
+				theRoot = this.rightRotate(theRoot);
 				if (theRoot.parent == null) {
-					treeRoot = theRoot;
+					this.treeRoot = theRoot;
 				}
 				return theRoot;
 			}
 			// double right, because its larger on the left and inserting on
 			// left.right
 			if (balance > 1 && ins.compareTo(theRoot.left.key) > 1) {
-				theRoot.left = leftRotate(theRoot.left);
-				theRoot = rightRotate(theRoot);
+				theRoot.left = this.leftRotate(theRoot.left);
+				theRoot = this.rightRotate(theRoot);
 				if (theRoot.parent == null) {
-					treeRoot = theRoot;
+					this.treeRoot = theRoot;
 				}
 				return theRoot;
 			}
@@ -111,18 +198,18 @@ public class BinaryTree<T extends Comparable<T>> {
 		// right.right
 		if (theRoot.right != null && theRoot.right.key != null) {
 			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
-				theRoot = leftRotate(theRoot);
+				theRoot = this.leftRotate(theRoot);
 				if (theRoot.parent == null) {
-					treeRoot = theRoot;
+					this.treeRoot = theRoot;
 				}
 				return theRoot;
 			}
 			// double left
 			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
-				theRoot.right = rightRotate(theRoot.right);
-				theRoot = leftRotate(theRoot);
+				theRoot.right = this.rightRotate(theRoot.right);
+				theRoot = this.leftRotate(theRoot);
 				if (theRoot.parent == null) {
-					treeRoot = theRoot;
+					this.treeRoot = theRoot;
 				}
 				return theRoot;
 			}
@@ -132,10 +219,110 @@ public class BinaryTree<T extends Comparable<T>> {
 	}
 
 	/**
-	 * Removes the given node from the tree.
-	 * 
+	 * Inserts the given value into the tree.
+	 *
+	 * @param toInsert the object to store
+	 * @throws DuplicateEntry if the entry already exists in the tree
+	 */
+	public void insert(T toInsert) throws DuplicateEntry {
+		this.treeRoot = this.insert(this.treeRoot, toInsert);
+		++this.size;
+	}
+
+	/**
+	 * Rotates the given node left and returns the new root that is where root
+	 * used to be. Updates heights of nodes and parents appropriately. If the
+	 * root's right child is null then it just returns the root because it can't
+	 * rotate.
+	 *
+	 * @param root the root of the three nodes to rotate
+	 * @return the new root
+	 *
+	 */
+	protected BinaryTreeNode<T> leftRotate(BinaryTreeNode<T> root) {
+		BinaryTreeNode<T> rightChild = root.right;
+		if (rightChild == null) {
+			return root;
+		}
+		BinaryTreeNode<T> rightsLeftChild = rightChild.left;
+
+		// Change root.parents reference to root to root.left
+		if (root.parent != null) {
+			if (root.parent.left == root) {
+				root.parent.left = rightChild;
+			}
+			else if (root.parent.right == root) {
+				root.parent.right = rightChild;
+			}
+		}
+
+		// rotate
+		rightChild.left = root;
+		rightChild.parent = root.parent;
+		root.parent = rightChild;
+		root.right = rightsLeftChild;
+		if (rightsLeftChild != null) {
+			rightsLeftChild.parent = root;
+		}
+
+		// update height, starting with the smallest changed child
+		if (rightsLeftChild != null) {
+			this.updateHeight(rightsLeftChild);
+		}
+		else {
+			this.updateHeight(root);
+		}
+
+		return rightChild;
+	}
+
+	/**
+	 * Returns the larger of the two numbers.
+	 *
+	 * @param a the first number
+	 * @param b the second number
+	 * @return whichever number is largest
+	 */
+	protected int max(int a, int b) {
+		/*
+		 * If a is less than b, return b. otherwise, return a.
+		 */
+		return (a < b) ? b : a;
+	}
+
+	/**
+	 * Rebalances the tree starting at the given the lowest possibly unbalanced
+	 * node and working up the path to the root.
+	 *
+	 * @param lowest the lowest node in the tree that might be unbalance or was
+	 *            changed
+	 */
+	@SuppressWarnings("all")
+	protected void rebalance(BinaryTreeNode<T> lowest) {
+		if (lowest == null) {
+			return;
+		}
+		int balance = this.getBalance(lowest);
+		// single right, because its larger on the left and inserting on
+		// left.left
+		if (balance > 1) {
+			// left is too big
+			lowest = this.rightRotate(lowest);
+		}
+		else if (balance < -1) {
+			// right is too big
+			lowest = this.leftRotate(lowest);
+		}
+		this.rebalance(lowest.parent);
+	}
+
+	/**
+	 * Removes the given node from the tree. This will nullify the pointer to
+	 * toRemove.
+	 *
 	 * @param toRemove the node to remove
 	 */
+	@SuppressWarnings("all")
 	protected void remove(BinaryTreeNode<T> toRemove) {
 		if (toRemove == null) {
 			return;// just ignore it
@@ -160,22 +347,22 @@ public class BinaryTree<T extends Comparable<T>> {
 
 			if (toRemove.parent == null) {
 				// this is the root node
-				treeRoot = child;
-				updateHeight(treeRoot);
+				this.treeRoot = child;
+				this.updateHeight(this.treeRoot);
 			}
 			else if (toRemove.parent.left == toRemove) {
 				// this is a left child
 				toRemove.parent.left = child;
 				child.parent = toRemove.parent;
-				updateHeight(child);
+				this.updateHeight(child);
 			}
 			else if (toRemove.parent.right == toRemove) {
 				// this is a right child
 				toRemove.parent.right = child;
 				child.parent = toRemove.parent;
-				updateHeight(child);
+				this.updateHeight(child);
 			}
-			rebalance(child);
+			this.rebalance(child);
 		}
 		/*
 		 * No children, just delete this node. this works because the null
@@ -185,25 +372,25 @@ public class BinaryTree<T extends Comparable<T>> {
 		else if (toRemove.left == null) {
 			if (toRemove.parent == null) {
 				// this is the root node, and the only node in the tree
-				treeRoot = null;
+				this.treeRoot = null;
 			}
 			else if (toRemove.parent.left == toRemove) {
 				// its a left child
 				toRemove.parent.left = null;// remove parents reference to this
-											// node
-				updateHeight(toRemove.parent);
+				// node
+				this.updateHeight(toRemove.parent);
 				BinaryTreeNode<T> parent = toRemove.parent;
 				toRemove.parent = null;
-				rebalance(parent);
+				this.rebalance(parent);
 
 			}
 			else if (toRemove.parent.right == toRemove) {
 				toRemove.parent.right = null;// remove parents reference to this
-												// node
-				updateHeight(toRemove.parent);
+				// node
+				this.updateHeight(toRemove.parent);
 				BinaryTreeNode<T> parent = toRemove.parent;
 				toRemove.parent = null;
-				rebalance(parent);
+				this.rebalance(parent);
 			}
 		}
 		// there are two children
@@ -212,7 +399,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		// if-else chain
 		else {
 			BinaryTreeNode<T> smallestRight =
-					getSmallestSubnode(toRemove.right);
+					this.getSmallestSubnode(toRemove.right);
 			BinaryTreeNode<T> parent = smallestRight.parent;
 			if (toRemove.parent == null) {
 				// this is the root node
@@ -240,7 +427,7 @@ public class BinaryTree<T extends Comparable<T>> {
 				toRemove.left = null;
 				toRemove.right = null;
 
-				treeRoot = smallestRight;
+				this.treeRoot = smallestRight;
 			}
 			else if (toRemove.parent.left == toRemove) {
 				// this is a left child
@@ -301,12 +488,12 @@ public class BinaryTree<T extends Comparable<T>> {
 
 			// update heights and balance
 			if (parent != null) {
-				updateHeight(parent);
-				rebalance(parent);
+				this.updateHeight(parent);
+				this.rebalance(parent);
 			}
 			else {
-				updateHeight(smallestRight);
-				rebalance(smallestRight);
+				this.updateHeight(smallestRight);
+				this.rebalance(smallestRight);
 			}
 		}
 		// ensure the element to remove is gone
@@ -315,155 +502,16 @@ public class BinaryTree<T extends Comparable<T>> {
 	}
 
 	/**
-	 * Returns true if the tree contains the given object
-	 * 
-	 * @param toFind the entry to search for
-	 * @return true if the object exists or false if it is not in the tree
+	 * Removes the object form the tree if it exists.
+	 *
+	 * @param toRemove the object to remove
 	 */
-	public boolean contains(T toFind) {
-		// true if the find method returns something that is not null
-		// (that is, it exists in the tree)
-		return (find(toFind, treeRoot) != null);
-	}
-
-	protected void rebalance(BinaryTreeNode<T> smallest) {
-		if (smallest == null) {
-			return;
+	public void remove(T toRemove) {
+		BinaryTreeNode<T> to_remove = this.find(toRemove, this.treeRoot);
+		if (to_remove != null) {
+			this.remove(to_remove);
 		}
-		int balance = getBalance(smallest);
-		// single right, because its larger on the left and inserting on
-		// left.left
-		if (balance > 1) {
-			// left is too big
-			smallest = rightRotate(smallest);
-		}
-		else if (balance < -1) {
-			// right is too big
-			smallest = leftRotate(smallest);
-		}
-		rebalance(smallest.parent);
-	}
-
-	protected BinaryTreeNode<T> getSmallestSubnode(BinaryTreeNode<T> root) {
-		BinaryTreeNode<T> node = root;
-		while (node.left != null) {
-			node = node.left;
-		}
-		return node;
-	}
-
-	/**
-	 * Recursively searches for the entry and returns the node that contains it
-	 * or null if it is not found.
-	 * 
-	 * @param toFind the entry to search for
-	 * @param root where to start looking
-	 * @return null or the node that has toFind as its key
-	 */
-	protected BinaryTreeNode<T> find(T toFind, BinaryTreeNode<T> root) {
-		if (root == null || root.key == null) {
-			return null;
-		}
-		int compareVal = toFind.compareTo(root.key);
-		if (compareVal == 0) {
-			// they match
-			return root;
-		}
-		else if (compareVal < 0) {
-			// less than the roots value, so in the left subtree
-			return find(toFind, root.left);
-		}
-		else if (compareVal > 0) {
-			// greater than the roots value, so in the right subtree
-			return find(toFind, root.right);
-		}
-		// won't reach here but just in case.
-		return null;
-	}
-
-	/**
-	 * Removes all objects from the tree.
-	 */
-	public void clear() {
-		if (treeRoot != null) {
-			treeRoot.delete();
-		}
-		treeRoot = null;
-		size = 0;
-	}
-
-	/**
-	 * Returns the height of the node, or -1 if it is null.
-	 * 
-	 * @param node the node to get the height of
-	 * @return the tree's (with node as the root) maximum height
-	 */
-	protected int getHeight(BinaryTreeNode<T> node) {
-		if (node == null) {
-			return -1;
-		}
-		return node.height;
-	}
-
-	/**
-	 * Returns the larger of the two numbers.
-	 * 
-	 * @param a the first number
-	 * @param b the second number
-	 * @return whichever number is largest
-	 */
-	protected int max(int a, int b) {
-		/*
-		 * If a is less than b, return b. otherwise, return a.
-		 */
-		return (a < b) ? b : a;
-	}
-
-	/**
-	 * Rotates the given node left and returns the new root that is where root
-	 * used to be. Updates heights of nodes and parents appropriately. If the
-	 * root's right child is null then it just returns the root because it can't
-	 * rotate.
-	 * 
-	 * @param root the root of the three nodes to rotate
-	 * @return the new root
-	 * 
-	 */
-	protected BinaryTreeNode<T> leftRotate(BinaryTreeNode<T> root) {
-		BinaryTreeNode<T> rightChild = root.right;
-		if (rightChild == null) {
-			return root;
-		}
-		BinaryTreeNode<T> rightsLeftChild = rightChild.left;
-
-		// Change root.parents reference to root to root.left
-		if (root.parent != null) {
-			if (root.parent.left == root) {
-				root.parent.left = rightChild;
-			}
-			else if (root.parent.right == root) {
-				root.parent.right = rightChild;
-			}
-		}
-
-		// rotate
-		rightChild.left = root;
-		rightChild.parent = root.parent;
-		root.parent = rightChild;
-		root.right = rightsLeftChild;
-		if (rightsLeftChild != null) {
-			rightsLeftChild.parent = root;
-		}
-
-		// update height, starting with the smallest changed child
-		if (rightsLeftChild != null) {
-			updateHeight(rightsLeftChild);
-		}
-		else {
-			updateHeight(root);
-		}
-
-		return rightChild;
+		--this.size;
 	}
 
 	/**
@@ -471,7 +519,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * used to be. Updates heights of nodes and parents appropriately. If the
 	 * root's left child is null, it just returns the root because it can't
 	 * rotate.
-	 * 
+	 *
 	 * @param root the root of the three nodes to rotate
 	 * @return the new root
 	 */
@@ -503,18 +551,27 @@ public class BinaryTree<T extends Comparable<T>> {
 
 		// update height, starting with the smallest changed child
 		if (leftsRightChild != null) {
-			updateHeight(leftsRightChild);
+			this.updateHeight(leftsRightChild);
 		}
 		else {
-			updateHeight(root);
+			this.updateHeight(root);
 		}
 
 		return leftChild;
 	}
 
 	/**
+	 * Returns the number of elements in this tree.
+	 *
+	 * @return the data structures size
+	 */
+	public int size() {
+		return this.size;
+	}
+
+	/**
 	 * Recursively updates the heights of the parents of this node
-	 * 
+	 *
 	 * @param changed the lowest node that needs to be updated
 	 */
 	protected void updateHeight(BinaryTreeNode<T> changed) {
@@ -522,35 +579,10 @@ public class BinaryTree<T extends Comparable<T>> {
 			return;
 		}
 		changed.height =
-				max(getHeight(changed.left), getHeight(changed.right)) + 1;
+				this.max(this.getHeight(changed.left),
+						this.getHeight(changed.right)) + 1;
 		if (changed.parent != null) {
-			updateHeight(changed.parent);
+			this.updateHeight(changed.parent);
 		}
-	}
-
-	/**
-	 * Returns the AVL balance factor of the node. That is, 0 if the node is
-	 * null, or the height of the left subtree minus the height of the right
-	 * subtree. This should be -1, 0, or 1 unless the node needs to be
-	 * rebalanced.
-	 * 
-	 * @see #getHeight(BinaryTreeNode)
-	 * @param node the node to find the balance of
-	 * @return the nodes AVL balance factor
-	 */
-	protected int getBalance(BinaryTreeNode<T> node) {
-		if (node == null) {
-			return 0;
-		}
-		return getHeight(node.left) - getHeight(node.right);
-	}
-
-	/**
-	 * Returns the number of elements in this tree.
-	 * 
-	 * @return the data structures size
-	 */
-	public int size() {
-		return size;
 	}
 }
