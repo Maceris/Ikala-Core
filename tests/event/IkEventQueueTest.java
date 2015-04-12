@@ -336,11 +336,6 @@ public class IkEventQueueTest {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 
-	@Test
-	public void testContainsAll() {
-		Assert.fail("Not yet implemented"); // TODO
-	}
-
 	/**
 	 * Adds a single element to the queue, then removes it and ensures no
 	 * exceptions occurred.
@@ -360,17 +355,7 @@ public class IkEventQueueTest {
 		Assert.assertEquals(value, ((TestEvent) e).getValue(), 0);
 		Assert.assertEquals(1, this.instanceQueue.size(), 0);
 	}
-
-	@Test
-	public void testIkEventQueue() {
-		Assert.fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testIndexOf() {
-		Assert.fail("Not yet implemented"); // TODO
-	}
-
+	
 	/**
 	 * Ensures the queue starts empty, adds an item, checks its not empty,
 	 * empties it and then checks that it is empty again.
@@ -479,11 +464,6 @@ public class IkEventQueueTest {
 
 	@Test
 	public void testRemoveObject() {
-		Assert.fail("Not yet implemented"); // TODO
-	}
-
-	@Test
-	public void testRetainAll() {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 
