@@ -1,3 +1,15 @@
+com.ikalagaming.crypto
+com.ikalagaming.event
+com.ikalagaming.gui
+com.ikalagaming.gui.console
+com.ikalagaming.gui.console.events
+com.ikalagaming.localization
+com.ikalagaming.logging
+com.ikalagaming.logging.events
+com.ikalagaming.packages
+com.ikalagaming.packages.events
+com.ikalagaming.scripting
+com.ikalagaming.util
 crypto
 event
 gui.console
