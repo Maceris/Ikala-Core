@@ -3,7 +3,7 @@ package com.ikalagaming.event;
 /**
  * A listener that handles events.
  */
-public class EventListener {
+class EventListener {
 	private final Listener theListener;
 	private final EventExecutor theExecutor;
 

@@ -7,7 +7,7 @@ import java.util.Iterator;
 /**
  * Stores handlers per event. Based on lahwran's fevents.
  */
-public class HandlerList {
+class HandlerList {
 	/*
 	 * Handler list. This changes when register() and unregister() are called.
 	 * This is a HashSet for speed.

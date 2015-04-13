@@ -12,7 +12,7 @@ public class PackageSettings {
 	 * loaded. If this is false then packages must be enabled manually after
 	 * they are loaded.
 	 */
-	public static boolean ENABLE_ON_LOAD = true;
+	public static final boolean ENABLE_ON_LOAD = true;
 
 	/**
 	 * If the package manager should use events for altering packages. False if
@@ -22,33 +22,33 @@ public class PackageSettings {
 	 * alteration has its own individual setting if this is true. <br>
 	 * If no event system is available, defaults to direct access.
 	 */
-	public static boolean USE_EVENTS_FOR_ACCESS = true;
+	public static final boolean USE_EVENTS_FOR_ACCESS = true;
 
 	/**
 	 * True if the package manager should use an event to call the packages
 	 * onLoad method. False if it should call directly. Has no effect if
 	 * {@link #USE_EVENTS_FOR_ACCESS} is false.
 	 */
-	public static boolean USE_EVENTS_FOR_ON_LOAD = true;
+	public static final boolean USE_EVENTS_FOR_ON_LOAD = true;
 
 	/**
 	 * True if the package manager should use an event to call the packages
 	 * onUnload method. False if it should call directly. Has no effect if
 	 * {@link #USE_EVENTS_FOR_ACCESS} is false.
 	 */
-	public static boolean USE_EVENTS_FOR_ON_UNLOAD = true;
+	public static final boolean USE_EVENTS_FOR_ON_UNLOAD = true;
 
 	/**
 	 * True if the package manager should use an event to call the packages
 	 * enable method. False if it should call directly. Has no effect if
 	 * {@link #USE_EVENTS_FOR_ACCESS} is false.
 	 */
-	public static boolean USE_EVENTS_FOR_ENABLE = true;
+	public static final boolean USE_EVENTS_FOR_ENABLE = true;
 
 	/**
 	 * True if the package manager should use an event to call the packages
 	 * disable method. False if it should call directly. Has no effect if
 	 * {@link #USE_EVENTS_FOR_ACCESS} is false.
 	 */
-	public static boolean USE_EVENTS_FOR_DISABLE = true;
+	public static final boolean USE_EVENTS_FOR_DISABLE = true;
 }

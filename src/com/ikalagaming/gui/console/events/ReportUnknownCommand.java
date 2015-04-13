@@ -3,7 +3,7 @@ package com.ikalagaming.gui.console.events;
 import com.ikalagaming.event.Event;
 
 /**
- * A message needs to be sent to the console.
+ * A message that a command was unknown.
  *
  * @author Ches Burks
  *

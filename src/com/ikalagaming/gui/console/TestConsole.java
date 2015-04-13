@@ -1,4 +1,4 @@
-package gui.console;
+package com.ikalagaming.gui.console;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -8,18 +8,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ikalagaming.event.EventManager;
-import com.ikalagaming.gui.console.Console;
 
-public class ConsoleTest {
+class TestConsole {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		ConsoleTest.manager = new EventManager();
+		TestConsole.manager = new EventManager();
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		ConsoleTest.manager.shutdown();
+		TestConsole.manager.shutdown();
 	}
 
 	static EventManager manager;
@@ -37,7 +36,7 @@ public class ConsoleTest {
 
 	@Test
 	public void testConsole() {
-		Console console = new Console(ConsoleTest.manager);
+		Console console = new Console(TestConsole.manager);
 		console.onLoad();
 		console.enable();
 		Assert.fail("Not yet implemented"); // TODO

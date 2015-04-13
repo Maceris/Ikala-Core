@@ -8,7 +8,7 @@ import java.util.LinkedList;
  * @author Ches Burks
  *
  */
-public class CommandHistory {
+class CommandHistory {
 	private final int defaultMaxElements = 20;
 	private int maxElements;
 	private LinkedList<String> commands;

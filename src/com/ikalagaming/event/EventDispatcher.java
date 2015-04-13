@@ -12,7 +12,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-public class EventDispatcher extends Thread {
+class EventDispatcher extends Thread {
 
 	private IkEventQueue<Event> queue;
 

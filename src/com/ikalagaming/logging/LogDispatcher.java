@@ -12,7 +12,7 @@ import com.ikalagaming.logging.events.DisplayLog;
  * @author Ches Burks
  *
  */
-public class LogDispatcher extends Thread {
+class LogDispatcher extends Thread {
 
 	private LinkedList<String> queue;
 	private String currentStr;

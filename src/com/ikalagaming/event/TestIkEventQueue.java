@@ -1,4 +1,4 @@
-package event;
+package com.ikalagaming.event;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -10,16 +10,13 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ikalagaming.event.Event;
-import com.ikalagaming.event.IkEventQueue;
-
 /**
  * Unit tests for the IkEventQueue
  *
  * @author Ches Burks
  *
  */
-public class IkEventQueueTest {
+class TestIkEventQueue {
 
 	private static class InteractionThread extends Thread {
 		private boolean done = false;

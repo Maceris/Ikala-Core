@@ -382,6 +382,7 @@ public class PackageManager implements Package {
 	 * @param toLoad the package to load
 	 * @return true if the package was loaded properly, false otherwise
 	 */
+	@SuppressWarnings("unused")
 	public boolean loadPackage(Package toLoad) {
 		String loading =
 				SafeResourceLoader.getString("ALERT_PACKAGE_LOADING",
@@ -491,14 +492,14 @@ public class PackageManager implements Package {
 		 * String[] filenames; filenames = pluginFolder.list(); if (filenames ==
 		 * null) { // TOD O log error return false; } if (filenames.length == 0)
 		 * { // empty // TO DO log error return false; } filenames = null;
-		 *
+		 * 
 		 * ArrayList<File> files = new ArrayList<File>();
-		 *
+		 * 
 		 * // adds valid jar files to the list of files for (File f :
 		 * pluginFolder.listFiles()) { if (f.isDirectory()) { continue;// its a
 		 * folder } if (!f.getName().toLowerCase().endsWith(".jar")) {
 		 * continue;// its not a jar file } files.add(f); }
-		 *
+		 * 
 		 * if (files.size() == 0) { // TOD O log error return false; }
 		 */
 		/*
@@ -618,6 +619,7 @@ public class PackageManager implements Package {
 	 * @param toUnload The type of package to unload
 	 * @return true if the package was unloaded properly
 	 */
+	@SuppressWarnings("unused")
 	public boolean unloadPackage(String toUnload) {
 		String unloading =
 				SafeResourceLoader.getString("ALERT_PACKAGE_UNLOADING",

@@ -22,7 +22,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-public class PMEventListener implements Listener {
+class PMEventListener implements Listener {
 
 	private final String callMethod;
 	private final String onLoad;

@@ -7,7 +7,7 @@ package com.ikalagaming.util;
  * @param <T> the Type of object this node holds
  *
  */
-public class BinaryTreeNode<T extends Comparable<T>> {
+class BinaryTreeNode<T extends Comparable<T>> {
 	/**
 	 * The value stored in this node.
 	 */

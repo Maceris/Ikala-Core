@@ -1,8 +1,6 @@
-package crypto;
+package com.ikalagaming.crypto;
 
 import org.junit.Test;
-
-import com.ikalagaming.crypto.Hasher;
 
 /**
  * Contains tests for the hashing algorithm.
@@ -10,7 +8,7 @@ import com.ikalagaming.crypto.Hasher;
  * @author Ches Burks
  *
  */
-public class HasherTest {
+class TestHasher {
 	/**
 	 * Creates a hash for passwords and tests collisions and matching.
 	 */

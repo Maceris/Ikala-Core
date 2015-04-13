@@ -14,7 +14,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-public class ConsoleListener implements Listener {
+class ConsoleListener implements Listener {
 	private Console parent;
 
 	/**

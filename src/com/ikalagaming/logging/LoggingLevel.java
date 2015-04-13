@@ -94,8 +94,8 @@ public enum LoggingLevel {
 	 */
 	ALL("ALL", -10);
 
-	private String levelName;
-	private int levelValue;
+	private final String levelName;
+	private final int levelValue;
 
 	// for caching the names
 	private transient String localizedLevelName;

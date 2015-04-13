@@ -1,6 +1,5 @@
-package event;
+package com.ikalagaming.event;
 
-import com.ikalagaming.event.Event;
 
 /**
  * An event for testing purposes.
@@ -8,7 +7,7 @@ import com.ikalagaming.event.Event;
  * @author Ches Burks
  *
  */
-public class TestEvent extends Event {
+class TestEvent extends Event {
 
 	private final int value;
 

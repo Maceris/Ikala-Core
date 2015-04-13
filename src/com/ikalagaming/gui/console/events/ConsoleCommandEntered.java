@@ -3,7 +3,8 @@ package com.ikalagaming.gui.console.events;
 import com.ikalagaming.event.Event;
 
 /**
- * A message needs to be sent to the console.
+ * A message command was entered on the console. Informs the command registry
+ * that the command was typed.
  *
  * @author Ches Burks
  *
@@ -16,8 +17,7 @@ public class ConsoleCommandEntered extends Event {
 	private final String message;
 
 	/**
-	 * Prints a help message to the console stating the given command was not
-	 * recognized.
+	 * Informs the command registry that a command was typed into the console.
 	 *
 	 * @param cmd the command that was not known
 	 */

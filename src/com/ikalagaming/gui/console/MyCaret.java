@@ -14,7 +14,7 @@ import javax.swing.text.JTextComponent;
  * @author Ches Burks
  *
  */
-public class MyCaret extends DefaultCaret {
+class MyCaret extends DefaultCaret {
 
 	private static final long serialVersionUID = -389070432822516041L;
 

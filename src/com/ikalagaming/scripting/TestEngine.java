@@ -1,11 +1,9 @@
-package scripting;
+package com.ikalagaming.scripting;
 
 import javax.script.ScriptEngineFactory;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.ikalagaming.scripting.Engine;
 
 /**
  * Tests the functionality of the scripting engine class.
@@ -13,7 +11,7 @@ import com.ikalagaming.scripting.Engine;
  * @author Ches Burks
  *
  */
-public class EngineTest {
+class TestEngine {
 
 	/**
 	 * Displays the engine name and version and the language name and version.

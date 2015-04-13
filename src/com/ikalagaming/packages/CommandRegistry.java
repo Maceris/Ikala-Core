@@ -16,7 +16,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  *
  */
 public class CommandRegistry {
-
+	// TODO interact with the registry through the package manager
 	/**
 	 * A list of all of the commands registered. This list is sorted.
 	 */

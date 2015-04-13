@@ -7,7 +7,7 @@ package com.ikalagaming.packages;
  * @author Ches Burks
  *
  */
-public class PackageCommand implements Comparable<PackageCommand> {
+class PackageCommand implements Comparable<PackageCommand> {
 	private String command;
 	private Package owner;
 

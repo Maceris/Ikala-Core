@@ -3,7 +3,7 @@ package com.ikalagaming.event;
 /**
  * An interface for events call backs.
  */
-public interface EventExecutor {
+interface EventExecutor {
 
 	/**
 	 * Executes the event using a given {@link Listener listener}.
