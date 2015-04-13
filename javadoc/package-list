@@ -8,9 +8,7 @@ com.ikalagaming.logging
 com.ikalagaming.logging.events
 com.ikalagaming.packages
 com.ikalagaming.packages.events
+com.ikalagaming.packages.rng
+com.ikalagaming.permissions
 com.ikalagaming.scripting
 com.ikalagaming.util
-crypto
-event
-gui.console
-scripting
