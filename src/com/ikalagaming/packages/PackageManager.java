@@ -168,6 +168,27 @@ public class PackageManager implements Package {
 	}
 
 	/**
+	 * Deactivates the package and halts all of its operations. The package is
+	 * still loaded in memory but not active. Calls {@link #onDisable()}. This
+	 * should change the packages state to {@link PackageState#DISABLING
+	 * DISABLING}. If the disabling were done here and not in the
+	 * {@link #onDisable()} method, the package state should be changed to
+	 * {@link PackageState#DISABLED DISABLED} after completion. Otherwise the
+	 * change to DISABLED is handled in the onDisable method.
+	 *
+	 * @param target the name of the package to disable
+	 *
+	 * @return true if the package has been successfully disabled
+	 */
+	public boolean disable(String target) {
+		Package p = getPackage(target);
+		if (p == null) {
+			return true;
+		}
+		return this.disable(p);
+	}
+
+	/**
 	 * Activates the package and enables it to perform its normal functions.
 	 * Calls {@link #onEnable()}. This should change the package state to
 	 * {@link PackageState#ENABLING ENABLING}. If the enabling were done here
@@ -192,6 +213,26 @@ public class PackageManager implements Package {
 		PackageEnabled packEnabled = new PackageEnabled(target);
 		this.fireEvent(packEnabled);
 		return true;
+	}
+
+	/**
+	 * Activates the package and enables it to perform its normal functions.
+	 * Calls {@link #onEnable()}. This should change the package state to
+	 * {@link PackageState#ENABLING ENABLING}. If the enabling were done here
+	 * and not in the {@link #onEnable()} method, the package state should be
+	 * changed to {@link PackageState#ENABLED ENABLED} after completion.
+	 * Otherwise the change to ENABLED is handled in the onEnable method.
+	 *
+	 * @param target The name of the package to enable
+	 *
+	 * @return true if the package was successfully enabled
+	 */
+	public boolean enable(String target) {
+		Package p = getPackage(target);
+		if (p == null) {
+			return true;
+		}
+		return this.enable(p);
 	}
 
 	/**
@@ -316,6 +357,24 @@ public class PackageManager implements Package {
 			return true;
 		}
 		return false;
+
+	}
+
+	/**
+	 * Returns true if the package is enabled, and false otherwise. A state of
+	 * {@link PackageState#ENABLED ENABLED} returns true, any other states will
+	 * return false.
+	 *
+	 * @param target The name of package to check for enabled status
+	 *
+	 * @return true if the package is fully ready to operate
+	 */
+	public boolean isEnabled(String target) {
+		Package p = getPackage(target);
+		if (p == null) {
+			return false;
+		}
+		return isEnabled(p);
 	}
 
 	/**
