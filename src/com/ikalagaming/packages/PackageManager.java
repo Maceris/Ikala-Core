@@ -31,16 +31,33 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class PackageManager implements Package {
 
-	private EventManager eventManager;
-	private PMEventListener listener;
-	private HashSet<Listener> listeners;
-	/** maps strings to packages loaded in memory */
-	private HashMap<String, Package> loadedPackages;
-	private Map<Package, PackageState> packageStates;
-	private String packageName = "package-manager";
-	private ResourceBundle resourceBundle;
+	/**
+	 * Shuts down the static instance (unregisters commands and unloads
+	 * packages)if it exists, and then nullifies the reference to it. This
+	 * exists in case you wish to use your own instances of the Package Manager
+	 * and not use the single static instance provided. If the instance does not
+	 * exist, nothing happens. Note that a new static instance may be created if
+	 * the instance is requested later.
+	 *
+	 * @see #getInstance()
+	 * @see #getInstance(EventManager)
+	 */
+	public static void destoryInstance() {
+		if (PackageManager.instance == null) {
+			return;
+		}
+		for (String s : PackageManager.instance.loadedPackages.keySet()) {
+			PackageManager.instance.unloadPackage(s);
+		}
+		PackageManager.instance.clearCommands();
+		for (Listener l : PackageManager.instance.listeners) {
+			PackageManager.instance.eventManager.unregisterEventListeners(l);
+		}
+		PackageManager.instance.eventManager = null;
+		PackageManager.instance.commands = null;
 
-	private static PackageManager instance;
+		PackageManager.instance = null;
+	}
 
 	/**
 	 * Returns the static instance of the package manager. Since there should
@@ -79,33 +96,19 @@ public class PackageManager implements Package {
 		return PackageManager.instance;
 	}
 
-	/**
-	 * Shuts down the static instance (unregisters commands and unloads
-	 * packages)if it exists, and then nullifies the reference to it. This
-	 * exists in case you wish to use your own instances of the Package Manager
-	 * and not use the single static instance provided. If the instance does not
-	 * exist, nothing happens. Note that a new static instance may be created if
-	 * the instance is requested later.
-	 *
-	 * @see #getInstance()
-	 * @see #getInstance(EventManager)
-	 */
-	public static void destoryInstance() {
-		if (PackageManager.instance == null) {
-			return;
-		}
-		for (String s : PackageManager.instance.loadedPackages.keySet()) {
-			PackageManager.instance.unloadPackage(s);
-		}
-		PackageManager.instance.clearCommands();
-		for (Listener l : PackageManager.instance.listeners) {
-			PackageManager.instance.eventManager.unregisterEventListeners(l);
-		}
-		PackageManager.instance.eventManager = null;
-		PackageManager.instance.commands = null;
+	private EventManager eventManager;
+	private PMEventListener listener;
+	private HashSet<Listener> listeners;
+	/** maps strings to packages loaded in memory */
+	private HashMap<String, Package> loadedPackages;
 
-		PackageManager.instance = null;
-	}
+	private Map<Package, PackageState> packageStates;
+
+	private String packageName = "package-manager";
+
+	private ResourceBundle resourceBundle;
+
+	private static PackageManager instance;
 
 	/**
 	 * If packages should be enabled by the package manager when they are
@@ -113,6 +116,11 @@ public class PackageManager implements Package {
 	 * they are loaded.
 	 */
 	private boolean enableOnLoad;
+
+	/**
+	 * A list of all of the commands registered. This list is sorted.
+	 */
+	private ArrayList<PackageCommand> commands;
 
 	/**
 	 * Constructs a new {@link PackageManager} and initializes variables.
@@ -133,9 +141,36 @@ public class PackageManager implements Package {
 
 		this.listener = new PMEventListener(this);
 		this.listeners.add(this.listener);
+		this.commands = new ArrayList<>();
 
 		this.loadCorePackages();
 		this.registerCommands();
+	}
+
+	/**
+	 * Unregisters all commands
+	 */
+	public void clearCommands() {
+		for (PackageCommand s : this.commands) {
+			this.unregisterCommand(s.getCommand());
+		}
+		this.commands.clear();
+	}
+
+	/**
+	 * Returns true if the array contains the given string.
+	 *
+	 * @param s the string to look for
+	 * @return true if the string exists
+	 */
+	public boolean containsCommand(String s) {
+		int i;
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -181,7 +216,7 @@ public class PackageManager implements Package {
 	 * @return true if the package has been successfully disabled
 	 */
 	public boolean disable(String target) {
-		Package p = getPackage(target);
+		Package p = this.getPackage(target);
 		if (p == null) {
 			return true;
 		}
@@ -228,7 +263,7 @@ public class PackageManager implements Package {
 	 * @return true if the package was successfully enabled
 	 */
 	public boolean enable(String target) {
-		Package p = getPackage(target);
+		Package p = this.getPackage(target);
 		if (p == null) {
 			return true;
 		}
@@ -273,6 +308,50 @@ public class PackageManager implements Package {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Returns the package that registered the given string, or null if it
+	 * cannot be found.
+	 *
+	 * @param s the string to look for
+	 * @return the owner of the command
+	 */
+	public Package getCommandParent(String s) {
+		int i;
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				return this.commands.get(i).getOwner();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a clone of the commands list.
+	 *
+	 * @return a copy of the stored list
+	 */
+	@SuppressWarnings("unchecked")
+	public ArrayList<PackageCommand> getCommands() {
+		return (ArrayList<PackageCommand>) this.commands.clone();
+	}
+
+	/**
+	 * Returns the index of the given string if it exists. If it is not in the
+	 * array, returns -1.
+	 *
+	 * @param s the string to look for
+	 * @return the index of the string
+	 */
+	private int getIndexOfCommand(String s) {
+		int i;
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	@Override
@@ -370,11 +449,11 @@ public class PackageManager implements Package {
 	 * @return true if the package is fully ready to operate
 	 */
 	public boolean isEnabled(String target) {
-		Package p = getPackage(target);
+		Package p = this.getPackage(target);
 		if (p == null) {
 			return false;
 		}
-		return isEnabled(p);
+		return this.isEnabled(p);
 	}
 
 	/**
@@ -407,7 +486,7 @@ public class PackageManager implements Package {
 	 * initialization.
 	 */
 	private void loadCorePackages() {
-		LoggingPackage loggingPack = new LoggingPackage();
+		LoggingPackage loggingPack = new LoggingPackage(this);
 		// TODO handle all this on creation
 		this.loadedPackages.put(loggingPack.getName(), loggingPack);
 
@@ -566,14 +645,14 @@ public class PackageManager implements Package {
 		 * String[] filenames; filenames = pluginFolder.list(); if (filenames ==
 		 * null) { // TOD O log error return false; } if (filenames.length == 0)
 		 * { // empty // TO DO log error return false; } filenames = null;
-		 * 
+		 *
 		 * ArrayList<File> files = new ArrayList<File>();
-		 * 
+		 *
 		 * // adds valid jar files to the list of files for (File f :
 		 * pluginFolder.listFiles()) { if (f.isDirectory()) { continue;// its a
 		 * folder } if (!f.getName().toLowerCase().endsWith(".jar")) {
 		 * continue;// its not a jar file } files.add(f); }
-		 * 
+		 *
 		 * if (files.size() == 0) { // TOD O log error return false; }
 		 */
 		/*
@@ -600,6 +679,45 @@ public class PackageManager implements Package {
 
 	@Override
 	public boolean onUnload() {
+		return true;
+	}
+
+	/**
+	 * Attempts to register the command for the given class. If the command
+	 * already exists, an error is logged and the method returns false.
+	 *
+	 * @param command the command to register
+	 * @param owner what package is registering the command
+	 * @return true if the command registered successfully
+	 */
+	public boolean registerCommand(String command, Package owner) {
+		if (this.containsCommand(command)) {
+			int index = this.getIndexOfCommand(command);
+			String msg =
+					SafeResourceLoader
+							.getString("COMMAND_ALREADY_REGISTERED",
+									this.getResourceBundle(),
+									"Command $COMMAND is already registered to $PACKAGE");
+			msg = msg.replaceFirst("\\$COMMAND", command);
+			msg =
+					msg.replaceFirst("\\$PACKAGE", this.commands.get(index)
+							.getOwner().getName());
+			LogError err =
+					new LogError(msg, LoggingLevel.WARNING, this.getName());
+			this.fireEvent(err);
+			return false;
+		}
+		PackageCommand cmd = new PackageCommand(command, owner);
+		this.commands.add(cmd);
+		String msg =
+				SafeResourceLoader.getString("REGISTERED_COMMAND",
+						this.getResourceBundle(),
+						"Registered command $COMMAND to $PACKAGE");
+		msg = msg.replaceFirst("\\$COMMAND", command);
+		msg = msg.replaceFirst("\\$PACKAGE", owner.getName());
+		Log log = new Log(msg, LoggingLevel.FINEST, this.getName());
+		this.fireEvent(log);
+		java.util.Collections.sort(this.commands);
 		return true;
 	}
 
@@ -775,120 +893,6 @@ public class PackageManager implements Package {
 
 		this.eventManager.fireEvent(new Log(unloaded, LoggingLevel.FINE, this));
 
-		return true;
-	}
-
-	/**
-	 * A list of all of the commands registered. This list is sorted.
-	 */
-	private ArrayList<PackageCommand> commands;
-
-	/**
-	 * Unregisters all commands
-	 */
-	public void clearCommands() {
-		for (PackageCommand s : this.commands) {
-			this.unregisterCommand(s.getCommand());
-		}
-		this.commands.clear();
-	}
-
-	/**
-	 * Returns true if the array contains the given string.
-	 *
-	 * @param s the string to look for
-	 * @return true if the string exists
-	 */
-	public boolean containsCommand(String s) {
-		int i;
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Returns a clone of the commands list.
-	 *
-	 * @return a copy of the stored list
-	 */
-	@SuppressWarnings("unchecked")
-	public ArrayList<PackageCommand> getCommands() {
-		return (ArrayList<PackageCommand>) this.commands.clone();
-	}
-
-	/**
-	 * Returns the index of the given string if it exists. If it is not in the
-	 * array, returns -1.
-	 *
-	 * @param s the string to look for
-	 * @return the index of the string
-	 */
-	private int getIndexOfCommand(String s) {
-		int i;
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				return i;
-			}
-		}
-		return -1;
-	}
-
-	/**
-	 * Returns the package that registered the given string, or null if it
-	 * cannot be found.
-	 *
-	 * @param s the string to look for
-	 * @return the owner of the command
-	 */
-	public Package getCommandParent(String s) {
-		int i;
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				return this.commands.get(i).getOwner();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Attempts to register the command for the given class. If the command
-	 * already exists, an error is logged and the method returns false.
-	 *
-	 * @param command the command to register
-	 * @param owner what package is registering the command
-	 * @return true if the command registered successfully
-	 */
-	public boolean registerCommand(String command, Package owner) {
-		if (this.containsCommand(command)) {
-			int index = this.getIndexOfCommand(command);
-			String msg =
-					SafeResourceLoader
-							.getString("COMMAND_ALREADY_REGISTERED",
-									this.getResourceBundle(),
-									"Command $COMMAND is already registered to $PACKAGE");
-			msg = msg.replaceFirst("\\$COMMAND", command);
-			msg =
-					msg.replaceFirst("\\$PACKAGE", this.commands.get(index)
-							.getOwner().getName());
-			LogError err =
-					new LogError(msg, LoggingLevel.WARNING, this.getName());
-			this.fireEvent(err);
-			return false;
-		}
-		PackageCommand cmd = new PackageCommand(command, owner);
-		this.commands.add(cmd);
-		String msg =
-				SafeResourceLoader.getString("REGISTERED_COMMAND",
-						this.getResourceBundle(),
-						"Registered command $COMMAND to $PACKAGE");
-		msg = msg.replaceFirst("\\$COMMAND", command);
-		msg = msg.replaceFirst("\\$PACKAGE", owner.getName());
-		Log log = new Log(msg, LoggingLevel.FINEST, this.getName());
-		this.fireEvent(log);
-		java.util.Collections.sort(this.commands);
 		return true;
 	}
 
