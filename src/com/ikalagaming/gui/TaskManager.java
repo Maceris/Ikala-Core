@@ -27,7 +27,6 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import com.ikalagaming.event.EventManager;
 import com.ikalagaming.packages.PackageManager;
 import com.ikalagaming.packages.PackageState;
 
@@ -89,18 +88,14 @@ public class TaskManager extends JFrame {
 	private long percentUsed = 0;
 
 	private PackageManager packageManager;
-	private EventManager eventManager;
-
 	/**
 	 * Create the frame.
 	 * 
 	 * @param packageMgr the package manager to list packages for
-	 * @param eventMgr The event system to listen and send to
 	 *
 	 */
-	public TaskManager(PackageManager packageMgr, EventManager eventMgr) {
+	public TaskManager(PackageManager packageMgr) {
 		this.packageManager = packageMgr;
-		this.eventManager = eventMgr;
 		this.setTitle("Task Manager");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBounds(100, 100, 450, 465);
@@ -272,20 +267,20 @@ public class TaskManager extends JFrame {
 			return;
 		}
 		if (change == "Enable") {
-			if (!pack.isEnabled()) {
-				pack.enable();
+			if (!packageManager.isEnabled(pack)) {
+				packageManager.enable(pack);
 			}
 		}
 		else if (change == "Disable") {
-			if (pack.isEnabled()) {
-				pack.disable();
+			if (packageManager.isEnabled(pack)) {
+				packageManager.disable(pack);
 			}
 		}
 		else if (change == "Unload") {
-			pack.onUnload();
+			packageManager.unloadPackage(pack);
 		}
 		else if (change == "Reload") {
-			pack.reload();
+			packageManager.reload(pack);
 		}
 
 	}
@@ -313,7 +308,9 @@ public class TaskManager extends JFrame {
 		String name = "";
 		for (int i = 0; i < this.model.getRowCount(); ++i) {
 			name = (String) this.model.getValueAt(i, 0);
-			currentState = packageManager.getPackage(name).getPackageState();
+			currentState =
+					packageManager.getPackageState(packageManager
+							.getPackage(name));
 			if (!this.model.getValueAt(i, 1).equals(currentState)) {
 				this.model.setValueAt(currentState, i, 1);
 			}
@@ -336,8 +333,8 @@ public class TaskManager extends JFrame {
 		Set<String> packageNames = packageManager.getLoadedPackages().keySet();
 		for (String s : packageNames) {
 			if (!this.packages.containsKey(s)) {
-				this.packages.put(s, packageManager.getPackage(s)
-						.getPackageState());
+				this.packages.put(s, packageManager
+						.getPackageState(packageManager.getPackage(s)));
 				boolean exists = false;
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {
@@ -364,6 +361,7 @@ public class TaskManager extends JFrame {
 		packageNames = null;
 
 	}
+
 	private static class Updater extends Thread {
 		TaskManager owner;
 
@@ -386,5 +384,3 @@ public class TaskManager extends JFrame {
 		}
 	}
 }
-
-

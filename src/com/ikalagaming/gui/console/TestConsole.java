@@ -9,19 +9,36 @@ import org.junit.Test;
 
 import com.ikalagaming.event.EventManager;
 
+/**
+ * Tests the functionality of the console class.
+ * 
+ * @author Ches Burks
+ *
+ */
 class TestConsole {
 
+	/**
+	 * Creates an event manager for the console test class.
+	 * 
+	 * @throws Exception if there is an exception setting up the console.
+	 */
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		TestConsole.manager = new EventManager();
 	}
 
+	/**
+	 * Shuts down the event manager for the console test class.
+	 * 
+	 * @throws Exception If there is an error shutting down the event manager
+	 */
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		TestConsole.manager.shutdown();
 	}
 
-	static EventManager manager;
+	private static EventManager manager;
+	private Console console;
 
 	@Before
 	public void setUp() throws Exception {}
@@ -34,12 +51,12 @@ class TestConsole {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 
+	/**
+	 * Tests the consoles constructor.
+	 */
 	@Test
 	public void testConsole() {
 		Console console = new Console(TestConsole.manager);
-		console.onLoad();
-		console.enable();
-		Assert.fail("Not yet implemented"); // TODO
 	}
 
 	@Test

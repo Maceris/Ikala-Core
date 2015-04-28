@@ -1,9 +1,9 @@
 package com.ikalagaming.logging;
 
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
 import com.ikalagaming.event.EventManager;
+import com.ikalagaming.event.IkEventQueue;
 import com.ikalagaming.logging.events.DisplayLog;
 
 /**
@@ -14,7 +14,7 @@ import com.ikalagaming.logging.events.DisplayLog;
  */
 class LogDispatcher extends Thread {
 
-	private LinkedList<String> queue;
+	private IkEventQueue<String> queue;
 	private String currentStr;
 	private boolean running;
 	private boolean hasLogs;
@@ -30,7 +30,7 @@ class LogDispatcher extends Thread {
 	public LogDispatcher(EventManager eventManager) {
 		this.setName("LogDispatcher");
 		this.manager = eventManager;
-		this.queue = new LinkedList<>();
+		this.queue = new IkEventQueue<>();
 		this.hasLogs = false;
 		this.running = true;
 	}

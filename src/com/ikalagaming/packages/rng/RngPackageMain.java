@@ -7,7 +7,7 @@ import java.util.Set;
 
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.packages.Package;
-import com.ikalagaming.packages.PackageState;
+import com.ikalagaming.packages.PackageManager;
 
 /**
  * The main interface for the rng package.
@@ -20,21 +20,7 @@ public class RngPackageMain implements Package, Listener {
 	private Generator gen;
 	private final double version = 0.1;
 	private final String packageName = "rng";
-	private PackageState state = PackageState.DISABLED;
-
-	@Override
-	public boolean disable() {
-		this.setPackageState(PackageState.DISABLING);
-		this.onDisable();
-		return true;
-	}
-
-	@Override
-	public boolean enable() {
-		this.setPackageState(PackageState.ENABLING);
-		this.onEnable();
-		return true;
-	}
+	private boolean enabled = false;
 
 	/**
 	 * Returns a random {@link Boolean boolean} if the package is enabled.
@@ -43,7 +29,7 @@ public class RngPackageMain implements Package, Listener {
 	 * @return a boolean
 	 */
 	public boolean getBoolean() {
-		if (!this.isEnabled()) {
+		if (!PackageManager.getInstance().isEnabled(this)) {
 			return false;
 		}
 		return this.gen.getBoolean();
@@ -59,7 +45,7 @@ public class RngPackageMain implements Package, Listener {
 	 * @return a boolean
 	 */
 	public boolean getBoolean(float probablilty) {
-		if (!this.isEnabled()) {
+		if (!this.enabled) {
 			return false;
 		}
 		return this.gen.getBoolean(probablilty);
@@ -73,7 +59,7 @@ public class RngPackageMain implements Package, Listener {
 	 * @return a random float
 	 */
 	public float getFloat() {
-		if (!this.isEnabled()) {
+		if (!this.enabled) {
 			return 0;
 		}
 		return this.gen.getFloat();
@@ -87,7 +73,7 @@ public class RngPackageMain implements Package, Listener {
 	 * @return a random int
 	 */
 	public int getInt() {
-		if (!this.isEnabled()) {
+		if (!this.enabled) {
 			return 0;
 		}
 		return this.gen.getInt();
@@ -104,7 +90,7 @@ public class RngPackageMain implements Package, Listener {
 	 * @return a random integer
 	 */
 	public int getIntBetween(int min, int max) {
-		if (!this.isEnabled()) {
+		if (!this.enabled) {
 			return 0;
 		}
 		return this.gen.getIntBetween(min, max);
@@ -121,73 +107,36 @@ public class RngPackageMain implements Package, Listener {
 	}
 
 	@Override
-	public PackageState getPackageState() {
-		synchronized (this.state) {
-			return this.state;
-		}
-	}
-
-	@Override
 	public double getVersion() {
 		return this.version;
 	}
 
 	@Override
-	public boolean isEnabled() {
-		if (this.getPackageState() == PackageState.ENABLED) {
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public void onDisable() {
+	public boolean onDisable() {
 		this.gen = null;
-		this.setPackageState(PackageState.DISABLED);
+		this.enabled = false;
+		return true;
 	}
 
 	@Override
-	public void onEnable() {
+	public boolean onEnable() {
 		SecureRandom sec = new SecureRandom();
 		byte[] sbuf = sec.generateSeed(8);
 		ByteBuffer bb = ByteBuffer.wrap(sbuf);
 		long seed = bb.getLong();
 		this.gen = new Generator((int) seed);
-		this.setPackageState(PackageState.ENABLED);
+		this.enabled = true;
+		return true;
 	}
 
 	@Override
-	public void onLoad() {
-		this.setPackageState(PackageState.LOADING);
-		this.setPackageState(PackageState.DISABLED);
+	public boolean onLoad() {
+		return true;
 	}
 
 	@Override
-	public void onUnload() {
-		this.setPackageState(PackageState.UNLOADING);
-		if (this.isEnabled()) {
-			this.disable();
-			this.setPackageState(PackageState.UNLOADING);
-		}
-		this.setPackageState(PackageState.PENDING_REMOVAL);
-	}
-
-	@Override
-	public boolean reload() {
-		this.setPackageState(PackageState.UNLOADING);
-		if (this.isEnabled()) {
-			this.disable();
-			this.setPackageState(PackageState.UNLOADING);
-		}
-		this.onLoad();
-		return false;
-	}
-
-	@Override
-	public void setPackageState(PackageState newState) {
-		synchronized (this.state) {
-			this.state = newState;
-		}
+	public boolean onUnload() {
+		return true;
 	}
 
 }

@@ -28,9 +28,6 @@ class TestRngPackageMain {
 				0.0);
 
 		pack.onLoad();
-		pack.enable();
-
-		pack.disable();
 		pack.onUnload();
 
 	}

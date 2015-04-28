@@ -10,4 +10,20 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EventHandler {}
+public @interface EventHandler {
+
+	/**
+	 * Define the priority of the event handler.
+	 * <p>
+	 * Order of execution from first to last:
+	 * <ol>
+	 * <li>LOWEST
+	 * <li>LOW
+	 * <li>NORMAL
+	 * <li>HIGH
+	 * <li>HIGHEST
+	 * <li>MONITOR
+	 * </ol>
+	 */
+	EventPriority priority() default EventPriority.NORMAL;
+}

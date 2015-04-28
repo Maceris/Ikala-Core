@@ -16,8 +16,44 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class EventManager {
 
+	/**
+	 * Shuts down the static instance if it exists, and then nullifies the
+	 * reference to it. This exists in case you wish to use your own instances
+	 * of the Event Manager and not use the single static instance provided. If
+	 * the instance does not exist, nothing happens. Note that a new static
+	 * instance may be created if the instance is requested later.
+	 *
+	 * @see EventManager#getInstance()
+	 */
+	public static void destoryInstance() {
+		if (EventManager.instance == null) {
+			return;
+		}
+		EventManager.instance.shutdown();
+		EventManager.instance = null;
+	}
+
+	/**
+	 * Returns the static instance of the event manager. Since there should only
+	 * be one of these, having a static instance is fine and any class can get
+	 * the instance which all other classes should share. If there is no
+	 * instance yet, one will be created.
+	 *
+	 * @return the static instance of the Event Manager
+	 * @see EventManager#destoryInstance()
+	 */
+	public static EventManager getInstance() {
+		if (EventManager.instance == null) {
+			EventManager.instance = new EventManager();
+		}
+		return EventManager.instance;
+	}
+
 	private EventDispatcher dispatcher;
+
 	private HashMap<Class<? extends Event>, HandlerList> handlerMap;
+
+	private static EventManager instance;
 
 	/**
 	 * Sets up the event managers handlers and event dispatching and starts the
@@ -97,7 +133,8 @@ public class EventManager {
 				}
 			};
 
-			eventSet.add(new EventListener(listener, executor));
+			eventSet.add(new EventListener(listener, executor,
+					handlerAnnotation.priority()));
 
 		}
 		return toReturn;
@@ -206,7 +243,7 @@ public class EventManager {
 	 */
 	public void unregisterEventListeners(Listener listener) {
 		for (HandlerList list : this.handlerMap.values()) {
-			list.unregisterAll(listener);
+			list.unregister(listener);
 		}
 	}
 }

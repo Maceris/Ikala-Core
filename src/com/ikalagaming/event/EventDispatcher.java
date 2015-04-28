@@ -16,8 +16,6 @@ class EventDispatcher extends Thread {
 
 	private IkEventQueue<Event> queue;
 
-	private HandlerList handlers;
-	private EventListener[] listeners;
 	private EventManager eventManager;
 
 	private boolean running;
@@ -38,10 +36,11 @@ class EventDispatcher extends Thread {
 	}
 
 	private void dispatch(Event event) {
-		this.handlers = this.eventManager.getHandlers(event);
-		if (this.handlers != null) {
-			this.listeners = this.handlers.getRegisteredListeners();
-			for (EventListener registration : this.listeners) {
+		HandlerList handlers = this.eventManager.getHandlers(event);
+		if (handlers != null) {
+
+			EventListener[] listeners = handlers.getRegisteredListeners();
+			for (EventListener registration : listeners) {
 				try {
 					registration.callEvent(event);
 				}

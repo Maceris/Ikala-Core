@@ -56,6 +56,12 @@ public enum PackageState {
 	 * be partially loaded/enabled or unloaded/disabled. The system will attempt
 	 * to fix the problem, but if it cannot then the package will be removed.
 	 */
-	CORRUPTED;
+	CORRUPTED,
+	/**
+	 * The package does not exist as far as the manager is concerned. If the
+	 * package state of a non-existent package is requested, this is the value
+	 * that is returned.
+	 */
+	NOT_LOADED;
 
 }

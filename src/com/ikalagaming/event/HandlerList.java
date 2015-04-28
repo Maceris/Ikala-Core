@@ -1,18 +1,18 @@
 package com.ikalagaming.event;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.EnumMap;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 /**
  * Stores handlers per event. Based on lahwran's fevents.
  */
 class HandlerList {
-	/*
-	 * Handler list. This changes when register() and unregister() are called.
-	 * This is a HashSet for speed.
-	 */
-	private HashSet<EventListener> handlerslots;
+
+	private final EnumMap<EventPriority, ArrayDeque<EventListener>> handlerSlots;
+
 	private EventListener[] bakedList;
 
 	/**
@@ -20,7 +20,10 @@ class HandlerList {
 	 * HandlerList is then added to meta-list for use in bakeAll().
 	 */
 	public HandlerList() {
-		this.handlerslots = new HashSet<>();
+		this.handlerSlots = new EnumMap<>(EventPriority.class);
+		for (EventPriority o : EventPriority.values()) {
+			this.handlerSlots.put(o, new ArrayDeque<EventListener>());
+		}
 		this.bakedList = new EventListener[0];
 	}
 
@@ -29,8 +32,18 @@ class HandlerList {
 	 * the hashset changes and saves on memory.
 	 */
 	private synchronized void bake() {
-		this.bakedList = new EventListener[this.handlerslots.size()];
-		this.bakedList = this.handlerslots.toArray(this.bakedList);
+		if (this.bakedList != null) {
+			return;// The list is still valid, so do not bake it again
+		}
+		// A temporary list of entries
+		ArrayDeque<EventListener> entries = new ArrayDeque<>();
+		// add all of the listeners, in priority order, to the entries list
+		for (Entry<EventPriority, ArrayDeque<EventListener>> entry : this.handlerSlots
+				.entrySet()) {
+			entries.addAll(entry.getValue());
+		}
+		// bake the list into an array
+		this.bakedList = entries.toArray(new EventListener[entries.size()]);
 	}
 
 	/**
@@ -39,7 +52,11 @@ class HandlerList {
 	 * @return The listeners registered
 	 */
 	public EventListener[] getRegisteredListeners() {
-		return this.bakedList;
+		EventListener[] handlers;
+		while ((handlers = this.bakedList) == null) {
+			this.bake(); // This prevents fringe cases of returning null
+		}
+		return handlers;
 	}
 
 	/**
@@ -49,14 +66,14 @@ class HandlerList {
 	 * @throws IllegalStateException if the listener is already registered
 	 */
 	public synchronized void register(EventListener listener) {
-		if (this.handlerslots.contains(listener)) {
-			IllegalStateException excep =
-					new IllegalStateException(
-							"This listener is already registered");
-			throw excep;
+		if (this.handlerSlots.get(listener.getPriority()).contains(listener)) {
+			// TODO localize this error
+			throw new IllegalStateException(
+					"This listener is already registered to priority "
+							+ listener.getPriority().toString());
 		}
-		this.handlerslots.add(listener);
-		this.bake();
+		this.bakedList = null;
+		this.handlerSlots.get(listener.getPriority()).add(listener);
 	}
 
 	/**
@@ -68,7 +85,6 @@ class HandlerList {
 		for (EventListener listener : listeners) {
 			this.register(listener);
 		}
-		this.bake();
 	}
 
 	/**
@@ -77,47 +93,40 @@ class HandlerList {
 	 * @param listener The listener to unregister
 	 */
 	public synchronized void unregister(EventListener listener) {
-		this.handlerslots.remove(listener);
-		this.bake();
+		if (this.handlerSlots.get(listener.getPriority()).remove(listener)) {
+			this.bakedList = null;
+		}
 	}
 
 	/**
 	 * Remove a specific listener from this handler
 	 *
-	 * @param listener the Listener to unregister
+	 * @param listener listener to remove
 	 */
 	public synchronized void unregister(Listener listener) {
-
-		// loop through and unregister a listener from the list if it
-		// matches the param
-		for (Iterator<EventListener> i = this.handlerslots.iterator(); i
-				.hasNext();) {
-			if (i.next().getListener().equals(listener)) {
-				i.remove();
+		boolean changed = false;
+		for (ArrayDeque<EventListener> list : this.handlerSlots.values()) {
+			for (Iterator<EventListener> i = list.iterator(); i.hasNext();) {
+				if (i.next().getListener().equals(listener)) {
+					i.remove();
+					changed = true;
+				}
 			}
 		}
-		this.bake();
+		if (changed) {
+			this.bakedList = null;
+		}
 	}
 
 	/**
 	 * Unregisters all handlers.
 	 */
 	public void unregisterAll() {
-		synchronized (this.handlerslots) {
-			this.handlerslots.clear();
-			this.bake();
-		}
-	}
-
-	/**
-	 * Unregister a specific listener from the handler list.
-	 *
-	 * @param listener The listener to unregister
-	 */
-	public void unregisterAll(Listener listener) {
-		synchronized (this.handlerslots) {
-			this.handlerslots.remove(listener);
-			this.bake();
+		synchronized (this.handlerSlots) {
+			for (ArrayDeque<EventListener> list : this.handlerSlots.values()) {
+				list.clear();
+			}
+			this.bakedList = null;
 		}
 	}
 

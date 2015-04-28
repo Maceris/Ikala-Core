@@ -35,7 +35,6 @@ import com.ikalagaming.logging.LoggingLevel;
 import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.logging.events.LogError;
 import com.ikalagaming.packages.Package;
-import com.ikalagaming.packages.PackageState;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -191,7 +190,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 */
 	CommandHistory history;
 	private String packageName = "console";
-	private PackageState state = PackageState.DISABLED;
 	private final double version = 0.2;
 	private EventManager eventManager;
 
@@ -238,12 +236,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * @param message The message to append
 	 */
 	public synchronized void appendMessage(String message) {
-		if (!this.isEnabled()) {
-			this.eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"not_enabled", this.getResourceBundle(),
-					"Console is not enabled"), LoggingLevel.SEVERE, this));
-			return;
-		}
 		// should this not be synchronized?
 		// it seems like it could be a choke point for speed. -CB
 
@@ -322,31 +314,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		this.moveLeft();
 	}
 
-	@Override
-	public boolean disable() {
-		this.setPackageState(PackageState.DISABLING);
-
-		this.onDisable();
-		return true;
-	}
-
-	@Override
-	public boolean enable() {
-
-		this.setPackageState(PackageState.ENABLING);
-
-		Runnable myrunnable = new Runnable() {
-			@Override
-			public void run() {
-				Console.this.onEnable();
-			}
-		};
-		new Thread(myrunnable).start();// Call it when you need to run the
-		// function
-
-		return true;
-	}
-
 	/**
 	 * Get the String from the clipboard.
 	 *
@@ -409,13 +376,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	@Override
 	public String getName() {
 		return this.packageName;
-	}
-
-	@Override
-	public PackageState getPackageState() {
-		synchronized (this.state) {
-			return this.state;
-		}
 	}
 
 	/**
@@ -567,16 +527,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		this.frame.setVisible(true);
 	}
 
-	@Override
-	public boolean isEnabled() {
-
-		if (this.getPackageState() == PackageState.ENABLED) {
-			return true;
-		}
-		return false;
-
-	}
-
 	/**
 	 * Empty implementation of the ClipboardOwner interface.
 	 */
@@ -643,27 +593,21 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	}
 
 	@Override
-	public void onDisable() {
+	public boolean onDisable() {
 		this.frame.setVisible(false);
 		this.frame.dispose();
-
-		this.setPackageState(PackageState.DISABLED);
-
+		return true;
 	}
 
 	@Override
-	public void onEnable() {
+	public boolean onEnable() {
 		this.init();
 		this.appendIndicatorChar();
-
-		this.setPackageState(PackageState.ENABLED);
-
+		return true;
 	}
 
 	@Override
-	public void onLoad() {
-
-		this.setPackageState(PackageState.LOADING);
+	public boolean onLoad() {
 
 		try {
 			this.setResourceBundle(ResourceBundle.getBundle(
@@ -681,22 +625,11 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 				SafeResourceLoader.getString("title", this.getResourceBundle(),
 						"Console");
 
-		this.setPackageState(PackageState.DISABLED);
-
+		return true;
 	}
 
 	@Override
-	public void onUnload() {
-
-		this.setPackageState(PackageState.UNLOADING);
-
-		if (this.getPackageState() == PackageState.ENABLED) {
-			this.disable();
-
-			this.setPackageState(PackageState.UNLOADING);
-
-		}
-
+	public boolean onUnload() {
 		if (this.frame != null) {
 			this.frame.setVisible(false);
 			this.frame.dispose();
@@ -704,25 +637,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		}
 		this.setResourceBundle(null);
 		this.history = null;
-
-		this.setPackageState(PackageState.PENDING_REMOVAL);
-
-	}
-
-	@Override
-	public boolean reload() {
-		// TODO does this even work?
-		this.setPackageState(PackageState.UNLOADING);
-
-		if (this.frame != null) {
-			this.frame.setVisible(false);
-			this.frame.dispose();
-			this.frame = null;
-		}
-		this.setResourceBundle(null);
-		this.history = null;
-
-		this.onLoad();
 		return true;
 	}
 
@@ -816,13 +730,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 */
 	public void setMaxLineCount(int newMaxLines) {
 		this.maxLineCount = newMaxLines;
-	}
-
-	@Override
-	public void setPackageState(PackageState newState) {
-		synchronized (this.state) {
-			this.state = newState;
-		}
 	}
 
 	private void setResourceBundle(ResourceBundle newBundle) {

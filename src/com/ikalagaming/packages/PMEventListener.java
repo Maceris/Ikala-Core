@@ -11,9 +11,10 @@ import com.ikalagaming.gui.console.events.ConsoleMessage;
 import com.ikalagaming.gui.console.events.ReportUnknownCommand;
 import com.ikalagaming.logging.LoggingLevel;
 import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.logging.events.LogError;
 import com.ikalagaming.packages.events.PackageCommandSent;
-import com.ikalagaming.packages.events.PackageEvent;
+import com.ikalagaming.packages.events.PackageDisabled;
+import com.ikalagaming.packages.events.PackageEnabled;
+import com.ikalagaming.packages.events.PackageLoaded;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -23,12 +24,6 @@ import com.ikalagaming.util.SafeResourceLoader;
  *
  */
 class PMEventListener implements Listener {
-
-	private final String callMethod;
-	private final String onLoad;
-	private final String onUnload;
-	private final String enable;
-	private final String disable;
 
 	private String cmd_help;
 	private String cmd_packages;
@@ -48,21 +43,6 @@ class PMEventListener implements Listener {
 	 */
 	public PMEventListener(PackageManager parent) {
 		this.manager = parent;
-		this.callMethod =
-				SafeResourceLoader.getString("CMD_CALL",
-						this.manager.getResourceBundle(), "call");
-		this.onLoad =
-				SafeResourceLoader.getString("ARG_ON_LOAD",
-						this.manager.getResourceBundle(), "onLoad");
-		this.onUnload =
-				SafeResourceLoader.getString("ARG_ON_UNLOAD",
-						this.manager.getResourceBundle(), "onUnload");
-		this.enable =
-				SafeResourceLoader.getString("ARG_ENABLE",
-						this.manager.getResourceBundle(), "enable");
-		this.disable =
-				SafeResourceLoader.getString("ARG_DISABLE",
-						this.manager.getResourceBundle(), "disable");
 
 		this.cmd_help =
 				SafeResourceLoader.getString("COMMAND_HELP",
@@ -114,7 +94,7 @@ class PMEventListener implements Listener {
 			// stop right here. It does not exist
 			return;
 		}
-		if (!pack.isEnabled()) {
+		if (!this.manager.isEnabled(pack)) {
 			tmp =
 					SafeResourceLoader.getString("package_disable_fail",
 							this.manager.getResourceBundle(),
@@ -123,9 +103,7 @@ class PMEventListener implements Listener {
 			this.manager.fireEvent(message);
 			return;
 		}
-		// unload the package
-		this.manager.fireEvent(new PackageEvent("package-manager", packageName,
-				this.callMethod + " " + this.disable));
+		this.manager.disable(pack);
 	}
 
 	/**
@@ -182,12 +160,12 @@ class PMEventListener implements Listener {
 	public void onConsoleCommandEntered(ConsoleCommandEntered event) {
 
 		String firstWord = event.getCommand().trim().split("\\s+")[0];
-		if (!this.manager.getCommandRegistry().contains(firstWord)) {
+		if (!this.manager.containsCommand(firstWord)) {
 			ReportUnknownCommand report = new ReportUnknownCommand(firstWord);
 			this.manager.fireEvent(report);
 		}
 
-		Package pack = this.manager.getCommandRegistry().getParent(firstWord);
+		Package pack = this.manager.getCommandParent(firstWord);
 		if (pack != null) {
 			this.manager.fireEvent(new PackageCommandSent(pack.getName(), event
 					.getCommand(), "console"));
@@ -195,58 +173,9 @@ class PMEventListener implements Listener {
 
 	}
 
-	/**
-	 * Called when a package event is sent out by the event system.
-	 *
-	 * @param event the event that was fired
-	 */
-	@EventHandler
-	public void onPackageEvent(PackageEvent event) {
-
-		if (!this.manager.isLoaded(event.getTo())) {
-			String err =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Package $PACKAGE not loaded").replaceFirst(
-							"\\$PACKAGE", event.getTo());
-			this.manager.fireEvent(new LogError(err, LoggingLevel.INFO,
-					"package-manager"));
-			return;
-		}
-		Package pack = this.manager.getPackage(event.getTo());
-		if (event.getMessage().startsWith(this.callMethod)) {
-
-			String trimmed =
-					event.getMessage().replaceFirst(this.callMethod, "");
-			trimmed = trimmed.replaceFirst(" ", "");
-			if (trimmed.startsWith(this.onLoad)) {
-				pack.onLoad();
-			}
-			else if (trimmed.startsWith(this.onUnload)) {
-				pack.onUnload();
-			}
-			else if (trimmed.startsWith(this.enable)) {
-				pack.enable();
-			}
-			else if (trimmed.startsWith(this.disable)) {
-				pack.disable();
-				String details =
-						SafeResourceLoader.getString("ALERT_DISABLED",
-								this.manager.getResourceBundle(),
-								"Package $PACKAGE ($VERSION) disabled!");
-				details = details.replaceFirst("\\$PACKAGE", pack.getName());
-				details =
-						details.replaceFirst("\\$VERSION",
-								"" + pack.getVersion());
-				this.manager.fireEvent(new Log(details, LoggingLevel.FINE,
-						"package-manager"));
-			}
-		}
-	}
-
 	private void printHelp() {
 		ArrayList<PackageCommand> commands;
-		commands = this.manager.getCommandRegistry().getCommands();
+		commands = this.manager.getCommands();
 		String tmp;
 		ConsoleMessage message;
 		for (PackageCommand cmd : commands) {
@@ -274,7 +203,7 @@ class PMEventListener implements Listener {
 							+ SafeResourceLoader.getString("PACKAGE_VERSION",
 									this.manager.getResourceBundle(), "v")
 							+ loadedPackages.get(name).getVersion();
-			if (loadedPackages.get(name).isEnabled()) {
+			if (this.manager.isEnabled(loadedPackages.get(name))) {
 				tmp +=
 						" "
 								+ "("
@@ -337,4 +266,70 @@ class PMEventListener implements Listener {
 						"WIP. This may not function correctly."));
 		this.manager.fireEvent(message);
 	}
+
+	// logging package events
+	/**
+	 * If packages should be enabled on load, this enables the newly loaded
+	 * package. Also logs the package being loaded.
+	 * 
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPackageLoaded(PackageLoaded event) {
+		if (this.manager.enableOnLoad()) {
+			this.manager.enable(event.getPackage());
+		}
+		String loaded =
+				SafeResourceLoader.getString("ALERT_LOADED",
+						this.manager.getResourceBundle(),
+						"Package $PACKAGE (v$VERSION) loaded!");
+		loaded =
+				loaded.replaceFirst("\\$PACKAGE", event.getPackage().getName());
+		loaded =
+				loaded.replaceFirst("\\$VERSION", ""
+						+ event.getPackage().getVersion());
+		this.manager
+				.fireEvent(new Log(loaded, LoggingLevel.FINE, this.manager));
+	}
+
+	/**
+	 * Logs the package being enabled.
+	 * 
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPackageEnabled(PackageEnabled event) {
+		Package target = event.getPackage();
+		String msgEnabled =
+				SafeResourceLoader
+						.getString("ALERT_ENABLED",
+								this.manager.getResourceBundle(),
+								"Package $PACKAGE (v$VERSION) enabled!")
+						.replaceFirst("\\$PACKAGE", target.getName())
+						.replaceFirst("\\$VERSION", target.getVersion() + "");
+		Log logEnabled =
+				new Log(msgEnabled, LoggingLevel.FINE, this.manager.getName());
+		this.manager.fireEvent(logEnabled);
+	}
+
+	/**
+	 * Logs the package being disabled.
+	 * 
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPackageDisabled(PackageDisabled event) {
+		Package target = event.getPackage();
+		String msgDisabled =
+				SafeResourceLoader
+						.getString("ALERT_ENABLED",
+								this.manager.getResourceBundle(),
+								"Package $PACKAGE (v$VERSION) enabled!")
+						.replaceFirst("\\$PACKAGE", target.getName())
+						.replaceFirst("\\$VERSION", target.getVersion() + "");
+		Log logDisabled =
+				new Log(msgDisabled, LoggingLevel.FINE, this.manager.getName());
+		this.manager.fireEvent(logDisabled);
+	}
+
 }

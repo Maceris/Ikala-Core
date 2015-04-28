@@ -1,8 +1,10 @@
 package com.ikalagaming.packages;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -13,7 +15,11 @@ import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.LoggingLevel;
 import com.ikalagaming.logging.LoggingPackage;
 import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.packages.events.PackageEvent;
+import com.ikalagaming.logging.events.LogError;
+import com.ikalagaming.packages.events.PackageDisabled;
+import com.ikalagaming.packages.events.PackageEnabled;
+import com.ikalagaming.packages.events.PackageLoaded;
+import com.ikalagaming.packages.events.PackageUnloaded;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -25,17 +31,88 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class PackageManager implements Package {
 
-	private CommandRegistry cmdRegistry;
-
 	private EventManager eventManager;
 	private PMEventListener listener;
 	private HashSet<Listener> listeners;
 	/** maps strings to packages loaded in memory */
 	private HashMap<String, Package> loadedPackages;
+	private Map<Package, PackageState> packageStates;
 	private String packageName = "package-manager";
 	private ResourceBundle resourceBundle;
-	private PackageState state = PackageState.ENABLED;
-	private final double version = 0.2;
+
+	private static PackageManager instance;
+
+	/**
+	 * Returns the static instance of the package manager. Since there should
+	 * only be one of these, having a static instance is fine and any class can
+	 * get the instance which all other classes should share. If there is no
+	 * instance yet, one will be created.
+	 *
+	 * @return the static instance of the Package Manager
+	 * @see #getInstance(EventManager)
+	 * @see PackageManager#destoryInstance()
+	 */
+	public static PackageManager getInstance() {
+		if (PackageManager.instance == null) {
+			PackageManager.instance =
+					new PackageManager(EventManager.getInstance());
+		}
+		return PackageManager.instance;
+	}
+
+	/**
+	 * Returns the static instance of the package manager. Since there should
+	 * only be one of these, having a static instance is fine and any class can
+	 * get the instance which all other classes should share. If there is no
+	 * instance yet, one will be created.
+	 *
+	 * @param manager the event manager to use for the static instance
+	 *
+	 * @return the static instance of the Package Manager
+	 * @see #getInstance()
+	 * @see #destoryInstance()
+	 */
+	public static PackageManager getInstance(EventManager manager) {
+		if (PackageManager.instance == null) {
+			PackageManager.instance = new PackageManager(manager);
+		}
+		return PackageManager.instance;
+	}
+
+	/**
+	 * Shuts down the static instance (unregisters commands and unloads
+	 * packages)if it exists, and then nullifies the reference to it. This
+	 * exists in case you wish to use your own instances of the Package Manager
+	 * and not use the single static instance provided. If the instance does not
+	 * exist, nothing happens. Note that a new static instance may be created if
+	 * the instance is requested later.
+	 *
+	 * @see #getInstance()
+	 * @see #getInstance(EventManager)
+	 */
+	public static void destoryInstance() {
+		if (PackageManager.instance == null) {
+			return;
+		}
+		for (String s : PackageManager.instance.loadedPackages.keySet()) {
+			PackageManager.instance.unloadPackage(s);
+		}
+		PackageManager.instance.clearCommands();
+		for (Listener l : PackageManager.instance.listeners) {
+			PackageManager.instance.eventManager.unregisterEventListeners(l);
+		}
+		PackageManager.instance.eventManager = null;
+		PackageManager.instance.commands = null;
+
+		PackageManager.instance = null;
+	}
+
+	/**
+	 * If packages should be enabled by the package manager when they are
+	 * loaded. If this is false then packages must be enabled manually after
+	 * they are loaded.
+	 */
+	private boolean enableOnLoad;
 
 	/**
 	 * Constructs a new {@link PackageManager} and initializes variables.
@@ -43,14 +120,16 @@ public class PackageManager implements Package {
 	 * @param evtManager The event manager to use for the package system
 	 */
 	public PackageManager(EventManager evtManager) {
+		this.enableOnLoad = false;
 		this.eventManager = evtManager;
 		this.loadedPackages = new HashMap<>();
+		// Ensure package states are synchronized
+		this.packageStates = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle =
 				ResourceBundle.getBundle(
 						"com.ikalagaming.packages.resources.PackageManager",
 						Localization.getLocale());
 		this.listeners = new HashSet<>();
-		this.cmdRegistry = new CommandRegistry(this, evtManager);
 
 		this.listener = new PMEventListener(this);
 		this.listeners.add(this.listener);
@@ -59,106 +138,73 @@ public class PackageManager implements Package {
 		this.registerCommands();
 	}
 
-	private void callDirectly(Package recipient, String operation) {
-		if (operation == "load") {
-			recipient.onLoad();
-		}
-		else if (operation == "enable") {
-			recipient.enable();
-		}
-		else if (operation == "disable") {
-			recipient.disable();
-		}
-		else if (operation == "unload") {
-			recipient.onUnload();
-		}
-	}
-
-	private boolean callUsingEvents(Package recipient, String message) {
-
-		/*
-		 * Tries to send the event. If the return value is false, it failed and
-		 * therefore we must load manually
-		 */
-		if (!this.firePackageEvent(recipient.getName(), message)) {
-			String failMsg =
-					SafeResourceLoader.getString("ALERT_CALL_EVENT_FAILED",
-							this.resourceBundle,
-							"Event failed. Calling method directly");
-			this.eventManager.fireEvent(new Log(failMsg, LoggingLevel.FINER,
-					this));
-			return false;
-		}
+	/**
+	 * Deactivates the package and halts all of its operations. The package is
+	 * still loaded in memory but not active. Calls {@link #onDisable()}. This
+	 * should change the packages state to {@link PackageState#DISABLING
+	 * DISABLING}. If the disabling were done here and not in the
+	 * {@link #onDisable()} method, the package state should be changed to
+	 * {@link PackageState#DISABLED DISABLED} after completion. Otherwise the
+	 * change to DISABLED is handled in the onDisable method.
+	 *
+	 * @param target the package to disable
+	 *
+	 * @return true if the package has been successfully disabled
+	 */
+	public boolean disable(Package target) {
+		this.setPackageState(target, PackageState.DISABLING);
+		String msgDisabling =
+				SafeResourceLoader.getString("ALERT_DISABLING",
+						this.resourceBundle, "Disabling package $PACKAGE...")
+						.replaceFirst("\\$PACKAGE", target.getName());
+		Log logDisabling =
+				new Log(msgDisabling, LoggingLevel.FINE, this.getName());
+		this.fireEvent(logDisabling);
+		target.onDisable();// TODO can return false
+		this.setPackageState(target, PackageState.DISABLED);
+		PackageDisabled packDisabled = new PackageDisabled(target);
+		this.fireEvent(packDisabled);
 		return true;
 	}
 
 	/**
-	 * Change the state of a given package. The operations allowed are
-	 * <ul>
-	 * <li>load</li>
-	 * <li>enable</li>
-	 * <li>disable</li>
-	 * <li>unload</li>
-	 * </ul>
-	 * If events fail and should be used, reverts to direct calling of methods.
+	 * Activates the package and enables it to perform its normal functions.
+	 * Calls {@link #onEnable()}. This should change the package state to
+	 * {@link PackageState#ENABLING ENABLING}. If the enabling were done here
+	 * and not in the {@link #onEnable()} method, the package state should be
+	 * changed to {@link PackageState#ENABLED ENABLED} after completion.
+	 * Otherwise the change to ENABLED is handled in the onEnable method.
 	 *
-	 * @param toChange the package to change
-	 * @param operation what you want to do to the package
-	 * @param usingEvents true if you want to use events, otherwise false
+	 * @param target The package to enable
+	 *
+	 * @return true if the package was successfully enabled
 	 */
-	private void changeState(Package toChange, String operation,
-			boolean usingEvents) {
-		String toSend = "";
-		String localMethodName = "";
-		String backupMethodName = "";
-		boolean callDirectly = usingEvents;
-		if (operation == "load") {
-			localMethodName = "ARG_ON_LOAD";
-			backupMethodName = "onLoad";
-		}
-		else if (operation == "enable") {
-			localMethodName = "ARG_ENABLE";
-			backupMethodName = "enable";
-		}
-		else if (operation == "disable") {
-			localMethodName = "ARG_DISABLE";
-			backupMethodName = "disable";
-		}
-		else if (operation == "onUnload") {
-			localMethodName = "ARG_ON_UNLOAD";
-			backupMethodName = "onUnload";
-		}
-
-		else {
-			localMethodName = "";
-			backupMethodName = "";
-		}
-
-		toSend =
-				SafeResourceLoader.getString("CMD_CALL", this.resourceBundle,
-						"call")
-						+ " "
-						+ SafeResourceLoader.getString(localMethodName,
-								this.resourceBundle, backupMethodName);
-
-		this.logMethodCall(backupMethodName, toChange.getName(), true);
-		if (!callDirectly) {
-			callDirectly = !this.callUsingEvents(toChange, toSend);
-		}
-		if (callDirectly) {
-			this.logMethodCall(backupMethodName, toChange.getName(), false);
-			this.callDirectly(toChange, operation);
-		}
-	}
-
-	@Override
-	public boolean disable() {
-		return false;
-	}
-
-	@Override
-	public boolean enable() {
+	public boolean enable(Package target) {
+		this.setPackageState(target, PackageState.ENABLING);
+		String msgEnable =
+				SafeResourceLoader.getString("ALERT_ENABLING",
+						this.resourceBundle, "Enabling package $PACKAGE...")
+						.replaceFirst("\\$PACKAGE", target.getName());
+		Log logEnabling = new Log(msgEnable, LoggingLevel.FINE, this.getName());
+		this.fireEvent(logEnabling);
+		target.onEnable();// TODO can return false
+		this.setPackageState(target, PackageState.ENABLED);
+		PackageEnabled packEnabled = new PackageEnabled(target);
+		this.fireEvent(packEnabled);
 		return true;
+	}
+
+	/**
+	 * Returns true if this package manager automatically enables packages when
+	 * they are loaded. If they are not enabled on load, they must be enabled
+	 * manually after being loaded.
+	 *
+	 * @return true if the packages enable after loading, false if they must be
+	 *         manually enabled
+	 * @see #setEnableOnLoad(boolean)
+	 */
+	public synchronized boolean enableOnLoad() {
+		return this.enableOnLoad;
 	}
 
 	/**
@@ -186,37 +232,6 @@ public class PackageManager implements Package {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Fires an event with a message to a package type from the package manager.
-	 * If an error occurs, this will return false. The event should not have
-	 * been sent if false was returned.
-	 *
-	 * @param to the package to send the message to
-	 * @param content the message to transfer
-	 * @return true if the event was fired correctly
-	 */
-	private boolean firePackageEvent(String to, String content) {
-
-		PackageEvent tmpEvent;
-
-		tmpEvent = new PackageEvent(this.packageName, to, content);
-		this.eventManager.fireEvent(tmpEvent);
-
-		return true;
-	}
-
-	/**
-	 * Returns the {@link CommandRegistry} for this package manager.
-	 *
-	 * @return the command registry
-	 */
-	public CommandRegistry getCommandRegistry() {
-		if (this.cmdRegistry == null) {
-			this.cmdRegistry = new CommandRegistry(this, this.eventManager);
-		}
-		return this.cmdRegistry;
 	}
 
 	@Override
@@ -254,11 +269,18 @@ public class PackageManager implements Package {
 		return null;
 	}
 
-	@Override
-	public PackageState getPackageState() {
-		synchronized (this.state) {
-			return this.state;
+	/**
+	 * Returns the {@link PackageState current state} of the package.
+	 *
+	 * @param target The package to fetch the state of
+	 *
+	 * @return a PackageState representing the status of this package
+	 */
+	public PackageState getPackageState(Package target) {
+		if (!this.packageStates.containsKey(target)) {
+			return PackageState.NOT_LOADED;
 		}
+		return this.packageStates.get(target);
 	}
 
 	/**
@@ -273,18 +295,33 @@ public class PackageManager implements Package {
 
 	@Override
 	public double getVersion() {
-		return this.version;
+		return 0.3f;
 	}
 
-	@Override
-	public boolean isEnabled() {
-		return true;
+	/**
+	 * Returns true if the package is enabled, and false otherwise. A state of
+	 * {@link PackageState#ENABLED ENABLED} returns true, any other states will
+	 * return false.
+	 *
+	 * @param target The package to check for enabled status
+	 *
+	 * @return true if the package is fully ready to operate
+	 */
+	public boolean isEnabled(Package target) {
+		if (!this.isLoaded(target)) {
+			return false;
+		}
+		PackageState state = this.getPackageState(target);
+		if (state.equals(PackageState.ENABLED)) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
 	 * Returns true if a package exists that has the same type as the provided
 	 * package (for example: "Graphics"). This is the same as calling
-	 * <code>{@link #isLoaded(String) isLoaded}(Package.getType())</code>
+	 * <code>{@link #isLoaded(String) isLoaded}({@link Package#getName()})</code>
 	 *
 	 * @param type the package type
 	 * @return true if the package is loaded in memory, false if it does not
@@ -311,12 +348,12 @@ public class PackageManager implements Package {
 	 * initialization.
 	 */
 	private void loadCorePackages() {
-		LoggingPackage loggingPack = new LoggingPackage(this.eventManager);
-
+		LoggingPackage loggingPack = new LoggingPackage();
+		// TODO handle all this on creation
 		this.loadedPackages.put(loggingPack.getName(), loggingPack);
 
 		loggingPack.onLoad();
-		loggingPack.enable();
+		this.enable(loggingPack);// TODO loaded and enabled events
 
 		/*
 		 * ensures the event manager can have its listeners registered after
@@ -342,8 +379,7 @@ public class PackageManager implements Package {
 						.replaceFirst("\\$PACKAGE", loggingPack.getName());
 		String loadingL =
 				SafeResourceLoader
-						.getString("ALERT_PACKAGE_LOADING",
-								this.resourceBundle,
+						.getString("ALERT_LOADING", this.resourceBundle,
 								"Loading package $PACKAGE (v$VERSION)...")
 						.replaceFirst("\\$PACKAGE", loggingPack.getName())
 						.replaceFirst("\\$VERSION",
@@ -351,7 +387,7 @@ public class PackageManager implements Package {
 
 		String loadedL =
 				SafeResourceLoader
-						.getString("ALERT_PACKAGE_LOADED", this.resourceBundle,
+						.getString("ALERT_LOADED", this.resourceBundle,
 								"Package $PACKAGE (v$VERSION) loaded!")
 						.replaceFirst("\\$PACKAGE", loggingPack.getName())
 						.replaceFirst("\\$VERSION",
@@ -369,8 +405,7 @@ public class PackageManager implements Package {
 	/**
 	 * <p>
 	 * Loads the given package into memory, stores it by type, and enables it if
-	 * packages are {@link PackageSettings#ENABLE_ON_LOAD enabled on load} by
-	 * default.
+	 * packages are enabled on load by default.
 	 * </p>
 	 * <p>
 	 * If the type of package already exists in the manager, and the new package
@@ -379,13 +414,14 @@ public class PackageManager implements Package {
 	 * is older, then it does not load the new version and returns false.
 	 * </p>
 	 *
+	 * @see PackageManager#enableOnLoad()
+	 *
 	 * @param toLoad the package to load
 	 * @return true if the package was loaded properly, false otherwise
 	 */
-	@SuppressWarnings("unused")
 	public boolean loadPackage(Package toLoad) {
 		String loading =
-				SafeResourceLoader.getString("ALERT_PACKAGE_LOADING",
+				SafeResourceLoader.getString("ALERT_LOADING",
 						this.resourceBundle,
 						"Loading package $PACKAGE (v$VERSION)...");
 		loading = loading.replaceFirst("\\$PACKAGE", toLoad.getName());
@@ -426,49 +462,28 @@ public class PackageManager implements Package {
 				return false;
 			}
 		}
+		this.setPackageState(toLoad, PackageState.LOADING);
 
 		// store the new package
 		this.loadedPackages.put(toLoad.getName(), toLoad);
 
-		if (PackageSettings.USE_EVENTS_FOR_ACCESS) {
-			for (Listener l : toLoad.getListeners()) {
-				this.eventManager.registerEventListeners(l);
-			}
-			String msg =
-					SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
-							this.resourceBundle,
-							"Registered event listeners for $PACKAGE")
-							.replaceFirst("\\$PACKAGE", toLoad.getName());
-			this.eventManager.fireEvent(new Log(msg, LoggingLevel.FINER, this));
+		for (Listener l : toLoad.getListeners()) {
+			this.eventManager.registerEventListeners(l);
 		}
+		String msg =
+				SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
+						this.resourceBundle,
+						"Registered event listeners for $PACKAGE")
+						.replaceFirst("\\$PACKAGE", toLoad.getName());
+		this.eventManager.fireEvent(new Log(msg, LoggingLevel.FINER, this));
 
 		// load it
-		if (PackageSettings.USE_EVENTS_FOR_ACCESS
-				&& PackageSettings.USE_EVENTS_FOR_ON_LOAD) {
-			this.changeState(toLoad, "load", true);
-		}
-		else {
-			this.changeState(toLoad, "load", false);
-		}
+		toLoad.onLoad();
 
-		// enable the package
-		if (PackageSettings.ENABLE_ON_LOAD) {
-			if (PackageSettings.USE_EVENTS_FOR_ACCESS
-					&& PackageSettings.USE_EVENTS_FOR_ENABLE) {
-				this.changeState(toLoad, "enable", true);
-			}
-			else {
-				this.changeState(toLoad, "enable", false);
-			}
-		}
+		this.setPackageState(toLoad, PackageState.DISABLED);
+		PackageLoaded packLoaded = new PackageLoaded(toLoad);
+		this.fireEvent(packLoaded);
 
-		String loaded =
-				SafeResourceLoader.getString("ALERT_PACKAGE_LOADED",
-						this.resourceBundle,
-						"Package $PACKAGE (v$VERSION) loaded!");
-		loaded = loaded.replaceFirst("\\$PACKAGE", toLoad.getName());
-		loaded = loaded.replaceFirst("\\$VERSION", "" + toLoad.getVersion());
-		this.eventManager.fireEvent(new Log(loaded, LoggingLevel.FINE, this));
 		return true;
 	}
 
@@ -509,81 +524,112 @@ public class PackageManager implements Package {
 		return false;
 	}
 
-	/**
-	 * Logs a call to the given method of the given package. Uses the
-	 * ALERT_CALL_METHOD_EVENT or ALERT_CALL_METHOD_DIRECT depending on whether
-	 * usingEvents is true or false.
-	 *
-	 * @param method the method being called
-	 * @param pack the package the method belongs to
-	 * @param usingEvents true if it is using the event system, false if direct
-	 */
-	private void logMethodCall(String method, String pack, boolean usingEvents) {
-		String call;
-		if (usingEvents) {
-			call =
-					SafeResourceLoader.getString("ALERT_CALL_METHOD_EVENT",
-							this.resourceBundle,
-							"Calling $METHOD of $PACKAGE using event system");
-		}
-		else {
-			call =
-					SafeResourceLoader.getString("ALERT_CALL_METHOD_DIRECT",
-							this.resourceBundle,
-							"Calling $METHOD of $PACKAGE directly");
-		}
-		call = call.replaceFirst("\\$METHOD", method);
-		call = call.replaceFirst("\\$PACKAGE", pack);
-
-		this.eventManager.fireEvent(new Log(call, LoggingLevel.FINER, this));
+	@Override
+	public boolean onDisable() {
+		return true;
 	}
 
 	@Override
-	public void onDisable() {}
+	public boolean onEnable() {
+		return true;
+	}
 
 	@Override
-	public void onEnable() {}
+	public boolean onLoad() {
+		return true;
+	}
 
 	@Override
-	public void onLoad() {}
-
-	@Override
-	public void onUnload() {}
+	public boolean onUnload() {
+		return true;
+	}
 
 	/**
 	 * Registers commands with the registry that the package manager uses
 	 */
 	private void registerCommands() {
-		ArrayList<String> commands = new ArrayList<>();
-		commands.add("COMMAND_ENABLE");
-		commands.add("COMMAND_DISABLE");
-		commands.add("COMMAND_LOAD");
-		commands.add("COMMAND_UNLOAD");
-		commands.add("COMMAND_LIST_PACKAGES");
-		commands.add("COMMAND_RELOAD");
-		commands.add("COMMAND_HELP");
-		commands.add("COMMAND_VERSION");
+		ArrayList<String> cmds = new ArrayList<>();
+		cmds.add("COMMAND_ENABLE");
+		cmds.add("COMMAND_DISABLE");
+		cmds.add("COMMAND_LOAD");
+		cmds.add("COMMAND_UNLOAD");
+		cmds.add("COMMAND_LIST_PACKAGES");
+		cmds.add("COMMAND_RELOAD");
+		cmds.add("COMMAND_HELP");
+		cmds.add("COMMAND_VERSION");
 
 		String tmp = "";
 
-		for (String s : commands) {
+		for (String s : cmds) {
 
 			tmp = SafeResourceLoader.getString(s, this.resourceBundle, s);
-			this.cmdRegistry.registerCommand(tmp, this);
+			this.registerCommand(tmp, this);
 		}
 
 	}
 
-	@Override
-	public boolean reload() {
-		return false;
+	/**
+	 * This is essentially restarting the package. The package is disabled if it
+	 * is enabled, unloaded, then loaded.
+	 *
+	 * @param target The package to reload
+	 *
+	 * @return true if the package reloaded successfully, false otherwise
+	 */
+	public boolean reload(Package target) {
+
+		if (!this.isLoaded(target)) {
+			String tmp =
+					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+							this.getResourceBundle(),
+							"Package $PACKAGE not loaded").replaceFirst(
+							"\\$PACKAGE", target.getName());
+			Log message = new Log(tmp, LoggingLevel.WARNING, this.getName());
+			this.fireEvent(message);
+			return false;
+		}
+		if (this.isEnabled(target)) {
+			if (!this.disable(target)) {
+				// disable failed
+				this.setPackageState(target, PackageState.CORRUPTED);
+
+				return false;
+			}
+		}
+		this.setPackageState(target, PackageState.UNLOADING);
+		this.unloadPackage(target);
+		this.setPackageState(target, PackageState.LOADING);
+		if (!this.loadPackage(target)) {
+			this.setPackageState(target, PackageState.CORRUPTED);
+			return false;
+		}
+		return true;
 	}
 
-	@Override
-	public void setPackageState(PackageState newState) {
-		synchronized (this.state) {
-			this.state = newState;
+	/**
+	 * Sets the flag for automatically enabling packages when they are loaded.
+	 * If they are not enabled on load, they must be enabled manually after
+	 * being loaded.
+	 * <p>
+	 * This allows some customization of how the package system works.
+	 *
+	 * @param newValue true if the packages should be automatically enabled
+	 *            after loading, false if they should be manually enabled
+	 */
+	public synchronized void setEnableOnLoad(boolean newValue) {
+		this.enableOnLoad = newValue;
+	}
+
+	private void setPackageState(Package target, PackageState newState) {
+		if (!this.packageStates.containsKey(target)) {
+			return;
 		}
+		// replaces the old state
+		PackageState oldState = this.packageStates.get(target);
+		if (oldState.equals(PackageState.PENDING_REMOVAL)) {
+			return;// You can't change the state at this point
+		}
+		this.packageStates.put(target, newState);
 	}
 
 	/**
@@ -619,10 +665,9 @@ public class PackageManager implements Package {
 	 * @param toUnload The type of package to unload
 	 * @return true if the package was unloaded properly
 	 */
-	@SuppressWarnings("unused")
 	public boolean unloadPackage(String toUnload) {
 		String unloading =
-				SafeResourceLoader.getString("ALERT_PACKAGE_UNLOADING",
+				SafeResourceLoader.getString("ALERT_UNLOADING",
 						this.resourceBundle, "Unloading package $PACKAGE...");
 		unloading = unloading.replaceFirst("\\$PACKAGE", toUnload);
 		this.eventManager
@@ -638,28 +683,20 @@ public class PackageManager implements Package {
 			return false;
 		}
 
+		Package pack = this.loadedPackages.get(toUnload);
+
 		// It has to be disabled before unloading.
-		if (this.loadedPackages.get(toUnload).isEnabled()) {
-			if (PackageSettings.USE_EVENTS_FOR_ACCESS
-					&& PackageSettings.USE_EVENTS_FOR_DISABLE) {
-				this.changeState(this.loadedPackages.get(toUnload), "disable",
-						true);
-			}
-			else {
-				this.changeState(this.loadedPackages.get(toUnload), "disable",
-						false);
-			}
+		if (this.isEnabled(pack)) {
+			this.disable(pack);
 		}
+		this.setPackageState(pack, PackageState.UNLOADING);
 
-		if (PackageSettings.USE_EVENTS_FOR_ACCESS
-				&& PackageSettings.USE_EVENTS_FOR_ON_UNLOAD) {
-			this.changeState(this.loadedPackages.get(toUnload), "unload", true);
-		}
-		else {
-			this.changeState(this.loadedPackages.get(toUnload), "unload", false);
-		}
+		pack.onUnload();
+		// TODO will this not become an invalid reference during event sending?
+		PackageUnloaded packUnloaded = new PackageUnloaded(pack);
+		this.fireEvent(packUnloaded);
 
-		for (Listener l : this.loadedPackages.get(toUnload).getListeners()) {
+		for (Listener l : pack.getListeners()) {
 			this.eventManager.unregisterEventListeners(l);
 		}
 		String unreg =
@@ -670,9 +707,10 @@ public class PackageManager implements Package {
 		this.eventManager.fireEvent(new Log(unreg, LoggingLevel.FINER, this));
 
 		this.loadedPackages.remove(toUnload);
+		this.packageStates.remove(pack);
 
 		String unloaded =
-				SafeResourceLoader.getString("ALERT_PACKAGE_UNLOADED",
+				SafeResourceLoader.getString("ALERT_UNLOADED",
 						this.resourceBundle, "Package $PACKAGE unloaded!");
 		unloaded = unloaded.replaceFirst("\\$PACKAGE", toUnload);
 
@@ -680,4 +718,164 @@ public class PackageManager implements Package {
 
 		return true;
 	}
+
+	/**
+	 * A list of all of the commands registered. This list is sorted.
+	 */
+	private ArrayList<PackageCommand> commands;
+
+	/**
+	 * Unregisters all commands
+	 */
+	public void clearCommands() {
+		for (PackageCommand s : this.commands) {
+			this.unregisterCommand(s.getCommand());
+		}
+		this.commands.clear();
+	}
+
+	/**
+	 * Returns true if the array contains the given string.
+	 *
+	 * @param s the string to look for
+	 * @return true if the string exists
+	 */
+	public boolean containsCommand(String s) {
+		int i;
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns a clone of the commands list.
+	 *
+	 * @return a copy of the stored list
+	 */
+	@SuppressWarnings("unchecked")
+	public ArrayList<PackageCommand> getCommands() {
+		return (ArrayList<PackageCommand>) this.commands.clone();
+	}
+
+	/**
+	 * Returns the index of the given string if it exists. If it is not in the
+	 * array, returns -1.
+	 *
+	 * @param s the string to look for
+	 * @return the index of the string
+	 */
+	private int getIndexOfCommand(String s) {
+		int i;
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns the package that registered the given string, or null if it
+	 * cannot be found.
+	 *
+	 * @param s the string to look for
+	 * @return the owner of the command
+	 */
+	public Package getCommandParent(String s) {
+		int i;
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				return this.commands.get(i).getOwner();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Attempts to register the command for the given class. If the command
+	 * already exists, an error is logged and the method returns false.
+	 *
+	 * @param command the command to register
+	 * @param owner what package is registering the command
+	 * @return true if the command registered successfully
+	 */
+	public boolean registerCommand(String command, Package owner) {
+		if (this.containsCommand(command)) {
+			int index = this.getIndexOfCommand(command);
+			String msg =
+					SafeResourceLoader
+							.getString("COMMAND_ALREADY_REGISTERED",
+									this.getResourceBundle(),
+									"Command $COMMAND is already registered to $PACKAGE");
+			msg = msg.replaceFirst("\\$COMMAND", command);
+			msg =
+					msg.replaceFirst("\\$PACKAGE", this.commands.get(index)
+							.getOwner().getName());
+			LogError err =
+					new LogError(msg, LoggingLevel.WARNING, this.getName());
+			this.fireEvent(err);
+			return false;
+		}
+		PackageCommand cmd = new PackageCommand(command, owner);
+		this.commands.add(cmd);
+		String msg =
+				SafeResourceLoader.getString("REGISTERED_COMMAND",
+						this.getResourceBundle(),
+						"Registered command $COMMAND to $PACKAGE");
+		msg = msg.replaceFirst("\\$COMMAND", command);
+		msg = msg.replaceFirst("\\$PACKAGE", owner.getName());
+		Log log = new Log(msg, LoggingLevel.FINEST, this.getName());
+		this.fireEvent(log);
+		java.util.Collections.sort(this.commands);
+		return true;
+	}
+
+	/**
+	 * Unregisters the given command.
+	 *
+	 * @param command the command to remove
+	 * @return true if the command was removed
+	 */
+	public boolean unregisterCommand(String command) {
+		if (this.containsCommand(command)) {
+			while (this.containsCommand(command)) {// just in case there are
+													// multiple
+				int index = this.getIndexOfCommand(command);
+				this.commands.remove(index);
+			}
+			String msg =
+					SafeResourceLoader.getString("UNREGISTERED_COMMAND",
+							this.getResourceBundle(),
+							"Unregistered command $COMMAND");
+			msg = msg.replaceFirst("\\$COMMAND", command);
+			Log log = new Log(msg, LoggingLevel.FINEST, this.getName());
+			this.fireEvent(log);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Removes all commands that the given package registered.
+	 *
+	 * @param owner the package which is having commands removed
+	 */
+	public void unregisterPackageCommands(Package owner) {
+		ArrayList<String> packageCommands = new ArrayList<>();
+		// find all the commands registered to the package
+		for (PackageCommand c : this.commands) {
+			if (c.getOwner().getName().equalsIgnoreCase(owner.getName())) {
+				packageCommands.add(c.getCommand());
+			}
+		}
+		// unload the commands
+		for (String s : packageCommands) {
+			this.unregisterCommand(s);
+		}
+
+	}
+
 }

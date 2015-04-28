@@ -21,7 +21,7 @@ import java.util.Queue;
  *
  * @param <E> the type of elements held in this collection
  */
-class IkEventQueue<E> extends AbstractCollection<E> implements Queue<E>,
+public class IkEventQueue<E> extends AbstractCollection<E> implements Queue<E>,
 		Cloneable, Serializable {
 	private class DeqIterator implements Iterator<E> {
 		/**
