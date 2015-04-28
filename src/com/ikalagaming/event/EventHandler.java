@@ -24,6 +24,8 @@ public @interface EventHandler {
 	 * <li>HIGHEST
 	 * <li>MONITOR
 	 * </ol>
+	 * 
+	 * @return Returns this handler's priority
 	 */
 	EventPriority priority() default EventPriority.NORMAL;
 }
