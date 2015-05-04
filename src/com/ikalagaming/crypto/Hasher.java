@@ -114,7 +114,7 @@ public class Hasher {
 	 * @throws NoSuchAlgorithmException if no Provider supports a
 	 *             SecretKeyFactorySpi implementation for the specified
 	 *             algorithm.
-	 * 
+	 *
 	 * @throws InvalidKeySpecException - if the given key specification is
 	 *             inappropriate for this secret-key factory to produce a secret
 	 *             key.

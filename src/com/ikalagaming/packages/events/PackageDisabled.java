@@ -18,7 +18,7 @@ public class PackageDisabled extends Event {
 
 	/**
 	 * Creates a new {@link PackageDisabled} for the given package.
-	 * 
+	 *
 	 * @param disabled the package that has been disabled.
 	 *
 	 */

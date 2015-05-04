@@ -1,9 +1,9 @@
 package com.ikalagaming.logging;
 
+import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 
 import com.ikalagaming.event.EventManager;
-import com.ikalagaming.event.IkEventQueue;
 import com.ikalagaming.logging.events.DisplayLog;
 
 /**
@@ -14,7 +14,7 @@ import com.ikalagaming.logging.events.DisplayLog;
  */
 class LogDispatcher extends Thread {
 
-	private IkEventQueue<String> queue;
+	private ArrayDeque<String> queue;
 	private String currentStr;
 	private boolean running;
 	private boolean hasLogs;
@@ -30,7 +30,7 @@ class LogDispatcher extends Thread {
 	public LogDispatcher(EventManager eventManager) {
 		this.setName("LogDispatcher");
 		this.manager = eventManager;
-		this.queue = new IkEventQueue<>();
+		this.queue = new ArrayDeque<>();
 		this.hasLogs = false;
 		this.running = true;
 	}

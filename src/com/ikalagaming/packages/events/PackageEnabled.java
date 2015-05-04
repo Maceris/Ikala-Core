@@ -18,7 +18,7 @@ public class PackageEnabled extends Event {
 
 	/**
 	 * Creates a new {@link PackageEnabled} for the given package.
-	 * 
+	 *
 	 * @param enabled the package that has been enabled
 	 *
 	 */

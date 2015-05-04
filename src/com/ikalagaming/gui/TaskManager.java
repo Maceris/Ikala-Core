@@ -38,6 +38,28 @@ import com.ikalagaming.packages.PackageState;
  */
 public class TaskManager extends JFrame {
 
+	private static class Updater extends Thread {
+		TaskManager owner;
+
+		public Updater(TaskManager manager) {
+			this.setName("TaskMgrUpdateThread");
+			this.owner = manager;
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				this.owner.tick();
+				try {
+					Thread.sleep(this.owner.getDelay());
+				}
+				catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	private static void addPopup(Component component, final JPopupMenu popup) {
 		component.addMouseListener(new MouseAdapter() {
 			@Override
@@ -69,7 +91,6 @@ public class TaskManager extends JFrame {
 			}
 		});
 	}
-
 	private static final long serialVersionUID = -4427516209866980363L;
 	private JPanel contentPane;
 	private JTable table;
@@ -85,12 +106,14 @@ public class TaskManager extends JFrame {
 	private JLabel threads;
 	private JLabel memUsage;
 	private long memUsed = 0;
+
 	private long percentUsed = 0;
 
 	private PackageManager packageManager;
+
 	/**
 	 * Create the frame.
-	 * 
+	 *
 	 * @param packageMgr the package manager to list packages for
 	 *
 	 */
@@ -261,26 +284,26 @@ public class TaskManager extends JFrame {
 			return;
 		}
 		com.ikalagaming.packages.Package pack =
-				packageManager.getPackage(this.table.getValueAt(row, column)
-						.toString());
+				this.packageManager.getPackage(this.table.getValueAt(row,
+						column).toString());
 		if (pack == null) {
 			return;
 		}
 		if (change == "Enable") {
-			if (!packageManager.isEnabled(pack)) {
-				packageManager.enable(pack);
+			if (!this.packageManager.isEnabled(pack)) {
+				this.packageManager.enable(pack);
 			}
 		}
 		else if (change == "Disable") {
-			if (packageManager.isEnabled(pack)) {
-				packageManager.disable(pack);
+			if (this.packageManager.isEnabled(pack)) {
+				this.packageManager.disable(pack);
 			}
 		}
 		else if (change == "Unload") {
-			packageManager.unloadPackage(pack);
+			this.packageManager.unloadPackage(pack);
 		}
 		else if (change == "Reload") {
-			packageManager.reload(pack);
+			this.packageManager.reload(pack);
 		}
 
 	}
@@ -309,7 +332,7 @@ public class TaskManager extends JFrame {
 		for (int i = 0; i < this.model.getRowCount(); ++i) {
 			name = (String) this.model.getValueAt(i, 0);
 			currentState =
-					packageManager.getPackageState(packageManager
+					this.packageManager.getPackageState(this.packageManager
 							.getPackage(name));
 			if (!this.model.getValueAt(i, 1).equals(currentState)) {
 				this.model.setValueAt(currentState, i, 1);
@@ -330,11 +353,12 @@ public class TaskManager extends JFrame {
 	}
 
 	private void updatePackageNames() {
-		Set<String> packageNames = packageManager.getLoadedPackages().keySet();
+		Set<String> packageNames =
+				this.packageManager.getLoadedPackages().keySet();
 		for (String s : packageNames) {
 			if (!this.packages.containsKey(s)) {
-				this.packages.put(s, packageManager
-						.getPackageState(packageManager.getPackage(s)));
+				this.packages.put(s, this.packageManager
+						.getPackageState(this.packageManager.getPackage(s)));
 				boolean exists = false;
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {
@@ -360,27 +384,5 @@ public class TaskManager extends JFrame {
 		}
 		packageNames = null;
 
-	}
-
-	private static class Updater extends Thread {
-		TaskManager owner;
-
-		public Updater(TaskManager manager) {
-			this.setName("TaskMgrUpdateThread");
-			this.owner = manager;
-		}
-
-		@Override
-		public void run() {
-			while (true) {
-				this.owner.tick();
-				try {
-					Thread.sleep(this.owner.getDelay());
-				}
-				catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
 	}
 }

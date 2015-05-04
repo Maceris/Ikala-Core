@@ -37,21 +37,21 @@ public class LoggingPackage implements Package, Listener {
 	public static LoggingLevel threshold = LoggingLevel.ALL;
 
 	/**
+	 * Creates a logging package using the default static event manager.
+	 */
+	public LoggingPackage() {
+		this(PackageManager.getInstance());
+	}
+
+	/**
 	 * Creates a logging package using the default static event manager. This is
 	 * called from the package manager to prevent a circular dependency.
-	 * 
+	 *
 	 * @param manager creates a logger for the given packageManager
 	 */
 	public LoggingPackage(PackageManager manager) {
 		this.eventManager = EventManager.getInstance();
 		this.packageManager = manager;
-	}
-
-	/**
-	 * Creates a logging package using the default static event manager.
-	 */
-	public LoggingPackage() {
-		this(PackageManager.getInstance());
 	}
 
 	@Override
@@ -85,7 +85,7 @@ public class LoggingPackage implements Package, Listener {
 	 */
 	private void log(String origin, LoggingLevel level, String details) {
 		this.newLog = "";
-		if (!packageManager.isEnabled(this)) {
+		if (!this.packageManager.isEnabled(this)) {
 			System.out.println(level.getName() + " " + details);
 			return;
 		}
@@ -128,7 +128,7 @@ public class LoggingPackage implements Package, Listener {
 	private void logError(String origin, String error, LoggingLevel level,
 			String details) {
 		this.newLog = "";
-		if (!packageManager.isEnabled(this)) {
+		if (!this.packageManager.isEnabled(this)) {
 			System.err.println(level.getName() + " " + error + " " + details);
 			return;
 		}

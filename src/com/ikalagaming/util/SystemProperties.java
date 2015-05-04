@@ -12,15 +12,6 @@ import java.io.File;
 public class SystemProperties {
 
 	/**
-	 * The type of operating system the engine is running on
-	 */
-	private static String OS;
-	/**
-	 * Equivalent to the current systems appdata folder
-	 */
-	private static String homeDirectory;
-
-	/**
 	 * Returns the home directory for the program. This is the application data
 	 * folder and <b>NOT</b> the games root folder. The games folder is
 	 * contained in this directory. For example, the game 'TextGame's folder
@@ -60,7 +51,6 @@ public class SystemProperties {
 		}
 		return SystemProperties.homeDirectory;
 	}
-
 	/**
 	 * Returns the OS name. Note that this is not equivalent to
 	 * <code>System.getProperty("os.name")</code> Possible OS names are:
@@ -171,5 +161,15 @@ public class SystemProperties {
 		}
 		SystemProperties.OS = toSet;
 	}
+
+	/**
+	 * The type of operating system the engine is running on
+	 */
+	private static String OS;
+
+	/**
+	 * Equivalent to the current systems appdata folder
+	 */
+	private static String homeDirectory;
 
 }

@@ -1,6 +1,5 @@
 package com.ikalagaming.event;
 
-
 /**
  * A listener that handles events.
  */

@@ -41,7 +41,7 @@ public interface Package {
 	 * This method is called when the package is disabled, and gives the package
 	 * the chance to shut itself down and save any changes made in memory to
 	 * disk if necessary.
-	 * 
+	 *
 	 * @return True if disabling was successful, false if there was a problem
 	 */
 	public boolean onDisable();
@@ -50,7 +50,7 @@ public interface Package {
 	 * This method is called when the package is enabled. Initialization should
 	 * be performed here, and configuration and data should be loaded from disk
 	 * if necessary.
-	 * 
+	 *
 	 * @return True if enabling was successful, false if there was a problem
 	 */
 	public boolean onEnable();
@@ -58,7 +58,7 @@ public interface Package {
 	/**
 	 * Called when the package is loaded into memory. The package may or may not
 	 * be enabled at this time.
-	 * 
+	 *
 	 * @return True if loading was successful, false if there was a problem
 	 */
 	public boolean onLoad();
@@ -68,7 +68,7 @@ public interface Package {
 	 * then the package should disable itself now. Any memory that can
 	 * reasonably be dereferenced by the package itself, should be. Files may be
 	 * saved to disk if needed.
-	 * 
+	 *
 	 * @return True if unloading was successful, false if there was a problem
 	 */
 	public boolean onUnload();

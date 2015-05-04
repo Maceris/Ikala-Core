@@ -102,13 +102,13 @@ class TestIkEventQueue {
 		int elements = 1000000;
 		try {
 
-			//this.queueAdd(adq, elements);
+			// this.queueAdd(adq, elements);
 
-			//this.queueAdd(ik, elements);
+			// this.queueAdd(ik, elements);
 
-			//this.queueRemove(adq, elements);
+			// this.queueRemove(adq, elements);
 
-			//this.queueRemove(ik, elements);
+			// this.queueRemove(ik, elements);
 
 			final long tDequeStart = System.currentTimeMillis();
 
@@ -135,8 +135,7 @@ class TestIkEventQueue {
 				Assert.fail(message);
 			}
 			else {
-				double time =
-						((tDeque - tIkQueue) / ((tDeque + tIkQueue) / 2));
+				double time = ((tDeque - tIkQueue) / ((tDeque + tIkQueue) / 2));
 				System.out.println(time + "% faster than deque");
 			}
 		}
@@ -328,9 +327,20 @@ class TestIkEventQueue {
 
 	}
 
+	/**
+	 * Adds an element to the queue and ensures it now contains that element,
+	 * and does not contain an un-added element.
+	 */
 	@Test
 	public void testContains() {
-		Assert.fail("Not yet implemented"); // TODO
+		int value = 3;
+		int wrongValue = 4;
+		Assert.assertNotEquals(value, wrongValue);
+		Event addedEvent = new TestEvent(value);
+		Event unaddedEvent = new TestEvent(wrongValue);
+		this.instanceQueue.add(addedEvent);
+		Assert.assertTrue(this.instanceQueue.contains(addedEvent));
+		Assert.assertFalse(this.instanceQueue.contains(unaddedEvent));
 	}
 
 	/**
@@ -348,11 +358,11 @@ class TestIkEventQueue {
 		catch (NoSuchElementException ex) {
 			Assert.fail("No such element");
 		}
-
+		Assert.assertNotNull(e);
 		Assert.assertEquals(value, ((TestEvent) e).getValue(), 0);
 		Assert.assertEquals(1, this.instanceQueue.size(), 0);
 	}
-	
+
 	/**
 	 * Ensures the queue starts empty, adds an item, checks its not empty,
 	 * empties it and then checks that it is empty again.

@@ -1,6 +1,5 @@
 package com.ikalagaming.event;
 
-
 /**
  * An event for testing purposes.
  *

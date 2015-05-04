@@ -173,6 +173,71 @@ class PMEventListener implements Listener {
 
 	}
 
+	/**
+	 * Logs the package being disabled.
+	 *
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPackageDisabled(PackageDisabled event) {
+		Package target = event.getPackage();
+		String msgDisabled =
+				SafeResourceLoader
+						.getString("ALERT_ENABLED",
+								this.manager.getResourceBundle(),
+								"Package $PACKAGE (v$VERSION) enabled!")
+						.replaceFirst("\\$PACKAGE", target.getName())
+						.replaceFirst("\\$VERSION", target.getVersion() + "");
+		Log logDisabled =
+				new Log(msgDisabled, LoggingLevel.FINE, this.manager.getName());
+		this.manager.fireEvent(logDisabled);
+	}
+
+	/**
+	 * Logs the package being enabled.
+	 *
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPackageEnabled(PackageEnabled event) {
+		Package target = event.getPackage();
+		String msgEnabled =
+				SafeResourceLoader
+						.getString("ALERT_ENABLED",
+								this.manager.getResourceBundle(),
+								"Package $PACKAGE (v$VERSION) enabled!")
+						.replaceFirst("\\$PACKAGE", target.getName())
+						.replaceFirst("\\$VERSION", target.getVersion() + "");
+		Log logEnabled =
+				new Log(msgEnabled, LoggingLevel.FINE, this.manager.getName());
+		this.manager.fireEvent(logEnabled);
+	}
+
+	// logging package events
+	/**
+	 * If packages should be enabled on load, this enables the newly loaded
+	 * package. Also logs the package being loaded.
+	 *
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPackageLoaded(PackageLoaded event) {
+		if (this.manager.enableOnLoad()) {
+			this.manager.enable(event.getPackage());
+		}
+		String loaded =
+				SafeResourceLoader.getString("ALERT_LOADED",
+						this.manager.getResourceBundle(),
+						"Package $PACKAGE (v$VERSION) loaded!");
+		loaded =
+				loaded.replaceFirst("\\$PACKAGE", event.getPackage().getName());
+		loaded =
+				loaded.replaceFirst("\\$VERSION", ""
+						+ event.getPackage().getVersion());
+		this.manager
+				.fireEvent(new Log(loaded, LoggingLevel.FINE, this.manager));
+	}
+
 	private void printHelp() {
 		ArrayList<PackageCommand> commands;
 		commands = this.manager.getCommands();
@@ -265,71 +330,6 @@ class PMEventListener implements Listener {
 						this.manager.getResourceBundle(),
 						"WIP. This may not function correctly."));
 		this.manager.fireEvent(message);
-	}
-
-	// logging package events
-	/**
-	 * If packages should be enabled on load, this enables the newly loaded
-	 * package. Also logs the package being loaded.
-	 * 
-	 * @param event the event that was received
-	 */
-	@EventHandler
-	public void onPackageLoaded(PackageLoaded event) {
-		if (this.manager.enableOnLoad()) {
-			this.manager.enable(event.getPackage());
-		}
-		String loaded =
-				SafeResourceLoader.getString("ALERT_LOADED",
-						this.manager.getResourceBundle(),
-						"Package $PACKAGE (v$VERSION) loaded!");
-		loaded =
-				loaded.replaceFirst("\\$PACKAGE", event.getPackage().getName());
-		loaded =
-				loaded.replaceFirst("\\$VERSION", ""
-						+ event.getPackage().getVersion());
-		this.manager
-				.fireEvent(new Log(loaded, LoggingLevel.FINE, this.manager));
-	}
-
-	/**
-	 * Logs the package being enabled.
-	 * 
-	 * @param event the event that was received
-	 */
-	@EventHandler
-	public void onPackageEnabled(PackageEnabled event) {
-		Package target = event.getPackage();
-		String msgEnabled =
-				SafeResourceLoader
-						.getString("ALERT_ENABLED",
-								this.manager.getResourceBundle(),
-								"Package $PACKAGE (v$VERSION) enabled!")
-						.replaceFirst("\\$PACKAGE", target.getName())
-						.replaceFirst("\\$VERSION", target.getVersion() + "");
-		Log logEnabled =
-				new Log(msgEnabled, LoggingLevel.FINE, this.manager.getName());
-		this.manager.fireEvent(logEnabled);
-	}
-
-	/**
-	 * Logs the package being disabled.
-	 * 
-	 * @param event the event that was received
-	 */
-	@EventHandler
-	public void onPackageDisabled(PackageDisabled event) {
-		Package target = event.getPackage();
-		String msgDisabled =
-				SafeResourceLoader
-						.getString("ALERT_ENABLED",
-								this.manager.getResourceBundle(),
-								"Package $PACKAGE (v$VERSION) enabled!")
-						.replaceFirst("\\$PACKAGE", target.getName())
-						.replaceFirst("\\$VERSION", target.getVersion() + "");
-		Log logDisabled =
-				new Log(msgDisabled, LoggingLevel.FINE, this.manager.getName());
-		this.manager.fireEvent(logDisabled);
 	}
 
 }

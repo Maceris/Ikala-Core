@@ -1,6 +1,5 @@
 package com.ikalagaming.util;
 
-
 /**
  * A {@link BinaryTree} subclass for storing integers. Allows the finding of the
  * smallest int not stored in the tree.

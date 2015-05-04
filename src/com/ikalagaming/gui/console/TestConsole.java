@@ -11,7 +11,7 @@ import com.ikalagaming.event.EventManager;
 
 /**
  * Tests the functionality of the console class.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -19,7 +19,7 @@ class TestConsole {
 
 	/**
 	 * Creates an event manager for the console test class.
-	 * 
+	 *
 	 * @throws Exception if there is an exception setting up the console.
 	 */
 	@BeforeClass
@@ -29,7 +29,7 @@ class TestConsole {
 
 	/**
 	 * Shuts down the event manager for the console test class.
-	 * 
+	 *
 	 * @throws Exception If there is an error shutting down the event manager
 	 */
 	@AfterClass
@@ -41,10 +41,14 @@ class TestConsole {
 	private Console console;
 
 	@Before
-	public void setUp() throws Exception {}
+	public void setUp() throws Exception {
+		this.console = new Console(TestConsole.manager);
+	}
 
 	@After
-	public void tearDown() throws Exception {}
+	public void tearDown() throws Exception {
+		this.console.onUnload();
+	}
 
 	@Test
 	public void testAppendMessage() {

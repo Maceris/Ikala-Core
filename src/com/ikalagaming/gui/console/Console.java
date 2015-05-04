@@ -12,6 +12,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -35,6 +36,7 @@ import com.ikalagaming.logging.LoggingLevel;
 import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.logging.events.LogError;
 import com.ikalagaming.packages.Package;
+import com.ikalagaming.packages.PackageManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -192,6 +194,16 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	private String packageName = "console";
 	private final double version = 0.2;
 	private EventManager eventManager;
+
+	/**
+	 * Constructs a console that uses the default EventManager for sending and
+	 * receiving events. It is not visible or set up and must be loaded with the
+	 * package manager before it can be used.
+	 *
+	 */
+	public Console() {
+		this(EventManager.getInstance());
+	}
 
 	/**
 	 * Constructs a console that uses the given EventManager for sending and
@@ -793,6 +805,16 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		if (this.posInString > this.currentLine.length()) {
 			this.posInString = this.currentLine.length();
 		}
+	}
+
+	@Override
+	public void windowClosing(WindowEvent e) {
+		String cmdUnload =
+				SafeResourceLoader.getString("COMMAND_UNLOAD", PackageManager
+						.getInstance().getResourceBundle(), "unload");
+		ConsoleCommandEntered cmdEvent = new ConsoleCommandEntered(cmdUnload);
+		this.eventManager.fireEvent(cmdEvent);
+		super.windowClosing(e);
 	}
 
 }

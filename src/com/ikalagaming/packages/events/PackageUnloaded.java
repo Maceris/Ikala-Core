@@ -18,7 +18,7 @@ public class PackageUnloaded extends Event {
 
 	/**
 	 * Creates a new {@link PackageUnloaded} for the given package.
-	 * 
+	 *
 	 * @param unloaded the package that has been unloaded
 	 *
 	 */

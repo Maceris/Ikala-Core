@@ -18,7 +18,7 @@ public class PackageLoaded extends Event {
 
 	/**
 	 * Creates a new {@link PackageLoaded} for the given package.
-	 * 
+	 *
 	 * @param loaded the package that has been loaded
 	 *
 	 */
