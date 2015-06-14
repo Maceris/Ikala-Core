@@ -116,20 +116,16 @@ public class EventManager {
 			}
 
 			// creates a class to execute the listener for the event
-			EventExecutor executor = new EventExecutor() {
-				@Override
-				public void execute(Listener listener1, Event event)
-						throws EventException {
-					try {
-						if (!eventClass.isAssignableFrom(event.getClass())) {
-							return;
-						}
-						method.invoke(listener1, event);
+			EventExecutor executor = (listener1, event) -> {
+				try {
+					if (!eventClass.isAssignableFrom(event.getClass())) {
+						return;
 					}
-					catch (Throwable t) {
-						EventException evtExcept = new EventException(t);
-						throw evtExcept;
-					}
+					method.invoke(listener1, event);
+				}
+				catch (Throwable t) {
+					EventException evtExcept = new EventException(t);
+					throw evtExcept;
 				}
 			};
 

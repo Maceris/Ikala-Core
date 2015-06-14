@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
@@ -91,6 +90,7 @@ public class TaskManager extends JFrame {
 			}
 		});
 	}
+
 	private static final long serialVersionUID = -4427516209866980363L;
 	private JPanel contentPane;
 	private JTable table;
@@ -145,12 +145,9 @@ public class TaskManager extends JFrame {
 		mnView.add(mnUpdateSpeed);
 
 		JRadioButtonMenuItem rdbtnmntmHigh = new JRadioButtonMenuItem("High");
-		rdbtnmntmHigh.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent arg0) {
-				if (arg0.getStateChange() == ItemEvent.SELECTED) {
-					TaskManager.this.delay = 500;
-				}
+		rdbtnmntmHigh.addItemListener(arg0 -> {
+			if (arg0.getStateChange() == ItemEvent.SELECTED) {
+				TaskManager.this.delay = 500;
 			}
 		});
 		this.buttonGroup.add(rdbtnmntmHigh);
@@ -159,24 +156,18 @@ public class TaskManager extends JFrame {
 		JRadioButtonMenuItem rdbtnmntmNormal =
 				new JRadioButtonMenuItem("Normal");
 		rdbtnmntmNormal.setSelected(true);
-		rdbtnmntmNormal.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					TaskManager.this.delay = 1000;
-				}
+		rdbtnmntmNormal.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				TaskManager.this.delay = 1000;
 			}
 		});
 		this.buttonGroup.add(rdbtnmntmNormal);
 		mnUpdateSpeed.add(rdbtnmntmNormal);
 
 		JRadioButtonMenuItem rdbtnmntmLow = new JRadioButtonMenuItem("Low");
-		rdbtnmntmLow.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					TaskManager.this.delay = 2000;
-				}
+		rdbtnmntmLow.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				TaskManager.this.delay = 2000;
 			}
 		});
 		this.buttonGroup.add(rdbtnmntmLow);

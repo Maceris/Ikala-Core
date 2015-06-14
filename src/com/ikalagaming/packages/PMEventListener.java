@@ -78,32 +78,96 @@ class PMEventListener implements Listener {
 	 * @param packageName The package to find a version for
 	 */
 	private void disable(String packageName) {
-		String tmp = "";
 		ConsoleMessage message;
-
 		Package pack = this.manager.getPackage(packageName);
 
 		if (pack == null) {
-			tmp =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"PACKAGE_NOT_LOADED",
 							this.manager.getResourceBundle(),
 							"Package $PACKAGE not loaded").replaceFirst(
-							"\\$PACKAGE", packageName);
-			message = new ConsoleMessage(tmp);
+							"\\$PACKAGE", packageName));
 			this.manager.fireEvent(message);
 			// stop right here. It does not exist
 			return;
 		}
 		if (!this.manager.isEnabled(pack)) {
-			tmp =
-					SafeResourceLoader.getString("package_disable_fail",
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"package_disable_fail",
 							this.manager.getResourceBundle(),
-							"Package failed to disable");
-			message = new ConsoleMessage(tmp);
+							"Package failed to disable"));
 			this.manager.fireEvent(message);
 			return;
 		}
 		this.manager.disable(pack);
+	}
+
+	private void reload(String packageName) {
+		ConsoleMessage message;
+		Package pack = this.manager.getPackage(packageName);
+
+		if (pack == null) {
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"PACKAGE_NOT_LOADED",
+							this.manager.getResourceBundle(),
+							"Package $PACKAGE not loaded").replaceFirst(
+							"\\$PACKAGE", packageName));
+			this.manager.fireEvent(message);
+			// stop right here. It does not exist
+			return;
+		}
+		this.manager.reload(pack);
+	}
+
+	private void enable(String packageName) {
+		ConsoleMessage message;
+		Package pack = this.manager.getPackage(packageName);
+
+		if (pack == null) {
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"PACKAGE_NOT_LOADED",
+							this.manager.getResourceBundle(),
+							"Package $PACKAGE not loaded").replaceFirst(
+							"\\$PACKAGE", packageName));
+			this.manager.fireEvent(message);
+			// stop right here. It does not exist
+			return;
+		}
+		if (this.manager.isEnabled(pack)) {
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"package_enable_fail",
+							this.manager.getResourceBundle(),
+							"Package failed to enable"));
+			this.manager.fireEvent(message);
+			return;
+		}
+		this.manager.enable(pack);
+	}
+
+	private void unload(String packageName) {
+		ConsoleMessage message;
+		Package pack = this.manager.getPackage(packageName);
+
+		if (pack == null) {
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"PACKAGE_NOT_LOADED",
+							this.manager.getResourceBundle(),
+							"Package $PACKAGE not loaded").replaceFirst(
+							"\\$PACKAGE", packageName));
+			this.manager.fireEvent(message);
+			// stop right here. It does not exist
+			return;
+		}
+		if (this.manager.isEnabled(pack)) {
+			this.manager.disable(pack);
+		}
+		this.manager.unloadPackage(pack);
 	}
 
 	/**
@@ -113,7 +177,6 @@ class PMEventListener implements Listener {
 	 */
 	@EventHandler
 	public void onCommand(PackageCommandSent event) {
-		// TODO handle these with scripting?
 		if (event.getCommand().equalsIgnoreCase(this.cmd_help)) {
 			this.printHelp();
 		}
@@ -121,24 +184,47 @@ class PMEventListener implements Listener {
 			this.printPackages();
 		}
 		else if (event.getCommand().equalsIgnoreCase(this.cmd_enable)) {
-			this.printWIP();
+			String name = "";
+			if (event.getArgs().length >= 1) {
+				name = event.getArgs()[0];
+			}
+			else {
+				// TODO error
+			}
+			this.enable(name);
 		}
 		else if (event.getCommand().equalsIgnoreCase(this.cmd_disable)) {
 			String name = "";
 			if (event.getArgs().length >= 1) {
 				name = event.getArgs()[0];
 			}
+			else {
+				// TODO error
+			}
 			this.disable(name);
-			this.printWIP();
 		}
 		else if (event.getCommand().equalsIgnoreCase(this.cmd_load)) {
 			this.printWIP();
 		}
 		else if (event.getCommand().equalsIgnoreCase(this.cmd_unload)) {
-			this.printWIP();
+			String name = "";
+			if (event.getArgs().length >= 1) {
+				name = event.getArgs()[0];
+			}
+			else {
+				// TODO error
+			}
+			this.unload(name);
 		}
 		else if (event.getCommand().equalsIgnoreCase(this.cmd_reload)) {
-			this.printWIP();
+			String name = "";
+			if (event.getArgs().length >= 1) {
+				name = event.getArgs()[0];
+			}
+			else {
+				// TODO error
+			}
+			this.reload(name);
 		}
 		else if (event.getCommand().equalsIgnoreCase(this.cmd_version)) {
 			String name = "";

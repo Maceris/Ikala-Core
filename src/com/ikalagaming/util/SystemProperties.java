@@ -51,6 +51,7 @@ public class SystemProperties {
 		}
 		return SystemProperties.homeDirectory;
 	}
+
 	/**
 	 * Returns the OS name. Note that this is not equivalent to
 	 * <code>System.getProperty("os.name")</code> Possible OS names are:
