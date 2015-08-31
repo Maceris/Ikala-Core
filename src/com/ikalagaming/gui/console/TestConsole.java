@@ -17,6 +17,8 @@ import com.ikalagaming.event.EventManager;
  */
 class TestConsole {
 
+	private static EventManager manager;
+
 	/**
 	 * Creates an event manager for the console test class.
 	 *
@@ -37,17 +39,28 @@ class TestConsole {
 		TestConsole.manager.shutdown();
 	}
 
-	private static EventManager manager;
 	private Console console;
 
+	/**
+	 * Creates an instance of console to use in the test.
+	 *
+	 * @throws Exception if an exception occurs when constructing the console
+	 */
 	@Before
 	public void setUp() throws Exception {
 		this.console = new Console(TestConsole.manager);
 	}
 
+	/**
+	 * Unloads and dereferences the instance of the console that is created for
+	 * each test.
+	 *
+	 * @throws Exception if an exception is thrown while unloading
+	 */
 	@After
 	public void tearDown() throws Exception {
 		this.console.onUnload();
+		this.console = null;
 	}
 
 	@Test
@@ -60,7 +73,9 @@ class TestConsole {
 	 */
 	@Test
 	public void testConsole() {
-		Console console = new Console(TestConsole.manager);
+		// it is just testing the constructor so it shouldn't be used
+		@SuppressWarnings("unused")
+		Console consoleTest = new Console(TestConsole.manager);
 	}
 
 	@Test
