@@ -15,6 +15,14 @@ import java.util.Map;
 public class Permission {
 
 	/**
+	 * The default value for a permission.
+	 */
+	private static final boolean DEFAULT_PERMISSION = false;
+
+	private static HashMap<String, Permission> permissionByName =
+			new HashMap<>();
+
+	/**
 	 * Checks to see if a permission with the given name has already been
 	 * created. If it exists, this returns true.
 	 *
@@ -226,11 +234,6 @@ public class Permission {
 		return result;
 	}
 
-	/**
-	 * The default value for a permission.
-	 */
-	private static final boolean DEFAULT_PERMISSION = false;
-
 	private boolean permDefaultValue;
 
 	private final String permName;
@@ -254,9 +257,6 @@ public class Permission {
 	 * Used so that the subchild map is only calculated once to save memory.
 	 */
 	private boolean childrenCalculated = false;
-
-	private static HashMap<String, Permission> permissionByName =
-			new HashMap<>();
 
 	/**
 	 * <p>

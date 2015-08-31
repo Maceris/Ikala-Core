@@ -16,6 +16,8 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class EventManager {
 
+	private static EventManager instance;
+
 	/**
 	 * Shuts down the static instance if it exists, and then nullifies the
 	 * reference to it. This exists in case you wish to use your own instances
@@ -52,8 +54,6 @@ public class EventManager {
 	private EventDispatcher dispatcher;
 
 	private HashMap<Class<? extends Event>, HandlerList> handlerMap;
-
-	private static EventManager instance;
 
 	/**
 	 * Sets up the event managers handlers and event dispatching and starts the

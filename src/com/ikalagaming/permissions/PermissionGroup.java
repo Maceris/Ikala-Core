@@ -16,6 +16,12 @@ import java.util.HashMap;
  */
 public class PermissionGroup implements PermissionHolder {
 
+	private static final PermissionGroup ROOT = new PermissionGroup("root",
+			null);
+
+	private static HashMap<String, PermissionGroup> groupsByName =
+			new HashMap<>();
+
 	/**
 	 * If the group {@link #groupExists(String) exists}, returns the group. If
 	 * the group has not been created, returns null.
@@ -29,7 +35,6 @@ public class PermissionGroup implements PermissionHolder {
 		}
 		return null;
 	}
-
 	/**
 	 * Returns true if a group with the given name has been created.
 	 *
@@ -39,10 +44,8 @@ public class PermissionGroup implements PermissionHolder {
 	public static boolean groupExists(String name) {
 		return PermissionGroup.groupsByName.containsKey(name);
 	}
-
-	private static final PermissionGroup ROOT = new PermissionGroup("root",
-			null);
 	private final String groupName;
+
 	private final PermissionGroup parent;
 
 	/**
@@ -55,9 +58,6 @@ public class PermissionGroup implements PermissionHolder {
 	private HashMap<Permission, Boolean> permissions;
 
 	private final String description;
-
-	private static HashMap<String, PermissionGroup> groupsByName =
-			new HashMap<>();
 
 	/**
 	 * Constructs a new {@link PermissionGroup} with the supplied information.

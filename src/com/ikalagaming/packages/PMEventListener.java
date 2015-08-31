@@ -104,24 +104,6 @@ class PMEventListener implements Listener {
 		this.manager.disable(pack);
 	}
 
-	private void reload(String packageName) {
-		ConsoleMessage message;
-		Package pack = this.manager.getPackage(packageName);
-
-		if (pack == null) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PACKAGE_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Package $PACKAGE not loaded").replaceFirst(
-							"\\$PACKAGE", packageName));
-			this.manager.fireEvent(message);
-			// stop right here. It does not exist
-			return;
-		}
-		this.manager.reload(pack);
-	}
-
 	private void enable(String packageName) {
 		ConsoleMessage message;
 		Package pack = this.manager.getPackage(packageName);
@@ -147,27 +129,6 @@ class PMEventListener implements Listener {
 			return;
 		}
 		this.manager.enable(pack);
-	}
-
-	private void unload(String packageName) {
-		ConsoleMessage message;
-		Package pack = this.manager.getPackage(packageName);
-
-		if (pack == null) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PACKAGE_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Package $PACKAGE not loaded").replaceFirst(
-							"\\$PACKAGE", packageName));
-			this.manager.fireEvent(message);
-			// stop right here. It does not exist
-			return;
-		}
-		if (this.manager.isEnabled(pack)) {
-			this.manager.disable(pack);
-		}
-		this.manager.unloadPackage(pack);
 	}
 
 	/**
@@ -416,6 +377,45 @@ class PMEventListener implements Listener {
 						this.manager.getResourceBundle(),
 						"WIP. This may not function correctly."));
 		this.manager.fireEvent(message);
+	}
+
+	private void reload(String packageName) {
+		ConsoleMessage message;
+		Package pack = this.manager.getPackage(packageName);
+
+		if (pack == null) {
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"PACKAGE_NOT_LOADED",
+							this.manager.getResourceBundle(),
+							"Package $PACKAGE not loaded").replaceFirst(
+							"\\$PACKAGE", packageName));
+			this.manager.fireEvent(message);
+			// stop right here. It does not exist
+			return;
+		}
+		this.manager.reload(pack);
+	}
+
+	private void unload(String packageName) {
+		ConsoleMessage message;
+		Package pack = this.manager.getPackage(packageName);
+
+		if (pack == null) {
+			message =
+					new ConsoleMessage(SafeResourceLoader.getString(
+							"PACKAGE_NOT_LOADED",
+							this.manager.getResourceBundle(),
+							"Package $PACKAGE not loaded").replaceFirst(
+							"\\$PACKAGE", packageName));
+			this.manager.fireEvent(message);
+			// stop right here. It does not exist
+			return;
+		}
+		if (this.manager.isEnabled(pack)) {
+			this.manager.disable(pack);
+		}
+		this.manager.unloadPackage(pack);
 	}
 
 }

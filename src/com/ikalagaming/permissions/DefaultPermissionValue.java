@@ -21,6 +21,17 @@ public enum DefaultPermissionValue {
 	 */
 	FALSE("false", "f", "no");
 
+	private final static Map<String, Boolean> lookup = new HashMap<>();
+
+	static {
+		for (String name : TRUE.namesArray) {
+			DefaultPermissionValue.lookup.put(name, true);
+		}
+		for (String name : FALSE.namesArray) {
+			DefaultPermissionValue.lookup.put(name, true);
+		}
+	}
+
 	/**
 	 * Looks up a DefaultPermissionValue by name
 	 *
@@ -46,17 +57,6 @@ public enum DefaultPermissionValue {
 	}
 
 	private final String[] namesArray;
-
-	private final static Map<String, Boolean> lookup = new HashMap<>();
-
-	static {
-		for (String name : TRUE.namesArray) {
-			DefaultPermissionValue.lookup.put(name, true);
-		}
-		for (String name : FALSE.namesArray) {
-			DefaultPermissionValue.lookup.put(name, true);
-		}
-	}
 
 	private DefaultPermissionValue(String... names) {
 		this.namesArray = names;

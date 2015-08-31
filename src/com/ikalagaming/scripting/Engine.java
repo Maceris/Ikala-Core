@@ -12,6 +12,12 @@ import javax.script.ScriptEngineManager;
  */
 public class Engine {
 
+	private static ScriptEngineManager engineManager =
+			new ScriptEngineManager();
+
+	private static ScriptEngine luaEngine = Engine.engineManager
+			.getEngineByName("luaj");
+
 	/**
 	 * Returns the Engine's lua engine.
 	 *
@@ -20,11 +26,5 @@ public class Engine {
 	public static ScriptEngine getLuaEngine() {
 		return Engine.luaEngine;
 	}
-
-	private static ScriptEngineManager engineManager =
-			new ScriptEngineManager();
-
-	private static ScriptEngine luaEngine = Engine.engineManager
-			.getEngineByName("luaj");
 
 }

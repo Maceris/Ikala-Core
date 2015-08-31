@@ -166,12 +166,16 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			KeyEvent.VK_KP_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_KP_UP,
 			KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
 
+	private static final int DEFAULT_WIDTH = 680;
+	private static final int DEFAULT_HEIGHT = 350;
+	private static final int DEFAULT_LINE_COUNT = 150;
+
 	private ResourceBundle resourceBundle;
 	private ConsoleListener listener = new ConsoleListener(this);
 	private String windowTitle;
-	private int width = 680;
-	private int height = 350;
-	private int maxLineCount = 150;
+	private int width = Console.DEFAULT_WIDTH;
+	private int height = Console.DEFAULT_HEIGHT;
+	private int maxLineCount = Console.DEFAULT_LINE_COUNT;
 	private Color background = new Color(2, 3, 2);
 
 	private Color foreground = new Color(2, 200, 2);

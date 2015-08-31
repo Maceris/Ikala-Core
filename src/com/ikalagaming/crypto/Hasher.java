@@ -16,6 +16,45 @@ import javax.crypto.spec.PBEKeySpec;
  */
 public class Hasher {
 	/**
+	 * The string name of the algorithm to use (PBKDF2WithHmacSHA1).
+	 */
+	public static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1";
+
+	// The following constants may be changed without breaking existing hashes.
+
+	/**
+	 * The size of the salt, measured in bytes.
+	 */
+	public static final int SALT_BYTE_SIZE = 32;
+
+	/**
+	 * The size of the hash, measured in bytes.
+	 */
+	public static final int HASH_BYTE_SIZE = 32;
+
+	/**
+	 * Iteration count is the number of times that the password is hashed during
+	 * the derivation of the symmetric key. The higher number, the more
+	 * difficult it is to brute force the key.
+	 */
+	public static final int PBKDF2_ITERATIONS = 1000;
+
+	/**
+	 * The index of the iteration count in the hash string.
+	 */
+	public static final int ITERATION_INDEX = 0;
+
+	/**
+	 * The index of the salt in the hash string.
+	 */
+	public static final int SALT_INDEX = 1;
+
+	/**
+	 * The index of the hash in the hash string.
+	 */
+	public static final int PBKDF2_INDEX = 2;
+
+	/**
 	 * Returns a salted PBKDF2 hash of the password using a random salt.
 	 *
 	 * @param password the password to hash
@@ -29,8 +68,6 @@ public class Hasher {
 		byte[] salt = Hasher.getRandomSaltBytes();
 		return Hasher.createHash(password, salt);
 	}
-
-	// The following constants may be changed without breaking existing hashes.
 
 	/**
 	 * Returns a salted PBKDF2 hash of the password using the provided salt.
@@ -198,42 +235,5 @@ public class Hasher {
 			throws NoSuchAlgorithmException, InvalidKeySpecException {
 		return Hasher.validatePassword(password.toCharArray(), correctHash);
 	}
-
-	/**
-	 * The string name of the algorithm to use (PBKDF2WithHmacSHA1).
-	 */
-	public static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1";
-
-	/**
-	 * The size of the salt, measured in bytes.
-	 */
-	public static final int SALT_BYTE_SIZE = 32;
-
-	/**
-	 * The size of the hash, measured in bytes.
-	 */
-	public static final int HASH_BYTE_SIZE = 32;
-
-	/**
-	 * Iteration count is the number of times that the password is hashed during
-	 * the derivation of the symmetric key. The higher number, the more
-	 * difficult it is to brute force the key.
-	 */
-	public static final int PBKDF2_ITERATIONS = 1000;
-
-	/**
-	 * The index of the iteration count in the hash string.
-	 */
-	public static final int ITERATION_INDEX = 0;
-
-	/**
-	 * The index of the salt in the hash string.
-	 */
-	public static final int SALT_INDEX = 1;
-
-	/**
-	 * The index of the hash in the hash string.
-	 */
-	public static final int PBKDF2_INDEX = 2;
 
 }

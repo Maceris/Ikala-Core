@@ -85,6 +85,12 @@ class IkEventQueue<E> extends AbstractCollection<E> implements Queue<E>,
 	private static final long serialVersionUID = -6955217856676299888L;
 
 	/**
+	 * The minimum capacity that we'll use for a newly created queue. Must be a
+	 * power of 2.
+	 */
+	private static final int MIN_INITIAL_CAPACITY = 8;
+
+	/**
 	 * The array in which the elements of the queue are stored. The capacity of
 	 * the queue is the length of this array, which is always a power of two.
 	 * The array is never allowed to become full, except transiently within an
@@ -107,12 +113,6 @@ class IkEventQueue<E> extends AbstractCollection<E> implements Queue<E>,
 	 * queue.
 	 */
 	transient int tail;
-
-	/**
-	 * The minimum capacity that we'll use for a newly created queue. Must be a
-	 * power of 2.
-	 */
-	private static final int MIN_INITIAL_CAPACITY = 8;
 
 	/**
 	 * Constructs an empty array queue with an initial capacity sufficient to

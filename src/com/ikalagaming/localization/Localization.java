@@ -10,6 +10,8 @@ import java.util.Locale;
  */
 public class Localization {
 
+	private static Localization instance;
+
 	/**
 	 * Returns the static instance. Creates one if it does not exist.
 	 *
@@ -39,8 +41,6 @@ public class Localization {
 	public static void setLocale(Locale locale) {
 		Localization.getInstance().locale = locale;
 	}
-
-	private static Localization instance;
 
 	private Locale locale = new Locale("en", "US");
 }

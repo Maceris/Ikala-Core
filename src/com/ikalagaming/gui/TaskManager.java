@@ -59,6 +59,8 @@ public class TaskManager extends JFrame {
 		}
 	}
 
+	private static final long serialVersionUID = -4427516209866980363L;
+
 	private static void addPopup(Component component, final JPopupMenu popup) {
 		component.addMouseListener(new MouseAdapter() {
 			@Override
@@ -90,8 +92,6 @@ public class TaskManager extends JFrame {
 			}
 		});
 	}
-
-	private static final long serialVersionUID = -4427516209866980363L;
 	private JPanel contentPane;
 	private JTable table;
 	private final ButtonGroup buttonGroup = new ButtonGroup();

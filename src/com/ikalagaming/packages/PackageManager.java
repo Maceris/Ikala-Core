@@ -31,6 +31,8 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class PackageManager implements Package {
 
+	private static PackageManager instance;
+
 	/**
 	 * Shuts down the static instance (unregisters commands and unloads
 	 * packages)if it exists, and then nullifies the reference to it. This
@@ -95,10 +97,10 @@ public class PackageManager implements Package {
 		}
 		return PackageManager.instance;
 	}
-
 	private EventManager eventManager;
 	private PMEventListener listener;
 	private HashSet<Listener> listeners;
+
 	/** maps strings to packages loaded in memory */
 	private HashMap<String, Package> loadedPackages;
 
@@ -107,8 +109,6 @@ public class PackageManager implements Package {
 	private String packageName = "package-manager";
 
 	private ResourceBundle resourceBundle;
-
-	private static PackageManager instance;
 
 	/**
 	 * If packages should be enabled by the package manager when they are
@@ -645,14 +645,14 @@ public class PackageManager implements Package {
 		 * String[] filenames; filenames = pluginFolder.list(); if (filenames ==
 		 * null) { // TOD O log error return false; } if (filenames.length == 0)
 		 * { // empty // TO DO log error return false; } filenames = null;
-		 * 
+		 *
 		 * ArrayList<File> files = new ArrayList<File>();
-		 * 
+		 *
 		 * // adds valid jar files to the list of files for (File f :
 		 * pluginFolder.listFiles()) { if (f.isDirectory()) { continue;// its a
 		 * folder } if (!f.getName().toLowerCase().endsWith(".jar")) {
 		 * continue;// its not a jar file } files.add(f); }
-		 * 
+		 *
 		 * if (files.size() == 0) { // TOD O log error return false; }
 		 */
 		/*

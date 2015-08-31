@@ -23,6 +23,10 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 public class LoggingPackage implements Package, Listener {
 
+	/**
+	 * Only logs events that are of this level or higher
+	 */
+	public static LoggingLevel threshold = LoggingLevel.ALL;
 	private ResourceBundle resourceBundle;
 	private final double version = 0.2;
 	private String packageName = "logging";
@@ -31,10 +35,6 @@ public class LoggingPackage implements Package, Listener {
 	private Set<Listener> listeners;
 	private EventManager eventManager;
 	private PackageManager packageManager;
-	/**
-	 * Only logs events that are of this level or higher
-	 */
-	public static LoggingLevel threshold = LoggingLevel.ALL;
 
 	/**
 	 * Creates a logging package using the default static event manager.
