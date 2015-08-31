@@ -35,6 +35,7 @@ public class PermissionGroup implements PermissionHolder {
 		}
 		return null;
 	}
+
 	/**
 	 * Returns true if a group with the given name has been created.
 	 *
@@ -44,6 +45,7 @@ public class PermissionGroup implements PermissionHolder {
 	public static boolean groupExists(String name) {
 		return PermissionGroup.groupsByName.containsKey(name);
 	}
+
 	private final String groupName;
 
 	private final PermissionGroup parent;

@@ -92,6 +92,7 @@ public class TaskManager extends JFrame {
 			}
 		});
 	}
+
 	private JPanel contentPane;
 	private JTable table;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
