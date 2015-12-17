@@ -166,9 +166,21 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			KeyEvent.VK_KP_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_KP_UP,
 			KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
 
-	private static final int DEFAULT_WIDTH = 680;
-	private static final int DEFAULT_HEIGHT = 350;
-	private static final int DEFAULT_LINE_COUNT = 150;
+	/**
+	 * The default width of the console. The console will start out with this
+	 * dimension.
+	 */
+	static final int DEFAULT_WIDTH = 680;
+	/**
+	 * The default height of the console. The console will start out with this
+	 * dimension.
+	 */
+	static final int DEFAULT_HEIGHT = 350;
+	/**
+	 * The default number of lines allowed in the console. Lines that go past
+	 * this limit are removed from the console.
+	 */
+	static final int DEFAULT_LINE_COUNT = 150;
 
 	private ResourceBundle resourceBundle;
 	private ConsoleListener listener = new ConsoleListener(this);
@@ -731,12 +743,17 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 
 	/**
 	 * Sets the frame height. This is the height of the frame the console is in.
+	 * Negative values will result in a height of 0.
 	 *
 	 * @param newHeight The new height
 	 */
 	public void setHeight(int newHeight) {
-		this.height = newHeight;
-		this.frame.setSize(this.frame.getWidth(), newHeight);
+		int h = newHeight;
+		if (h < 0) {
+			h = 0;
+		}
+		this.height = h;
+		this.frame.setSize(this.frame.getWidth(), h);
 	}
 
 	/**
@@ -754,12 +771,17 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 
 	/**
 	 * Sets the frame width. This is the width of the frame the console is in.
+	 * Negative values will result in a width of 0.
 	 *
 	 * @param newWidth The new width
 	 */
 	public void setWidth(int newWidth) {
-		this.width = newWidth;
-		this.frame.setSize(newWidth, this.frame.getHeight());
+		int w = newWidth;
+		if (w < 0) {
+			w = 0;
+		}
+		this.width = w;
+		this.frame.setSize(w, this.frame.getHeight());
 	}
 
 	/**

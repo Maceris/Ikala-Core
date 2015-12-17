@@ -15,7 +15,7 @@ import com.ikalagaming.event.EventManager;
  * @author Ches Burks
  *
  */
-class TestConsole {
+public class TestConsole {
 
 	private static EventManager manager;
 
@@ -49,6 +49,7 @@ class TestConsole {
 	@Before
 	public void setUp() throws Exception {
 		this.console = new Console(TestConsole.manager);
+		this.console.onEnable();
 	}
 
 	/**
@@ -88,9 +89,16 @@ class TestConsole {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 
+	/**
+	 * Tests the getter for height. This depends on {@link #testSetHeight()}, as
+	 * the height must be changed to test properly.
+	 */
 	@Test
 	public void testGetHeight() {
-		Assert.fail("Not yet implemented"); // TODO
+		final int TEST_HEIGHT = 450;
+		Assert.assertEquals(Console.DEFAULT_HEIGHT, this.console.getHeight(), 0);
+		this.console.setHeight(TEST_HEIGHT);
+		Assert.assertEquals(TEST_HEIGHT, this.console.getHeight(), 0);
 	}
 
 	@Test
@@ -178,9 +186,21 @@ class TestConsole {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 
+	/**
+	 * Tests the getter for height. This depends on {@link #testGetHeight()}, as
+	 * the height must be checked to test properly.
+	 */
 	@Test
 	public void testSetHeight() {
-		Assert.fail("Not yet implemented"); // TODO
+		final int TEST_HEIGHT_LARGE = 450;
+		final int TEST_HEIGHT_SMALL = 10;
+		final int TEST_HEIGHT_NEGATIVE = -100;
+		this.console.setHeight(TEST_HEIGHT_LARGE);
+		Assert.assertEquals(TEST_HEIGHT_LARGE, this.console.getHeight(), 0);
+		this.console.setHeight(TEST_HEIGHT_SMALL);
+		Assert.assertEquals(TEST_HEIGHT_SMALL, this.console.getHeight(), 0);
+		this.console.setHeight(TEST_HEIGHT_NEGATIVE);
+		Assert.assertEquals(0, this.console.getHeight(), 0);
 	}
 
 	@Test
