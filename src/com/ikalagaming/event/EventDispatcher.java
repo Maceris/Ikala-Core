@@ -1,5 +1,6 @@
 package com.ikalagaming.event;
 
+import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 
 import com.ikalagaming.logging.LoggingLevel;
@@ -14,7 +15,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  */
 class EventDispatcher extends Thread {
 
-	private IkEventQueue<Event> queue;
+	private ArrayDeque<Event> queue;
 
 	private EventManager eventManager;
 
@@ -29,7 +30,7 @@ class EventDispatcher extends Thread {
 	 */
 	public EventDispatcher(EventManager manager) {
 		this.setName("EventDispatcher");
-		this.queue = new IkEventQueue<>();
+		this.queue = new ArrayDeque<>();
 		this.eventManager = manager;
 		this.hasEvents = false;
 		this.running = true;
