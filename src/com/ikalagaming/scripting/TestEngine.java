@@ -11,7 +11,7 @@ import org.junit.Test;
  * @author Ches Burks
  *
  */
-class TestEngine {
+public class TestEngine {
 
 	/**
 	 * Displays the engine name and version and the language name and version.
