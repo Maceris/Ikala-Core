@@ -210,6 +210,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	private String packageName = "console";
 	private final double version = 0.2;
 	private EventManager eventManager;
+	private HashSet<Listener> listeners;
 
 	/**
 	 * Constructs a console that uses the default EventManager for sending and
@@ -387,8 +388,10 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 
 	@Override
 	public Set<Listener> getListeners() {
-		HashSet<Listener> listeners = new HashSet<>();
-		listeners.add(this.listener);
+		if (this.listeners == null) {
+			this.listeners = new HashSet<>();
+			this.listeners.add(this.listener);
+		}
 		return listeners;
 	}
 
