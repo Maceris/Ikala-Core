@@ -422,7 +422,7 @@ public class PackageManager implements Package {
 	/**
 	 * Returns true if the package is enabled, and false otherwise. A state of
 	 * {@link PackageState#ENABLED ENABLED} returns true, any other states will
-	 * return false.
+	 * return false. Packages that are not loaded will return false.
 	 *
 	 * @param target The package to check for enabled status
 	 *
@@ -443,7 +443,7 @@ public class PackageManager implements Package {
 	/**
 	 * Returns true if the package is enabled, and false otherwise. A state of
 	 * {@link PackageState#ENABLED ENABLED} returns true, any other states will
-	 * return false.
+	 * return false. Packages that are not loaded will return false.
 	 *
 	 * @param target The name of package to check for enabled status
 	 *

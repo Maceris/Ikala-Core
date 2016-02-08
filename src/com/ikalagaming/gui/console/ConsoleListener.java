@@ -5,6 +5,7 @@ import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleMessage;
 import com.ikalagaming.gui.console.events.ReportUnknownCommand;
 import com.ikalagaming.logging.events.DisplayLog;
+import com.ikalagaming.packages.PackageManager;
 import com.ikalagaming.packages.events.PackageCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -36,7 +37,7 @@ class ConsoleListener implements Listener {
 		if (!event.getTo().equalsIgnoreCase(this.parent.getName())) {
 			return;
 		}
-
+		// TODO do something with commands
 	}
 
 	/**
@@ -46,6 +47,11 @@ class ConsoleListener implements Listener {
 	 */
 	@EventHandler
 	public void onConsoleMessage(ConsoleMessage event) {
+		if (!PackageManager.getInstance().isEnabled(this.parent)) {
+			System.err.println("Console is disabled! Cannot print message '"
+					+ event.getMessage() + "'");
+			return;// Don't try to log things if it is disabled
+		}
 		this.parent.appendMessage(event.getMessage());
 	}
 
@@ -56,6 +62,11 @@ class ConsoleListener implements Listener {
 	 */
 	@EventHandler
 	public void onDisplayLog(DisplayLog event) {
+		if (!PackageManager.getInstance().isEnabled(this.parent)) {
+			System.err.println("Console is disabled! Cannot print message '"
+					+ event.getMessage() + "'");
+			return;// Don't try to log things if it is disabled
+		}
 		this.parent.appendMessage(event.getMessage());
 	}
 
@@ -67,18 +78,26 @@ class ConsoleListener implements Listener {
 	 */
 	@EventHandler
 	public void onReportUnknownCommand(ReportUnknownCommand event) {
-		this.parent.appendMessage(SafeResourceLoader.getString(
-				"unknown_command", this.parent.getResourceBundle(),
-				"Unknown command")
-				+ " '"
-				+ event.getCommand()
-				+ "'. "
-				+ SafeResourceLoader.getString("try_cmd",
-						this.parent.getResourceBundle(),
-						"For a list of available commands, type")
-				+ " '"
-				+ SafeResourceLoader.getString("COMMAND_HELP",
-						"com.ikalagaming.packages.resources.PackageManager",
-						"help") + "'");
+		String message =
+				SafeResourceLoader.getString("unknown_command",
+						this.parent.getResourceBundle(), "Unknown command")
+						+ " '"
+						+ event.getCommand()
+						+ "'. "
+						+ SafeResourceLoader.getString("try_cmd",
+								this.parent.getResourceBundle(),
+								"For a list of available commands, type")
+						+ " '"
+						+ SafeResourceLoader
+								.getString(
+										"COMMAND_HELP",
+										"com.ikalagaming.packages.resources.PackageManager",
+										"help") + "'";
+		if (!PackageManager.getInstance().isEnabled(this.parent)) {
+			System.err.println("Console is disabled! Cannot print message '"
+					+ message + "'");
+			return;// Don't try to log things if it is disabled
+		}
+		this.parent.appendMessage(message);
 	}
 }

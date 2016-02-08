@@ -423,6 +423,9 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 */
 	private int getSafeLineStartOffset(int line) {
 		int theLine = line;
+		if (this.textArea == null) {
+			return 0;
+		}
 		if (theLine >= this.textArea.getLineCount()) {
 			if (this.textArea.getLineCount() >= 1) {
 				theLine = this.textArea.getLineCount() - 1;
