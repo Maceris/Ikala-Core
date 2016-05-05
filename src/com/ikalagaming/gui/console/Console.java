@@ -33,9 +33,7 @@ import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleCommandEntered;
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.logging.LoggingLevel;
-import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.logging.events.LogError;
+import com.ikalagaming.logging.Logging;
 import com.ikalagaming.packages.Package;
 import com.ikalagaming.packages.PackageManager;
 import com.ikalagaming.util.SafeResourceLoader;
@@ -381,12 +379,12 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 								.getTransferData(DataFlavor.stringFlavor);
 			}
 			catch (UnsupportedFlavorException | IOException ex) {
-				this.eventManager.fireEvent(new LogError(SafeResourceLoader
-						.getString("invalid_clipboard",
+				String msg =
+						SafeResourceLoader.getString("invalid_clipboard",
 								this.getResourceBundle(),
 								"Invalid clipboard contents").concat(
-								ex.getLocalizedMessage()),
-						LoggingLevel.WARNING, this));
+								ex.getLocalizedMessage());
+				Logging.warning(this.getName(), msg);
 			}
 		}
 		return result;
@@ -457,9 +455,10 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			return theLine <= 0 ? 0 : this.textArea.getLineStartOffset(theLine);
 		}
 		catch (BadLocationException e) {
-			this.eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"error_bad_location", this.getResourceBundle(),
-					"Bad location"), LoggingLevel.WARNING, this));
+			String msg =
+					SafeResourceLoader.getString("error_bad_location",
+							this.getResourceBundle(), "Bad location");
+			Logging.warning(this.getName(), msg);
 		}
 		return 0;
 	}
@@ -686,9 +685,8 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		catch (MissingResourceException missingResource) {
 			// don't localize this since it would fail anyways
 			// TODO handle this better
-			this.eventManager
-					.fireEvent(new LogError("Locale not found for Console",
-							LoggingLevel.WARNING, this));
+			Logging.warning(this.getName(),
+					"Locale not found for Console in onLoad()");
 		}
 		this.windowTitle =
 				SafeResourceLoader.getString("title", this.getResourceBundle(),
@@ -737,10 +735,10 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			this.textArea.replaceRange("", 0, end);
 		}
 		catch (BadLocationException e) {
-			this.eventManager.fireEvent(new Log(SafeResourceLoader.getString(
-					"error_bad_location", this.getResourceBundle(),
-					"Bad location"), LoggingLevel.WARNING, this));
-
+			String msg =
+					SafeResourceLoader.getString("error_bad_location",
+							this.getResourceBundle(), "Bad location");
+			Logging.warning(this.getName(), msg);
 		}
 		finally {
 			editLock.lock();

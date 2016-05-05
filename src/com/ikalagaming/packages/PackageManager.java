@@ -1,25 +1,29 @@
 package com.ikalagaming.packages;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import com.ikalagaming.event.Event;
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.logging.LoggingLevel;
-import com.ikalagaming.logging.LoggingPackage;
-import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.logging.events.LogError;
+import com.ikalagaming.logging.Logging;
 import com.ikalagaming.packages.events.PackageDisabled;
 import com.ikalagaming.packages.events.PackageEnabled;
 import com.ikalagaming.packages.events.PackageLoaded;
 import com.ikalagaming.packages.events.PackageUnloaded;
+import com.ikalagaming.system.SystemPackage;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -29,7 +33,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-public class PackageManager implements Package {
+public class PackageManager {
 
 	private static PackageManager instance;
 
@@ -52,9 +56,6 @@ public class PackageManager implements Package {
 			PackageManager.instance.unloadPackage(s);
 		}
 		PackageManager.instance.clearCommands();
-		for (Listener l : PackageManager.instance.listeners) {
-			PackageManager.instance.eventManager.unregisterEventListeners(l);
-		}
 		PackageManager.instance.eventManager = null;
 		PackageManager.instance.commands = null;
 
@@ -99,15 +100,11 @@ public class PackageManager implements Package {
 	}
 
 	private EventManager eventManager;
-	private PMEventListener listener;
-	private HashSet<Listener> listeners;
 
 	/** maps strings to packages loaded in memory */
 	private HashMap<String, Package> loadedPackages;
 
 	private Map<Package, PackageState> packageStates;
-
-	private String packageName = "package-manager";
 
 	private ResourceBundle resourceBundle;
 
@@ -122,6 +119,8 @@ public class PackageManager implements Package {
 	 * A list of all of the commands registered. This list is sorted.
 	 */
 	private ArrayList<PackageCommand> commands;
+
+	private SystemPackage sysPackage;
 
 	/**
 	 * Constructs a new {@link PackageManager} and initializes variables.
@@ -138,13 +137,13 @@ public class PackageManager implements Package {
 				ResourceBundle.getBundle(
 						"com.ikalagaming.packages.resources.PackageManager",
 						Localization.getLocale());
-		this.listeners = new HashSet<>();
 
-		this.listener = new PMEventListener(this);
-		this.listeners.add(this.listener);
 		this.commands = new ArrayList<>();
 
-		this.loadCorePackages();
+		Logging.create();
+		this.sysPackage = new SystemPackage();
+		this.loadPackage(this.sysPackage);
+
 		this.registerCommands();
 	}
 
@@ -176,16 +175,17 @@ public class PackageManager implements Package {
 
 	/**
 	 * Deactivates the package and halts all of its operations. The package is
-	 * still loaded in memory but not active. Calls {@link #onDisable()}. This
-	 * should change the packages state to {@link PackageState#DISABLING
-	 * DISABLING}. If the disabling were done here and not in the
-	 * {@link #onDisable()} method, the package state should be changed to
-	 * {@link PackageState#DISABLED DISABLED} after completion. Otherwise the
-	 * change to DISABLED is handled in the onDisable method.
+	 * still loaded in memory but not active. Calls {@link Package#onDisable()}.
+	 * This changes the packages state to {@link PackageState#DISABLING
+	 * DISABLING}. The package state is changed to {@link PackageState#DISABLED
+	 * DISABLED} after completion. If {@link Package#onDisable()} returns false
+	 * (failed), the package state is set to {@link PackageState#CORRUPTED
+	 * CORRUPTED}.
 	 *
 	 * @param target the package to disable
 	 *
-	 * @return true if the package has been successfully disabled
+	 * @return true if the package has been successfully disabled, false if
+	 *         there was a problem
 	 */
 	public boolean disable(Package target) {
 		this.setPackageState(target, PackageState.DISABLING);
@@ -193,28 +193,34 @@ public class PackageManager implements Package {
 				SafeResourceLoader.getString("ALERT_DISABLING",
 						this.resourceBundle, "Disabling package $PACKAGE...")
 						.replaceFirst("\\$PACKAGE", target.getName());
-		Log logDisabling =
-				new Log(msgDisabling, LoggingLevel.FINE, this.getName());
-		this.fireEvent(logDisabling);
-		target.onDisable();// TODO can return false
-		this.setPackageState(target, PackageState.DISABLED);
-		PackageDisabled packDisabled = new PackageDisabled(target);
-		this.fireEvent(packDisabled);
-		return true;
+		Logging.fine(SystemPackage.PACKAGE_NAME, msgDisabling);
+
+		boolean success = target.onDisable();
+		if (success) {
+			this.setPackageState(target, PackageState.DISABLED);
+			PackageDisabled packDisabled = new PackageDisabled(target);
+			this.fireEvent(packDisabled);
+		}
+		else {
+			this.setPackageState(target, PackageState.CORRUPTED);
+			// TODO note the error
+		}
+		return success;
 	}
 
 	/**
 	 * Deactivates the package and halts all of its operations. The package is
-	 * still loaded in memory but not active. Calls {@link #onDisable()}. This
-	 * should change the packages state to {@link PackageState#DISABLING
-	 * DISABLING}. If the disabling were done here and not in the
-	 * {@link #onDisable()} method, the package state should be changed to
-	 * {@link PackageState#DISABLED DISABLED} after completion. Otherwise the
-	 * change to DISABLED is handled in the onDisable method.
+	 * still loaded in memory but not active. Calls {@link Package#onDisable()}.
+	 * This changes the packages state to {@link PackageState#DISABLING
+	 * DISABLING}. The package state is changed to {@link PackageState#DISABLED
+	 * DISABLED} after completion. If {@link Package#onDisable()} returns false
+	 * (failed), the package state is set to {@link PackageState#CORRUPTED
+	 * CORRUPTED}.
 	 *
 	 * @param target the name of the package to disable
 	 *
-	 * @return true if the package has been successfully disabled
+	 * @return true if the package has been successfully disabled, false if
+	 *         there was a problem
 	 */
 	public boolean disable(String target) {
 		Package p = this.getPackage(target);
@@ -226,15 +232,16 @@ public class PackageManager implements Package {
 
 	/**
 	 * Activates the package and enables it to perform its normal functions.
-	 * Calls {@link #onEnable()}. This should change the package state to
-	 * {@link PackageState#ENABLING ENABLING}. If the enabling were done here
-	 * and not in the {@link #onEnable()} method, the package state should be
-	 * changed to {@link PackageState#ENABLED ENABLED} after completion.
-	 * Otherwise the change to ENABLED is handled in the onEnable method.
+	 * Calls {@link Package#onEnable()}. This changes the package state to
+	 * {@link PackageState#ENABLING ENABLING}. The package state is changed to
+	 * {@link PackageState#ENABLED ENABLED} after completion. If
+	 * {@link Package#onEnable()} returns false (failed), the package state is
+	 * set to {@link PackageState#CORRUPTED CORRUPTED}.
 	 *
 	 * @param target The package to enable
 	 *
-	 * @return true if the package was successfully enabled
+	 * @return true if the package was successfully enabled, false if there was
+	 *         a problem
 	 */
 	public boolean enable(Package target) {
 		this.setPackageState(target, PackageState.ENABLING);
@@ -242,26 +249,34 @@ public class PackageManager implements Package {
 				SafeResourceLoader.getString("ALERT_ENABLING",
 						this.resourceBundle, "Enabling package $PACKAGE...")
 						.replaceFirst("\\$PACKAGE", target.getName());
-		Log logEnabling = new Log(msgEnable, LoggingLevel.FINE, this.getName());
-		this.fireEvent(logEnabling);
-		target.onEnable();// TODO can return false
-		this.setPackageState(target, PackageState.ENABLED);
-		PackageEnabled packEnabled = new PackageEnabled(target);
-		this.fireEvent(packEnabled);
-		return true;
+		Logging.fine(SystemPackage.PACKAGE_NAME, msgEnable);
+
+		boolean success = target.onEnable();
+		if (success) {
+			this.setPackageState(target, PackageState.ENABLED);
+			PackageEnabled packEnabled = new PackageEnabled(target);
+			this.fireEvent(packEnabled);
+		}
+		else {
+			this.setPackageState(target, PackageState.CORRUPTED);
+			// TODO note the error
+		}
+
+		return success;
 	}
 
 	/**
 	 * Activates the package and enables it to perform its normal functions.
-	 * Calls {@link #onEnable()}. This should change the package state to
-	 * {@link PackageState#ENABLING ENABLING}. If the enabling were done here
-	 * and not in the {@link #onEnable()} method, the package state should be
-	 * changed to {@link PackageState#ENABLED ENABLED} after completion.
-	 * Otherwise the change to ENABLED is handled in the onEnable method.
+	 * Calls {@link Package#onEnable()}. This changes the package state to
+	 * {@link PackageState#ENABLING ENABLING}. The package state is changed to
+	 * {@link PackageState#ENABLED ENABLED} after completion. If
+	 * {@link Package#onEnable()} returns false (failed), the package state is
+	 * set to {@link PackageState#CORRUPTED CORRUPTED}.
 	 *
 	 * @param target The name of the package to enable
 	 *
-	 * @return true if the package was successfully enabled
+	 * @return true if the package was successfully enabled, false if there was
+	 *         a problem
 	 */
 	public boolean enable(String target) {
 		Package p = this.getPackage(target);
@@ -333,9 +348,9 @@ public class PackageManager implements Package {
 	 *
 	 * @return a copy of the stored list
 	 */
-	@SuppressWarnings("unchecked")
 	public ArrayList<PackageCommand> getCommands() {
-		return (ArrayList<PackageCommand>) this.commands.clone();
+		ArrayList<PackageCommand> cmds = new ArrayList<>(this.commands);
+		return cmds;
 	}
 
 	/**
@@ -355,11 +370,6 @@ public class PackageManager implements Package {
 		return -1;
 	}
 
-	@Override
-	public Set<Listener> getListeners() {
-		return this.listeners;
-	}
-
 	/**
 	 * Returns the map of package name to package of the currently loaded
 	 * packages.
@@ -368,11 +378,6 @@ public class PackageManager implements Package {
 	 */
 	public HashMap<String, Package> getLoadedPackages() {
 		return this.loadedPackages;
-	}
-
-	@Override
-	public String getName() {
-		return this.packageName;
 	}
 
 	/**
@@ -412,11 +417,6 @@ public class PackageManager implements Package {
 	 */
 	public ResourceBundle getResourceBundle() {
 		return this.resourceBundle;
-	}
-
-	@Override
-	public double getVersion() {
-		return 0.3f;
 	}
 
 	/**
@@ -483,65 +483,6 @@ public class PackageManager implements Package {
 	}
 
 	/**
-	 * Loads the event manager and logging packages. This is done on
-	 * initialization.
-	 */
-	private void loadCorePackages() {
-		LoggingPackage loggingPack = new LoggingPackage(this);
-		// TODO handle all this on creation
-		this.loadedPackages.put(loggingPack.getName(), loggingPack);
-
-		loggingPack.onLoad();
-		this.enable(loggingPack);// TODO loaded and enabled events
-
-		/*
-		 * ensures the event manager can have its listeners registered after
-		 * being loaded.
-		 */
-		for (Listener l : this.getListeners()) {
-			this.eventManager.registerEventListeners(l);
-		}
-
-		for (Listener l : loggingPack.getListeners()) {
-			this.eventManager.registerEventListeners(l);
-		}
-
-		String regListenersP =
-				SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
-						this.resourceBundle,
-						"Registered event listeners for $PACKAGE")
-						.replaceFirst("\\$PACKAGE", this.getName());
-		String regListenersL =
-				SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
-						this.resourceBundle,
-						"Registered event listeners for $PACKAGE")
-						.replaceFirst("\\$PACKAGE", loggingPack.getName());
-		String loadingL =
-				SafeResourceLoader
-						.getString("ALERT_LOADING", this.resourceBundle,
-								"Loading package $PACKAGE (v$VERSION)...")
-						.replaceFirst("\\$PACKAGE", loggingPack.getName())
-						.replaceFirst("\\$VERSION",
-								"" + loggingPack.getVersion());
-
-		String loadedL =
-				SafeResourceLoader
-						.getString("ALERT_LOADED", this.resourceBundle,
-								"Package $PACKAGE (v$VERSION) loaded!")
-						.replaceFirst("\\$PACKAGE", loggingPack.getName())
-						.replaceFirst("\\$VERSION",
-								"" + loggingPack.getVersion());
-
-		this.eventManager.fireEvent(new Log(loadingL, LoggingLevel.FINE, this));
-		this.eventManager.fireEvent(new Log(regListenersP, LoggingLevel.FINER,
-				this));
-		this.eventManager.fireEvent(new Log(regListenersL, LoggingLevel.FINER,
-				this));
-		this.eventManager.fireEvent(new Log(loadedL, LoggingLevel.FINER, this));
-
-	}
-
-	/**
 	 * <p>
 	 * Loads the given package into memory, stores it by type, and enables it if
 	 * packages are enabled on load by default.
@@ -565,7 +506,7 @@ public class PackageManager implements Package {
 						"Loading package $PACKAGE (v$VERSION)...");
 		loading = loading.replaceFirst("\\$PACKAGE", toLoad.getName());
 		loading = loading.replaceFirst("\\$VERSION", "" + toLoad.getVersion());
-		this.eventManager.fireEvent(new Log(loading, LoggingLevel.FINE, this));
+		Logging.fine(SystemPackage.PACKAGE_NAME, loading);
 		// if the package exists and is older than toLoad, unload
 		if (this.isLoaded(toLoad)) {
 			String alreadyLoaded =
@@ -578,8 +519,7 @@ public class PackageManager implements Package {
 			alreadyLoaded =
 					alreadyLoaded.replaceFirst("\\$VERSION",
 							"" + toLoad.getVersion());
-			this.eventManager.fireEvent(new Log(alreadyLoaded,
-					LoggingLevel.FINE, this));
+			Logging.fine(SystemPackage.PACKAGE_NAME, alreadyLoaded);
 			if (this.loadedPackages.get(toLoad.getName()).getVersion() < toLoad
 					.getVersion()) {
 				this.unloadPackage(this.loadedPackages.get(toLoad.getName()));
@@ -596,8 +536,7 @@ public class PackageManager implements Package {
 				outdated =
 						outdated.replaceFirst("\\$VERSION",
 								"" + toLoad.getVersion());
-				this.eventManager.fireEvent(new Log(outdated,
-						LoggingLevel.FINE, this));
+				Logging.fine(SystemPackage.PACKAGE_NAME, outdated);
 				return false;
 			}
 		}
@@ -614,7 +553,7 @@ public class PackageManager implements Package {
 						this.resourceBundle,
 						"Registered event listeners for $PACKAGE")
 						.replaceFirst("\\$PACKAGE", toLoad.getName());
-		this.eventManager.fireEvent(new Log(msg, LoggingLevel.FINER, this));
+		Logging.finer(SystemPackage.PACKAGE_NAME, msg);
 
 		// load it
 		toLoad.onLoad();
@@ -626,61 +565,203 @@ public class PackageManager implements Package {
 		return true;
 	}
 
+	public boolean loadPlugin(PackageInfo info) {
+		return false;
+	}
+
 	/**
 	 * Loads a plugin from a name
-	 *
+	 * 
+	 * @param path the path to the folder containing the file
 	 * @param name the filename to load from
 	 * @return true on success, false if it failed
 	 */
-	public boolean loadPlugin(String name) {
+	public boolean loadPlugin(String path, String name) {
 		// TODO javadoc
 		// TODO load a package from file
+
+		// The folder containing the plugin
+		File pluginFolder;
+		try {
+			pluginFolder = new File(path);
+		}
+		catch (NullPointerException nullExcept) {
+			// TODO localize error
+			String msg = "Null plugin folder path";
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+			return false;
+		}
+		try {
+			if (!pluginFolder.exists()) { // TODO localize error
+				String msg = "Plugin folder does not exist";
+				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+				return false;
+			}
+			if (!pluginFolder.isDirectory()) { // TODO localize error
+				String msg = "Plugin folder is not a folder";
+				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+				return false;
+			}
+			if (!pluginFolder.canRead()) {
+				// TODO localize error
+				String msg = "Cannot read plugin folder";
+				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+				return false;
+			}
+
+		}
+		catch (SecurityException securExcep) {
+			// TODO localize error
+			String msg = "System security denied read access to plugin folder";
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+			return false;
+		}
+
+		// directory should be good by here
+
+		File[] files;
+		files = pluginFolder.listFiles();
+		if (files == null) { // TODO log error
+			String msg = "Error reading file names in plugin folder";
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+			return false;
+		}
+		if (files.length == 0) {
+			// empty
+			// TODO localize error
+			String msg = "Plugin folder is empty";
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+			return false;
+		}
+
+		File jarFile = null;
+
+		for (File file : files) {
+			try {
+				if (!file.exists()) {
+					continue;
+				}
+				if (!file.canRead()) {
+					continue;
+				}
+				if (file.isDirectory()) {
+					continue;
+				}
+				if (!file.getName().endsWith(".jar")) {
+					continue;
+				}
+				if (file.getName().replaceAll("\\.jar\\z", "").equals(name)) {
+					jarFile = file;
+					break;
+				}
+			}
+			catch (SecurityException secExcep) {
+				// Maybe one or more files can't be read
+				continue;
+			}
+		}
+		files = null;
+		if (jarFile == null) {
+			// TODO localize error
+			String msg = "Cannot find specified plugin";
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+			return false;
+		}
+
+		// jar file should be valid and correct by here
+
+		JarFile jfile;
+		ZipEntry config;
 		/*
 		 * Check for being a jar file check for package info file load and check
 		 * for valid info load the file if necessary
 		 */
-		/*
-		 * File pluginFolder = Game.getPluginFolder(); if
-		 * (!pluginFolder.exists()) { // TOD O log error return false; } if
-		 * (!pluginFolder.isDirectory()) { // TO DO log error return false; }
-		 * String[] filenames; filenames = pluginFolder.list(); if (filenames ==
-		 * null) { // TOD O log error return false; } if (filenames.length == 0)
-		 * { // empty // TO DO log error return false; } filenames = null;
-		 * 
-		 * ArrayList<File> files = new ArrayList<File>();
-		 * 
-		 * // adds valid jar files to the list of files for (File f :
-		 * pluginFolder.listFiles()) { if (f.isDirectory()) { continue;// its a
-		 * folder } if (!f.getName().toLowerCase().endsWith(".jar")) {
-		 * continue;// its not a jar file } files.add(f); }
-		 * 
-		 * if (files.size() == 0) { // TOD O log error return false; }
-		 */
-		/*
-		 * ListIterator<File> iterator = files.listIterator(); File tmp; while
-		 * (iterator.hasNext()) { tmp = iterator.next(); }
-		 */
+		try {
+			jfile = new JarFile(jarFile);
+			config = jfile.getEntry("plugin.yaml");
+			if (config == null) {
+				// TODO log error
+				// invalid plugin
+				jfile.close();
+				return false;
+			}
+		}
+		catch (IOException e) {
+			// TODO log error
+			e.printStackTrace();
+			return false;
+		}
+		catch (Exception e) {
+			// TODO log error
+			e.printStackTrace();
+			return false;
+		}
+		// grab an input stream for the configuration file
+		InputStream configIStream;
+		try {
+			configIStream = jfile.getInputStream(config);
+		}
+		catch (IOException e1) {
+			// TODO log error
+			e1.printStackTrace();
+			try {
+				jfile.close();
+			}
+			catch (IOException e) {
+				// TODO log error
+				// wow we really must have messed up
+				e.printStackTrace();
+			}
+			return false;
+		}
+
+		// Load in the package info from the config file
+		PackageInfo info;
+		try {
+			info = new PackageInfo(configIStream);
+		}
+		catch (InvalidDescriptionException e1) {
+			// TODO log error
+			e1.printStackTrace();
+			try {
+				jfile.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			return false;
+		}
+
+		try {
+			jfile.close();// We already loaded in the config info
+		}
+		catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		ClassLoader loader;
+		try {
+			loader =
+					URLClassLoader.newInstance(new URL[] {jarFile.toURI()
+							.toURL()}, this.getClass().getClassLoader());
+		}
+		catch (MalformedURLException e) {
+			// TODO log error
+			e.printStackTrace();
+			return false;
+		}
+		Class<?> clazz;
+		try {
+			clazz = Class.forName(info.getMain(), true, loader);
+		}
+		catch (ClassNotFoundException e) {
+			// TODO log error
+			e.printStackTrace();
+			return false;
+		}
+
+		// TODO finish this
 		return false;
-	}
-
-	@Override
-	public boolean onDisable() {
-		return true;
-	}
-
-	@Override
-	public boolean onEnable() {
-		return true;
-	}
-
-	@Override
-	public boolean onLoad() {
-		return true;
-	}
-
-	@Override
-	public boolean onUnload() {
-		return true;
 	}
 
 	/**
@@ -703,9 +784,7 @@ public class PackageManager implements Package {
 			msg =
 					msg.replaceFirst("\\$PACKAGE", this.commands.get(index)
 							.getOwner().getName());
-			LogError err =
-					new LogError(msg, LoggingLevel.WARNING, this.getName());
-			this.fireEvent(err);
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
 		PackageCommand cmd = new PackageCommand(command, owner);
@@ -716,8 +795,7 @@ public class PackageManager implements Package {
 						"Registered command $COMMAND to $PACKAGE");
 		msg = msg.replaceFirst("\\$COMMAND", command);
 		msg = msg.replaceFirst("\\$PACKAGE", owner.getName());
-		Log log = new Log(msg, LoggingLevel.FINEST, this.getName());
-		this.fireEvent(log);
+		Logging.finest(SystemPackage.PACKAGE_NAME, msg);
 		java.util.Collections.sort(this.commands);
 		return true;
 	}
@@ -739,9 +817,8 @@ public class PackageManager implements Package {
 		String tmp = "";
 
 		for (String s : cmds) {
-
 			tmp = SafeResourceLoader.getString(s, this.resourceBundle, s);
-			this.registerCommand(tmp, this);
+			this.registerCommand(tmp, this.sysPackage);
 		}
 
 	}
@@ -762,8 +839,7 @@ public class PackageManager implements Package {
 							this.getResourceBundle(),
 							"Package $PACKAGE not loaded").replaceFirst(
 							"\\$PACKAGE", target.getName());
-			Log message = new Log(tmp, LoggingLevel.WARNING, this.getName());
-			this.fireEvent(message);
+			Logging.warning(SystemPackage.PACKAGE_NAME, tmp);
 			return false;
 		}
 		if (this.isEnabled(target)) {
@@ -830,8 +906,7 @@ public class PackageManager implements Package {
 					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
 							this.resourceBundle, "Package $PACKAGE not loaded")
 							.replaceFirst("\\$PACKAGE", type);
-			this.eventManager.fireEvent(new Log(notLoaded, LoggingLevel.FINE,
-					this));
+			Logging.fine(SystemPackage.PACKAGE_NAME, notLoaded);
 			return;
 		}
 		this.unloadPackage(type);
@@ -849,16 +924,13 @@ public class PackageManager implements Package {
 				SafeResourceLoader.getString("ALERT_UNLOADING",
 						this.resourceBundle, "Unloading package $PACKAGE...");
 		unloading = unloading.replaceFirst("\\$PACKAGE", toUnload);
-		this.eventManager
-				.fireEvent(new Log(unloading, LoggingLevel.FINE, this));
+		Logging.fine(SystemPackage.PACKAGE_NAME, unloading);
 		if (!this.isLoaded(toUnload)) {
 			String notLoaded =
 					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
 							this.resourceBundle, "Package $PACKAGE not loaded")
 							.replaceFirst("\\$PACKAGE", toUnload);
-			this.eventManager.fireEvent(new Log(notLoaded, LoggingLevel.FINE,
-					this));
-
+			Logging.fine(SystemPackage.PACKAGE_NAME, notLoaded);
 			return false;
 		}
 
@@ -882,9 +954,8 @@ public class PackageManager implements Package {
 				SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS",
 						this.resourceBundle,
 						"Unregistered event listeners for $PACKAGE")
-						.replaceFirst("\\$PACKAGE", this.getName());
-		this.eventManager.fireEvent(new Log(unreg, LoggingLevel.FINER, this));
-
+						.replaceFirst("\\$PACKAGE", SystemPackage.PACKAGE_NAME);
+		Logging.finer(SystemPackage.PACKAGE_NAME, unreg);
 		this.loadedPackages.remove(toUnload);
 		this.packageStates.remove(pack);
 
@@ -892,9 +963,7 @@ public class PackageManager implements Package {
 				SafeResourceLoader.getString("ALERT_UNLOADED",
 						this.resourceBundle, "Package $PACKAGE unloaded!");
 		unloaded = unloaded.replaceFirst("\\$PACKAGE", toUnload);
-
-		this.eventManager.fireEvent(new Log(unloaded, LoggingLevel.FINE, this));
-
+		Logging.fine(SystemPackage.PACKAGE_NAME, unloaded);
 		return true;
 	}
 
@@ -916,8 +985,7 @@ public class PackageManager implements Package {
 							this.getResourceBundle(),
 							"Unregistered command $COMMAND");
 			msg = msg.replaceFirst("\\$COMMAND", command);
-			Log log = new Log(msg, LoggingLevel.FINEST, this.getName());
-			this.fireEvent(log);
+			Logging.finest(SystemPackage.PACKAGE_NAME, msg);
 			return true;
 		}
 		return false;

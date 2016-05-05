@@ -6,6 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.system.SystemPackage;
+import com.ikalagaming.util.SafeResourceLoader;
+
 /**
  * Represents a unique permission.
  *
@@ -18,6 +22,9 @@ public class Permission {
 	 * The default value for a permission.
 	 */
 	private static final boolean DEFAULT_PERMISSION = false;
+
+	private static final String resourceLocation =
+			"com.ikalagaming.permissions.resources.Permissions";
 
 	private static HashMap<String, Permission> permissionByName =
 			new HashMap<>();
@@ -53,7 +60,7 @@ public class Permission {
 						output.add(perm);
 					}
 				}
-				catch (Throwable ex) {// TODO localize this and use logging
+				catch (Throwable ex) {
 					throw new IllegalArgumentException("Permission node '"
 							+ entry.getKey().toString() + "' in child of "
 							+ name + " is invalid", ex);
@@ -124,7 +131,7 @@ public class Permission {
 			boolean def, List<Permission> output) throws NullPointerException,
 			IllegalArgumentException {
 		boolean defau = def;
-		if (name == null) {// TODO localize and use logging
+		if (name == null) {
 			throw new NullPointerException("Name cannot be null");
 		}
 		if (data == null) {
@@ -137,9 +144,11 @@ public class Permission {
 			if (!DefaultPermissionValue.isValid(theDefault.toString())) {
 				throw new IllegalArgumentException(
 						"'default' key contained unknown value");
-			}// TODO localize and use logging
+			}
 
-			defau = DefaultPermissionValue.getByName(theDefault.toString());
+			defau =
+					DefaultPermissionValue.getByName(theDefault.toString())
+							.value();
 
 		}
 		if (data.get("children") != null) {
@@ -157,7 +166,7 @@ public class Permission {
 						Permission.extractChildren((Map<?, ?>) childrenNode,
 								name, defau, output);
 			}
-			else {// TODO localize and use logging
+			else {
 				throw new IllegalArgumentException(
 						"'children' key is of wrong type");
 			}
@@ -222,12 +231,12 @@ public class Permission {
 						(Map<?, ?>) entry.getValue(), defaultPerm, result));
 			}
 			catch (Throwable ex) {
-				/*
-				 * LogError log = new LogError(SafeResourceLoader.getString(
-				 * "INVALID_PERMISSIONS", Permission.resourceLocation,
-				 * "Invalid permissions"), LoggingLevel.WARNING, "Permissions");
-				 */
-				// TODO log this
+				String log =
+						SafeResourceLoader.getString("INVALID_PERMISSIONS",
+								Permission.resourceLocation,
+								"Invalid permissions");
+				Logging.warning(SystemPackage.PACKAGE_NAME, log);
+
 				ex.printStackTrace();
 			}
 		}
@@ -271,6 +280,7 @@ public class Permission {
 	 * </p>
 	 *
 	 * @param name The name of the permission
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -297,6 +307,7 @@ public class Permission {
 	 *
 	 * @param name The name of the permission
 	 * @param defaultValue the default value for the permission
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -331,6 +342,7 @@ public class Permission {
 	 * @param name The name of the permission
 	 * @param defaultValue the default value for the permission
 	 * @param children children this permission includes
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -361,6 +373,7 @@ public class Permission {
 	 *
 	 * @param name The name of the permission
 	 * @param children children this permission includes
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -386,6 +399,7 @@ public class Permission {
 	 *
 	 * @param name The name of the permission
 	 * @param description A short description of the permissions purpose
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -416,6 +430,7 @@ public class Permission {
 	 * @param name The name of the permission
 	 * @param description A short description of the permissions purpose
 	 * @param defaultValue the default value for the permission
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -455,14 +470,18 @@ public class Permission {
 	 * @param description A short description of the permissions purpose
 	 * @param defaultValue the default value for the permission
 	 * @param children children this permission includes
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 */
 	public Permission(String name, String description, boolean defaultValue,
 			Map<String, Boolean> children) {
 		if (!Permission.isValidName(name)) {
-			// TODO error
+			throw new IllegalArgumentException("Name '" + name
+					+ "' is invalid.");
 		}
 		if (Permission.exists(name)) {
-			// TODO error
+			throw new IllegalArgumentException("Permission '" + name
+					+ "' already exists.");
+
 		}
 		this.permName = name;
 		if (description == null) {
@@ -503,6 +522,7 @@ public class Permission {
 	 * @param name The name of the permission
 	 * @param description A short description of the permissions purpose
 	 * @param children children this permission includes
+	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 *
 	 * @see #Permission(String, String, boolean, Map)
 	 */
@@ -545,7 +565,8 @@ public class Permission {
 		HashMap<String, Boolean> submap;
 		for (String s : perms.keySet()) {
 			if (!Permission.exists(s)) {
-				System.out.println(s + " does not exist");
+				System.err.println("Permission " + s + " does not exist"
+						+ " (in Permission.getgetAllSubpermissions())");
 				// TODO log this
 				continue;// it was not created somehow
 			}

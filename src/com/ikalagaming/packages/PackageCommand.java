@@ -7,9 +7,9 @@ package com.ikalagaming.packages;
  * @author Ches Burks
  *
  */
-class PackageCommand implements Comparable<PackageCommand> {
-	private String command;
-	private Package owner;
+public class PackageCommand implements Comparable<PackageCommand> {
+	private final String command;
+	private final Package owner;
 
 	/**
 	 * Constructs a new registered command with the given command and package
@@ -17,7 +17,7 @@ class PackageCommand implements Comparable<PackageCommand> {
 	 * @param cmd the command registered
 	 * @param theOwner what package registered the command
 	 */
-	public PackageCommand(String cmd, Package theOwner) {
+	public PackageCommand(final String cmd, final Package theOwner) {
 		this.command = cmd;
 		this.owner = theOwner;
 	}

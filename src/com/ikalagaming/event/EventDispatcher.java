@@ -3,8 +3,8 @@ package com.ikalagaming.event;
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 
-import com.ikalagaming.logging.LoggingLevel;
-import com.ikalagaming.logging.events.LogError;
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.system.SystemPackage;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -63,8 +63,7 @@ class EventDispatcher extends Thread {
 						SafeResourceLoader.getString("DISPATCH_ERROR",
 								"com.ikalagaming.event.resources.strings",
 								"There was a problem sending an event");
-				this.eventManager.fireEvent(new LogError(error,
-						LoggingLevel.WARNING, "event-manager"));
+				Logging.warning(SystemPackage.PACKAGE_NAME, error);
 				System.err.println(e.toString());
 				e.printStackTrace(System.err);
 			}

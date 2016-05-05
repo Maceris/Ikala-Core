@@ -1,4 +1,4 @@
-package com.ikalagaming.packages;
+package com.ikalagaming.system;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,8 +9,10 @@ import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleCommandEntered;
 import com.ikalagaming.gui.console.events.ConsoleMessage;
 import com.ikalagaming.gui.console.events.ReportUnknownCommand;
-import com.ikalagaming.logging.LoggingLevel;
-import com.ikalagaming.logging.events.Log;
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.packages.Package;
+import com.ikalagaming.packages.PackageCommand;
+import com.ikalagaming.packages.PackageManager;
 import com.ikalagaming.packages.events.PackageCommandSent;
 import com.ikalagaming.packages.events.PackageDisabled;
 import com.ikalagaming.packages.events.PackageEnabled;
@@ -35,14 +37,16 @@ class PMEventListener implements Listener {
 	private String cmd_version;
 
 	private PackageManager manager;
+	private SystemPackage sysPackage;
 
 	/**
-	 * Constructs a listener for the given package manager.
+	 * Constructs a listener for the default package manager.
 	 *
-	 * @param parent the manager to handle events for
+	 * @param parent the system package to handle events for
 	 */
-	public PMEventListener(PackageManager parent) {
-		this.manager = parent;
+	public PMEventListener(SystemPackage parent) {
+		this.manager = PackageManager.getInstance();
+		this.sysPackage = parent;
 
 		this.cmd_help =
 				SafeResourceLoader.getString("COMMAND_HELP",
@@ -235,9 +239,7 @@ class PMEventListener implements Listener {
 								"Package $PACKAGE (v$VERSION) enabled!")
 						.replaceFirst("\\$PACKAGE", target.getName())
 						.replaceFirst("\\$VERSION", target.getVersion() + "");
-		Log logDisabled =
-				new Log(msgDisabled, LoggingLevel.FINE, this.manager.getName());
-		this.manager.fireEvent(logDisabled);
+		Logging.fine(this.sysPackage.getName(), msgDisabled);
 	}
 
 	/**
@@ -255,9 +257,7 @@ class PMEventListener implements Listener {
 								"Package $PACKAGE (v$VERSION) enabled!")
 						.replaceFirst("\\$PACKAGE", target.getName())
 						.replaceFirst("\\$VERSION", target.getVersion() + "");
-		Log logEnabled =
-				new Log(msgEnabled, LoggingLevel.FINE, this.manager.getName());
-		this.manager.fireEvent(logEnabled);
+		Logging.fine(this.sysPackage.getName(), msgEnabled);
 	}
 
 	// logging package events
@@ -281,8 +281,7 @@ class PMEventListener implements Listener {
 		loaded =
 				loaded.replaceFirst("\\$VERSION", ""
 						+ event.getPackage().getVersion());
-		this.manager
-				.fireEvent(new Log(loaded, LoggingLevel.FINE, this.manager));
+		Logging.fine(this.sysPackage.getName(), loaded);
 	}
 
 	private void printHelp() {

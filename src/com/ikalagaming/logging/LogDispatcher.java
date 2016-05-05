@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 
 import com.ikalagaming.event.EventManager;
-import com.ikalagaming.logging.events.DisplayLog;
+import com.ikalagaming.logging.events.Log;
 
 /**
  * Holds an internal queue and dispatches the events in order when possible.
@@ -55,9 +55,8 @@ class LogDispatcher extends Thread {
 			}
 			this.currentStr = this.queue.remove();
 			// log it to the system output stream
-			DisplayLog log = new DisplayLog(this.currentStr);
+			Log log = new Log(this.currentStr);
 			this.manager.fireEvent(log);
-			System.out.println(this.currentStr);
 		}
 		catch (NoSuchElementException noElement) {
 			// the queue is empty

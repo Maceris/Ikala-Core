@@ -6,9 +6,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.ikalagaming.logging.LoggingLevel;
+import com.ikalagaming.logging.Logging;
 import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.logging.events.LogError;
+import com.ikalagaming.system.SystemPackage;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -151,18 +151,16 @@ public class EventManager {
 			throw illegalState;
 		}
 		catch (Exception e) {
-			if (event instanceof Log || event instanceof LogError) {
+			if (event instanceof Log) {
 				e.printStackTrace(System.err);
 			}
 			else {
-				LogError err =
-						new LogError(SafeResourceLoader.getString(
-								"EVT_QUEUE_FULL",
+				String err =
+						SafeResourceLoader.getString("EVT_QUEUE_FULL",
 								"com.ikalagaming.event.strings",
-								"Event queue full"),
-								"EventManager.fireEvent(Event)",
-								LoggingLevel.WARNING, "event-manager");
-				this.dispatcher.dispatchEvent(err);
+								"Event queue full")
+								+ "in EventManager.fireEvent(Event)";
+				Logging.warning(SystemPackage.PACKAGE_NAME, err);
 			}
 
 		}
@@ -223,13 +221,11 @@ public class EventManager {
 			this.dispatcher.join();
 		}
 		catch (InterruptedException e) {
-			LogError err =
-					new LogError(SafeResourceLoader.getString(
-							"THREAD_INTERRUPTED",
+			String err =
+					SafeResourceLoader.getString("THREAD_INTERRUPTED",
 							"com.ikalagaming.event.resources.strings",
-							"Thread interrupted"), "EventManager.onDisable()",
-							LoggingLevel.SEVERE, "event-manager");
-			this.dispatcher.dispatchEvent(err);
+							"Thread interrupted");
+			Logging.severe(SystemPackage.PACKAGE_NAME, err);
 			e.printStackTrace(System.err);
 		}
 	}

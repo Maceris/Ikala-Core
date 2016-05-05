@@ -4,7 +4,7 @@ import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleMessage;
 import com.ikalagaming.gui.console.events.ReportUnknownCommand;
-import com.ikalagaming.logging.events.DisplayLog;
+import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.packages.PackageManager;
 import com.ikalagaming.packages.events.PackageCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
@@ -61,7 +61,7 @@ class ConsoleListener implements Listener {
 	 * @param event logs and errors received
 	 */
 	@EventHandler
-	public void onDisplayLog(DisplayLog event) {
+	public void onDisplayLog(Log event) {
 		if (!PackageManager.getInstance().isEnabled(this.parent)) {
 			System.err.println("Console is disabled! Cannot print message '"
 					+ event.getMessage() + "'");

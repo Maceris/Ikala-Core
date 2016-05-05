@@ -22,13 +22,17 @@ public enum DefaultPermissionValue {
 	FALSE("false", "f", "no");
 
 	private final static Map<String, Boolean> lookup = new HashMap<>();
+	private final static Map<String, DefaultPermissionValue> values =
+			new HashMap<>();
 
 	static {
 		for (String name : TRUE.namesArray) {
 			DefaultPermissionValue.lookup.put(name, true);
+			DefaultPermissionValue.values.put(name, TRUE);
 		}
 		for (String name : FALSE.namesArray) {
-			DefaultPermissionValue.lookup.put(name, true);
+			DefaultPermissionValue.lookup.put(name, false);
+			DefaultPermissionValue.values.put(name, FALSE);
 		}
 	}
 
@@ -36,14 +40,14 @@ public enum DefaultPermissionValue {
 	 * Looks up a DefaultPermissionValue by name
 	 *
 	 * @param name Name of the default
-	 * @return Specified value, or false if it does not exist
+	 * @return Specified value, or FALSE if it does not exist
 	 */
-	public static boolean getByName(String name) {
-		if (DefaultPermissionValue.lookup.containsKey(name)) {
-			return DefaultPermissionValue.lookup.get(name.toLowerCase()
+	public static DefaultPermissionValue getByName(String name) {
+		if (DefaultPermissionValue.values.containsKey(name)) {
+			return DefaultPermissionValue.values.get(name.toLowerCase()
 					.replaceAll("[^a-z!]", ""));
 		}
-		return false;
+		return FALSE;
 	}
 
 	/**

@@ -14,8 +14,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-public enum LoggingLevel {
-
+public enum LogLevel {
 	/**
 	 * OFF is a special level that can be used to turn off logging. This should
 	 * not be used as a value when constructing a message for logging. This
@@ -107,7 +106,7 @@ public enum LoggingLevel {
 	 * @param name the name of the level
 	 * @param value an integer value for the level
 	 */
-	private LoggingLevel(String name, int value) {
+	private LogLevel(String name, int value) {
 		this.levelName = name;
 		this.levelValue = value;
 	}
