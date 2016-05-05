@@ -203,11 +203,11 @@ public class PackageInfo {
 				this.permissions = new ArrayList<>();
 			}
 			else {
-				permissions =
-						Permission.loadPermissions(lazyPermissions,
+				this.permissions =
+						Permission.loadPermissions(this.lazyPermissions,
 								"Permission node '%s' in plugin description file for "
-										+ getFullName() + " is invalid",
-								defaultPerm.value());
+										+ this.getFullName() + " is invalid",
+								this.defaultPerm.value());
 
 				this.lazyPermissions = null;
 			}
@@ -351,7 +351,7 @@ public class PackageInfo {
 		}
 		if (map.get("default-permission") != null) {
 			try {
-				defaultPerm =
+				this.defaultPerm =
 						DefaultPermissionValue.getByName(map.get(
 								"default-permission").toString());
 			}
@@ -366,11 +366,11 @@ public class PackageInfo {
 		}
 		try {
 			this.lazyPermissions = (Map<?, ?>) map.get("permissions");
-			permissions =
-					Permission.loadPermissions(lazyPermissions,
+			this.permissions =
+					Permission.loadPermissions(this.lazyPermissions,
 							"Permission node '%s' in plugin description file for "
-									+ getFullName() + " is invalid",
-							defaultPerm.value());
+									+ this.getFullName() + " is invalid",
+							this.defaultPerm.value());
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException(

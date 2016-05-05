@@ -43,9 +43,10 @@ class PMEventListener implements Listener {
 	 * Constructs a listener for the default package manager.
 	 *
 	 * @param parent the system package to handle events for
+	 * @param packManager The package management system this listener is for
 	 */
-	public PMEventListener(SystemPackage parent) {
-		this.manager = PackageManager.getInstance();
+	public PMEventListener(SystemPackage parent, PackageManager packManager) {
+		this.manager = packManager;
 		this.sysPackage = parent;
 
 		this.cmd_help =

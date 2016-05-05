@@ -95,7 +95,7 @@ class EventDispatcher extends Thread {
 			e.printStackTrace(System.err);
 			return;// don't wake up thread
 		}
-		wakeUp();
+		this.wakeUp();
 	}
 
 	private void handleEvent() {
@@ -139,7 +139,7 @@ class EventDispatcher extends Thread {
 				synchronized (this.syncObject) {
 					try {
 						// block this thread until an item is added
-						this.wait(EventDispatcher.WAIT_TIMEOUT);
+						this.syncObject.wait(EventDispatcher.WAIT_TIMEOUT);
 					}
 					catch (InterruptedException e) {
 						// TODO log this
@@ -167,6 +167,6 @@ class EventDispatcher extends Thread {
 		this.hasEvents = false;
 		this.running = false;
 		this.eventManager = null;
-		wakeUp();
+		this.wakeUp();
 	}
 }

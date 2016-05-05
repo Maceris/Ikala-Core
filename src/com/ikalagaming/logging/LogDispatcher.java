@@ -91,7 +91,7 @@ class LogDispatcher extends Thread {
 			System.err.println(e.toString());
 			return;// don't wake up thread
 		}
-		wakeUp();
+		this.wakeUp();
 	}
 
 	/**
@@ -116,7 +116,7 @@ class LogDispatcher extends Thread {
 				synchronized (this.syncObject) {
 					try {
 						// block this thread until an item is added
-						this.wait(LogDispatcher.WAIT_TIMEOUT);
+						this.syncObject.wait(LogDispatcher.WAIT_TIMEOUT);
 					}
 					catch (InterruptedException e) {
 						// TODO log this
@@ -142,6 +142,6 @@ class LogDispatcher extends Thread {
 	public synchronized void terminate() {
 		this.hasLogs = false;
 		this.running = false;
-		wakeUp();
+		this.wakeUp();
 	}
 }

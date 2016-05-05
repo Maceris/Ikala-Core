@@ -141,8 +141,9 @@ public class PackageManager {
 		this.commands = new ArrayList<>();
 
 		Logging.create();
-		this.sysPackage = new SystemPackage();
+		this.sysPackage = new SystemPackage(this);
 		this.loadPackage(this.sysPackage);
+		this.enable(this.sysPackage);
 
 		this.registerCommands();
 	}
@@ -313,7 +314,8 @@ public class PackageManager {
 			String err =
 					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
 							this.resourceBundle, "Package $PACKAGE not loaded")
-							.replaceFirst("\\$PACKAGE", "event-manager");
+							.replaceFirst("\\$PACKAGE",
+									SystemPackage.PACKAGE_NAME);
 			System.err.println(err);
 			return false;
 		}
@@ -571,7 +573,7 @@ public class PackageManager {
 
 	/**
 	 * Loads a plugin from a name
-	 * 
+	 *
 	 * @param path the path to the folder containing the file
 	 * @param name the filename to load from
 	 * @return true on success, false if it failed

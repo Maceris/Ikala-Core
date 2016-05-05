@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.packages.Package;
+import com.ikalagaming.packages.PackageManager;
 
 /**
  * Allows for interfacing with the core system using events.
@@ -30,9 +31,11 @@ public class SystemPackage implements Package {
 
 	/**
 	 * Constructs a new System package
+	 *
+	 * @param manager The packaging system to handle events for
 	 */
-	public SystemPackage() {
-		Listener pmListener = new PMEventListener(this);
+	public SystemPackage(PackageManager manager) {
+		Listener pmListener = new PMEventListener(this, manager);
 		Listener sysListener = new SystemEventListener();
 		this.listeners = new HashSet<>();
 		this.listeners.add(pmListener);
