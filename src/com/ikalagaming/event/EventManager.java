@@ -176,10 +176,12 @@ public class EventManager {
 	 * @return the map of handlers for the given type
 	 */
 	private HandlerList getEventListeners(Class<? extends Event> type) {
-		if (!this.handlerMap.containsKey(type)) {
-			this.handlerMap.put(type, new HandlerList());
+		synchronized (this.handlerMap) {
+			if (!this.handlerMap.containsKey(type)) {
+				this.handlerMap.put(type, new HandlerList());
+			}
+			return this.handlerMap.get(type);
 		}
-		return this.handlerMap.get(type);
 	}
 
 	/**
@@ -198,11 +200,11 @@ public class EventManager {
 	 * @param listener The listener to register
 	 */
 	public void registerEventListeners(Listener listener) {
-		for (Map.Entry<Class<? extends Event>, Set<EventListener>> entry : this
-				.createRegisteredListeners(listener).entrySet()) {
-			this.getEventListeners(entry.getKey())
-					.registerAll(entry.getValue());
-		}
+		Map<Class<? extends Event>, Set<EventListener>> listMap;
+		listMap = this.createRegisteredListeners(listener);
+		listMap.entrySet().forEach(
+				(e) -> this.getEventListeners(e.getKey()).registerAll(
+						e.getValue()));
 	}
 
 	/**
@@ -211,10 +213,10 @@ public class EventManager {
 	 */
 	public void shutdown() {
 		// TODO make sure this is called
-		for (HandlerList l : this.handlerMap.values()) {
-			l.unregisterAll();
+		synchronized (this.handlerMap) {
+			this.handlerMap.values().forEach((l) -> l.unregisterAll());
+			this.handlerMap.clear();
 		}
-		this.handlerMap.clear();
 
 		this.dispatcher.terminate();
 		try {
@@ -238,8 +240,9 @@ public class EventManager {
 	 * @param listener The listener to unregister
 	 */
 	public void unregisterEventListeners(Listener listener) {
-		for (HandlerList list : this.handlerMap.values()) {
-			list.unregister(listener);
+		synchronized (this.handlerMap) {
+			this.handlerMap.values().forEach(
+					(list) -> list.unregister(listener));
 		}
 	}
 }

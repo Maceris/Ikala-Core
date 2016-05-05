@@ -3,8 +3,6 @@ package com.ikalagaming.event;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 /**
  * Stores handlers per event. Based on lahwran's fevents.
@@ -24,7 +22,7 @@ class HandlerList {
 		for (EventPriority o : EventPriority.values()) {
 			this.handlerSlots.put(o, new ArrayDeque<EventListener>());
 		}
-		this.bakedList = new EventListener[0];
+		this.bakedList = null;
 	}
 
 	/**
@@ -37,11 +35,10 @@ class HandlerList {
 		}
 		// A temporary list of entries
 		ArrayDeque<EventListener> entries = new ArrayDeque<>();
+
 		// add all of the listeners, in priority order, to the entries list
-		for (Entry<EventPriority, ArrayDeque<EventListener>> entry : this.handlerSlots
-				.entrySet()) {
-			entries.addAll(entry.getValue());
-		}
+		this.handlerSlots.entrySet().forEach(
+				(entry) -> entries.addAll(entry.getValue()));
 		// bake the list into an array
 		this.bakedList = entries.toArray(new EventListener[entries.size()]);
 	}
@@ -104,30 +101,20 @@ class HandlerList {
 	 * @param listener listener to remove
 	 */
 	public synchronized void unregister(Listener listener) {
-		boolean changed = false;
-		for (ArrayDeque<EventListener> list : this.handlerSlots.values()) {
-			for (Iterator<EventListener> i = list.iterator(); i.hasNext();) {
-				if (i.next().getListener().equals(listener)) {
-					i.remove();
-					changed = true;
-				}
-			}
-		}
-		if (changed) {
-			this.bakedList = null;
-		}
+		// go through each priority
+		this.handlerSlots.values().forEach(
+				(list) -> list.removeIf((li) -> li.getListener().equals(
+						listener)));
+
+		this.bakedList = null;
 	}
 
 	/**
 	 * Unregisters all handlers.
 	 */
-	public void unregisterAll() {
-		synchronized (this.handlerSlots) {
-			for (ArrayDeque<EventListener> list : this.handlerSlots.values()) {
-				list.clear();
-			}
-			this.bakedList = null;
-		}
+	public synchronized void unregisterAll() {
+		this.handlerSlots.values().forEach((list) -> list.clear());
+		this.bakedList = null;
 	}
 
 }

@@ -8,5 +8,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/IkalaCore/thirdParty/luaj-doc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="thirdParty/snakeyaml-1.14.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

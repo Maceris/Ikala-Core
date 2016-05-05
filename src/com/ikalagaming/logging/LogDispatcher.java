@@ -14,11 +14,22 @@ import com.ikalagaming.logging.events.DisplayLog;
  */
 class LogDispatcher extends Thread {
 
+	/**
+	 * The number of milliseconds to wait before timing out and checking if
+	 * there are more items again.
+	 */
+	private static final long WAIT_TIMEOUT = 10000;
+
 	private ArrayDeque<String> queue;
 	private String currentStr;
 	private boolean running;
 	private boolean hasLogs;
 	private EventManager manager;
+
+	/**
+	 * Used to handle synchronization and waiting for events
+	 */
+	private Object syncObject;
 
 	/**
 	 * Creates and starts the thread. It will begin attempting to dispatch
@@ -33,36 +44,29 @@ class LogDispatcher extends Thread {
 		this.queue = new ArrayDeque<>();
 		this.hasLogs = false;
 		this.running = true;
+		this.syncObject = new Object();
 	}
 
 	private void handleEvent() {
 		try {
 			if (this.queue.isEmpty()) {
 				this.hasLogs = false;
-			}
-			else if (this.queue.peek() != null) {
-				this.currentStr = this.queue.remove();
-				// log it to the system output stream
-				DisplayLog log = new DisplayLog(this.currentStr);
-				this.manager.fireEvent(log);
-				System.out.println(this.currentStr);
-			}
-			else {
 				return;
 			}
+			this.currentStr = this.queue.remove();
+			// log it to the system output stream
+			DisplayLog log = new DisplayLog(this.currentStr);
+			this.manager.fireEvent(log);
+			System.out.println(this.currentStr);
 		}
 		catch (NoSuchElementException noElement) {
 			// the queue is empty
-			// hasEvents = false;
+			this.hasLogs = false;
 			return;
 		}
 		catch (Exception e) {
 			System.err.println(e.toString());
 		}
-	}
-
-	private boolean hasEvents() {
-		return this.hasLogs;
 	}
 
 	/**
@@ -82,9 +86,22 @@ class LogDispatcher extends Thread {
 		}
 		catch (NullPointerException nullPointer) {
 			;// do nothing since its a null event
+			return;// don't wake up thread
 		}
 		catch (Exception e) {
 			System.err.println(e.toString());
+			return;// don't wake up thread
+		}
+		wakeUp();
+	}
+
+	/**
+	 * Wakes this thread up when it is sleeping
+	 */
+	private void wakeUp() {
+		synchronized (this.syncObject) {
+			// Wake the thread up as there is now an event
+			this.syncObject.notify();
 		}
 	}
 
@@ -95,28 +112,37 @@ class LogDispatcher extends Thread {
 	 */
 	@Override
 	public void run() {
-		if (!this.running) {
-			return;
-		}
 		while (this.running) {
-			try {
-				Thread.sleep(5);
+			while (!this.hasLogs) {
+				synchronized (this.syncObject) {
+					try {
+						// block this thread until an item is added
+						this.wait(LogDispatcher.WAIT_TIMEOUT);
+					}
+					catch (InterruptedException e) {
+						// TODO log this
+						e.printStackTrace(System.err);
+					}
+				}
+				// in case it was terminated while waiting
+				if (!this.running) {
+					break;
+				}
 			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			if (this.hasEvents()) {
+			if (this.hasLogs) {
 				this.handleEvent();
 			}
 		}
+		this.queue.clear();
 	}
 
 	/**
 	 * Stops the thread from executing its run method in preparation for
 	 * shutting down the thread.
 	 */
-	public void terminate() {
+	public synchronized void terminate() {
 		this.hasLogs = false;
 		this.running = false;
+		wakeUp();
 	}
 }

@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.ActionMap;
 import javax.swing.JFrame;
@@ -202,6 +203,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	private String currentLine = "";
 	private int currentIndicatorLine = 0;
 	private final int maxHistory = 30;
+	private ReentrantLock editLock = new ReentrantLock();
 
 	/**
 	 * The previous commands typed in the console.
@@ -239,13 +241,19 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * @param c the char to add
 	 */
 	void addChar(char c) {
-		this.textArea.insert("" + c,
-				this.getSafeLineStartOffset(this.currentIndicatorLine)
-						+ (this.posInString) + 1);
-		// how many lines the current line takes up
-		this.currentLine =
-				this.currentLine.substring(0, this.posInString) + c
-						+ this.currentLine.substring(this.posInString);
+		editLock.lock();
+		try {
+			this.textArea.insert("" + c,
+					this.getSafeLineStartOffset(this.currentIndicatorLine)
+							+ (this.posInString) + 1);
+			// how many lines the current line takes up
+			this.currentLine =
+					this.currentLine.substring(0, this.posInString) + c
+							+ this.currentLine.substring(this.posInString);
+		}
+		finally {
+			editLock.unlock();
+		}
 		this.moveRight();
 	}
 
@@ -253,8 +261,14 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * Appends the input indicator char to the console
 	 */
 	private void appendIndicatorChar() {
-		this.textArea.append("" + this.inputIndicator);
-		++this.posInString;
+		editLock.lock();
+		try {
+			this.textArea.append("" + this.inputIndicator);
+			++this.posInString;
+		}
+		finally {
+			editLock.unlock();
+		}
 		this.moveRight();
 	}
 
@@ -265,9 +279,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * @param message The message to append
 	 */
 	public synchronized void appendMessage(String message) {
-		// should this not be synchronized?
-		// it seems like it could be a choke point for speed. -CB
-
 		int p = this.posInString;
 		this.clearCurrentText();
 		this.removeIndicatorChar();
@@ -277,9 +288,8 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		if (this.textArea.getText().endsWith(System.lineSeparator())) {
 			this.textArea.replaceRange("",
 					this.textArea.getText().length() - 1, this.textArea
-							.getText().length());// removes the last newline if
-			// it
-			// exists
+							.getText().length());
+			// removes the last newline if it exists
 		}
 		this.textArea.append(message);
 		this.textArea.append(System.lineSeparator());// extra space to be
@@ -311,18 +321,24 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * will be removed.
 	 */
 	private void clearCurrentText() {
-
-		int start;
-		// fetch the index of the last line of text
-		start = this.getSafeLineStartOffset(this.currentIndicatorLine);
-		// add one to account for the input indicator char
-		++start;
-		this.textArea
-				.replaceRange("", start, start + this.currentLine.length());
-		this.posInString = 0;
-		this.currentLine = "";
+		editLock.lock();
+		try {
+			int start;
+			// fetch the index of the last line of text
+			start = this.getSafeLineStartOffset(this.currentIndicatorLine);
+			// add one to account for the input indicator char
+			++start;
+			this.textArea.replaceRange("", start,
+					start + this.currentLine.length());
+			this.posInString = 0;
+			this.currentLine = "";
+		}
+		finally {
+			editLock.unlock();
+		}
 		this.validatePositions();
 		this.updateCaretPosition();
+
 	}
 
 	/**
@@ -577,10 +593,15 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		if (this.posInString <= 0) {
 			return;
 		}
-		--this.posInString;
+		editLock.lock();
+		try {
+			--this.posInString;
+		}
+		finally {
+			editLock.unlock();
+		}
 		this.validatePositions();
 		this.updateCaretPosition();
-
 	}
 
 	/**
@@ -588,6 +609,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * updates the caret.
 	 */
 	void moveRight() {
+
 		if (this.currentLine.length() <= 0) {
 			this.validatePositions();
 			this.updateCaretPosition();
@@ -599,15 +621,28 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 			return;// do not do anything
 		}
 		if (this.posInString < 0) {
-			this.posInString = 0;
+			editLock.lock();
+			try {
+				this.posInString = 0;
+			}
+			finally {
+				editLock.unlock();
+			}
 			this.validatePositions();
 			this.updateCaretPosition();
 		}
 		else if (this.posInString >= 0) {
-			++this.posInString;
+			editLock.lock();
+			try {
+				++this.posInString;
+			}
+			finally {
+				editLock.unlock();
+			}
 			this.validatePositions();
 			this.updateCaretPosition();
 		}
+
 	}
 
 	/**
@@ -681,8 +716,14 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * Replaces the input indicator char to the console
 	 */
 	private void removeIndicatorChar() {
-		int offset = this.getSafeLineStartOffset(this.currentIndicatorLine);
-		this.textArea.replaceRange("", offset, offset + 1);
+		editLock.lock();
+		try {
+			int offset = this.getSafeLineStartOffset(this.currentIndicatorLine);
+			this.textArea.replaceRange("", offset, offset + 1);
+		}
+		finally {
+			editLock.unlock();
+		}
 	}
 
 	/**
@@ -690,6 +731,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 */
 	private void removeTopLine() {
 		int end;
+		editLock.lock();
 		try {
 			end = this.textArea.getLineEndOffset(0);
 			this.textArea.replaceRange("", 0, end);
@@ -699,6 +741,9 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 					"error_bad_location", this.getResourceBundle(),
 					"Bad location"), LoggingLevel.WARNING, this));
 
+		}
+		finally {
+			editLock.lock();
 		}
 	}
 
@@ -807,15 +852,23 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * Moves the caret to the correct position.
 	 */
 	private void updateCaretPosition() {
-		int position =
-				this.getSafeLineStartOffset(this.currentIndicatorLine)
-						+ this.posInString + 1;
-		if (position >= this.textArea.getText().length()) {
-			position = this.textArea.getText().length();
+		editLock.lock();
+		try {
+			int position =
+					this.getSafeLineStartOffset(this.currentIndicatorLine)
+							+ this.posInString + 1;
+			if (position >= this.textArea.getText().length()) {
+				position = this.textArea.getText().length();
+			}
+			editLock.unlock();
+
+			this.textArea.setCaretPosition(position);
+			if (!this.textArea.getCaret().isVisible()) {
+				this.textArea.getCaret().setVisible(true);
+			}
 		}
-		this.textArea.setCaretPosition(position);
-		if (!this.textArea.getCaret().isVisible()) {
-			this.textArea.getCaret().setVisible(true);
+		finally {
+			editLock.unlock();
 		}
 	}
 
@@ -834,11 +887,17 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * they are not.
 	 */
 	private void validatePositions() {
-		if (this.posInString < 0) {
-			this.posInString = 0;
+		editLock.lock();
+		try {
+			if (this.posInString < 0) {
+				this.posInString = 0;
+			}
+			if (this.posInString > this.currentLine.length()) {
+				this.posInString = this.currentLine.length();
+			}
 		}
-		if (this.posInString > this.currentLine.length()) {
-			this.posInString = this.currentLine.length();
+		finally {
+			editLock.unlock();
 		}
 	}
 
