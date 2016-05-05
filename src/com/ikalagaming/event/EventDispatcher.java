@@ -21,33 +21,6 @@ class EventDispatcher extends Thread {
 	 */
 	private static final long WAIT_TIMEOUT = 10000;
 
-	/**
-	 * A running average of recent dispatch times
-	 */
-	private long averageTime;
-
-	/**
-	 * The difference between the start and end times
-	 */
-	private long estimatedTime;
-
-	/**
-	 * Keep a rolling average event dispatch time over the this many of the last
-	 * measured values
-	 */
-	private static final long AVG_COUNT = 10;
-
-	/**
-	 * Used in calculating a rolling average.
-	 */
-	private static final float AVG_ALPHA = 2.0f / (AVG_COUNT + 1);
-
-	/**
-	 * Used to time dispatch calls. Specifically, the time just before
-	 * execution.
-	 */
-	private long startTime;
-
 	private ArrayDeque<Event> queue;
 
 	private EventManager eventManager;
@@ -73,7 +46,6 @@ class EventDispatcher extends Thread {
 		this.hasEvents = false;
 		this.running = true;
 		this.syncObject = new Object();
-		averageTime = 1;// Base value
 	}
 
 	private void dispatch(Event event) {
@@ -84,14 +56,7 @@ class EventDispatcher extends Thread {
 		EventListener[] listeners = handlers.getRegisteredListeners();
 		for (EventListener registration : listeners) {
 			try {
-				startTime = System.nanoTime();
 				registration.callEvent(event);
-				estimatedTime = System.nanoTime() - startTime;
-
-				/*
-				 * Equivalent to acc=alpha*est + (1-alpha)*acc
-				 */
-				averageTime += AVG_ALPHA * (estimatedTime - averageTime);
 			}
 			catch (EventException e) {
 				String error =
@@ -162,17 +127,6 @@ class EventDispatcher extends Thread {
 			// Wake the thread up as there is now an event
 			this.syncObject.notify();
 		}
-	}
-
-	/**
-	 * Returns a running estimate of the past several times taken to execute
-	 * event handler methods. If called before several events have been run, it
-	 * will likely be useless due to statistical error.
-	 * 
-	 * @return the average time spent dispatching recent events
-	 */
-	public long getAverageTime() {
-		return averageTime;
 	}
 
 	/**
