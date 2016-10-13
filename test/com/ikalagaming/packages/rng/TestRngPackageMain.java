@@ -9,7 +9,7 @@ import org.junit.Test;
  * @author Ches Burks
  *
  */
-class TestRngPackageMain {
+public class TestRngPackageMain {
 
 	/**
 	 * Creates a new rng package, tests the default getter values and then loads

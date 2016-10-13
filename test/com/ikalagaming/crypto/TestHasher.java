@@ -8,7 +8,7 @@ import org.junit.Test;
  * @author Ches Burks
  *
  */
-class TestHasher {
+public class TestHasher {
 	/**
 	 * Creates a hash for passwords and tests collisions and matching.
 	 */

@@ -705,8 +705,10 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		this.setResourceBundle(null);
 		this.history = null;
 		this.listener = null;
-		this.listeners.clear();
-		this.listeners = null;
+		if (this.listeners != null) {
+			this.listeners.clear();
+			this.listeners = null;
+		}
 		return true;
 	}
 
