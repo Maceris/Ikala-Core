@@ -17,7 +17,7 @@ public class ArrayOperations {
 	 * @param array the array to convert
 	 * @return the formatted string
 	 */
-	public static String convertToString(Object[] array) {
+	public static String convertToString(final Object[] array) {
 		String output = "";
 
 		if (array == null) {

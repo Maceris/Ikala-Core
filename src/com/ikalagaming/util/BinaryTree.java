@@ -1,7 +1,8 @@
 package com.ikalagaming.util;
 
 /**
- * A binary AVL tree for storing (comparable) objects.
+ * A binary AVL tree for storing (comparable) objects. This is not synchronized,
+ * so synchronization must be done externally.
  *
  * @author Ches Burks
  *

@@ -1,6 +1,7 @@
 package com.ikalagaming.util;
 
 import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Contains a list of Strings. Each string has a list of integers that represent
@@ -19,13 +20,20 @@ import java.util.HashMap;
  */
 public class NameRegistry {
 	private HashMap<String, IntegerTree> registeredNames = new HashMap<>();
+	private ReentrantLock mapLock = new ReentrantLock();
 
 	/**
 	 * Removes all names and mappings from the registry.
 	 */
 	public void clear() {
-		for (String name : this.registeredNames.keySet()) {
-			this.clear(name);
+		this.mapLock.lock();
+		try {
+			for (String name : this.registeredNames.keySet()) {
+				this.clear(name);
+			}
+		}
+		finally {
+			this.mapLock.unlock();
 		}
 	}
 
@@ -34,10 +42,16 @@ public class NameRegistry {
 	 *
 	 * @param baseName the string that IDs are registered for
 	 */
-	public void clear(String baseName) {
-		if (this.registeredNames.containsKey(baseName)) {
-			this.registeredNames.get(baseName).clear();
-			this.registeredNames.remove(baseName);
+	public void clear(final String baseName) {
+		this.mapLock.lock();
+		try {
+			if (this.registeredNames.containsKey(baseName)) {
+				this.registeredNames.get(baseName).clear();
+				this.registeredNames.remove(baseName);
+			}
+		}
+		finally {
+			this.mapLock.unlock();
 		}
 	}
 
@@ -49,7 +63,7 @@ public class NameRegistry {
 	 *            and ID
 	 * @return true if that name and ID pair exists, otherwise false
 	 */
-	public boolean contains(String fullName) {
+	public boolean contains(final String fullName) {
 		if (fullName == null || fullName.isEmpty()) {
 			return false;// invalid name
 		}
@@ -75,7 +89,16 @@ public class NameRegistry {
 		if (name.isEmpty()) {
 			return false;
 		}
-		return this.registeredNames.get(name).contains(id);
+
+		boolean doesContain = false;
+		this.mapLock.lock();
+		try {
+			doesContain = this.registeredNames.get(name).contains(id);
+		}
+		finally {
+			this.mapLock.unlock();
+		}
+		return doesContain;
 	}
 
 	/**
@@ -93,11 +116,29 @@ public class NameRegistry {
 	 * @param baseName the string that IDs are registered for
 	 * @return the next ID that will be registered for the given name
 	 */
-	public int getNextID(String baseName) {
-		if (!this.registeredNames.containsKey(baseName)) {
+	public int getNextID(final String baseName) {
+		boolean doesContain = false;
+		this.mapLock.lock();
+		try {
+			doesContain = this.registeredNames.containsKey(baseName);
+		}
+		finally {
+			this.mapLock.unlock();
+		}
+		if (!doesContain) {
 			return 0;
 		}
-		return this.registeredNames.get(baseName).getSmallestUnusedInt();
+		int smallest = 0;
+
+		this.mapLock.lock();
+		try {
+			smallest =
+					this.registeredNames.get(baseName).getSmallestUnusedInt();
+		}
+		finally {
+			this.mapLock.unlock();
+		}
+		return smallest;
 	}
 
 	/**
@@ -121,19 +162,44 @@ public class NameRegistry {
 	 * @param baseName The base string to create and register an ID for
 	 * @return the newly created unique name for the object
 	 */
-	public String registerName(String baseName) {
+	public String registerName(final String baseName) {
 		String ret = baseName;
 		IntegerTree tree;
 		int addition;
-		if (this.registeredNames.containsKey(baseName)) {
-			tree = this.registeredNames.get(baseName);
-			addition = tree.getSmallestUnusedInt();
+
+		boolean doesContain = false;
+
+		this.mapLock.lock();
+		try {
+			doesContain = this.registeredNames.containsKey(baseName);
+		}
+		finally {
+			this.mapLock.unlock();
+		}
+		if (doesContain) {
+			this.mapLock.lock();
+			try {
+				tree = this.registeredNames.get(baseName);
+				addition = tree.getSmallestUnusedInt();
+			}
+			finally {
+				this.mapLock.unlock();
+			}
 		}
 		else {
 			tree = new IntegerTree();
-			this.registeredNames.put(baseName, tree);
 			addition = 0;
+			this.mapLock.lock();
+			try {
+				this.registeredNames.put(baseName, tree);
+
+			}
+			finally {
+				this.mapLock.unlock();
+			}
 		}
+
+		this.mapLock.lock();
 		try {
 			tree.insert(addition);
 		}
@@ -141,6 +207,10 @@ public class NameRegistry {
 			System.err.println(e.getCause());
 			e.printStackTrace(System.err);
 		}
+		finally {
+			this.mapLock.unlock();
+		}
+
 		ret = ret + "-" + addition;
 		return ret;
 	}
@@ -157,7 +227,7 @@ public class NameRegistry {
 	 *            and ID
 	 * @return true if the name was unregistered, otherwise false
 	 */
-	public boolean unregisterName(String fullName) {
+	public boolean unregisterName(final String fullName) {
 		if (fullName == null || fullName.isEmpty()) {
 			return false;// invalid name
 		}
@@ -183,7 +253,18 @@ public class NameRegistry {
 		if (name.isEmpty()) {
 			return false;
 		}
-		this.registeredNames.get(name).remove(id);
+
+		this.mapLock.lock();
+		try {
+			IntegerTree nameTree;
+			nameTree = this.registeredNames.get(name);
+			if (nameTree != null) {
+				nameTree.remove(id);
+			}
+		}
+		finally {
+			this.mapLock.unlock();
+		}
 
 		return true;
 	}

@@ -10,7 +10,8 @@ import com.ikalagaming.packages.Package;
 import com.ikalagaming.packages.PackageManager;
 
 /**
- * The main interface for the rng package.
+ * The main interface for the rng package. Seeds the {@link Generator} using
+ * {@link SecureRandom} so it should be fairly secure/hard to predict.
  *
  * @author Ches Burks
  *

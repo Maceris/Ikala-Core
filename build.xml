@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Ikala-Core" default="compile" basedir=".">
+	<!-- set global properties for this build -->
+	<property name="src" location="src"/>
+	<property name="build" location="bin"/>
+	<property name="dist" location="Jars"/>
+	<property name="doc" location="javadoc"/>
+	<property name="packages" value="com.ikalagaming.*"/>
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp/>
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="compile" depends="init"
+			description="compile the source">
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false"
+				classpath="${basedir}/thirdParty/luaj-jse-3.0.jar;${basedir}/thirdParty/snakeyaml-1.14.jar">
+			<exclude name="com/ikalagaming/package-info.java"/>
+			<exclude name="com/ikalagaming/**/package-info.java"/>
+		</javac>
+	</target>
+
+	<target name="javadoc"
+			description="generate javadoc">
+        <javadoc access="package"
+				author="true"
+				classpath="${basedir}/thirdParty/luaj-jse-3.0.jar;${basedir}/thirdParty/snakeyaml-1.14.jar"
+				destdir="${doc}"
+				nodeprecated="false"
+				nodeprecatedlist="false"
+				noindex="false"
+				nonavbar="false"
+				notree="false"
+				packagenames="${packages}"
+				source="1.8"
+				sourcepath="${src}"
+				splitindex="true"
+				use="true"
+				version="true"/>
+    </target>
+
+	<target name="dist" depends="compile,javadoc"
+			description="generate the distribution jars">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${dist}"/>
+
+		<!-- Put everything in ${build} into the ICore-${DSTAMP}.jar file -->
+		<jar jarfile="${dist}/ICore.jar" basedir="${build}"/>
+		<!-- Put everything in ${src} into the ICore-source-${DSTAMP}.jar file -->
+		<jar jarfile="${dist}/ICore-source.jar" basedir="${src}"/>
+		<!-- Put everything in ${doc} into the ICore-javadoc-${DSTAMP}.jar file -->
+		<jar jarfile="${dist}/ICore-javadoc.jar" basedir="${doc}"/>
+	</target>
+
+	<target name="clean"
+			description="clean up">
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+	</target>
+</project>
