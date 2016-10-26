@@ -17,8 +17,11 @@
 	<target name="compile" depends="init"
 			description="compile the source">
 		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false"
-				classpath="${basedir}/thirdParty/luaj-jse-3.0.jar;${basedir}/thirdParty/snakeyaml-1.14.jar">
+		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false">
+			<classpath>
+				<pathelement location="${basedir}/thirdParty/luaj-jse-3.0.jar"/>
+				<pathelement location="${basedir}/thirdParty/snakeyaml-1.14.jar"/>
+			</classpath>
 			<exclude name="com/ikalagaming/package-info.java"/>
 			<exclude name="com/ikalagaming/**/package-info.java"/>
 		</javac>
@@ -26,21 +29,17 @@
 
 	<target name="javadoc"
 			description="generate javadoc">
-        <javadoc access="package"
-				author="true"
-				classpath="${basedir}/thirdParty/luaj-jse-3.0.jar;${basedir}/thirdParty/snakeyaml-1.14.jar"
-				destdir="${doc}"
-				nodeprecated="false"
-				nodeprecatedlist="false"
-				noindex="false"
-				nonavbar="false"
-				notree="false"
-				packagenames="${packages}"
-				source="1.8"
-				sourcepath="${src}"
-				splitindex="true"
-				use="true"
-				version="true"/>
+        <javadoc access="package" author="true" destdir="${doc}"
+				nodeprecated="false" nodeprecatedlist="false"
+				noindex="false" nonavbar="false" notree="false"
+				packagenames="${packages}" source="1.8" sourcepath="${src}"
+				splitindex="true" use="true" version="true">
+			<classpath>
+				<pathelement location="${basedir}/thirdParty/luaj-jse-3.0.jar"/>
+				<pathelement location="${basedir}/thirdParty/snakeyaml-1.14.jar"/>
+			</classpath>
+		</javadoc>
+			
     </target>
 
 	<target name="dist" depends="compile,javadoc"
