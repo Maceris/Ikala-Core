@@ -252,7 +252,6 @@ public class Logging {
 		}
 		if (newLevel == null) {
 			Logging.threshold = Logging.DEFAULT_THRESHOLD;
-			return;
 		}
 		synchronized (Logging.threshold) {
 			Logging.threshold = newLevel;

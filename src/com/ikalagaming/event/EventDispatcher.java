@@ -49,6 +49,9 @@ class EventDispatcher extends Thread {
 	}
 
 	private void dispatch(Event event) {
+		if (event == null) {
+			return;
+		}
 		HandlerList handlers = this.eventManager.getHandlers(event);
 		if (handlers == null) {
 			return;
@@ -78,6 +81,9 @@ class EventDispatcher extends Thread {
 	 *             due to capacity restrictions
 	 */
 	public void dispatchEvent(Event event) throws IllegalStateException {
+		if (event == null) {
+			return;
+		}
 		try {
 			synchronized (this.queue) {
 				this.queue.add(event);
@@ -116,6 +122,7 @@ class EventDispatcher extends Thread {
 			return;
 		}
 		this.dispatch(event);
+
 	}
 
 	/**

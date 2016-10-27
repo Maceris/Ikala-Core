@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -52,9 +53,16 @@ public class PackageManager {
 		if (PackageManager.instance == null) {
 			return;
 		}
-		for (String s : PackageManager.instance.loadedPackages.keySet()) {
-			PackageManager.instance.unloadPackage(s);
+		PackageManager.instance.packageLock.lock();
+		try {
+			for (String s : PackageManager.instance.loadedPackages.keySet()) {
+				PackageManager.instance.unloadPackage(s);
+			}
 		}
+		finally {
+			PackageManager.instance.packageLock.unlock();
+		}
+
 		PackageManager.instance.clearCommands();
 		PackageManager.instance.eventManager = null;
 		PackageManager.instance.commands = null;
@@ -104,6 +112,11 @@ public class PackageManager {
 	/** maps strings to packages loaded in memory */
 	private HashMap<String, Package> loadedPackages;
 
+	/**
+	 * Lock for packageStates and loadedPackages
+	 */
+	private ReentrantLock packageLock;
+
 	private Map<Package, PackageState> packageStates;
 
 	private ResourceBundle resourceBundle;
@@ -116,9 +129,16 @@ public class PackageManager {
 	private boolean enableOnLoad;
 
 	/**
+	 * Lock for enableOnLoad
+	 */
+	private ReentrantLock enableLock;
+
+	/**
 	 * A list of all of the commands registered. This list is sorted.
 	 */
 	private ArrayList<PackageCommand> commands;
+
+	private ReentrantLock commandLock;
 
 	private SystemPackage sysPackage;
 
@@ -128,6 +148,9 @@ public class PackageManager {
 	 * @param evtManager The event manager to use for the package system
 	 */
 	public PackageManager(EventManager evtManager) {
+		this.packageLock = new ReentrantLock();
+		this.commandLock = new ReentrantLock();
+		this.enableLock = new ReentrantLock();
 		this.enableOnLoad = false;
 		this.eventManager = evtManager;
 		this.loadedPackages = new HashMap<>();
@@ -152,10 +175,20 @@ public class PackageManager {
 	 * Unregisters all commands
 	 */
 	public void clearCommands() {
-		for (PackageCommand s : this.commands) {
-			this.unregisterCommand(s.getCommand());
+		this.commandLock.lock();
+		try {
+			ArrayList<String> cmds = new ArrayList<>();
+			for (PackageCommand s : this.commands) {
+				cmds.add(s.getCommand());
+			}
+			for (String s : cmds) {
+				this.unregisterCommand(s);
+			}
+			this.commands.clear();
 		}
-		this.commands.clear();
+		finally {
+			this.commandLock.unlock();
+		}
 	}
 
 	/**
@@ -164,14 +197,22 @@ public class PackageManager {
 	 * @param s the string to look for
 	 * @return true if the string exists
 	 */
-	public boolean containsCommand(String s) {
+	public boolean containsCommand(final String s) {
 		int i;
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				return true;
+		boolean res = false;
+		this.commandLock.lock();
+		try {
+			for (i = 0; i < this.commands.size(); ++i) {
+				if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+					res = true;
+					break;
+				}
 			}
 		}
-		return false;
+		finally {
+			this.commandLock.unlock();
+		}
+		return res;
 	}
 
 	/**
@@ -206,6 +247,7 @@ public class PackageManager {
 			this.setPackageState(target, PackageState.CORRUPTED);
 			// TODO note the error
 		}
+
 		return success;
 	}
 
@@ -223,12 +265,26 @@ public class PackageManager {
 	 * @return true if the package has been successfully disabled, false if
 	 *         there was a problem
 	 */
-	public boolean disable(String target) {
-		Package p = this.getPackage(target);
-		if (p == null) {
-			return true;
+	public boolean disable(final String target) {
+		Package p;
+		this.packageLock.lock();
+		try {
+			p = this.getPackage(target);
 		}
-		return this.disable(p);
+		finally {
+			this.packageLock.unlock();
+		}
+
+		if (p == null) {
+			return false;
+		}
+
+		boolean disabled = this.disable(p);
+
+		if (!disabled) {
+			this.setPackageState(p, PackageState.CORRUPTED);
+		}
+		return disabled;
 	}
 
 	/**
@@ -279,12 +335,27 @@ public class PackageManager {
 	 * @return true if the package was successfully enabled, false if there was
 	 *         a problem
 	 */
-	public boolean enable(String target) {
-		Package p = this.getPackage(target);
-		if (p == null) {
-			return true;
+	public boolean enable(final String target) {
+		Package p;
+		this.packageLock.lock();
+		try {
+			p = this.getPackage(target);
 		}
-		return this.enable(p);
+		finally {
+			this.packageLock.unlock();
+		}
+
+		if (p == null) {
+			return false;
+		}
+
+		boolean enabled = this.enable(p);
+
+		if (!enabled) {
+			this.setPackageState(p, PackageState.CORRUPTED);
+		}
+
+		return enabled;
 	}
 
 	/**
@@ -296,8 +367,16 @@ public class PackageManager {
 	 *         manually enabled
 	 * @see #setEnableOnLoad(boolean)
 	 */
-	public synchronized boolean enableOnLoad() {
-		return this.enableOnLoad;
+	public boolean enableOnLoad() {
+		boolean res = false;
+		this.enableLock.lock();
+		try {
+			res = this.enableOnLoad;
+		}
+		finally {
+			this.enableLock.unlock();
+		}
+		return res;
 	}
 
 	/**
@@ -322,7 +401,6 @@ public class PackageManager {
 
 		if (event != null) {// just in case the assignment failed
 			this.eventManager.fireEvent(event);
-
 		}
 
 		return true;
@@ -335,14 +413,21 @@ public class PackageManager {
 	 * @param s the string to look for
 	 * @return the owner of the command
 	 */
-	public Package getCommandParent(String s) {
+	public Package getCommandParent(final String s) {
 		int i;
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				return this.commands.get(i).getOwner();
+		Package ret = null;
+		this.commandLock.lock();
+		try {
+			for (i = 0; i < this.commands.size(); ++i) {
+				if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+					ret = this.commands.get(i).getOwner();
+				}
 			}
 		}
-		return null;
+		finally {
+			this.commandLock.unlock();
+		}
+		return ret;
 	}
 
 	/**
@@ -351,7 +436,16 @@ public class PackageManager {
 	 * @return a copy of the stored list
 	 */
 	public ArrayList<PackageCommand> getCommands() {
-		ArrayList<PackageCommand> cmds = new ArrayList<>(this.commands);
+		ArrayList<PackageCommand> cmds = new ArrayList<>();
+		this.commandLock.lock();
+		try {
+			for (PackageCommand pc : this.commands) {
+				cmds.add(pc);
+			}
+		}
+		finally {
+			this.commandLock.unlock();
+		}
 		return cmds;
 	}
 
@@ -364,12 +458,23 @@ public class PackageManager {
 	 */
 	private int getIndexOfCommand(String s) {
 		int i;
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				return i;
+		boolean found = false;
+		this.commandLock.lock();
+		try {
+			for (i = 0; i < this.commands.size(); ++i) {
+				if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+					found = true;
+					break;
+				}
 			}
 		}
-		return -1;
+		finally {
+			this.commandLock.unlock();
+		}
+		if (!found) {
+			i = -1;
+		}
+		return i;
 	}
 
 	/**
@@ -379,7 +484,15 @@ public class PackageManager {
 	 * @return the package map
 	 */
 	public HashMap<String, Package> getLoadedPackages() {
-		return this.loadedPackages;
+		HashMap<String, Package> ret = new HashMap<>();
+		this.packageLock.lock();
+		try {
+			ret.putAll(this.loadedPackages);
+		}
+		finally {
+			this.packageLock.unlock();
+		}
+		return ret;
 	}
 
 	/**
@@ -390,11 +503,18 @@ public class PackageManager {
 	 * @param type The package type
 	 * @return the Package with the given type or null if none exists
 	 */
-	public Package getPackage(String type) {
-		if (this.isLoaded(type)) {
-			return this.loadedPackages.get(type);
+	public Package getPackage(final String type) {
+		Package ret = null;
+		this.packageLock.lock();
+		try {
+			if (this.isLoaded(type)) {
+				ret = this.loadedPackages.get(type);
+			}
 		}
-		return null;
+		finally {
+			this.packageLock.unlock();
+		}
+		return ret;
 	}
 
 	/**
@@ -405,10 +525,21 @@ public class PackageManager {
 	 * @return a PackageState representing the status of this package
 	 */
 	public PackageState getPackageState(Package target) {
-		if (!this.packageStates.containsKey(target)) {
-			return PackageState.NOT_LOADED;
+		PackageState ret = PackageState.NOT_LOADED;
+		this.packageLock.lock();
+		try {
+			if (!this.packageStates.containsKey(target)) {
+				ret = PackageState.NOT_LOADED;
+			}
+			else {
+				ret = this.packageStates.get(target);
+			}
 		}
-		return this.packageStates.get(target);
+		finally {
+			this.packageLock.unlock();
+		}
+
+		return ret;
 	}
 
 	/**
@@ -431,15 +562,33 @@ public class PackageManager {
 	 * @return true if the package is fully ready to operate
 	 */
 	public boolean isEnabled(Package target) {
-		if (!this.isLoaded(target)) {
-			return false;
+		boolean ret = true;
+		this.packageLock.lock();
+		try {
+			if (!this.isLoaded(target)) {
+				ret = false;
+			}
 		}
-		PackageState state = this.getPackageState(target);
-		if (state.equals(PackageState.ENABLED)) {
-			return true;
+		finally {
+			this.packageLock.unlock();
 		}
-		return false;
+		if (!ret) {// ret starts as true, if set to false (!loaded), return f.
+			return ret;
+		}
 
+		ret = false;
+		this.packageLock.lock();
+		try {
+			PackageState state = this.getPackageState(target);
+			if (state.equals(PackageState.ENABLED)) {
+				ret = true;
+			}
+		}
+		finally {
+			this.packageLock.unlock();
+		}
+
+		return ret;
 	}
 
 	/**
@@ -451,12 +600,19 @@ public class PackageManager {
 	 *
 	 * @return true if the package is fully ready to operate
 	 */
-	public boolean isEnabled(String target) {
-		Package p = this.getPackage(target);
-		if (p == null) {
-			return false;
+	public boolean isEnabled(final String target) {
+		boolean ret = false;
+		this.packageLock.lock();
+		try {
+			Package p = this.getPackage(target);
+			if (p != null) {
+				ret = this.isEnabled(p);
+			}
 		}
-		return this.isEnabled(p);
+		finally {
+			this.packageLock.unlock();
+		}
+		return ret;
 	}
 
 	/**
@@ -469,7 +625,15 @@ public class PackageManager {
 	 *         exist
 	 */
 	public boolean isLoaded(Package type) {
-		return this.loadedPackages.containsKey(type.getName());
+		boolean ret;
+		this.packageLock.lock();
+		try {
+			ret = this.loadedPackages.containsKey(type.getName());
+		}
+		finally {
+			this.packageLock.unlock();
+		}
+		return ret;
 	}
 
 	/**
@@ -480,8 +644,16 @@ public class PackageManager {
 	 * @return true if the package is loaded in memory, false if it does not
 	 *         exist
 	 */
-	public boolean isLoaded(String type) {
-		return this.loadedPackages.containsKey(type);
+	public boolean isLoaded(final String type) {
+		boolean ret;
+		this.packageLock.lock();
+		try {
+			ret = this.loadedPackages.containsKey(type);
+		}
+		finally {
+			this.packageLock.unlock();
+		}
+		return ret;
 	}
 
 	/**
@@ -522,9 +694,19 @@ public class PackageManager {
 					alreadyLoaded.replaceFirst("\\$VERSION",
 							"" + toLoad.getVersion());
 			Logging.fine(SystemPackage.PACKAGE_NAME, alreadyLoaded);
-			if (this.loadedPackages.get(toLoad.getName()).getVersion() < toLoad
-					.getVersion()) {
-				this.unloadPackage(this.loadedPackages.get(toLoad.getName()));
+
+			boolean lowerVersion = false;
+			this.packageLock.lock();
+			try {
+				lowerVersion =
+						this.loadedPackages.get(toLoad.getName()).getVersion() < toLoad
+								.getVersion();
+			}
+			finally {
+				this.packageLock.unlock();
+			}
+			if (lowerVersion) {
+				this.unloadPackage(toLoad.getName());
 				// unload the old package and continue loading the new one
 			}
 			else {
@@ -544,8 +726,14 @@ public class PackageManager {
 		}
 		this.setPackageState(toLoad, PackageState.LOADING);
 
-		// store the new package
-		this.loadedPackages.put(toLoad.getName(), toLoad);
+		this.packageLock.lock();
+		try {
+			// store the new package
+			this.loadedPackages.put(toLoad.getName(), toLoad);
+		}
+		finally {
+			this.packageLock.unlock();
+		}
 
 		for (Listener l : toLoad.getListeners()) {
 			this.eventManager.registerEventListeners(l);
@@ -774,7 +962,7 @@ public class PackageManager {
 	 * @param owner what package is registering the command
 	 * @return true if the command registered successfully
 	 */
-	public boolean registerCommand(String command, Package owner) {
+	public boolean registerCommand(final String command, Package owner) {
 		if (this.containsCommand(command)) {
 			int index = this.getIndexOfCommand(command);
 			String msg =
@@ -790,7 +978,14 @@ public class PackageManager {
 			return false;
 		}
 		PackageCommand cmd = new PackageCommand(command, owner);
-		this.commands.add(cmd);
+		this.commandLock.lock();
+		try {
+			this.commands.add(cmd);
+		}
+		finally {
+			this.commandLock.unlock();
+		}
+
 		String msg =
 				SafeResourceLoader.getString("REGISTERED_COMMAND",
 						this.getResourceBundle(),
@@ -798,7 +993,14 @@ public class PackageManager {
 		msg = msg.replaceFirst("\\$COMMAND", command);
 		msg = msg.replaceFirst("\\$PACKAGE", owner.getName());
 		Logging.finest(SystemPackage.PACKAGE_NAME, msg);
-		java.util.Collections.sort(this.commands);
+		this.commandLock.lock();
+		try {
+			java.util.Collections.sort(this.commands);
+		}
+		finally {
+			this.commandLock.unlock();
+		}
+
 		return true;
 	}
 
@@ -834,7 +1036,6 @@ public class PackageManager {
 	 * @return true if the package reloaded successfully, false otherwise
 	 */
 	public boolean reload(Package target) {
-
 		if (!this.isLoaded(target)) {
 			String tmp =
 					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
@@ -872,21 +1073,45 @@ public class PackageManager {
 	 * @param newValue true if the packages should be automatically enabled
 	 *            after loading, false if they should be manually enabled
 	 */
-	public synchronized void setEnableOnLoad(boolean newValue) {
-		this.enableOnLoad = newValue;
+	public void setEnableOnLoad(final boolean newValue) {
+		this.enableLock.lock();
+		try {
+			this.enableOnLoad = newValue;
+		}
+		finally {
+			this.enableLock.unlock();
+		}
 	}
 
 	private void setPackageState(Package target, PackageState newState) {
-		if (!this.packageStates.containsKey(target)) {
-			this.packageStates.put(target, newState);
+		boolean added = false;
+
+		this.packageLock.lock();
+		try {
+			if (!this.packageStates.containsKey(target)) {
+				this.packageStates.put(target, newState);
+				added = true;
+			}
+		}
+		finally {
+			this.packageLock.unlock();
+		}
+		if (added) {
 			return;
 		}
-		// replaces the old state
-		PackageState oldState = this.packageStates.get(target);
-		if (oldState.equals(PackageState.PENDING_REMOVAL)) {
-			return;// You can't change the state at this point
+
+		this.packageLock.lock();
+		try {
+			// replaces the old state
+			PackageState oldState = this.packageStates.get(target);
+			if (!oldState.equals(PackageState.PENDING_REMOVAL)) {
+				// can't change packages pending removal
+				this.packageStates.put(target, newState);
+			}
 		}
-		this.packageStates.put(target, newState);
+		finally {
+			this.packageLock.unlock();
+		}
 	}
 
 	/**
@@ -921,7 +1146,7 @@ public class PackageManager {
 	 * @param toUnload The type of package to unload
 	 * @return true if the package was unloaded properly
 	 */
-	public boolean unloadPackage(String toUnload) {
+	public boolean unloadPackage(final String toUnload) {
 		String unloading =
 				SafeResourceLoader.getString("ALERT_UNLOADING",
 						this.resourceBundle, "Unloading package $PACKAGE...");
@@ -936,7 +1161,17 @@ public class PackageManager {
 			return false;
 		}
 
-		Package pack = this.loadedPackages.get(toUnload);
+		Package pack;
+		this.packageLock.lock();
+		try {
+			pack = this.loadedPackages.get(toUnload);
+		}
+		finally {
+			this.packageLock.unlock();
+		}
+		if (pack == null) {
+			return false;// TODO log this problem
+		}
 
 		// It has to be disabled before unloading.
 		if (this.isEnabled(pack)) {
@@ -958,8 +1193,14 @@ public class PackageManager {
 						"Unregistered event listeners for $PACKAGE")
 						.replaceFirst("\\$PACKAGE", SystemPackage.PACKAGE_NAME);
 		Logging.finer(SystemPackage.PACKAGE_NAME, unreg);
-		this.loadedPackages.remove(toUnload);
-		this.packageStates.remove(pack);
+		this.packageLock.lock();
+		try {
+			this.loadedPackages.remove(toUnload);
+			this.packageStates.remove(pack);
+		}
+		finally {
+			this.packageLock.unlock();
+		}
 
 		String unloaded =
 				SafeResourceLoader.getString("ALERT_UNLOADED",
@@ -975,22 +1216,31 @@ public class PackageManager {
 	 * @param command the command to remove
 	 * @return true if the command was removed
 	 */
-	public boolean unregisterCommand(String command) {
-		if (this.containsCommand(command)) {
-			while (this.containsCommand(command)) {// just in case there are
-													// multiple
-				int index = this.getIndexOfCommand(command);
-				this.commands.remove(index);
+	public boolean unregisterCommand(final String command) {
+		boolean found = false;
+
+		this.commandLock.lock();
+		try {
+			if (this.containsCommand(command)) {
+
+				while (this.containsCommand(command)) {// just in case there are
+														// multiple
+					int index = this.getIndexOfCommand(command);
+					this.commands.remove(index);
+				}
+				String msg =
+						SafeResourceLoader.getString("UNREGISTERED_COMMAND",
+								this.getResourceBundle(),
+								"Unregistered command $COMMAND");
+				msg = msg.replaceFirst("\\$COMMAND", command);
+				Logging.finest(SystemPackage.PACKAGE_NAME, msg);
+				found = true;
 			}
-			String msg =
-					SafeResourceLoader.getString("UNREGISTERED_COMMAND",
-							this.getResourceBundle(),
-							"Unregistered command $COMMAND");
-			msg = msg.replaceFirst("\\$COMMAND", command);
-			Logging.finest(SystemPackage.PACKAGE_NAME, msg);
-			return true;
 		}
-		return false;
+		finally {
+			this.commandLock.unlock();
+		}
+		return found;
 	}
 
 	/**
@@ -1000,15 +1250,21 @@ public class PackageManager {
 	 */
 	public void unregisterPackageCommands(Package owner) {
 		ArrayList<String> packageCommands = new ArrayList<>();
-		// find all the commands registered to the package
-		for (PackageCommand c : this.commands) {
-			if (c.getOwner().getName().equalsIgnoreCase(owner.getName())) {
-				packageCommands.add(c.getCommand());
+		this.commandLock.lock();
+		try {
+			// find all the commands registered to the package
+			for (PackageCommand c : this.commands) {
+				if (c.getOwner().getName().equalsIgnoreCase(owner.getName())) {
+					packageCommands.add(c.getCommand());
+				}
+			}
+			// unload the commands
+			for (String s : packageCommands) {
+				this.unregisterCommand(s);
 			}
 		}
-		// unload the commands
-		for (String s : packageCommands) {
-			this.unregisterCommand(s);
+		finally {
+			this.commandLock.unlock();
 		}
 
 	}
