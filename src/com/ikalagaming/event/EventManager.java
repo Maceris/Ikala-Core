@@ -221,11 +221,11 @@ public class EventManager {
 			this.dispatcher.join();
 		}
 		catch (InterruptedException e) {
-			String err =
+			/*String err =
 					SafeResourceLoader.getString("THREAD_INTERRUPTED",
 							"com.ikalagaming.event.resources.strings",
 							"Thread interrupted");
-			Logging.severe(SystemPackage.PACKAGE_NAME, err);
+			Logging.severe(SystemPackage.PACKAGE_NAME, err);*/
 			e.printStackTrace(System.err);
 		}
 	}
