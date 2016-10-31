@@ -671,6 +671,9 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	public boolean onEnable() {
 		this.init();
 		this.appendIndicatorChar();
+		this.appendMessage(SafeResourceLoader.getString("missed_logs",
+				this.getResourceBundle(),
+				"Logs sent before console was enabled were skipped"));
 		return true;
 	}
 
@@ -684,7 +687,6 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 		}
 		catch (MissingResourceException missingResource) {
 			// don't localize this since it would fail anyways
-			// TODO handle this better
 			Logging.warning(this.getName(),
 					"Locale not found for Console in onLoad()");
 		}
