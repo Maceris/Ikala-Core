@@ -2,6 +2,7 @@ package com.ikalagaming.logging;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
@@ -25,6 +26,9 @@ public class Logging {
 	private static EventManager eventManager;
 
 	private static boolean initialized = false;
+
+	private static ReentrantLock initLock = new ReentrantLock();
+	private static ReentrantLock thresholdLock = new ReentrantLock();
 
 	/**
 	 * Logs the given message at the {@link LogLevel#CONFIG config} log level.
@@ -50,26 +54,39 @@ public class Logging {
 	 * @see Logging#destory()
 	 */
 	public static void create() {
-		if (Logging.initialized) {
-			return;
-		}
-		Logging.threshold = Logging.DEFAULT_THRESHOLD;
-		Logging.eventManager = EventManager.getInstance();
+		initLock.lock();
 		try {
-			Logging.resourceBundle =
-					ResourceBundle.getBundle(
-							"com.ikalagaming.logging.resources.LoggingPackage",
-							Localization.getLocale());
-		}
-		catch (MissingResourceException missingResource) {
-			// TODO use the system name
-			Logging.log("logging", LogLevel.SEVERE,
-					"locale not found in LoggingPackage.onLoad()");
-		}
-		Logging.dispatcher = new LogDispatcher(Logging.eventManager);
-		Logging.dispatcher.start();
+			if (Logging.initialized) {
+				return;
+			}
+			thresholdLock.lock();
+			try {
+				Logging.threshold = Logging.DEFAULT_THRESHOLD;
+			}
+			finally {
+				thresholdLock.unlock();
+			}
+			Logging.eventManager = EventManager.getInstance();
+			try {
+				Logging.resourceBundle =
+						ResourceBundle
+								.getBundle(
+										"com.ikalagaming.logging.resources.LoggingPackage",
+										Localization.getLocale());
+			}
+			catch (MissingResourceException missingResource) {
+				// TODO use the system name
+				Logging.log("logging", LogLevel.SEVERE,
+						"locale not found in LoggingPackage.onLoad()");
+			}
+			Logging.dispatcher = new LogDispatcher(Logging.eventManager);
+			Logging.dispatcher.start();
 
-		Logging.initialized = true;
+			Logging.initialized = true;
+		}
+		finally {
+			initLock.unlock();
+		}
 	}
 
 	/**
@@ -80,15 +97,27 @@ public class Logging {
 	 * @see #create()
 	 */
 	public static void destory() {
-		if (!Logging.initialized) {
-			return;
+		initLock.lock();
+		try {
+			if (!Logging.initialized) {
+				return;
+			}
+			Logging.dispatcher.terminate();
+			Logging.dispatcher = null;
+			Logging.resourceBundle = null;
+			Logging.eventManager = null;
+			Logging.initialized = false;
+			thresholdLock.lock();
+			try {
+				Logging.threshold = null;
+			}
+			finally {
+				thresholdLock.unlock();
+			}
 		}
-		Logging.dispatcher.terminate();
-		Logging.dispatcher = null;
-		Logging.resourceBundle = null;
-		Logging.eventManager = null;
-		Logging.initialized = false;
-		Logging.threshold = null;
+		finally {
+			initLock.unlock();
+		}
 	}
 
 	/**
@@ -151,12 +180,26 @@ public class Logging {
 	 * @see #setLogLevel(LogLevel)
 	 */
 	public static LogLevel getLogLevel() {
-		if (!Logging.initialized) {
-			return Logging.DEFAULT_THRESHOLD;
+		initLock.lock();
+		LogLevel ret;
+		try {
+			if (!Logging.initialized) {
+				ret = Logging.DEFAULT_THRESHOLD;
+			}
+			else {
+				thresholdLock.lock();
+				try {
+					ret = Logging.threshold;
+				}
+				finally {
+					thresholdLock.unlock();
+				}
+			}
 		}
-		synchronized (Logging.threshold) {
-			return Logging.threshold;
+		finally {
+			initLock.unlock();
 		}
+		return ret;
 	}
 
 	/**
@@ -183,7 +226,13 @@ public class Logging {
 	 * @return true if the logger has been created, false otherwise
 	 */
 	public static boolean isInitialized() {
-		return Logging.initialized;
+		initLock.lock();
+		try {
+			return Logging.initialized;
+		}
+		finally {
+			initLock.unlock();
+		}
 	}
 
 	/**
@@ -204,11 +253,23 @@ public class Logging {
 	 * @see #finest(String, String)
 	 */
 	public static void log(String origin, LogLevel level, String details) {
-		if (!Logging.initialized) {
-			Logging.create();
+		initLock.lock();
+		try {
+			if (!Logging.initialized) {
+				Logging.create();
+			}
 		}
-		if (level.intValue() < Logging.threshold.intValue()) {
-			return;
+		finally {
+			initLock.unlock();
+		}
+		thresholdLock.lock();
+		try {
+			if (level.intValue() < Logging.threshold.intValue()) {
+				return;
+			}
+		}
+		finally {
+			thresholdLock.unlock();
 		}
 		String newLog = "";
 		try {
@@ -247,14 +308,24 @@ public class Logging {
 	 * @see #create()
 	 */
 	public static void setLogLevel(LogLevel newLevel) {
-		if (!Logging.initialized) {
-			Logging.create();
+		initLock.lock();
+		try {
+			if (!Logging.initialized) {
+				Logging.create();
+			}
 		}
-		if (newLevel == null) {
-			Logging.threshold = Logging.DEFAULT_THRESHOLD;
+		finally {
+			initLock.unlock();
 		}
-		synchronized (Logging.threshold) {
+		thresholdLock.lock();
+		try {
+			if (newLevel == null) {
+				Logging.threshold = Logging.DEFAULT_THRESHOLD;
+			}
 			Logging.threshold = newLevel;
+		}
+		finally {
+			thresholdLock.unlock();
 		}
 	}
 

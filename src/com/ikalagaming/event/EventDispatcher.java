@@ -52,6 +52,11 @@ class EventDispatcher extends Thread {
 		if (event == null) {
 			return;
 		}
+		if (this.eventManager == null) {
+			Logging.severe(SystemPackage.PACKAGE_NAME,
+					"There is no event manager!");
+			return;
+		}
 		HandlerList handlers = this.eventManager.getHandlers(event);
 		if (handlers == null) {
 			return;
