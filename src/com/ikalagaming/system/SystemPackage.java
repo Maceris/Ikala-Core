@@ -21,7 +21,7 @@ public class SystemPackage implements Package {
 	 */
 	public static final String PACKAGE_NAME = "System";
 
-	private static final double PACKAGE_VERSION = 1.0;
+	private static final double PACKAGE_VERSION = 1.1;
 
 	/*
 	 * Made final so that if anyone tries to modify it they will fail, as a

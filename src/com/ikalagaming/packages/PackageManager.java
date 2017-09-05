@@ -83,7 +83,7 @@ public class PackageManager {
 	public static PackageManager getInstance() {
 		if (PackageManager.instance == null) {
 			PackageManager.instance =
-					new PackageManager(EventManager.getInstance());
+				new PackageManager(EventManager.getInstance());
 		}
 		return PackageManager.instance;
 	}
@@ -157,9 +157,9 @@ public class PackageManager {
 		// Ensure package states are synchronized
 		this.packageStates = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle =
-				ResourceBundle.getBundle(
-						"com.ikalagaming.packages.resources.PackageManager",
-						Localization.getLocale());
+			ResourceBundle.getBundle(
+				"com.ikalagaming.packages.resources.PackageManager",
+				Localization.getLocale());
 
 		this.commands = new ArrayList<>();
 
@@ -232,9 +232,9 @@ public class PackageManager {
 	public boolean disable(Package target) {
 		this.setPackageState(target, PackageState.DISABLING);
 		String msgDisabling =
-				SafeResourceLoader.getString("ALERT_DISABLING",
-						this.resourceBundle, "Disabling package $PACKAGE...")
-						.replaceFirst("\\$PACKAGE", target.getName());
+			SafeResourceLoader.getString("ALERT_DISABLING",
+				this.resourceBundle, "Disabling package $PACKAGE...")
+				.replaceFirst("\\$PACKAGE", target.getName());
 		Logging.fine(SystemPackage.PACKAGE_NAME, msgDisabling);
 
 		boolean success = target.onDisable();
@@ -245,7 +245,11 @@ public class PackageManager {
 		}
 		else {
 			this.setPackageState(target, PackageState.CORRUPTED);
-			// TODO note the error
+			String msgCorrupted =
+				SafeResourceLoader.getString("PACKAGE_STATE_CORRUPTED",
+					this.resourceBundle, "Package state of $PACKAGE became corrupted")
+					.replaceFirst("\\$PACKAGE", target.getName());
+			Logging.warning(SystemPackage.PACKAGE_NAME, msgCorrupted);
 		}
 
 		return success;
@@ -303,9 +307,9 @@ public class PackageManager {
 	public boolean enable(Package target) {
 		this.setPackageState(target, PackageState.ENABLING);
 		String msgEnable =
-				SafeResourceLoader.getString("ALERT_ENABLING",
-						this.resourceBundle, "Enabling package $PACKAGE...")
-						.replaceFirst("\\$PACKAGE", target.getName());
+			SafeResourceLoader.getString("ALERT_ENABLING", this.resourceBundle,
+				"Enabling package $PACKAGE...").replaceFirst("\\$PACKAGE",
+				target.getName());
 		Logging.fine(SystemPackage.PACKAGE_NAME, msgEnable);
 
 		boolean success = target.onEnable();
@@ -316,7 +320,11 @@ public class PackageManager {
 		}
 		else {
 			this.setPackageState(target, PackageState.CORRUPTED);
-			// TODO note the error
+			String msgCorrupted =
+				SafeResourceLoader.getString("PACKAGE_STATE_CORRUPTED",
+					this.resourceBundle, "Package state of $PACKAGE became corrupted")
+					.replaceFirst("\\$PACKAGE", target.getName());
+			Logging.warning(SystemPackage.PACKAGE_NAME, msgCorrupted);
 		}
 
 		return success;
@@ -391,10 +399,9 @@ public class PackageManager {
 	public boolean fireEvent(Event event) {
 		if (this.eventManager == null) {
 			String err =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							this.resourceBundle, "Package $PACKAGE not loaded")
-							.replaceFirst("\\$PACKAGE",
-									SystemPackage.PACKAGE_NAME);
+				SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+					this.resourceBundle, "Package $PACKAGE not loaded")
+					.replaceFirst("\\$PACKAGE", SystemPackage.PACKAGE_NAME);
 			System.err.println(err);
 			return false;
 		}
@@ -675,32 +682,30 @@ public class PackageManager {
 	 */
 	public boolean loadPackage(Package toLoad) {
 		String loading =
-				SafeResourceLoader.getString("ALERT_LOADING",
-						this.resourceBundle,
-						"Loading package $PACKAGE (v$VERSION)...");
+			SafeResourceLoader.getString("ALERT_LOADING", this.resourceBundle,
+				"Loading package $PACKAGE (v$VERSION)...");
 		loading = loading.replaceFirst("\\$PACKAGE", toLoad.getName());
 		loading = loading.replaceFirst("\\$VERSION", "" + toLoad.getVersion());
 		Logging.fine(SystemPackage.PACKAGE_NAME, loading);
 		// if the package exists and is older than toLoad, unload
 		if (this.isLoaded(toLoad)) {
 			String alreadyLoaded =
-					SafeResourceLoader.getString(
-							"ALERT_PACKAGE_ALREADY_LOADED",
-							this.resourceBundle,
-							"Package $PACKAGE is already loaded. (v$VERSION)");
+				SafeResourceLoader.getString("ALERT_PACKAGE_ALREADY_LOADED",
+					this.resourceBundle,
+					"Package $PACKAGE is already loaded. (v$VERSION)");
 			alreadyLoaded =
-					alreadyLoaded.replaceFirst("\\$PACKAGE", toLoad.getName());
+				alreadyLoaded.replaceFirst("\\$PACKAGE", toLoad.getName());
 			alreadyLoaded =
-					alreadyLoaded.replaceFirst("\\$VERSION",
-							"" + toLoad.getVersion());
+				alreadyLoaded.replaceFirst("\\$VERSION",
+					"" + toLoad.getVersion());
 			Logging.fine(SystemPackage.PACKAGE_NAME, alreadyLoaded);
 
 			boolean lowerVersion = false;
 			this.packageLock.lock();
 			try {
 				lowerVersion =
-						this.loadedPackages.get(toLoad.getName()).getVersion() < toLoad
-								.getVersion();
+					this.loadedPackages.get(toLoad.getName()).getVersion() < toLoad
+						.getVersion();
 			}
 			finally {
 				this.packageLock.unlock();
@@ -711,15 +716,14 @@ public class PackageManager {
 			}
 			else {
 				String outdated =
-						SafeResourceLoader.getString("ALERT_PACKAGE_OUTDATED",
-								this.resourceBundle,
-								"Package $PACKAGE (v$VERSION) "
-										+ "was outdated. Aborting.");
+					SafeResourceLoader.getString("ALERT_PACKAGE_OUTDATED",
+						this.resourceBundle, "Package $PACKAGE (v$VERSION) "
+							+ "was outdated. Aborting.");
 				outdated =
-						outdated.replaceFirst("\\$PACKAGE", toLoad.getName());
+					outdated.replaceFirst("\\$PACKAGE", toLoad.getName());
 				outdated =
-						outdated.replaceFirst("\\$VERSION",
-								"" + toLoad.getVersion());
+					outdated.replaceFirst("\\$VERSION",
+						"" + toLoad.getVersion());
 				Logging.fine(SystemPackage.PACKAGE_NAME, outdated);
 				return false;
 			}
@@ -739,10 +743,9 @@ public class PackageManager {
 			this.eventManager.registerEventListeners(l);
 		}
 		String msg =
-				SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
-						this.resourceBundle,
-						"Registered event listeners for $PACKAGE")
-						.replaceFirst("\\$PACKAGE", toLoad.getName());
+			SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
+				this.resourceBundle, "Registered event listeners for $PACKAGE")
+				.replaceFirst("\\$PACKAGE", toLoad.getName());
 		Logging.finer(SystemPackage.PACKAGE_NAME, msg);
 
 		// load it
@@ -755,54 +758,62 @@ public class PackageManager {
 		return true;
 	}
 
-	public boolean loadPlugin(PackageInfo info) {
-		return false;
-	}
-
 	/**
-	 * Loads a plugin from a name
+	 * Loads a plugin by name from a folder.
 	 *
 	 * @param path the path to the folder containing the file
-	 * @param name the filename to load from
+	 * @param name the filename to load from, without a file extension
 	 * @return true on success, false if it failed
 	 */
 	public boolean loadPlugin(String path, String name) {
-		// TODO javadoc
-		// TODO load a package from file
-
 		// The folder containing the plugin
 		File pluginFolder;
 		try {
 			pluginFolder = new File(path);
 		}
 		catch (NullPointerException nullExcept) {
-			// TODO localize error
-			String msg = "Null plugin folder path";
+			String msg =
+				SafeResourceLoader.getString("PLUGIN_PATH_NULL",
+					this.resourceBundle, "Plugin path was null");
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
 		try {
-			if (!pluginFolder.exists()) { // TODO localize error
-				String msg = "Plugin folder does not exist";
+			if (!pluginFolder.exists()) {
+				String msg =
+					SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND",
+						this.resourceBundle,
+						"Cannot find plugin folder $FOLDER").replaceFirst(
+						"\\$FOLDER", pluginFolder.getAbsolutePath());
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 				return false;
 			}
-			if (!pluginFolder.isDirectory()) { // TODO localize error
-				String msg = "Plugin folder is not a folder";
+			if (!pluginFolder.isDirectory()) {
+				String msg =
+					SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOLDER",
+						this.resourceBundle,
+						"Plugin folder $FOLDER isn't a folder").replaceFirst(
+						"\\$FOLDER", pluginFolder.getAbsolutePath());
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 				return false;
 			}
 			if (!pluginFolder.canRead()) {
-				// TODO localize error
-				String msg = "Cannot read plugin folder";
+				String msg =
+					SafeResourceLoader.getString("PLUGIN_FOLDER_UNREADABLE",
+						this.resourceBundle,
+						"Cannot read plugin folder $FOLDER").replaceFirst(
+						"\\$FOLDER", pluginFolder.getAbsolutePath());
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 				return false;
 			}
 
 		}
 		catch (SecurityException securExcep) {
-			// TODO localize error
-			String msg = "System security denied read access to plugin folder";
+			String msg =
+				SafeResourceLoader.getString("PLUGIN_FOLDER_ACCESS_DENIED",
+					this.resourceBundle,
+					"Read access denied to plugin folder $FOLDER")
+					.replaceFirst("\\$FOLDER", path);
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
@@ -811,15 +822,20 @@ public class PackageManager {
 
 		File[] files;
 		files = pluginFolder.listFiles();
-		if (files == null) { // TODO log error
-			String msg = "Error reading file names in plugin folder";
+		if (files == null) {
+			String msg =
+				SafeResourceLoader.getString("PLUGIN_FILES_NULL",
+					this.resourceBundle,
+					"Error listing files in plugin folder $FOLDER")
+					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
 		if (files.length == 0) {
-			// empty
-			// TODO localize error
-			String msg = "Plugin folder is empty";
+			String msg =
+				SafeResourceLoader.getString("PLUGIN_FOLDER_EMPTY",
+					this.resourceBundle, "Empty plugin folder $FOLDER")
+					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
@@ -846,14 +862,23 @@ public class PackageManager {
 				}
 			}
 			catch (SecurityException secExcep) {
+				String msg =
+					SafeResourceLoader.getString("PLUGIN_FILE_SECURITY_ERR",
+						this.resourceBundle,
+						"Security error reading file $FILE").replaceFirst(
+						"\\$FILE", file.getName());
+				Logging.fine(SystemPackage.PACKAGE_NAME, msg);
 				// Maybe one or more files can't be read
 				continue;
 			}
 		}
 		files = null;
 		if (jarFile == null) {
-			// TODO localize error
-			String msg = "Cannot find specified plugin";
+			String msg =
+				SafeResourceLoader
+					.getString("PLUGIN_NOT_FOUND", this.resourceBundle,
+						"Cannot find specified plugin $PLUGIN").replaceFirst(
+						"\\$PLUGIN", name);
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
@@ -870,20 +895,22 @@ public class PackageManager {
 			jfile = new JarFile(jarFile);
 			config = jfile.getEntry("plugin.yaml");
 			if (config == null) {
-				// TODO log error
-				// invalid plugin
+				String msg =
+					SafeResourceLoader.getString("PLUGIN_CONFIG_MISSING",
+						this.resourceBundle,
+						"Invalid plugin, plugin.yaml missing");
+				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 				jfile.close();
 				return false;
 			}
 		}
-		catch (IOException e) {
-			// TODO log error
-			e.printStackTrace();
-			return false;
-		}
 		catch (Exception e) {
-			// TODO log error
-			e.printStackTrace();
+			String msg =
+				SafeResourceLoader
+					.getString("PLUGIN_JAR_ERROR", this.resourceBundle,
+						"Error reading plugin jar for $PLUGIN").replaceFirst(
+						"\\$PLUGIN", name);
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
 		// grab an input stream for the configuration file
@@ -892,15 +919,22 @@ public class PackageManager {
 			configIStream = jfile.getInputStream(config);
 		}
 		catch (IOException e1) {
-			// TODO log error
-			e1.printStackTrace();
+			String msg =
+				SafeResourceLoader.getString("PLUGIN_CONFIG_READ_ERROR",
+					this.resourceBundle,
+					"Error reading plugin configuration for $PLUGIN")
+					.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			try {
 				jfile.close();
 			}
 			catch (IOException e) {
-				// TODO log error
+				String errorMsg =
+					SafeResourceLoader.getString("PLUGIN_JAR_CLOSE_ERROR",
+						this.resourceBundle, "Error closing jar for $PLUGIN")
+						.replaceFirst("\\$PLUGIN", name);
+				Logging.warning(SystemPackage.PACKAGE_NAME, errorMsg);
 				// wow we really must have messed up
-				e.printStackTrace();
 			}
 			return false;
 		}
@@ -911,13 +945,21 @@ public class PackageManager {
 			info = new PackageInfo(configIStream);
 		}
 		catch (InvalidDescriptionException e1) {
-			// TODO log error
-			e1.printStackTrace();
+			String msg =
+				SafeResourceLoader.getString("PLUGIN_INVALID_DESCRIPTION",
+					this.resourceBundle,
+					"Invalid plugin description for $PLUGIN").replaceFirst(
+					"\\$PLUGIN", name);
+			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			try {
 				jfile.close();
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				String errorMsg =
+					SafeResourceLoader.getString("PLUGIN_JAR_CLOSE_ERROR",
+						this.resourceBundle, "Error closing jar for $PLUGIN")
+						.replaceFirst("\\$PLUGIN", name);
+				Logging.warning(SystemPackage.PACKAGE_NAME, errorMsg);
 			}
 			return false;
 		}
@@ -926,18 +968,26 @@ public class PackageManager {
 			jfile.close();// We already loaded in the config info
 		}
 		catch (IOException e1) {
-			e1.printStackTrace();
+			String errorMsg =
+				SafeResourceLoader.getString("PLUGIN_JAR_CLOSE_ERROR",
+					this.resourceBundle, "Error closing jar for $PLUGIN")
+					.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPackage.PACKAGE_NAME, errorMsg);
 		}
 
 		ClassLoader loader;
 		try {
 			loader =
-					URLClassLoader.newInstance(new URL[] {jarFile.toURI()
-							.toURL()}, this.getClass().getClassLoader());
+				URLClassLoader.newInstance(new URL[] {jarFile.toURI().toURL()},
+					this.getClass().getClassLoader());
 		}
 		catch (MalformedURLException e) {
-			// TODO log error
-			e.printStackTrace();
+			String err =
+				SafeResourceLoader.getString("PACKAGE_URL_INVALID",
+					this.resourceBundle,
+					"Invalid URL of package jar for $PLUGIN").replaceFirst(
+					"\\$PLUGIN", name);
+			Logging.warning(SystemPackage.PACKAGE_NAME, err);
 			return false;
 		}
 		Class<?> clazz;
@@ -945,12 +995,17 @@ public class PackageManager {
 			clazz = Class.forName(info.getMain(), true, loader);
 		}
 		catch (ClassNotFoundException e) {
-			// TODO log error
-			e.printStackTrace();
+			String err =
+				SafeResourceLoader.getString("PACKAGE_MAIN_METHOD_MISSING",
+					this.resourceBundle,
+					"Cannot find main method for plugin $PLUGIN").replaceFirst(
+					"\\$PLUGIN", name);
+			Logging.warning(SystemPackage.PACKAGE_NAME, err);
 			return false;
 		}
 
 		// TODO finish this
+
 		return false;
 	}
 
@@ -966,14 +1021,13 @@ public class PackageManager {
 		if (this.containsCommand(command)) {
 			int index = this.getIndexOfCommand(command);
 			String msg =
-					SafeResourceLoader
-							.getString("COMMAND_ALREADY_REGISTERED",
-									this.getResourceBundle(),
-									"Command $COMMAND is already registered to $PACKAGE");
+				SafeResourceLoader.getString("COMMAND_ALREADY_REGISTERED",
+					this.getResourceBundle(),
+					"Command $COMMAND is already registered to $PACKAGE");
 			msg = msg.replaceFirst("\\$COMMAND", command);
 			msg =
-					msg.replaceFirst("\\$PACKAGE", this.commands.get(index)
-							.getOwner().getName());
+				msg.replaceFirst("\\$PACKAGE", this.commands.get(index)
+					.getOwner().getName());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 			return false;
 		}
@@ -987,9 +1041,9 @@ public class PackageManager {
 		}
 
 		String msg =
-				SafeResourceLoader.getString("REGISTERED_COMMAND",
-						this.getResourceBundle(),
-						"Registered command $COMMAND to $PACKAGE");
+			SafeResourceLoader.getString("REGISTERED_COMMAND",
+				this.getResourceBundle(),
+				"Registered command $COMMAND to $PACKAGE");
 		msg = msg.replaceFirst("\\$COMMAND", command);
 		msg = msg.replaceFirst("\\$PACKAGE", owner.getName());
 		Logging.finest(SystemPackage.PACKAGE_NAME, msg);
@@ -1038,10 +1092,9 @@ public class PackageManager {
 	public boolean reload(Package target) {
 		if (!this.isLoaded(target)) {
 			String tmp =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							this.getResourceBundle(),
-							"Package $PACKAGE not loaded").replaceFirst(
-							"\\$PACKAGE", target.getName());
+				SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+					this.getResourceBundle(), "Package $PACKAGE not loaded")
+					.replaceFirst("\\$PACKAGE", target.getName());
 			Logging.warning(SystemPackage.PACKAGE_NAME, tmp);
 			return false;
 		}
@@ -1130,9 +1183,9 @@ public class PackageManager {
 		String type = toUnload.getName();
 		if (!this.isLoaded(type)) {
 			String notLoaded =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							this.resourceBundle, "Package $PACKAGE not loaded")
-							.replaceFirst("\\$PACKAGE", type);
+				SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+					this.resourceBundle, "Package $PACKAGE not loaded")
+					.replaceFirst("\\$PACKAGE", type);
 			Logging.fine(SystemPackage.PACKAGE_NAME, notLoaded);
 			return;
 		}
@@ -1148,15 +1201,15 @@ public class PackageManager {
 	 */
 	public boolean unloadPackage(final String toUnload) {
 		String unloading =
-				SafeResourceLoader.getString("ALERT_UNLOADING",
-						this.resourceBundle, "Unloading package $PACKAGE...");
+			SafeResourceLoader.getString("ALERT_UNLOADING",
+				this.resourceBundle, "Unloading package $PACKAGE...");
 		unloading = unloading.replaceFirst("\\$PACKAGE", toUnload);
 		Logging.fine(SystemPackage.PACKAGE_NAME, unloading);
 		if (!this.isLoaded(toUnload)) {
 			String notLoaded =
-					SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
-							this.resourceBundle, "Package $PACKAGE not loaded")
-							.replaceFirst("\\$PACKAGE", toUnload);
+				SafeResourceLoader.getString("PACKAGE_NOT_LOADED",
+					this.resourceBundle, "Package $PACKAGE not loaded")
+					.replaceFirst("\\$PACKAGE", toUnload);
 			Logging.fine(SystemPackage.PACKAGE_NAME, notLoaded);
 			return false;
 		}
@@ -1188,10 +1241,10 @@ public class PackageManager {
 			this.eventManager.unregisterEventListeners(l);
 		}
 		String unreg =
-				SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS",
-						this.resourceBundle,
-						"Unregistered event listeners for $PACKAGE")
-						.replaceFirst("\\$PACKAGE", SystemPackage.PACKAGE_NAME);
+			SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS",
+				this.resourceBundle,
+				"Unregistered event listeners for $PACKAGE").replaceFirst(
+				"\\$PACKAGE", SystemPackage.PACKAGE_NAME);
 		Logging.finer(SystemPackage.PACKAGE_NAME, unreg);
 		this.packageLock.lock();
 		try {
@@ -1203,8 +1256,8 @@ public class PackageManager {
 		}
 
 		String unloaded =
-				SafeResourceLoader.getString("ALERT_UNLOADED",
-						this.resourceBundle, "Package $PACKAGE unloaded!");
+			SafeResourceLoader.getString("ALERT_UNLOADED", this.resourceBundle,
+				"Package $PACKAGE unloaded!");
 		unloaded = unloaded.replaceFirst("\\$PACKAGE", toUnload);
 		Logging.fine(SystemPackage.PACKAGE_NAME, unloaded);
 		return true;
@@ -1229,9 +1282,9 @@ public class PackageManager {
 					this.commands.remove(index);
 				}
 				String msg =
-						SafeResourceLoader.getString("UNREGISTERED_COMMAND",
-								this.getResourceBundle(),
-								"Unregistered command $COMMAND");
+					SafeResourceLoader.getString("UNREGISTERED_COMMAND",
+						this.getResourceBundle(),
+						"Unregistered command $COMMAND");
 				msg = msg.replaceFirst("\\$COMMAND", command);
 				Logging.finest(SystemPackage.PACKAGE_NAME, msg);
 				found = true;

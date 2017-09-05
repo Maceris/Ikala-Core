@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite tests="38" failures="37" name="com.ikalagaming.gui.console.TestConsole" time="0.154" errors="0" skipped="0">
+  <properties>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk1.8.0_111\jre\bin"/>
+    <property name="java.vm.version" value="25.111-b14"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="java.vendor.url" value="http://java.oracle.com/"/>
+    <property name="path.separator" value=";"/>
+    <property name="guice.disable.misplaced.annotation.check" value="true"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.script" value=""/>
+    <property name="user.country" value="US"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value="Service Pack 1"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="C:\Users\Ches\Documents\Programming\Eclipse Workspace\Ikala-Core"/>
+    <property name="java.runtime.version" value="1.8.0_111-b14"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.Win32GraphicsEnvironment"/>
+    <property name="java.endorsed.dirs" value="C:\Program Files\Java\jdk1.8.0_111\jre\lib\endorsed"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.io.tmpdir" value="C:\Users\Ches\AppData\Local\Temp\"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.variant" value=""/>
+    <property name="os.name" value="Windows 7"/>
+    <property name="classworlds.conf" value="C:\Users\Ches\Documents\Programming\Eclipse Workspace\.metadata\.plugins\org.eclipse.m2e.launching\launches\m2conf6777092083454284392.tmp"/>
+    <property name="sun.jnu.encoding" value="Cp1252"/>
+    <property name="java.library.path" value="C:\Program Files\Java\jdk1.8.0_111\bin;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:/Program Files/Java/jre1.8.0_111/bin/server;C:/Program Files/Java/jre1.8.0_111/bin;C:/Program Files/Java/jre1.8.0_111/lib/amd64;C:\ProgramData\Oracle\Java\javapath;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\ATI Technologies\ATI.ACE\Core-Static;c:\Program Files (x86)\Microsoft SQL Server\100\Tools\Binn\;c:\Program Files\Microsoft SQL Server\100\Tools\Binn\;c:\Program Files\Microsoft SQL Server\100\DTS\Binn\;C:\Program Files\Dell\Dell Data Protection\Drivers\TSS\bin\;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Program Files\MATLAB\R2014b\bin;C:\Program Files\TortoiseSVN\bin;C:\Program Files (x86)\AMD\ATI.ACE\Core-Static;C:\Program Files (x86)\Skype\Phone\;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files\MySQL\MySQL Utilities 1.6\;C:\Program Files (x86)\apache-maven-3.3.9\bin\;C:\Program Files\Java\jdk1.8.0_111\bin\;C:\MinGW\bin\;C:\Program Files (x86)\nasm\;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files\Eclipse Luna;;."/>
+    <property name="m2eclipse.workspace.state" value="C:\Users\Ches\Documents\Programming\Eclipse Workspace\.metadata\.plugins\org.eclipse.m2e.core\workspacestate.properties"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="52.0"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="os.version" value="6.1"/>
+    <property name="user.home" value="C:\Users\Ches"/>
+    <property name="user.timezone" value="America/Chicago"/>
+    <property name="java.awt.printerjob" value="sun.awt.windows.WPrinterJob"/>
+    <property name="java.specification.version" value="1.8"/>
+    <property name="file.encoding" value="Cp1252"/>
+    <property name="user.name" value="Ches"/>
+    <property name="java.class.path" value="/C:/Program Files/Eclipse Luna/plugins/org.eclipse.m2e.maven.runtime_1.5.1.20150109-1819/jars/plexus-classworlds-2.5.1.jar"/>
+    <property name="org.slf4j.simpleLogger.defaultLogLevel" value="info"/>
+    <property name="java.vm.specification.version" value="1.8"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.home" value="C:\Program Files\Java\jdk1.8.0_111\jre"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -B verify"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="user.language" value="en"/>
+    <property name="awt.toolkit" value="sun.awt.windows.WToolkit"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.8.0_111"/>
+    <property name="java.ext.dirs" value="C:\Program Files\Java\jdk1.8.0_111\jre\lib\ext;C:\Windows\Sun\Java\lib\ext"/>
+    <property name="sun.boot.class.path" value="C:\Program Files\Java\jdk1.8.0_111\jre\lib\resources.jar;C:\Program Files\Java\jdk1.8.0_111\jre\lib\rt.jar;C:\Program Files\Java\jdk1.8.0_111\jre\lib\sunrsasign.jar;C:\Program Files\Java\jdk1.8.0_111\jre\lib\jsse.jar;C:\Program Files\Java\jdk1.8.0_111\jre\lib\jce.jar;C:\Program Files\Java\jdk1.8.0_111\jre\lib\charsets.jar;C:\Program Files\Java\jdk1.8.0_111\jre\lib\jfr.jar;C:\Program Files\Java\jdk1.8.0_111\jre\classes"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="maven.home" value="C:\Users\Ches\Documents\Programming\Eclipse Workspace\Ikala-Core\EMBEDDED"/>
+    <property name="file.separator" value="\"/>
+    <property name="java.vendor.url.bug" value="http://bugreport.sun.com/bugreport/"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="sun.desktop" value="windows"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+  </properties>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowDeactivated" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowDeactivated(TestConsole.java:248)
+Caused by: java.lang.ClassNotFoundException: org.junit.Assert
+	at java.net.URLClassLoader.findClass(URLClassLoader.java:381)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+	at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:331)
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+	... 19 more
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowClosed" time="0.001">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowClosed(TestConsole.java:238)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowOpened" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowOpened(TestConsole.java:273)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowDeiconified" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowDeiconified(TestConsole.java:253)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowGainedFocus" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowGainedFocus(TestConsole.java:258)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowIconified" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowIconified(TestConsole.java:263)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowLostFocus" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowLostFocus(TestConsole.java:268)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowStateChanged" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowStateChanged(TestConsole.java:278)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetName" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetName(TestConsole.java:116)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetWidth" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetWidth(TestConsole.java:131)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetListeners" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetListeners(TestConsole.java:106)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testIsEnabled" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testIsEnabled(TestConsole.java:141)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetVersion" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetVersion(TestConsole.java:126)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnLogEvent" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnLogEvent(TestConsole.java:171)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnDisable" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnDisable(TestConsole.java:151)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnEnable" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnEnable(TestConsole.java:156)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testReload" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testReload(TestConsole.java:186)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testSetWidth" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testSetWidth(TestConsole.java:218)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnLoad" time="0.001">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnLoad(TestConsole.java:161)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testSetHeight" time="0">
+    <failure type="java.lang.NullPointerException">java.lang.NullPointerException
+	at com.ikalagaming.gui.console.TestConsole.testSetHeight(TestConsole.java:198)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnUnload" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnUnload(TestConsole.java:181)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testConsole" time="0.148"/>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testDisable" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testDisable(TestConsole.java:84)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testEnable" time="0.002">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testEnable(TestConsole.java:89)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetHeight" time="0.001">
+    <failure type="java.lang.NullPointerException">java.lang.NullPointerException
+	at com.ikalagaming.gui.console.TestConsole.testGetHeight(TestConsole.java:99)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testAppendMessage" time="0.001">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testAppendMessage(TestConsole.java:69)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetMaxLineCount" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetMaxLineCount(TestConsole.java:111)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetPackageState" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetPackageState(TestConsole.java:121)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testGetWindowTitle" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testGetWindowTitle(TestConsole.java:136)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testLostOwnership" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testLostOwnership(TestConsole.java:146)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnLogErrorEvent" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnLogErrorEvent(TestConsole.java:166)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testOnReportUnknownCommand" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testOnReportUnknownCommand(TestConsole.java:176)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testSetMaxLineCount" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testSetMaxLineCount(TestConsole.java:208)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testSetPackageState" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testSetPackageState(TestConsole.java:213)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testSetWindowTitle" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testSetWindowTitle(TestConsole.java:223)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowActivated" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowActivated(TestConsole.java:228)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowAdapter" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowAdapter(TestConsole.java:233)
+</failure>
+  </testcase>
+  <testcase classname="com.ikalagaming.gui.console.TestConsole" name="com.ikalagaming.gui.console.TestConsole.testWindowClosing" time="0">
+    <failure message="org/junit/Assert" type="java.lang.NoClassDefFoundError">java.lang.NoClassDefFoundError: org/junit/Assert
+	at com.ikalagaming.gui.console.TestConsole.testWindowClosing(TestConsole.java:243)
+</failure>
+  </testcase>
+</testsuite>

@@ -23,7 +23,7 @@ public class PackageInfo {
 	private static final ThreadLocal<Yaml> YAML = new ThreadLocal<>();
 
 	private static List<String> makePackageNameList(final Map<?, ?> map,
-			final String key) throws InvalidDescriptionException {
+		final String key) throws InvalidDescriptionException {
 		final Object value = map.get(key);
 		if (value == null) {
 			return new ArrayList<>();
@@ -36,11 +36,11 @@ public class PackageInfo {
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException(
-					key + " is of the wrong type", ex);
+				key + " is of the wrong type", ex);
 		}
 		catch (NullPointerException ex) {
 			throw new InvalidDescriptionException("invalid " + key + " format",
-					ex);
+				ex);
 		}
 		return pluginNameList;
 	}
@@ -68,7 +68,7 @@ public class PackageInfo {
 	 * @throws InvalidDescriptionException if the description is not valid
 	 */
 	public PackageInfo(final InputStream stream)
-			throws InvalidDescriptionException {
+		throws InvalidDescriptionException {
 		// TODO finish javadoc
 		// TODO provide examples
 		// TODO list yaml tags
@@ -80,7 +80,7 @@ public class PackageInfo {
 			return (Map<?, ?>) object;
 		}
 		throw new InvalidDescriptionException(object
-				+ " is not properly structured.");
+			+ " is not properly structured.");
 	}
 
 	/**
@@ -156,8 +156,8 @@ public class PackageInfo {
 	/**
 	 * The fully qualified name of the main method for the plugin. This includes
 	 * the class name. The format should follow the
-	 * {@link ClassLoader#loadClass(String)} syntax. Typically this will be the
-	 * class that implements {@link Package}.
+	 * {@link ClassLoader#loadClass(String)} syntax. This will be the class that
+	 * implements {@link Package}.
 	 *
 	 * @return the absolute path to the main method of the plugin
 	 */
@@ -204,10 +204,10 @@ public class PackageInfo {
 			}
 			else {
 				this.permissions =
-						Permission.loadPermissions(this.lazyPermissions,
-								"Permission node '%s' in plugin description file for "
-										+ this.getFullName() + " is invalid",
-								this.defaultPerm.value());
+					Permission.loadPermissions(this.lazyPermissions,
+						"Permission node '%s' in plugin description file for "
+							+ this.getFullName() + " is invalid",
+						this.defaultPerm.value());
 
 				this.lazyPermissions = null;
 			}
@@ -250,7 +250,7 @@ public class PackageInfo {
 			this.name = map.get("name").toString().toLowerCase();
 			if (!this.name.matches("^[a-zA-Z0-9 _.-]+$")) {
 				throw new InvalidDescriptionException("name '" + this.name
-						+ "' contains invalid characters.");
+					+ "' contains invalid characters.");
 			}
 			this.name = this.name.replace(' ', '_');
 		}
@@ -268,46 +268,46 @@ public class PackageInfo {
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException("version is of wrong type",
-					ex);
+				ex);
 		}
 		try {
 			this.main = map.get("main").toString();
 		}
 		catch (NullPointerException ex) {
 			throw new InvalidDescriptionException("main class is not defined",
-					ex);
+				ex);
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException("main is of the wrong type",
-					ex);
+				ex);
 		}
 		if (map.get("commands") != null) {
 			HashMap<String, Map<String, Object>> commandsMap = new HashMap<>();
 			try {
 				for (Map.Entry<?, ?> command : ((Map<?, ?>) map.get("commands"))
-						.entrySet()) {
+					.entrySet()) {
 					HashMap<String, Object> commandMap = new HashMap<>();
 					if (command.getValue() != null) {
 						for (Map.Entry<?, ?> commandEntry : ((Map<?, ?>) command
-								.getValue()).entrySet()) {
+							.getValue()).entrySet()) {
 							if (commandEntry.getValue() instanceof Iterable) {
 								HashSet<Object> commandSubList =
-										new HashSet<>();
+									new HashSet<>();
 								for (Object commandSubListItem : (Iterable<?>) commandEntry
-										.getValue()) {
+									.getValue()) {
 									if (commandSubListItem != null) {
 										commandSubList.add(commandSubListItem);
 									}
 								}
 								commandMap.put(
-										commandEntry.getKey().toString(),
-										commandSubList);
+									commandEntry.getKey().toString(),
+									commandSubList);
 
 							}
 							else if (commandEntry.getValue() != null) {
 								commandMap.put(
-										commandEntry.getKey().toString(),
-										commandEntry.getValue());
+									commandEntry.getKey().toString(),
+									commandEntry.getValue());
 							}
 						}
 					}
@@ -316,7 +316,7 @@ public class PackageInfo {
 			}
 			catch (ClassCastException ex) {
 				throw new InvalidDescriptionException(
-						"commands are of the wrong type", ex);
+					"commands are of the wrong type", ex);
 			}
 			this.commands = commandsMap;
 		}
@@ -338,11 +338,11 @@ public class PackageInfo {
 			}
 			catch (ClassCastException ex) {
 				throw new InvalidDescriptionException(
-						"authors are of the wrong type", ex);
+					"authors are of the wrong type", ex);
 			}
 			catch (NullPointerException ex) {
 				throw new InvalidDescriptionException(
-						"authors are not defined properly", ex);
+					"authors are not defined properly", ex);
 			}
 			this.authors = authorsList;
 		}
@@ -352,29 +352,29 @@ public class PackageInfo {
 		if (map.get("default-permission") != null) {
 			try {
 				this.defaultPerm =
-						DefaultPermissionValue.getByName(map.get(
-								"default-permission").toString());
+					DefaultPermissionValue.getByName(map.get(
+						"default-permission").toString());
 			}
 			catch (ClassCastException ex) {
 				throw new InvalidDescriptionException(
-						"default-permission is of the wrong type", ex);
+					"default-permission is of the wrong type", ex);
 			}
 			catch (IllegalArgumentException ex) {
 				throw new InvalidDescriptionException(
-						"default-permission is not a valid choice", ex);
+					"default-permission is not a valid choice", ex);
 			}
 		}
 		try {
 			this.lazyPermissions = (Map<?, ?>) map.get("permissions");
 			this.permissions =
-					Permission.loadPermissions(this.lazyPermissions,
-							"Permission node '%s' in plugin description file for "
-									+ this.getFullName() + " is invalid",
-							this.defaultPerm.value());
+				Permission.loadPermissions(this.lazyPermissions,
+					"Permission node '%s' in plugin description file for "
+						+ this.getFullName() + " is invalid",
+					this.defaultPerm.value());
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException(
-					"permissions are of the wrong type", ex);
+				"permissions are of the wrong type", ex);
 		}
 		if (map.get("prefix") != null) {
 			this.prefix = map.get("prefix").toString();
