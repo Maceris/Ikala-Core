@@ -1,7 +1,7 @@
 package com.ikalagaming.event;
 
 /**
- * A listener that handles events.
+ * A listener that handles events. Based off lahwran's fevents.
  */
 class EventListener {
 	private final Listener theListener;

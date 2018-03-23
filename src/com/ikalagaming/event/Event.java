@@ -1,7 +1,7 @@
 package com.ikalagaming.event;
 
 /**
- * An abstract event to be extended.
+ * An abstract event to be extended. Based off lahwran's fevents.
  */
 public abstract class Event {
 	private String name;

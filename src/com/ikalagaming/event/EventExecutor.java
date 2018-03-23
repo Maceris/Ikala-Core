@@ -1,7 +1,7 @@
 package com.ikalagaming.event;
 
 /**
- * An interface for events call backs.
+ * An interface for events call backs. Based off lahwran's fevents.
  */
 interface EventExecutor {
 

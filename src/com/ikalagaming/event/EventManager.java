@@ -12,7 +12,7 @@ import com.ikalagaming.system.SystemPackage;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
- * Manages events and listeners.
+ * Manages events and listeners. Based off lahwran's fevents.
  */
 public class EventManager {
 

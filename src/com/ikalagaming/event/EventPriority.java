@@ -1,7 +1,8 @@
 package com.ikalagaming.event;
 
 /**
- * Represents an event handler's priority in receiving events
+ * Represents an event handler's priority in receiving events. Based off
+ * lahwran's fevents.
  */
 public enum EventPriority {
 
