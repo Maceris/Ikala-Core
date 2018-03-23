@@ -28,5 +28,5 @@ public @interface EventHandler {
 	 *
 	 * @return Returns this handler's priority
 	 */
-	EventPriority priority() default EventPriority.NORMAL;
+	Order priority() default Order.DEFAULT;
 }

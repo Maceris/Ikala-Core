@@ -6,7 +6,7 @@ package com.ikalagaming.event;
 class EventListener {
 	private final Listener theListener;
 	private final EventExecutor theExecutor;
-	private final EventPriority thePriority;
+	private final Order thePriority;
 
 	/**
 	 * Constructs a new {@link EventListener}.
@@ -16,7 +16,7 @@ class EventListener {
 	 * @param priority The priority of the listener
 	 */
 	public EventListener(final Listener listener, final EventExecutor executor,
-			final EventPriority priority) {
+			final Order priority) {
 		this.theListener = listener;
 		this.theExecutor = executor;
 		this.thePriority = priority;
@@ -46,7 +46,7 @@ class EventListener {
 	 *
 	 * @return The registered Priority
 	 */
-	public EventPriority getPriority() {
+	public Order getPriority() {
 		return this.thePriority;
 	}
 

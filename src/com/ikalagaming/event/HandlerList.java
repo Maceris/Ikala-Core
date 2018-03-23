@@ -9,7 +9,7 @@ import java.util.EnumMap;
  */
 class HandlerList {
 
-	private final EnumMap<EventPriority, ArrayDeque<EventListener>> handlerSlots;
+	private final EnumMap<Order, ArrayDeque<EventListener>> handlerSlots;
 
 	private EventListener[] bakedList;
 
@@ -18,8 +18,8 @@ class HandlerList {
 	 * HandlerList is then added to meta-list for use in bakeAll().
 	 */
 	public HandlerList() {
-		this.handlerSlots = new EnumMap<>(EventPriority.class);
-		for (EventPriority o : EventPriority.values()) {
+		this.handlerSlots = new EnumMap<>(Order.class);
+		for (Order o : Order.values()) {
 			this.handlerSlots.put(o, new ArrayDeque<EventListener>());
 		}
 		this.bakedList = null;
