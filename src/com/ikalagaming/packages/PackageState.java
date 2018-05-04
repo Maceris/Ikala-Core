@@ -62,6 +62,31 @@ public enum PackageState {
 	 * package state of a non-existent package is requested, this is the value
 	 * that is returned.
 	 */
-	NOT_LOADED;
+	NOT_LOADED,
+	/**
+	 * The package has been discovered, which means the system found it in a
+	 * file, has loaded data about it, but has yet to check dependencies or
+	 * start loading it up.
+	 */
+	DISCOVERED,
+	/**
+	 * The system is checking dependencies for the package, but has not
+	 * determined whether or not dependencies are satisfied.
+	 */
+	DEPS_CHECKING,
+	/**
+	 * The system has checked for dependencies, and confirmed that all
+	 * dependencies are satisfied. A package with no dependencies has all
+	 * dependencies satisfied. A package with all dependencies either being
+	 * loaded simultaneously or having been loaded previously also has its
+	 * dependencies satisfied.
+	 */
+	DEPS_SATISFIED,
+	/**
+	 * The package has dependencies which no currently loaded package, or
+	 * package loaded simultaneously, satisfies. This will be reported and
+	 * unloaded.
+	 */
+	DEPS_MISSING;
 
 }

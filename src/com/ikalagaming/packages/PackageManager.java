@@ -9,10 +9,14 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import com.ikalagaming.event.Event;
@@ -247,8 +251,9 @@ public class PackageManager {
 			this.setPackageState(target, PackageState.CORRUPTED);
 			String msgCorrupted =
 				SafeResourceLoader.getString("PACKAGE_STATE_CORRUPTED",
-					this.resourceBundle, "Package state of $PACKAGE became corrupted")
-					.replaceFirst("\\$PACKAGE", target.getName());
+					this.resourceBundle,
+					"Package state of $PACKAGE became corrupted").replaceFirst(
+					"\\$PACKAGE", target.getName());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msgCorrupted);
 		}
 
@@ -322,8 +327,9 @@ public class PackageManager {
 			this.setPackageState(target, PackageState.CORRUPTED);
 			String msgCorrupted =
 				SafeResourceLoader.getString("PACKAGE_STATE_CORRUPTED",
-					this.resourceBundle, "Package state of $PACKAGE became corrupted")
-					.replaceFirst("\\$PACKAGE", target.getName());
+					this.resourceBundle,
+					"Package state of $PACKAGE became corrupted").replaceFirst(
+					"\\$PACKAGE", target.getName());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msgCorrupted);
 		}
 
@@ -759,14 +765,14 @@ public class PackageManager {
 	}
 
 	/**
-	 * Loads a plugin by name from a folder.
-	 *
-	 * @param path the path to the folder containing the file
-	 * @param name the filename to load from, without a file extension
-	 * @return true on success, false if it failed
+	 * For plugin loading. The return value is an empty optional if there was a
+	 * problem accessing the folder from path. If there is a file in the
+	 * optional it should be an existing folder that can be read.
+	 * 
+	 * @param path the path of the folder to return as a File
+	 * @return an optional containing the folder or empty if there was an error
 	 */
-	public boolean loadPlugin(String path, String name) {
-		// The folder containing the plugin
+	private Optional<File> plGetFolder(final String path) {
 		File pluginFolder;
 		try {
 			pluginFolder = new File(path);
@@ -776,7 +782,7 @@ public class PackageManager {
 				SafeResourceLoader.getString("PLUGIN_PATH_NULL",
 					this.resourceBundle, "Plugin path was null");
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-			return false;
+			return Optional.empty();
 		}
 		try {
 			if (!pluginFolder.exists()) {
@@ -786,7 +792,7 @@ public class PackageManager {
 						"Cannot find plugin folder $FOLDER").replaceFirst(
 						"\\$FOLDER", pluginFolder.getAbsolutePath());
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-				return false;
+				return Optional.empty();
 			}
 			if (!pluginFolder.isDirectory()) {
 				String msg =
@@ -795,7 +801,7 @@ public class PackageManager {
 						"Plugin folder $FOLDER isn't a folder").replaceFirst(
 						"\\$FOLDER", pluginFolder.getAbsolutePath());
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-				return false;
+				return Optional.empty();
 			}
 			if (!pluginFolder.canRead()) {
 				String msg =
@@ -804,9 +810,8 @@ public class PackageManager {
 						"Cannot read plugin folder $FOLDER").replaceFirst(
 						"\\$FOLDER", pluginFolder.getAbsolutePath());
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-				return false;
+				return Optional.empty();
 			}
-
 		}
 		catch (SecurityException securExcep) {
 			String msg =
@@ -815,32 +820,40 @@ public class PackageManager {
 					"Read access denied to plugin folder $FOLDER")
 					.replaceFirst("\\$FOLDER", path);
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-			return false;
+			return Optional.empty();
 		}
+		return Optional.of(pluginFolder);
+	}
 
-		// directory should be good by here
-
+	/**
+	 * Return all jar files in the specified folder. If none are found, an empty
+	 * list is returned.
+	 * 
+	 * @param folder a valid folder
+	 * @return a list of all readable jars in the folder
+	 */
+	private ArrayList<File> plGetAllJars(final File folder) {
 		File[] files;
-		files = pluginFolder.listFiles();
+		files = folder.listFiles();
+
+		ArrayList<File> jars = new ArrayList<>();
 		if (files == null) {
 			String msg =
 				SafeResourceLoader.getString("PLUGIN_FILES_NULL",
 					this.resourceBundle,
 					"Error listing files in plugin folder $FOLDER")
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+					.replaceFirst("\\$FOLDER", folder.getAbsolutePath());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-			return false;
+			return jars;
 		}
 		if (files.length == 0) {
 			String msg =
 				SafeResourceLoader.getString("PLUGIN_FOLDER_EMPTY",
 					this.resourceBundle, "Empty plugin folder $FOLDER")
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+					.replaceFirst("\\$FOLDER", folder.getAbsolutePath());
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-			return false;
+			return jars;
 		}
-
-		File jarFile = null;
 
 		for (File file : files) {
 			try {
@@ -856,9 +869,44 @@ public class PackageManager {
 				if (!file.getName().endsWith(".jar")) {
 					continue;
 				}
-				if (file.getName().replaceAll("\\.jar\\z", "").equals(name)) {
-					jarFile = file;
-					break;
+			}
+			catch (SecurityException secExcep) {
+				String msg =
+					SafeResourceLoader.getString("PLUGIN_FILE_SECURITY_ERR",
+						this.resourceBundle,
+						"Security error reading file $FILE").replaceFirst(
+						"\\$FILE", file.getName());
+				Logging.fine(SystemPackage.PACKAGE_NAME, msg);
+				// Maybe one or more files can't be read
+				continue;
+			}
+			jars.add(file);
+		}
+
+		return jars;
+	}
+
+	/**
+	 * Returns an optional that contains the jar file with the specified name,
+	 * or an empty optional if none was found in the list of files. The file
+	 * name is without an extension so "example.jar" should be passed as
+	 * "example", and "test.1.0.2.jar" should be "test.1.0.2".
+	 * 
+	 * @param files The list of files to look through, must all be valid
+	 *            readable files.
+	 * @param name the name of the jar, without a jar extension.
+	 * @return an optional containing the matching jar, or an empty optional if
+	 *         it was not found
+	 */
+	private Optional<File> plPickJarByName(final List<File> files,
+		final String name) {
+		Pattern fileNamePattern = Pattern.compile(name + "\\.jar\\z");
+		Matcher fileNameMatcher = fileNamePattern.matcher("");
+
+		for (File file : files) {
+			try {
+				if (fileNameMatcher.reset(file.getName()).matches()) {
+					return Optional.of(file);
 				}
 			}
 			catch (SecurityException secExcep) {
@@ -872,27 +920,37 @@ public class PackageManager {
 				continue;
 			}
 		}
-		files = null;
-		if (jarFile == null) {
-			String msg =
-				SafeResourceLoader
-					.getString("PLUGIN_NOT_FOUND", this.resourceBundle,
-						"Cannot find specified plugin $PLUGIN").replaceFirst(
-						"\\$PLUGIN", name);
-			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-			return false;
-		}
 
-		// jar file should be valid and correct by here
+		// It hasn't returned by now which means it couldn't find a match
+		String msg =
+			SafeResourceLoader.getString("PLUGIN_NOT_FOUND",
+				this.resourceBundle, "Cannot find specified plugin $PLUGIN")
+				.replaceFirst("\\$PLUGIN", name);
+		Logging.warning(SystemPackage.PACKAGE_NAME, msg);
+		return Optional.empty();
+	}
 
+	/**
+	 * Load up the package info from the given jar file and return it. If there
+	 * is some error like the file not actually being a jar or plugin info
+	 * missing, then the returned optional is empty.
+	 * 
+	 * @param jar the jar to load info from.
+	 * @param name the name of the file, for logging purposes.
+	 * @return an optional containing the plugin info, or an empty optional on
+	 *         failure.
+	 */
+	private Optional<PackageInfo> plGetPackageInfo(final File jar,
+		final String name) {
 		JarFile jfile;
 		ZipEntry config;
+
 		/*
 		 * Check for being a jar file check for package info file load and check
 		 * for valid info load the file if necessary
 		 */
 		try {
-			jfile = new JarFile(jarFile);
+			jfile = new JarFile(jar);
 			config = jfile.getEntry("plugin.yaml");
 			if (config == null) {
 				String msg =
@@ -901,7 +959,7 @@ public class PackageManager {
 						"Invalid plugin, plugin.yaml missing");
 				Logging.warning(SystemPackage.PACKAGE_NAME, msg);
 				jfile.close();
-				return false;
+				return Optional.empty();
 			}
 		}
 		catch (Exception e) {
@@ -911,8 +969,9 @@ public class PackageManager {
 						"Error reading plugin jar for $PLUGIN").replaceFirst(
 						"\\$PLUGIN", name);
 			Logging.warning(SystemPackage.PACKAGE_NAME, msg);
-			return false;
+			return Optional.empty();
 		}
+
 		// grab an input stream for the configuration file
 		InputStream configIStream;
 		try {
@@ -936,11 +995,11 @@ public class PackageManager {
 				Logging.warning(SystemPackage.PACKAGE_NAME, errorMsg);
 				// wow we really must have messed up
 			}
-			return false;
+			return Optional.empty();
 		}
 
 		// Load in the package info from the config file
-		PackageInfo info;
+		PackageInfo info = null;
 		try {
 			info = new PackageInfo(configIStream);
 		}
@@ -961,7 +1020,7 @@ public class PackageManager {
 						.replaceFirst("\\$PLUGIN", name);
 				Logging.warning(SystemPackage.PACKAGE_NAME, errorMsg);
 			}
-			return false;
+			return Optional.empty();
 		}
 
 		try {
@@ -973,6 +1032,48 @@ public class PackageManager {
 					this.resourceBundle, "Error closing jar for $PLUGIN")
 					.replaceFirst("\\$PLUGIN", name);
 			Logging.warning(SystemPackage.PACKAGE_NAME, errorMsg);
+		}
+		return Optional.ofNullable(info);
+	}
+
+	/**
+	 * Loads a plugin by name from a folder.
+	 *
+	 * @param path the path to the folder containing the file
+	 * @param name the filename to load from, without a file extension
+	 * @return true on success, false if it failed
+	 */
+	public boolean loadPlugin(String path, String name) {
+
+		File pluginFolder = null;
+		{// keeps scope name space clean
+			Optional<File> folderMaybe = plGetFolder(path);
+			if (!folderMaybe.isPresent()) {
+				return false;
+			}
+			pluginFolder = folderMaybe.get();
+		}
+
+		ArrayList<File> jars = plGetAllJars(pluginFolder);
+
+		File jarFile = null;
+
+		{// keeps scope name space clean
+			Optional<File> jarMaybe = plPickJarByName(jars, name);
+			if (!jarMaybe.isPresent()) {
+				return false;
+			}
+			jarFile = jarMaybe.get();
+		}
+
+		PackageInfo info = null;
+
+		{// keeps scope name space clean
+			Optional<PackageInfo> infoMaybe = plGetPackageInfo(jarFile, name);
+			if (!infoMaybe.isPresent()) {
+				return false;
+			}
+			info = infoMaybe.get();
 		}
 
 		ClassLoader loader;
