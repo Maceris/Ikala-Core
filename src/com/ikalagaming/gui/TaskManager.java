@@ -26,8 +26,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
-import com.ikalagaming.packages.PackageManager;
-import com.ikalagaming.packages.PackageState;
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.plugins.PluginState;
 
 /**
  * Displays various information about the program.
@@ -97,29 +97,29 @@ public class TaskManager extends JFrame {
 	private JTable table;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	/**
-	 * low long to wait between package status updates
+	 * low long to wait between plugin status updates
 	 */
 	long delay = 1000;
 	private DefaultTableModel model;
-	private Map<String, PackageState> packages = new HashMap<>();
+	private Map<String, PluginState> plugins = new HashMap<>();
 	private final int maxTick = 10;
-	private int tickCount = 0;// counts down to refreshing package list
+	private int tickCount = 0;// counts down to refreshing plugin list
 	private JLabel threads;
 	private JLabel memUsage;
 	private long memUsed = 0;
 
 	private long percentUsed = 0;
 
-	private PackageManager packageManager;
+	private PluginManager pluginManager;
 
 	/**
 	 * Create the frame.
 	 *
-	 * @param packageMgr the package manager to list packages for
+	 * @param pluginMgr the plugin manager to list plugins for
 	 *
 	 */
-	public TaskManager(PackageManager packageMgr) {
-		this.packageManager = packageMgr;
+	public TaskManager(PluginManager pluginMgr) {
+		this.pluginManager = pluginMgr;
 		this.setTitle("Task Manager");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBounds(100, 100, 450, 465);
@@ -130,8 +130,8 @@ public class TaskManager extends JFrame {
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
 
-		JMenuItem mntmNewPackage = new JMenuItem("New Package");
-		mnFile.add(mntmNewPackage);
+		JMenuItem mntmNewPlugin = new JMenuItem("New Plugin");
+		mnFile.add(mntmNewPlugin);
 
 		JMenuItem mntmExitTaskManager = new JMenuItem("Exit Task Manager");
 		mnFile.add(mntmExitTaskManager);
@@ -182,11 +182,11 @@ public class TaskManager extends JFrame {
 		this.contentPane.add(tabbedPane, BorderLayout.CENTER);
 
 		JScrollPane scrollPane = new JScrollPane();
-		tabbedPane.addTab("Packages", null, scrollPane, null);
+		tabbedPane.addTab("Plugins", null, scrollPane, null);
 
 		this.table = new JTable();
 		this.table.setModel(new DefaultTableModel(new Object[][] {},
-				new String[] {"Package Name", "Status"}));
+				new String[] {"Plugin Name", "Status"}));
 		this.table.getColumnModel().getColumn(0).setPreferredWidth(102);
 
 		JPopupMenu popupMenu_1 = new JPopupMenu();
@@ -253,7 +253,7 @@ public class TaskManager extends JFrame {
 	}
 
 	/**
-	 * Attempts to change the status of the currently selected package. This may
+	 * Attempts to change the status of the currently selected plugin. This may
 	 * be any of the following:
 	 * <ul>
 	 * <li>Enable</li>
@@ -268,34 +268,34 @@ public class TaskManager extends JFrame {
 		int row = this.table.getSelectedRow();
 		int column = -1;
 		for (int i = 0; i < this.table.getColumnCount(); ++i) {
-			if (this.table.getColumnName(i).equals("Package Name")) {
+			if (this.table.getColumnName(i).equals("Plugin Name")) {
 				column = i;
 			}
 		}
 		if (row == -1 || column == -1) {
 			return;
 		}
-		com.ikalagaming.packages.Package pack =
-				this.packageManager.getPackage(this.table.getValueAt(row,
+		com.ikalagaming.plugins.Plugin pack =
+				this.pluginManager.getPlugin(this.table.getValueAt(row,
 						column).toString());
 		if (pack == null) {
 			return;
 		}
 		if (change == "Enable") {
-			if (!this.packageManager.isEnabled(pack)) {
-				this.packageManager.enable(pack);
+			if (!this.pluginManager.isEnabled(pack)) {
+				this.pluginManager.enable(pack);
 			}
 		}
 		else if (change == "Disable") {
-			if (this.packageManager.isEnabled(pack)) {
-				this.packageManager.disable(pack);
+			if (this.pluginManager.isEnabled(pack)) {
+				this.pluginManager.disable(pack);
 			}
 		}
 		else if (change == "Unload") {
-			this.packageManager.unloadPackage(pack);
+			this.pluginManager.unloadPlugin(pack);
 		}
 		else if (change == "Reload") {
-			this.packageManager.reload(pack);
+			this.pluginManager.reload(pack);
 		}
 
 	}
@@ -314,18 +314,18 @@ public class TaskManager extends JFrame {
 	 */
 	public void tick() {
 		if (this.tickCount == 0) {
-			this.updatePackageNames();
+			this.updatePluginNames();
 			this.tickCount = this.maxTick;
 		}
 		--this.tickCount;
 
-		PackageState currentState;
+		PluginState currentState;
 		String name = "";
 		for (int i = 0; i < this.model.getRowCount(); ++i) {
 			name = (String) this.model.getValueAt(i, 0);
 			currentState =
-					this.packageManager.getPackageState(this.packageManager
-							.getPackage(name));
+					this.pluginManager.getPluginState(this.pluginManager
+							.getPlugin(name));
 			if (!this.model.getValueAt(i, 1).equals(currentState)) {
 				this.model.setValueAt(currentState, i, 1);
 			}
@@ -344,13 +344,13 @@ public class TaskManager extends JFrame {
 		this.memUsage.setText(this.memUsed + " kb (" + this.percentUsed + "%)");
 	}
 
-	private void updatePackageNames() {
-		Set<String> packageNames =
-				this.packageManager.getLoadedPackages().keySet();
-		for (String s : packageNames) {
-			if (!this.packages.containsKey(s)) {
-				this.packages.put(s, this.packageManager
-						.getPackageState(this.packageManager.getPackage(s)));
+	private void updatePluginNames() {
+		Set<String> pluginNames =
+				this.pluginManager.getLoadedPlugins().keySet();
+		for (String s : pluginNames) {
+			if (!this.plugins.containsKey(s)) {
+				this.plugins.put(s, this.pluginManager
+						.getPluginState(this.pluginManager.getPlugin(s)));
 				boolean exists = false;
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {
@@ -359,13 +359,13 @@ public class TaskManager extends JFrame {
 					}
 				}
 				if (!exists) {
-					this.model.addRow(new Object[] {s, this.packages.get(s)});
+					this.model.addRow(new Object[] {s, this.plugins.get(s)});
 				}
 			}
 		}
-		for (String s : this.packages.keySet()) {
-			if (!packageNames.contains(s)) {
-				this.packages.remove(s);
+		for (String s : this.plugins.keySet()) {
+			if (!pluginNames.contains(s)) {
+				this.plugins.remove(s);
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {
 						this.model.removeRow(i);
@@ -374,7 +374,7 @@ public class TaskManager extends JFrame {
 				}
 			}
 		}
-		packageNames = null;
+		pluginNames = null;
 
 	}
 }

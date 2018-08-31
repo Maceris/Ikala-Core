@@ -33,7 +33,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#CONFIG config} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #severe(String, String)
 	 * @see #warning(String, String)
@@ -71,13 +71,13 @@ public class Logging {
 				Logging.resourceBundle =
 						ResourceBundle
 								.getBundle(
-										"com.ikalagaming.logging.resources.LoggingPackage",
+										"com.ikalagaming.logging.resources.LoggingPlugin",
 										Localization.getLocale());
 			}
 			catch (MissingResourceException missingResource) {
 				// TODO use the system name
 				Logging.log("logging", LogLevel.SEVERE,
-						"locale not found in LoggingPackage.onLoad()");
+						"locale not found in LoggingPlugin.onLoad()");
 			}
 			Logging.dispatcher = new LogDispatcher(Logging.eventManager);
 			Logging.dispatcher.start();
@@ -123,7 +123,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#FINE fine} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #severe(String, String)
 	 * @see #warning(String, String)
@@ -140,7 +140,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#FINER finer} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #severe(String, String)
 	 * @see #warning(String, String)
@@ -157,7 +157,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#FINEST finest} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #severe(String, String)
 	 * @see #warning(String, String)
@@ -205,7 +205,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#INFO info} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #severe(String, String)
 	 * @see #warning(String, String)
@@ -240,7 +240,7 @@ public class Logging {
 	 * logging level. This only logs information that is above or equal to the
 	 * logging threshold. If the logger is not initialized, it will be created.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param level The level of the requested log
 	 * @param details What to log
 	 * @see #create()
@@ -332,7 +332,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#SEVERE severe} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #warning(String, String)
 	 * @see #info(String, String)
@@ -349,7 +349,7 @@ public class Logging {
 	/**
 	 * Logs the given message at the {@link LogLevel#WARNING warning} log level.
 	 *
-	 * @param origin The package that is logging the info
+	 * @param origin The plugin that is logging the info
 	 * @param details What to log
 	 * @see #severe(String, String)
 	 * @see #info(String, String)

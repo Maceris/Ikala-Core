@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.system.SystemPackage;
+import com.ikalagaming.system.SystemPlugin;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -160,7 +160,7 @@ public class EventManager {
 								"com.ikalagaming.event.strings",
 								"Event queue full")
 								+ "in EventManager.fireEvent(Event)";
-				Logging.warning(SystemPackage.PACKAGE_NAME, err);
+				Logging.warning(SystemPlugin.PLUGIN_NAME, err);
 			}
 
 		}
@@ -221,11 +221,6 @@ public class EventManager {
 			this.dispatcher.join();
 		}
 		catch (InterruptedException e) {
-			/*String err =
-					SafeResourceLoader.getString("THREAD_INTERRUPTED",
-							"com.ikalagaming.event.resources.strings",
-							"Thread interrupted");
-			Logging.severe(SystemPackage.PACKAGE_NAME, err);*/
 			e.printStackTrace(System.err);
 		}
 	}

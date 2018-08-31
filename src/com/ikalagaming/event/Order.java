@@ -8,7 +8,7 @@ public enum Order {
 
 	/**
 	 * Event is handled very early, before any other order level, to allow other
-	 * packages to modify the outcome later.
+	 * handlers to modify the outcome later.
 	 */
 	EARLIEST(0),
 	/**

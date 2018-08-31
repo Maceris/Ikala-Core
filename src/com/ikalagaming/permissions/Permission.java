@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ikalagaming.logging.Logging;
-import com.ikalagaming.system.SystemPackage;
+import com.ikalagaming.system.SystemPlugin;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -235,7 +235,7 @@ public class Permission {
 						SafeResourceLoader.getString("INVALID_PERMISSIONS",
 								Permission.resourceLocation,
 								"Invalid permissions");
-				Logging.warning(SystemPackage.PACKAGE_NAME, log);
+				Logging.warning(SystemPlugin.PLUGIN_NAME, log);
 
 				ex.printStackTrace();
 			}

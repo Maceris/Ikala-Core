@@ -34,8 +34,8 @@ import com.ikalagaming.event.Listener;
 import com.ikalagaming.gui.console.events.ConsoleCommandEntered;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.Logging;
-import com.ikalagaming.packages.Package;
-import com.ikalagaming.packages.PackageManager;
+import com.ikalagaming.plugins.Plugin;
+import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -44,7 +44,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-public class Console extends WindowAdapter implements Package, ClipboardOwner {
+public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 
 	private class ConsoleKeyListener extends KeyAdapter {
 
@@ -207,7 +207,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	 * The previous commands typed in the console.
 	 */
 	CommandHistory history;
-	private String packageName = "console";
+	private String pluginName = "console";
 	private final double version = 0.2;
 	private EventManager eventManager;
 	private HashSet<Listener> listeners;
@@ -215,7 +215,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	/**
 	 * Constructs a console that uses the default EventManager for sending and
 	 * receiving events. It is not visible or set up and must be loaded with the
-	 * package manager before it can be used.
+	 * plugin manager before it can be used.
 	 *
 	 */
 	public Console() {
@@ -225,7 +225,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	/**
 	 * Constructs a console that uses the given EventManager for sending and
 	 * receiving events. It is not visible or set up and must be loaded with the
-	 * package manager before it can be used.
+	 * plugin manager before it can be used.
 	 *
 	 * @param evtManager the event manager to use with the console
 	 */
@@ -420,7 +420,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 
 	@Override
 	public String getName() {
-		return this.packageName;
+		return this.pluginName;
 	}
 
 	/**
@@ -905,7 +905,7 @@ public class Console extends WindowAdapter implements Package, ClipboardOwner {
 	@Override
 	public void windowClosing(WindowEvent e) {
 		String cmdUnload =
-				SafeResourceLoader.getString("COMMAND_UNLOAD", PackageManager
+				SafeResourceLoader.getString("COMMAND_UNLOAD", PluginManager
 						.getInstance().getResourceBundle(), "unload");
 		ConsoleCommandEntered cmdEvent = new ConsoleCommandEntered(cmdUnload);
 		this.eventManager.fireEvent(cmdEvent);

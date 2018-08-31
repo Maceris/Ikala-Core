@@ -117,7 +117,7 @@ public class TestConsole {
 	}
 
 	@Test
-	public void testGetPackageState() {
+	public void testGetPluginState() {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 
@@ -209,7 +209,7 @@ public class TestConsole {
 	}
 
 	@Test
-	public void testSetPackageState() {
+	public void testSetPluginState() {
 		Assert.fail("Not yet implemented"); // TODO
 	}
 

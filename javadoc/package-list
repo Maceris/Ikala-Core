@@ -7,9 +7,9 @@ com.ikalagaming.gui.console.events
 com.ikalagaming.localization
 com.ikalagaming.logging
 com.ikalagaming.logging.events
-com.ikalagaming.packages
-com.ikalagaming.packages.events
 com.ikalagaming.permissions
+com.ikalagaming.plugins
+com.ikalagaming.plugins.events
 com.ikalagaming.scripting
 com.ikalagaming.system
 com.ikalagaming.util

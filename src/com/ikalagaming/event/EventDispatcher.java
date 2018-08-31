@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 
 import com.ikalagaming.logging.Logging;
-import com.ikalagaming.system.SystemPackage;
+import com.ikalagaming.system.SystemPlugin;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -53,7 +53,7 @@ class EventDispatcher extends Thread {
 			return;
 		}
 		if (this.eventManager == null) {
-			Logging.severe(SystemPackage.PACKAGE_NAME,
+			Logging.severe(SystemPlugin.PLUGIN_NAME,
 					"There is no event manager!");
 			return;
 		}
@@ -71,7 +71,7 @@ class EventDispatcher extends Thread {
 						SafeResourceLoader.getString("DISPATCH_ERROR",
 								"com.ikalagaming.event.resources.strings",
 								"There was a problem sending an event");
-				Logging.warning(SystemPackage.PACKAGE_NAME, error);
+				Logging.warning(SystemPlugin.PLUGIN_NAME, error);
 				System.err.println(e.toString());
 				e.printStackTrace(System.err);
 			}
