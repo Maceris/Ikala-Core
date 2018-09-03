@@ -100,7 +100,7 @@ class PMEventListener implements Listener {
 		if (!this.manager.isEnabled(pack)) {
 			message =
 					new ConsoleMessage(SafeResourceLoader.getString(
-							"plugin_disable_fail",
+							"PLUGIN_DISABLE_FAIL",
 							this.manager.getResourceBundle(),
 							"Plugin failed to disable"));
 			this.manager.fireEvent(message);
@@ -127,7 +127,7 @@ class PMEventListener implements Listener {
 		if (this.manager.isEnabled(pack)) {
 			message =
 					new ConsoleMessage(SafeResourceLoader.getString(
-							"plugin_enable_fail",
+							"PLUGIN_ENABLE_FAIL",
 							this.manager.getResourceBundle(),
 							"Plugin failed to enable"));
 			this.manager.fireEvent(message);
