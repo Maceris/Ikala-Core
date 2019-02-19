@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Ikala-Core" default="compile" basedir=".">
+<project name="Ikala-Core" default="compileTest" basedir=".">
 	<!-- set global properties for this build -->
 	<property name="src" location="src"/>
+	<property name="test" location="test"/>
 	<property name="build" location="bin"/>
 	<property name="dist" location="Jars"/>
 	<property name="doc" location="javadoc"/>
 	<property name="packages" value="com.ikalagaming.*"/>
+	
+	<path id = "classpath.base">
+		<pathelement location="${basedir}/thirdParty/luaj-jse-3.0.jar"/>
+		<pathelement location="${basedir}/thirdParty/snakeyaml-1.14.jar"/>
+	</path>
+		
+	<path id = "classpath.test">
+		<pathelement location="${basedir}/thirdParty/junit-4.12.jar"/>
+		<pathelement location="${basedir}/thirdParty/hamcrest-all-1.3.jar"/>
+		<pathelement location = "${test}" />
+		<pathelement location = "${src}" />
+		<path refid = "classpath.base" />
+	</path>
 
 	<target name="init">
 		<!-- Create the time stamp -->
@@ -18,10 +32,7 @@
 			description="compile the source">
 		<!-- Compile the java code from ${src} into ${build} -->
 		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false">
-			<classpath>
-				<pathelement location="${basedir}/thirdParty/luaj-jse-3.0.jar"/>
-				<pathelement location="${basedir}/thirdParty/snakeyaml-1.14.jar"/>
-			</classpath>
+			<classpath refid = "classpath.test"/>
 			<exclude name="com/ikalagaming/package-info.java"/>
 			<exclude name="com/ikalagaming/**/package-info.java"/>
 		</javac>
@@ -31,6 +42,27 @@
 			</fileset>
 		</copy> 
 	</target>
+	
+	<target name="compileTest" depends="compile" 
+			description="compile the JUnit tests">
+		<javac srcdir="${test}" destdir="${build}" includeAntRuntime="false">
+			<classpath refid = "classpath.test"/>
+		</javac>
+	</target>
+		
+	
+	<target name = "test" depends = "compileTest">
+		<junit>
+			<classpath>
+		    	<pathelement location="${build}" />    
+				<path refid = "classpath.test" />
+		    </classpath>
+			<formatter type = "brief" usefile = "false" />
+			<batchtest>
+				<fileset dir="${test}" includes="**/Test*" />
+			</batchtest>
+		</junit>
+	</target>
 
 	<target name="javadoc"
 			description="generate javadoc">
@@ -39,10 +71,7 @@
 				noindex="false" nonavbar="false" notree="false"
 				packagenames="${packages}" source="1.8" sourcepath="${src}"
 				splitindex="true" use="true" version="true">
-			<classpath>
-				<pathelement location="${basedir}/thirdParty/luaj-jse-3.0.jar"/>
-				<pathelement location="${basedir}/thirdParty/snakeyaml-1.14.jar"/>
-			</classpath>
+        	<classpath refid = "classpath.test" />
 		</javadoc>
 			
     </target>
