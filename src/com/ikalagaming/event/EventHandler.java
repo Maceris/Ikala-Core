@@ -14,19 +14,19 @@ import java.lang.annotation.Target;
 public @interface EventHandler {
 
 	/**
-	 * Define the priority of the event handler.
+	 * Define the order of the event handler relative to the default.
 	 * <p>
 	 * Order of execution from first to last:
 	 * <ol>
-	 * <li>LOWEST
-	 * <li>LOW
-	 * <li>NORMAL
-	 * <li>HIGH
-	 * <li>HIGHEST
+	 * <li>EARLIEST
+	 * <li>EARLY
+	 * <li>DEFAULT
+	 * <li>LATE
+	 * <li>LATEST
 	 * <li>MONITOR
 	 * </ol>
 	 *
 	 * @return Returns this handler's priority
 	 */
-	Order priority() default Order.DEFAULT;
+	Order order() default Order.DEFAULT;
 }
