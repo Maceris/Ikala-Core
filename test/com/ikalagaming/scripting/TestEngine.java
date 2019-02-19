@@ -1,9 +1,13 @@
 package com.ikalagaming.scripting;
 
-import javax.script.ScriptEngineFactory;
+import static org.junit.Assert.fail;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
 
 /**
  * Tests the functionality of the scripting engine class.
@@ -25,6 +29,21 @@ public class TestEngine {
 		System.out.println("Engine Version: " + f.getEngineVersion());
 		System.out.println("LanguageName: " + f.getLanguageName());
 		System.out.println("Language Version: " + f.getLanguageVersion());
+	}
+
+	/**
+	 * Tries to evaluate some lua code that prints text.
+	 */
+	@Test
+	public void testPrinting() {
+		ScriptEngine eng = Engine.getLuaEngine();
+		Assert.assertNotNull(eng);
+		try {
+			eng.eval("print('This should show in stdout')");
+		}
+		catch (ScriptException e) {
+			fail("Exception in print string");
+		}
 	}
 
 }
