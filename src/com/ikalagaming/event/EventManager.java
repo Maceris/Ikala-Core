@@ -130,7 +130,7 @@ public class EventManager {
 			};
 
 			eventSet.add(new EventListener(listener, executor,
-					handlerAnnotation.priority()));
+					handlerAnnotation.order()));
 
 		}
 		return toReturn;
