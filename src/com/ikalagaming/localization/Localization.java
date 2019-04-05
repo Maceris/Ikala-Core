@@ -9,20 +9,7 @@ import java.util.Locale;
  *
  */
 public class Localization {
-
-	private static Localization instance;
-
-	/**
-	 * Returns the static instance. Creates one if it does not exist.
-	 *
-	 * @return The current instance of the class
-	 */
-	private static Localization getInstance() {
-		if (Localization.instance == null) {
-			Localization.instance = new Localization();
-		}
-		return Localization.instance;
-	}
+	private static Locale loc = new Locale("en", "US");
 
 	/**
 	 * Returns the current locale. If no locale was set, defaults to "en_US".
@@ -30,7 +17,7 @@ public class Localization {
 	 * @return The current locale
 	 */
 	public static Locale getLocale() {
-		return Localization.getInstance().locale;
+		return Localization.loc;
 	}
 
 	/**
@@ -39,8 +26,7 @@ public class Localization {
 	 * @param locale The new locale to use
 	 */
 	public static void setLocale(Locale locale) {
-		Localization.getInstance().locale = locale;
+		Localization.loc = locale;
 	}
 
-	private Locale locale = new Locale("en", "US");
 }
