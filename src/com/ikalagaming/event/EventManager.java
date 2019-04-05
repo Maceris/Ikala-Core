@@ -157,8 +157,7 @@ public class EventManager {
 			else {
 				String err =
 						SafeResourceLoader.getString("EVT_QUEUE_FULL",
-								"com.ikalagaming.event.strings",
-								"Event queue full")
+								"com.ikalagaming.event.strings")
 								+ "in EventManager.fireEvent(Event)";
 				Logging.warning(SystemPlugin.PLUGIN_NAME, err);
 			}

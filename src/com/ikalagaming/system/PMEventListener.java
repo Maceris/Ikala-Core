@@ -49,30 +49,22 @@ class PMEventListener implements Listener {
 		this.manager = packManager;
 		this.sysPlugin = parent;
 
-		this.cmd_help =
-				SafeResourceLoader.getString("COMMAND_HELP",
-						this.manager.getResourceBundle(), "help");
-		this.cmd_plugins =
-				SafeResourceLoader.getString("COMMAND_LIST_PLUGINS",
-						this.manager.getResourceBundle(), "plugins");
-		this.cmd_enable =
-				SafeResourceLoader.getString("COMMAND_ENABLE",
-						this.manager.getResourceBundle(), "enable");
-		this.cmd_disable =
-				SafeResourceLoader.getString("COMMAND_DISABLE",
-						this.manager.getResourceBundle(), "disable");
-		this.cmd_load =
-				SafeResourceLoader.getString("COMMAND_LOAD",
-						this.manager.getResourceBundle(), "load");
-		this.cmd_unload =
-				SafeResourceLoader.getString("COMMAND_UNLOAD",
-						this.manager.getResourceBundle(), "unload");
-		this.cmd_reload =
-				SafeResourceLoader.getString("COMMAND_RELOAD",
-						this.manager.getResourceBundle(), "reload");
-		this.cmd_version =
-				SafeResourceLoader.getString("COMMAND_VERSION",
-						this.manager.getResourceBundle(), "version");
+		this.cmd_help = SafeResourceLoader.getString("COMMAND_HELP",
+			this.manager.getResourceBundle(), "help");
+		this.cmd_plugins = SafeResourceLoader.getString("COMMAND_LIST_PLUGINS",
+			this.manager.getResourceBundle(), "plugins");
+		this.cmd_enable = SafeResourceLoader.getString("COMMAND_ENABLE",
+			this.manager.getResourceBundle(), "enable");
+		this.cmd_disable = SafeResourceLoader.getString("COMMAND_DISABLE",
+			this.manager.getResourceBundle(), "disable");
+		this.cmd_load = SafeResourceLoader.getString("COMMAND_LOAD",
+			this.manager.getResourceBundle(), "load");
+		this.cmd_unload = SafeResourceLoader.getString("COMMAND_UNLOAD",
+			this.manager.getResourceBundle(), "unload");
+		this.cmd_reload = SafeResourceLoader.getString("COMMAND_RELOAD",
+			this.manager.getResourceBundle(), "reload");
+		this.cmd_version = SafeResourceLoader.getString("COMMAND_VERSION",
+			this.manager.getResourceBundle(), "version");
 
 	}
 
@@ -87,22 +79,17 @@ class PMEventListener implements Listener {
 		Plugin pack = this.manager.getPlugin(pluginName);
 
 		if (pack == null) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PLUGIN_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Plugin $PLUGIN not loaded").replaceFirst(
-							"\\$PLUGIN", pluginName));
+			message = new ConsoleMessage(SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED",
+					this.manager.getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pluginName));
 			this.manager.fireEvent(message);
 			// stop right here. It does not exist
 			return;
 		}
 		if (!this.manager.isEnabled(pack)) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PLUGIN_DISABLE_FAIL",
-							this.manager.getResourceBundle(),
-							"Plugin failed to disable"));
+			message = new ConsoleMessage(SafeResourceLoader.getString(
+				"PLUGIN_DISABLE_FAIL", this.manager.getResourceBundle()));
 			this.manager.fireEvent(message);
 			return;
 		}
@@ -114,22 +101,17 @@ class PMEventListener implements Listener {
 		Plugin pack = this.manager.getPlugin(pluginName);
 
 		if (pack == null) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PLUGIN_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Plugin $PLUGIN not loaded").replaceFirst(
-							"\\$PLUGIN", pluginName));
+			message = new ConsoleMessage(SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED",
+					this.manager.getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pluginName));
 			this.manager.fireEvent(message);
 			// stop right here. It does not exist
 			return;
 		}
 		if (this.manager.isEnabled(pack)) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PLUGIN_ENABLE_FAIL",
-							this.manager.getResourceBundle(),
-							"Plugin failed to enable"));
+			message = new ConsoleMessage(SafeResourceLoader.getString(
+				"PLUGIN_ENABLE_FAIL", this.manager.getResourceBundle()));
 			this.manager.fireEvent(message);
 			return;
 		}
@@ -219,8 +201,8 @@ class PMEventListener implements Listener {
 
 		Plugin pack = this.manager.getCommandParent(firstWord);
 		if (pack != null) {
-			this.manager.fireEvent(new PluginCommandSent(pack.getName(), event
-					.getCommand(), "console"));
+			this.manager.fireEvent(new PluginCommandSent(pack.getName(),
+				event.getCommand(), "console"));
 		}
 
 	}
@@ -233,13 +215,10 @@ class PMEventListener implements Listener {
 	@EventHandler
 	public void onPluginDisabled(PluginDisabled event) {
 		Plugin target = event.getPlugin();
-		String msgDisabled =
-				SafeResourceLoader
-						.getString("ALERT_ENABLED",
-								this.manager.getResourceBundle(),
-								"Plugin $PLUGIN (v$VERSION) enabled!")
-						.replaceFirst("\\$PLUGIN", target.getName())
-						.replaceFirst("\\$VERSION", target.getVersion() + "");
+		String msgDisabled = SafeResourceLoader
+			.getString("ALERT_ENABLED", this.manager.getResourceBundle())
+			.replaceFirst("\\$PLUGIN", target.getName())
+			.replaceFirst("\\$VERSION", target.getVersion() + "");
 		Logging.fine(this.sysPlugin.getName(), msgDisabled);
 	}
 
@@ -251,13 +230,10 @@ class PMEventListener implements Listener {
 	@EventHandler
 	public void onPluginEnabled(PluginEnabled event) {
 		Plugin target = event.getPlugin();
-		String msgEnabled =
-				SafeResourceLoader
-						.getString("ALERT_ENABLED",
-								this.manager.getResourceBundle(),
-								"Plugin $PLUGIN (v$VERSION) enabled!")
-						.replaceFirst("\\$PLUGIN", target.getName())
-						.replaceFirst("\\$VERSION", target.getVersion() + "");
+		String msgEnabled = SafeResourceLoader
+			.getString("ALERT_ENABLED", this.manager.getResourceBundle())
+			.replaceFirst("\\$PLUGIN", target.getName())
+			.replaceFirst("\\$VERSION", target.getVersion() + "");
 		Logging.fine(this.sysPlugin.getName(), msgEnabled);
 	}
 
@@ -273,15 +249,11 @@ class PMEventListener implements Listener {
 		if (this.manager.enableOnLoad()) {
 			this.manager.enable(event.getPlugin());
 		}
-		String loaded =
-				SafeResourceLoader.getString("ALERT_LOADED",
-						this.manager.getResourceBundle(),
-						"Plugin $PLUGIN (v$VERSION) loaded!");
-		loaded =
-				loaded.replaceFirst("\\$PLUGIN", event.getPlugin().getName());
-		loaded =
-				loaded.replaceFirst("\\$VERSION", ""
-						+ event.getPlugin().getVersion());
+		String loaded = SafeResourceLoader.getString("ALERT_LOADED",
+			this.manager.getResourceBundle());
+		loaded = loaded.replaceFirst("\\$PLUGIN", event.getPlugin().getName());
+		loaded = loaded.replaceFirst("\\$VERSION",
+			"" + event.getPlugin().getVersion());
 		Logging.fine(this.sysPlugin.getName(), loaded);
 	}
 
@@ -301,8 +273,7 @@ class PMEventListener implements Listener {
 	private void printPlugins() {
 		String tmp;
 		ConsoleMessage message;
-		HashMap<String, Plugin> loadedPlugins =
-				this.manager.getLoadedPlugins();
+		HashMap<String, Plugin> loadedPlugins = this.manager.getLoadedPlugins();
 		ArrayList<String> names = new ArrayList<>();
 		names.addAll(loadedPlugins.keySet());
 		Collections.sort(names);
@@ -310,28 +281,19 @@ class PMEventListener implements Listener {
 		for (String name : names) {
 			tmp = "";
 			tmp += loadedPlugins.get(name).getName();
-			tmp +=
-					" "
-							+ SafeResourceLoader.getString("PLUGIN_VERSION",
-									this.manager.getResourceBundle(), "v")
-							+ loadedPlugins.get(name).getVersion();
+			tmp += " "
+				+ SafeResourceLoader.getString("PLUGIN_VERSION",
+					this.manager.getResourceBundle())
+				+ loadedPlugins.get(name).getVersion();
 			if (this.manager.isEnabled(loadedPlugins.get(name))) {
 				tmp +=
-						" "
-								+ "("
-								+ SafeResourceLoader.getString(
-										"ENABLED_STATUS",
-										this.manager.getResourceBundle(),
-										"Enabled") + ")";
+					" " + "(" + SafeResourceLoader.getString("ENABLED_STATUS",
+						this.manager.getResourceBundle()) + ")";
 			}
 			else {
 				tmp +=
-						" "
-								+ "("
-								+ SafeResourceLoader.getString(
-										"DISABLED_STATUS",
-										this.manager.getResourceBundle(),
-										"Disabled") + ")";
+					" " + "(" + SafeResourceLoader.getString("DISABLED_STATUS",
+						this.manager.getResourceBundle()) + ")";
 			}
 			message = new ConsoleMessage(tmp);
 			this.manager.fireEvent(message);
@@ -351,17 +313,14 @@ class PMEventListener implements Listener {
 		Plugin pack = this.manager.getPlugin(pluginName);
 
 		if (pack != null) {
-			tmp =
-					SafeResourceLoader.getString("PLUGIN_VERSION",
-							this.manager.getResourceBundle(), "v")
-							+ pack.getVersion();
+			tmp = SafeResourceLoader.getString("PLUGIN_VERSION",
+				this.manager.getResourceBundle()) + pack.getVersion();
 		}
 		else {
-			tmp =
-					SafeResourceLoader.getString("PLUGIN_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Plugin $PLUGIN not loaded").replaceFirst(
-							"\\$PLUGIN", pluginName);
+			tmp = SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED",
+					this.manager.getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pluginName);
 		}
 		message = new ConsoleMessage(tmp);
 		this.manager.fireEvent(message);
@@ -372,10 +331,8 @@ class PMEventListener implements Listener {
 	 * correctly.
 	 */
 	private void printWIP() {
-		ConsoleMessage message =
-				new ConsoleMessage(SafeResourceLoader.getString("WIP_TEXT",
-						this.manager.getResourceBundle(),
-						"WIP. This may not function correctly."));
+		ConsoleMessage message = new ConsoleMessage(SafeResourceLoader
+			.getString("WIP_TEXT", this.manager.getResourceBundle()));
 		this.manager.fireEvent(message);
 	}
 
@@ -384,12 +341,10 @@ class PMEventListener implements Listener {
 		Plugin pack = this.manager.getPlugin(pluginName);
 
 		if (pack == null) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PLUGIN_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Plugin $PLUGIN not loaded").replaceFirst(
-							"\\$PLUGIN", pluginName));
+			message = new ConsoleMessage(SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED",
+					this.manager.getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pluginName));
 			this.manager.fireEvent(message);
 			// stop right here. It does not exist
 			return;
@@ -402,12 +357,10 @@ class PMEventListener implements Listener {
 		Plugin pack = this.manager.getPlugin(pluginName);
 
 		if (pack == null) {
-			message =
-					new ConsoleMessage(SafeResourceLoader.getString(
-							"PLUGIN_NOT_LOADED",
-							this.manager.getResourceBundle(),
-							"Plugin $PLUGIN not loaded").replaceFirst(
-							"\\$PLUGIN", pluginName));
+			message = new ConsoleMessage(SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED",
+					this.manager.getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pluginName));
 			this.manager.fireEvent(message);
 			// stop right here. It does not exist
 			return;

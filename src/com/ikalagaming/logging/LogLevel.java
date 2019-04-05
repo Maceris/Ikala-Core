@@ -135,8 +135,7 @@ public enum LogLevel {
 		// value is for a different locale.
 		this.localizedLevelName =
 				SafeResourceLoader.getString(this.levelName,
-						"com.ikalagaming.logging.resources.LoggingLevel",
-						this.levelName);
+						"com.ikalagaming.logging.resources.LoggingLevel");
 		this.cachedLocale = Localization.getLocale();
 
 		return this.localizedLevelName;

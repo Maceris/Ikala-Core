@@ -69,8 +69,7 @@ class EventDispatcher extends Thread {
 			catch (EventException e) {
 				String error =
 						SafeResourceLoader.getString("DISPATCH_ERROR",
-								"com.ikalagaming.event.resources.strings",
-								"There was a problem sending an event");
+								"com.ikalagaming.event.resources.strings");
 				Logging.warning(SystemPlugin.PLUGIN_NAME, error);
 				System.err.println(e.toString());
 				e.printStackTrace(System.err);

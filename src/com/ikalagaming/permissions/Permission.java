@@ -233,8 +233,7 @@ public class Permission {
 			catch (Throwable ex) {
 				String log =
 						SafeResourceLoader.getString("INVALID_PERMISSIONS",
-								Permission.resourceLocation,
-								"Invalid permissions");
+								Permission.resourceLocation);
 				Logging.warning(SystemPlugin.PLUGIN_NAME, log);
 
 				ex.printStackTrace();

@@ -381,8 +381,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			catch (UnsupportedFlavorException | IOException ex) {
 				String msg =
 						SafeResourceLoader.getString("invalid_clipboard",
-								this.getResourceBundle(),
-								"Invalid clipboard contents").concat(
+								this.getResourceBundle()).concat(
 								ex.getLocalizedMessage());
 				Logging.warning(this.getName(), msg);
 			}
@@ -457,7 +456,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		catch (BadLocationException e) {
 			String msg =
 					SafeResourceLoader.getString("error_bad_location",
-							this.getResourceBundle(), "Bad location");
+							this.getResourceBundle());
 			Logging.warning(this.getName(), msg);
 		}
 		return 0;
@@ -672,8 +671,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		this.init();
 		this.appendIndicatorChar();
 		this.appendMessage(SafeResourceLoader.getString("missed_logs",
-				this.getResourceBundle(),
-				"Logs sent before console was enabled were skipped"));
+				this.getResourceBundle()));
 		return true;
 	}
 
@@ -691,8 +689,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 					"Locale not found for Console in onLoad()");
 		}
 		this.windowTitle =
-				SafeResourceLoader.getString("title", this.getResourceBundle(),
-						"Console");
+				SafeResourceLoader.getString("title", this.getResourceBundle());
 
 		return true;
 	}
@@ -741,7 +738,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		catch (BadLocationException e) {
 			String msg =
 					SafeResourceLoader.getString("error_bad_location",
-							this.getResourceBundle(), "Bad location");
+							this.getResourceBundle());
 			Logging.warning(this.getName(), msg);
 		}
 		finally {
@@ -906,7 +903,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 	public void windowClosing(WindowEvent e) {
 		String cmdUnload =
 				SafeResourceLoader.getString("COMMAND_UNLOAD", PluginManager
-						.getInstance().getResourceBundle(), "unload");
+						.getInstance().getResourceBundle());
 		ConsoleCommandEntered cmdEvent = new ConsoleCommandEntered(cmdUnload);
 		this.eventManager.fireEvent(cmdEvent);
 		super.windowClosing(e);
