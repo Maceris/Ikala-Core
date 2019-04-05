@@ -18,18 +18,6 @@ import java.util.ResourceBundle;
 public class SafeResourceLoader {
 
 	/**
-	 * Only checks the root resource files for strings.
-	 */
-	private static ResourceBundle rootOnly =
-		ResourceBundle.getBundle("labels", new ResourceBundle.Control() {
-			@Override
-			public List<Locale> getCandidateLocales(String name,
-				Locale locale) {
-				return Collections.singletonList(Locale.ROOT);
-			}
-		});
-
-	/**
 	 * Returns a string from the supplied bundle. Any errors are printed to
 	 * console. If no string is loaded, it attempts to load from the root
 	 * resource bundle. If it fails again, the name is returned.
@@ -54,8 +42,16 @@ public class SafeResourceLoader {
 		if (!failed) {
 			return toReturn;
 		}
+		ResourceBundle rootOnly = ResourceBundle
+			.getBundle(from.getBaseBundleName(), new ResourceBundle.Control() {
+				@Override
+				public List<Locale> getCandidateLocales(String n,
+					Locale locale) {
+					return Collections.singletonList(Locale.ROOT);
+				}
+			});
 		try {
-			toReturn = SafeResourceLoader.rootOnly.getString(name);
+			toReturn = rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
@@ -119,8 +115,17 @@ public class SafeResourceLoader {
 			return toReturn;
 		}
 
+		ResourceBundle rootOnly =
+			ResourceBundle.getBundle(from, new ResourceBundle.Control() {
+				@Override
+				public List<Locale> getCandidateLocales(String n,
+					Locale locale) {
+					return Collections.singletonList(Locale.ROOT);
+				}
+			});
+
 		try {
-			toReturn = SafeResourceLoader.rootOnly.getString(name);
+			toReturn = rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
