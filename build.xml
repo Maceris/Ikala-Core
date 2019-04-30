@@ -33,8 +33,6 @@
 		<!-- Compile the java code from ${src} into ${build} -->
 		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false">
 			<classpath refid = "classpath.test"/>
-			<exclude name="com/ikalagaming/package-info.java"/>
-			<exclude name="com/ikalagaming/**/package-info.java"/>
 		</javac>
 		<copy verbose="${verbose}" todir="${build}" preservelastmodified="false">
 			<fileset dir="${src}">
@@ -84,7 +82,7 @@
 		<!-- Put everything in ${build} into the ICore-${DSTAMP}.jar file -->
 		<jar jarfile="${dist}/ICore.jar" basedir="${build}"/>
 		<!-- Put everything in ${src} into the ICore-source-${DSTAMP}.jar file -->
-		<jar jarfile="${dist}/ICore-source.jar" basedir="${src}"/>
+		<jar jarfile="${dist}/ICore-sources.jar" basedir="${src}"/>
 		<!-- Put everything in ${doc} into the ICore-javadoc-${DSTAMP}.jar file -->
 		<jar jarfile="${dist}/ICore-javadoc.jar" basedir="${doc}"/>
 	</target>
