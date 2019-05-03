@@ -1,100 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Ikala-Core" default="compileTest" basedir=".">
 	<!-- set global properties for this build -->
-	<property name="src" location="src"/>
-	<property name="test" location="test"/>
-	<property name="build" location="bin"/>
-	<property name="dist" location="Jars"/>
-	<property name="doc" location="javadoc"/>
-	<property name="lib.dir" location="thirdParty"/>
-	<property name="packages" value="com.ikalagaming.*"/>
-	
-	<path id = "classpath.base">
-		<pathelement location="${lib.dir}/luaj-jse-3.0.jar"/>
-		<pathelement location="${lib.dir}/snakeyaml-1.14.jar"/>
-		<pathelement location="${lib.dir}/jsemver-0.9.0.jar"/>
-	</path>
-		
-	<path id = "classpath.test">
-		<pathelement location="${lib.dir}/junit-4.12.jar"/>
-		<pathelement location="${lib.dir}/hamcrest-all-1.3.jar"/>
-		<pathelement location = "${test}" />
-		<pathelement location = "${src}" />
-		<path refid = "classpath.base" />
-	</path>
+	<property name="src.dir" location="src" />
+	<property name="test.dir" location="test" />
+	<property name="build.dir" location="bin" />
+	<property name="dist.dir" location="dist" />
+	<property name="doc.dir" location="javadoc" />
+	<property name="jars.plugins.dir" location="lib/plugins" />
+	<property name="jars.bundled.dir" location="lib/bundled" />
+	<property name="jars.info.dir" location="lib/info" />
+	<property name="jars.test.dir" location="lib/testing" />
+
+	<!-- some configuration -->
+	<property name="packages" value="com.ikalagaming.*" />
+	<property name="leavedebugsymbols" value="true" />
+	<property name="verbose" value="true" />
+	<property name="name" location="Ikala-Core" />
+	<property name="version" location="0.0.1" />
 
 	<target name="init">
 		<!-- Create the time stamp -->
-		<tstamp/>
+		<tstamp />
 		<!-- Create the build directory structure used by compile -->
-		<mkdir dir="${build}"/>
+		<mkdir dir="${build.dir}" />
 	</target>
 
-	<target name="compile" depends="init"
-			description="compile the source">
-		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false" debug="true">
-			<classpath refid = "classpath.test"/>
+	<target name="compile" depends="init" description="compile the source">
+		<!-- Compile the java code from ${src.dir} into ${build.dir} -->
+		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${leavedebugsymbols}">
+			<classpath>
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+			</classpath>
 		</javac>
-		<copy verbose="${verbose}" todir="${build}" preservelastmodified="false">
-			<fileset dir="${src}">
+		<copy verbose="${verbose}" todir="${build.dir}" preservelastmodified="false">
+			<fileset dir=".">
+				<include name="*.yml" />
+			</fileset>
+		</copy>
+		<copy verbose="${verbose}" todir="${build.dir}" preservelastmodified="false">
+			<fileset dir="${src.dir}">
 				<include name="**/*.properties" />
 			</fileset>
-		</copy> 
+		</copy>
 	</target>
-	
-	<target name="compileTest" depends="compile" 
-			description="compile the JUnit tests">
-		<javac srcdir="${test}" destdir="${build}" includeAntRuntime="false">
-			<classpath refid = "classpath.test"/>
+
+	<target name="compileTest" depends="compile" description="compile the JUnit tests">
+		<javac srcdir="${test.dir}" destdir="${build.dir}" includeAntRuntime="false">
+			<classpath>
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+				<fileset dir="${jars.test.dir}" includes="*.jar" />
+			</classpath>
 		</javac>
 	</target>
-		
-	
-	<target name = "test" depends = "compileTest">
+
+	<target name="test" depends="compileTest" description="run JUnit tests">
 		<junit>
 			<classpath>
-		    	<pathelement location="${build}" />    
-				<path refid = "classpath.test" />
-		    </classpath>
-			<formatter type = "brief" usefile = "false" />
+				<pathelement location="${build.dir}" />
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+				<fileset dir="${jars.test.dir}" includes="*.jar" />
+			</classpath>
+			<formatter type="brief" usefile="false" />
 			<batchtest>
-				<fileset dir="${test}" includes="**/Test*" />
+				<fileset dir="${test.dir}" includes="**/Test*" />
 			</batchtest>
 		</junit>
 	</target>
 
-	<target name="javadoc"
-			description="generate javadoc">
-        <javadoc access="package" author="true" destdir="${doc}"
-				nodeprecated="false" nodeprecatedlist="false"
-				noindex="false" nonavbar="false" notree="false"
-				packagenames="${packages}" source="1.8" sourcepath="${src}"
-				splitindex="true" use="true" version="true">
-        	<classpath refid = "classpath.test" />
+	<target name="javadoc" description="generate javadoc">
+		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="1.8" sourcepath="${src.dir}" splitindex="true" use="true" version="true">
+			<classpath>
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+			</classpath>
 		</javadoc>
-			
-    </target>
-
-	<target name="dist" depends="compile,javadoc"
-			description="generate the distribution jars">
-		<!-- Create the distribution directory -->
-		<mkdir dir="${dist}"/>
-
-		<!-- Put everything in ${build} into the ICore-${DSTAMP}.jar file -->
-		<jar jarfile="${dist}/ICore.jar" basedir="${build}">
-			<zipgroupfileset dir="${lib.dir}" includes="luaj-jse-3.0.jar,snakeyaml-1.14.jar,jsemver-0.9.0.jar" />
-		</jar>
-		<!-- Put everything in ${src} into the ICore-source-${DSTAMP}.jar file -->
-		<jar jarfile="${dist}/ICore-sources.jar" basedir="${src}"/>
-		<!-- Put everything in ${doc} into the ICore-javadoc-${DSTAMP}.jar file -->
-		<jar jarfile="${dist}/ICore-javadoc.jar" basedir="${doc}"/>
 	</target>
 
-	<target name="clean"
-			description="clean up">
-		<!-- Delete the ${build} and ${dist} directory trees -->
-		<delete dir="${build}"/>
-		<delete dir="${dist}"/>
+	<target name="dist" depends="compile,javadoc" description="generate distribution jars">
+		<!-- Create the distribution directory -->
+		<mkdir dir="${dist.dir}" />
+
+		<jar jarfile="${dist.dir}/${name}-${version}.jar" basedir="${build.dir}">
+			<zipgroupfileset dir="${jars.bundled.dir}" includes="*.jar" />
+		</jar>
+		<jar jarfile="${dist.dir}/${name}-${version}-sources.jar" basedir="${src.dir}" />
+		<jar jarfile="${dist.dir}/${name}-${version}-javadoc.jar" basedir="${doc.dir}" />
+	</target>
+
+	<target name="clean" description="clean up">
+		<!-- Delete the ${build.dir} and ${dist.dir} directory trees -->
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
 	</target>
 </project>
