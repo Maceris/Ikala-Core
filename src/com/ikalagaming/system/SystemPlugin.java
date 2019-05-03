@@ -37,10 +37,8 @@ public class SystemPlugin implements Plugin {
 	 * @param manager The packaging system to handle events for
 	 */
 	public SystemPlugin(PluginManager manager) {
-		Listener pmListener = new PMEventListener(this, manager);
 		Listener sysListener = new SystemEventListener();
 		this.listeners = new HashSet<>();
-		this.listeners.add(pmListener);
 		this.listeners.add(sysListener);
 	}
 

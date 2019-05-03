@@ -50,8 +50,8 @@ public class PluginManager {
 	 * handle build info and the like but build metadata is ignored.
 	 *
 	 * For example, compareVersions("1.0.0-rc.1+build.1",
-	 * "1.3.7+build.2.b8f12d7") would return a number < 0.
-	 * compareVersions("2.1.3", "1.0.1") would return >0.
+	 * "1.3.7+build.2.b8f12d7") would return a number less than 0.
+	 * compareVersions("2.1.3", "1.0.1") would return a number greater than 0.
 	 * compareVersions("1.0.0+build.1", "1.0.0+build.1") would return 0 because
 	 * they are equal builds.
 	 *
@@ -188,7 +188,7 @@ public class PluginManager {
 	private ReentrantLock commandLock;
 
 	private SystemPlugin sysPlugin;
-	
+
 	private final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
 
 	/**
@@ -465,7 +465,6 @@ public class PluginManager {
 		JarFile jfile;
 		ZipEntry config;
 
-		
 		final String fileName = jar.getName();
 
 		/*
