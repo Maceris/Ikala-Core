@@ -34,7 +34,7 @@ class ConsoleListener implements Listener {
 	 */
 	@EventHandler
 	public void onCommand(PluginCommandSent event) {
-		if (!event.getTo().equalsIgnoreCase(this.parent.getName())) {
+		if (!event.getTo().equalsIgnoreCase(this.parent.pluginName)) {
 			return;
 		}
 		// TODO do something with commands
@@ -78,16 +78,14 @@ class ConsoleListener implements Listener {
 	 */
 	@EventHandler
 	public void onReportUnknownCommand(ReportUnknownCommand event) {
-		String message =
-			SafeResourceLoader.getString("unknown_command",
-				this.parent.getResourceBundle()) + " '" + event.getCommand()
-				+ "'. "
-				+ SafeResourceLoader
-					.getString("try_cmd", this.parent.getResourceBundle())
-				+ " '"
-				+ SafeResourceLoader.getString("COMMAND_HELP",
-					"com.ikalagaming.plugins.resources.PluginManager")
-				+ "'";
+		String message = SafeResourceLoader.getString("unknown_command",
+			this.parent.getResourceBundle())
+			+ " '" + event.getCommand() + "'. "
+			+ SafeResourceLoader.getString("try_cmd",
+				this.parent.getResourceBundle())
+			+ " '" + SafeResourceLoader.getString("COMMAND_HELP",
+				"com.ikalagaming.plugins.resources.PluginManager")
+			+ "'";
 		if (!PluginManager.getInstance().isEnabled(this.parent)) {
 			System.err.println(
 				"Console is disabled! Cannot print message '" + message + "'");

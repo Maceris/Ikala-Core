@@ -151,7 +151,7 @@ public class PluginInfo {
 	 * @return the full name
 	 */
 	public String getFullName() {
-		return this.name + " v" + this.version;
+		return this.name + "-" + this.version;
 	}
 
 	/**

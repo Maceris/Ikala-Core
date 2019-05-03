@@ -10,18 +10,20 @@ import com.ikalagaming.plugins.PluginManager;
 /**
  * Allows for interfacing with the core system using events.
  *
+ * @deprecated This will be extracted to the console plugin.
  * @author Ches Burks
  *
  */
+@Deprecated
 public class SystemPlugin implements Plugin {
 
 	/**
-	 * The name that is returned by {@link #getName()}. This is readable by
-	 * everyone to simplify logging by the system.
+	 * The name. This is readable by everyone to simplify logging by the system.
+	 * 
+	 * @deprecated This is going to go away
 	 */
+	@Deprecated
 	public static final String PLUGIN_NAME = "System";
-
-	private static final double PLUGIN_VERSION = 1.1;
 
 	/*
 	 * Made final so that if anyone tries to modify it they will fail, as a
@@ -45,16 +47,6 @@ public class SystemPlugin implements Plugin {
 	@Override
 	public Set<Listener> getListeners() {
 		return this.listeners;
-	}
-
-	@Override
-	public String getName() {
-		return SystemPlugin.PLUGIN_NAME;
-	}
-
-	@Override
-	public double getVersion() {
-		return SystemPlugin.PLUGIN_VERSION;
 	}
 
 	@Override

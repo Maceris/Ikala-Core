@@ -22,22 +22,6 @@ public interface Plugin {
 	public Set<Listener> getListeners();
 
 	/**
-	 * Returns the type of plugin this is. This is a string that describes the
-	 * plugin, such as "Graphics" or "AI".
-	 *
-	 * @return a string descriptor of the plugin
-	 */
-	public String getName();
-
-	/**
-	 * Returns this classes version number. This changes periodically for each
-	 * plugin subclass as they are changed and updated.
-	 *
-	 * @return the version
-	 */
-	public double getVersion();
-
-	/**
 	 * This method is called when the plugin is disabled, and gives the plugin
 	 * the chance to shut itself down and save any changes made in memory to
 	 * disk if necessary.

@@ -9,7 +9,7 @@ package com.ikalagaming.plugins;
  */
 public class PluginCommand implements Comparable<PluginCommand> {
 	private final String command;
-	private final Plugin owner;
+	private final String owner;
 
 	/**
 	 * Constructs a new registered command with the given command and plugin
@@ -17,7 +17,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 * @param cmd the command registered
 	 * @param theOwner what plugin registered the command
 	 */
-	public PluginCommand(final String cmd, final Plugin theOwner) {
+	public PluginCommand(final String cmd, final String theOwner) {
 		this.command = cmd;
 		this.owner = theOwner;
 	}
@@ -42,7 +42,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 *
 	 * @return the owner
 	 */
-	public Plugin getOwner() {
+	public String getOwner() {
 		return this.owner;
 	}
 

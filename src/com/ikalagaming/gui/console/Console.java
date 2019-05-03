@@ -63,8 +63,8 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			}
 			else if (Console.ARROW_UP.contains(keyCode)) {
 				if (this.parent.history.hasPrevious()) {
-					this.parent.setCurrentText(this.parent.history
-							.getPrevious());
+					this.parent
+						.setCurrentText(this.parent.history.getPrevious());
 				}
 			}
 			else if (Console.ARROW_DOWN.contains(keyCode)) {
@@ -92,8 +92,8 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			}
 			else if (keyCode == KeyEvent.VK_C && event.isControlDown()) {
 				if (this.parent.textArea.getSelectedText() != null) {
-					this.parent.setClipboardContents(this.parent.textArea
-							.getSelectedText());
+					this.parent.setClipboardContents(
+						this.parent.textArea.getSelectedText());
 				}
 			}
 			else if (Console.LETTERS.contains(keyCode)) {
@@ -105,65 +105,64 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		public void keyReleased(KeyEvent event) {}
 	}
 
-	private static final Integer[] LETTER_VALUES = new Integer[] {
-			KeyEvent.VK_0, KeyEvent.VK_0, KeyEvent.VK_1, KeyEvent.VK_2,
-			KeyEvent.VK_3, KeyEvent.VK_4, KeyEvent.VK_5, KeyEvent.VK_6,
-			KeyEvent.VK_7, KeyEvent.VK_8, KeyEvent.VK_9, KeyEvent.VK_A,
-			KeyEvent.VK_B, KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_E,
-			KeyEvent.VK_F, KeyEvent.VK_G, KeyEvent.VK_H, KeyEvent.VK_I,
-			KeyEvent.VK_J, KeyEvent.VK_K, KeyEvent.VK_L, KeyEvent.VK_M,
-			KeyEvent.VK_N, KeyEvent.VK_O, KeyEvent.VK_P, KeyEvent.VK_Q,
-			KeyEvent.VK_R, KeyEvent.VK_S, KeyEvent.VK_T, KeyEvent.VK_U,
-			KeyEvent.VK_V, KeyEvent.VK_W, KeyEvent.VK_X, KeyEvent.VK_Y,
-			KeyEvent.VK_Z, KeyEvent.VK_NUMPAD0, KeyEvent.VK_NUMPAD1,
-			KeyEvent.VK_NUMPAD2, KeyEvent.VK_NUMPAD3, KeyEvent.VK_NUMPAD4,
-			KeyEvent.VK_NUMPAD5, KeyEvent.VK_NUMPAD6, KeyEvent.VK_NUMPAD7,
-			KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD9, KeyEvent.VK_AMPERSAND,
-			KeyEvent.VK_ASTERISK, KeyEvent.VK_AT, KeyEvent.VK_BACK_SLASH,
-			KeyEvent.VK_BRACELEFT, KeyEvent.VK_BRACERIGHT,
-			KeyEvent.VK_CLOSE_BRACKET, KeyEvent.VK_COLON, KeyEvent.VK_COMMA,
-			KeyEvent.VK_DOLLAR, KeyEvent.VK_EQUALS,
-			KeyEvent.VK_EXCLAMATION_MARK, KeyEvent.VK_GREATER,
-			KeyEvent.VK_LEFT_PARENTHESIS, KeyEvent.VK_LESS, KeyEvent.VK_MINUS,
-			KeyEvent.VK_NUMBER_SIGN, KeyEvent.VK_OPEN_BRACKET,
-			KeyEvent.VK_PERIOD, KeyEvent.VK_PLUS, KeyEvent.VK_QUOTE,
-			KeyEvent.VK_QUOTEDBL, KeyEvent.VK_RIGHT_PARENTHESIS,
-			KeyEvent.VK_SEMICOLON, KeyEvent.VK_SLASH, KeyEvent.VK_SPACE};
+	private static final Integer[] LETTER_VALUES = new Integer[] {KeyEvent.VK_0,
+		KeyEvent.VK_0, KeyEvent.VK_1, KeyEvent.VK_2, KeyEvent.VK_3,
+		KeyEvent.VK_4, KeyEvent.VK_5, KeyEvent.VK_6, KeyEvent.VK_7,
+		KeyEvent.VK_8, KeyEvent.VK_9, KeyEvent.VK_A, KeyEvent.VK_B,
+		KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_E, KeyEvent.VK_F,
+		KeyEvent.VK_G, KeyEvent.VK_H, KeyEvent.VK_I, KeyEvent.VK_J,
+		KeyEvent.VK_K, KeyEvent.VK_L, KeyEvent.VK_M, KeyEvent.VK_N,
+		KeyEvent.VK_O, KeyEvent.VK_P, KeyEvent.VK_Q, KeyEvent.VK_R,
+		KeyEvent.VK_S, KeyEvent.VK_T, KeyEvent.VK_U, KeyEvent.VK_V,
+		KeyEvent.VK_W, KeyEvent.VK_X, KeyEvent.VK_Y, KeyEvent.VK_Z,
+		KeyEvent.VK_NUMPAD0, KeyEvent.VK_NUMPAD1, KeyEvent.VK_NUMPAD2,
+		KeyEvent.VK_NUMPAD3, KeyEvent.VK_NUMPAD4, KeyEvent.VK_NUMPAD5,
+		KeyEvent.VK_NUMPAD6, KeyEvent.VK_NUMPAD7, KeyEvent.VK_NUMPAD8,
+		KeyEvent.VK_NUMPAD9, KeyEvent.VK_AMPERSAND, KeyEvent.VK_ASTERISK,
+		KeyEvent.VK_AT, KeyEvent.VK_BACK_SLASH, KeyEvent.VK_BRACELEFT,
+		KeyEvent.VK_BRACERIGHT, KeyEvent.VK_CLOSE_BRACKET, KeyEvent.VK_COLON,
+		KeyEvent.VK_COMMA, KeyEvent.VK_DOLLAR, KeyEvent.VK_EQUALS,
+		KeyEvent.VK_EXCLAMATION_MARK, KeyEvent.VK_GREATER,
+		KeyEvent.VK_LEFT_PARENTHESIS, KeyEvent.VK_LESS, KeyEvent.VK_MINUS,
+		KeyEvent.VK_NUMBER_SIGN, KeyEvent.VK_OPEN_BRACKET, KeyEvent.VK_PERIOD,
+		KeyEvent.VK_PLUS, KeyEvent.VK_QUOTE, KeyEvent.VK_QUOTEDBL,
+		KeyEvent.VK_RIGHT_PARENTHESIS, KeyEvent.VK_SEMICOLON, KeyEvent.VK_SLASH,
+		KeyEvent.VK_SPACE};
 
 	/**
 	 * All characters that are permitted to be typed into the console.
 	 */
-	static final HashSet<Integer> LETTERS = new HashSet<>(
-			Arrays.asList(Console.LETTER_VALUES));
+	static final HashSet<Integer> LETTERS =
+		new HashSet<>(Arrays.asList(Console.LETTER_VALUES));
 	/**
 	 * Keys that represent the left arrow on the keyboard.
 	 */
-	static final HashSet<Integer> ARROW_LEFT = new HashSet<>(Arrays.asList(
-			KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT));
+	static final HashSet<Integer> ARROW_LEFT =
+		new HashSet<>(Arrays.asList(KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT));
 	/**
 	 * Keys that represent the right arrow on the keyboard.
 	 */
-	static final HashSet<Integer> ARROW_RIGHT = new HashSet<>(Arrays.asList(
-			KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT));
+	static final HashSet<Integer> ARROW_RIGHT =
+		new HashSet<>(Arrays.asList(KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT));
 	/**
 	 * Keys that represent the up arrow on the keyboard.
 	 */
-	static final HashSet<Integer> ARROW_UP = new HashSet<>(Arrays.asList(
-			KeyEvent.VK_UP, KeyEvent.VK_KP_UP));
+	static final HashSet<Integer> ARROW_UP =
+		new HashSet<>(Arrays.asList(KeyEvent.VK_UP, KeyEvent.VK_KP_UP));
 
 	/**
 	 * Keys that represent the down arrow on the keyboard.
 	 */
-	static final HashSet<Integer> ARROW_DOWN = new HashSet<>(Arrays.asList(
-			KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
+	static final HashSet<Integer> ARROW_DOWN =
+		new HashSet<>(Arrays.asList(KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
 
 	/**
 	 * Up, down, left, and right arrows.
 	 */
-	static final HashSet<Integer> ARROWS = new HashSet<>(Arrays.asList(
-			KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT, KeyEvent.VK_RIGHT,
-			KeyEvent.VK_KP_RIGHT, KeyEvent.VK_UP, KeyEvent.VK_KP_UP,
-			KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
+	static final HashSet<Integer> ARROWS =
+		new HashSet<>(Arrays.asList(KeyEvent.VK_LEFT, KeyEvent.VK_KP_LEFT,
+			KeyEvent.VK_RIGHT, KeyEvent.VK_KP_RIGHT, KeyEvent.VK_UP,
+			KeyEvent.VK_KP_UP, KeyEvent.VK_DOWN, KeyEvent.VK_KP_DOWN));
 
 	/**
 	 * The default width of the console. The console will start out with this
@@ -207,8 +206,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 	 * The previous commands typed in the console.
 	 */
 	CommandHistory history;
-	private String pluginName = "console";
-	private final double version = 0.2;
+	String pluginName = "console";
 	private EventManager eventManager;
 	private HashSet<Listener> listeners;
 
@@ -242,12 +240,11 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		this.editLock.lock();
 		try {
 			this.textArea.insert("" + c,
-					this.getSafeLineStartOffset(this.currentIndicatorLine)
-							+ (this.posInString) + 1);
+				this.getSafeLineStartOffset(this.currentIndicatorLine)
+					+ (this.posInString) + 1);
 			// how many lines the current line takes up
-			this.currentLine =
-					this.currentLine.substring(0, this.posInString) + c
-							+ this.currentLine.substring(this.posInString);
+			this.currentLine = this.currentLine.substring(0, this.posInString)
+				+ c + this.currentLine.substring(this.posInString);
 		}
 		finally {
 			this.editLock.unlock();
@@ -284,9 +281,8 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		// extra gap just before the input line and any previous lines for
 		// visibility
 		if (this.textArea.getText().endsWith(System.lineSeparator())) {
-			this.textArea.replaceRange("",
-					this.textArea.getText().length() - 1, this.textArea
-							.getText().length());
+			this.textArea.replaceRange("", this.textArea.getText().length() - 1,
+				this.textArea.getText().length());
 			// removes the last newline if it exists
 		}
 		this.textArea.append(message);
@@ -327,7 +323,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			// add one to account for the input indicator char
 			++start;
 			this.textArea.replaceRange("", start,
-					start + this.currentLine.length());
+				start + this.currentLine.length());
 			this.posInString = 0;
 			this.currentLine = "";
 		}
@@ -346,14 +342,12 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		if (this.posInString <= 0) {
 			return;
 		}
-		int pos =
-				this.getSafeLineStartOffset(this.currentIndicatorLine)
-						+ this.posInString;
+		int pos = this.getSafeLineStartOffset(this.currentIndicatorLine)
+			+ this.posInString;
 		this.textArea.replaceRange("", pos, pos + 1);
 
-		this.currentLine =
-				this.currentLine.substring(0, this.posInString - 1)
-						+ this.currentLine.substring(this.posInString);
+		this.currentLine = this.currentLine.substring(0, this.posInString - 1)
+			+ this.currentLine.substring(this.posInString);
 		this.moveLeft();
 	}
 
@@ -371,19 +365,17 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			return "";
 		}
 		boolean hasTransferableText =
-				contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+			contents.isDataFlavorSupported(DataFlavor.stringFlavor);
 		if (hasTransferableText) {
 			try {
 				result =
-						(String) contents
-								.getTransferData(DataFlavor.stringFlavor);
+					(String) contents.getTransferData(DataFlavor.stringFlavor);
 			}
 			catch (UnsupportedFlavorException | IOException ex) {
-				String msg =
-						SafeResourceLoader.getString("invalid_clipboard",
-								this.getResourceBundle()).concat(
-								ex.getLocalizedMessage());
-				Logging.warning(this.getName(), msg);
+				String msg = SafeResourceLoader
+					.getString("invalid_clipboard", this.getResourceBundle())
+					.concat(ex.getLocalizedMessage());
+				Logging.warning(this.pluginName, msg);
 			}
 		}
 		return result;
@@ -415,11 +407,6 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 	 */
 	public int getMaxLineCount() {
 		return this.maxLineCount;
-	}
-
-	@Override
-	public String getName() {
-		return this.pluginName;
 	}
 
 	/**
@@ -454,17 +441,11 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			return theLine <= 0 ? 0 : this.textArea.getLineStartOffset(theLine);
 		}
 		catch (BadLocationException e) {
-			String msg =
-					SafeResourceLoader.getString("error_bad_location",
-							this.getResourceBundle());
-			Logging.warning(this.getName(), msg);
+			String msg = SafeResourceLoader.getString("error_bad_location",
+				this.getResourceBundle());
+			Logging.warning(this.pluginName, msg);
 		}
 		return 0;
-	}
-
-	@Override
-	public double getVersion() {
-		return this.version;
 	}
 
 	/**
@@ -671,7 +652,7 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		this.init();
 		this.appendIndicatorChar();
 		this.appendMessage(SafeResourceLoader.getString("missed_logs",
-				this.getResourceBundle()));
+			this.getResourceBundle()));
 		return true;
 	}
 
@@ -680,16 +661,16 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 
 		try {
 			this.setResourceBundle(ResourceBundle.getBundle(
-					"com.ikalagaming.gui.console.resources.Console",
-					Localization.getLocale()));
+				"com.ikalagaming.gui.console.resources.Console",
+				Localization.getLocale()));
 		}
 		catch (MissingResourceException missingResource) {
 			// don't localize this since it would fail anyways
-			Logging.warning(this.getName(),
-					"Locale not found for Console in onLoad()");
+			Logging.warning(this.pluginName,
+				"Locale not found for Console in onLoad()");
 		}
 		this.windowTitle =
-				SafeResourceLoader.getString("title", this.getResourceBundle());
+			SafeResourceLoader.getString("title", this.getResourceBundle());
 
 		return true;
 	}
@@ -736,10 +717,9 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 			this.textArea.replaceRange("", 0, end);
 		}
 		catch (BadLocationException e) {
-			String msg =
-					SafeResourceLoader.getString("error_bad_location",
-							this.getResourceBundle());
-			Logging.warning(this.getName(), msg);
+			String msg = SafeResourceLoader.getString("error_bad_location",
+				this.getResourceBundle());
+			Logging.warning(this.pluginName, msg);
 		}
 		finally {
 			this.editLock.lock();
@@ -854,8 +834,8 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 		this.editLock.lock();
 		try {
 			int position =
-					this.getSafeLineStartOffset(this.currentIndicatorLine)
-							+ this.posInString + 1;
+				this.getSafeLineStartOffset(this.currentIndicatorLine)
+					+ this.posInString + 1;
 			if (position >= this.textArea.getText().length()) {
 				position = this.textArea.getText().length();
 			}
@@ -901,9 +881,8 @@ public class Console extends WindowAdapter implements Plugin, ClipboardOwner {
 
 	@Override
 	public void windowClosing(WindowEvent e) {
-		String cmdUnload =
-				SafeResourceLoader.getString("COMMAND_UNLOAD", PluginManager
-						.getInstance().getResourceBundle());
+		String cmdUnload = SafeResourceLoader.getString("COMMAND_UNLOAD",
+			PluginManager.getInstance().getResourceBundle());
 		ConsoleCommandEntered cmdEvent = new ConsoleCommandEntered(cmdUnload);
 		this.eventManager.fireEvent(cmdEvent);
 		super.windowClosing(e);

@@ -188,6 +188,8 @@ public class PluginManager {
 	private ReentrantLock commandLock;
 
 	private SystemPlugin sysPlugin;
+	
+	private final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
 
 	/**
 	 * Constructs a new {@link PluginManager} and initializes variables.
@@ -211,11 +213,38 @@ public class PluginManager {
 		this.commands = new ArrayList<>();
 
 		Logging.create();
-		this.sysPlugin = new SystemPlugin(this);
-		this.loadPlugin(this.sysPlugin);
-		this.enable(this.sysPlugin);
 
 		this.registerCommands();
+	}
+
+	/**
+	 * Log an alert about a plugin lifecycle, where plugin name and version are
+	 * automatically replaced.
+	 * 
+	 * @param whichAlert The string to read from the resource bundle
+	 * @param plugin The plugin that the alert is about
+	 */
+	void logAlert(String whichAlert, Plugin plugin) {
+		PluginInfo pInfo = getInfo(plugin).get();
+
+		String message =
+			SafeResourceLoader.getString(whichAlert, getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pInfo.getName())
+				.replaceFirst("\\$VERSION", pInfo.getVersion());
+		Logging.fine(SystemPlugin.PLUGIN_NAME, message);
+	}
+
+	/**
+	 * Log the fact that a plugin had its state corrupted.
+	 * 
+	 * @param plugin The plugin that was corrupted.
+	 */
+	void logStateCorrupted(Plugin plugin) {
+		PluginInfo pInfo = getInfo(plugin).get();
+		String msgCorrupted = SafeResourceLoader
+			.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle)
+			.replaceFirst("\\$PLUIGN", pInfo.getName());
+		Logging.warning(SystemPlugin.PLUGIN_NAME, msgCorrupted);
 	}
 
 	/**
@@ -277,10 +306,8 @@ public class PluginManager {
 	 */
 	public boolean disable(Plugin target) {
 		this.setPluginState(target, PluginState.DISABLING);
-		String msgDisabling =
-			SafeResourceLoader.getString("ALERT_DISABLING", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", target.getName());
-		Logging.fine(SystemPlugin.PLUGIN_NAME, msgDisabling);
+
+		logAlert("ALERT_DISABLING", target);
 
 		boolean success = target.onDisable();
 		if (success) {
@@ -290,10 +317,7 @@ public class PluginManager {
 		}
 		else {
 			this.setPluginState(target, PluginState.CORRUPTED);
-			String msgCorrupted = SafeResourceLoader
-				.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle)
-				.replaceFirst("\\$PLUIGN", target.getName());
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msgCorrupted);
+			logStateCorrupted(target);
 		}
 
 		return success;
@@ -332,6 +356,7 @@ public class PluginManager {
 
 		if (!disabled) {
 			this.setPluginState(plugin, PluginState.CORRUPTED);
+			logStateCorrupted(plugin);
 		}
 		return disabled;
 	}
@@ -351,10 +376,8 @@ public class PluginManager {
 	 */
 	public boolean enable(Plugin target) {
 		this.setPluginState(target, PluginState.ENABLING);
-		String msgEnable =
-			SafeResourceLoader.getString("ALERT_ENABLING", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", target.getName());
-		Logging.fine(SystemPlugin.PLUGIN_NAME, msgEnable);
+
+		logAlert("ALERT_ENABLING", target);
 
 		boolean success = target.onEnable();
 		if (success) {
@@ -364,10 +387,7 @@ public class PluginManager {
 		}
 		else {
 			this.setPluginState(target, PluginState.CORRUPTED);
-			String msgCorrupted = SafeResourceLoader
-				.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", target.getName());
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msgCorrupted);
+			logStateCorrupted(target);
 		}
 
 		return success;
@@ -445,7 +465,7 @@ public class PluginManager {
 		JarFile jfile;
 		ZipEntry config;
 
-		final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
+		
 		final String fileName = jar.getName();
 
 		/*
@@ -562,9 +582,9 @@ public class PluginManager {
 	 * @param s the string to look for
 	 * @return the owner of the command
 	 */
-	public Plugin getCommandParent(final String s) {
+	public String getCommandParent(final String s) {
 		int i;
-		Plugin ret = null;
+		String ret = null;
 		this.commandLock.lock();
 		try {
 			for (i = 0; i < this.commands.size(); ++i) {
@@ -782,8 +802,7 @@ public class PluginManager {
 
 	/**
 	 * Returns true if a plugin exists that has the same type as the provided
-	 * plugin (for example: "Graphics"). This is the same as calling
-	 * <code>{@link #isLoaded(String) isLoaded}({@link Plugin#getName()})</code>
+	 * plugin (for example: "Graphics").
 	 *
 	 * @param type the plugin type
 	 * @return true if the plugin is loaded in memory, false if it does not
@@ -793,7 +812,7 @@ public class PluginManager {
 		boolean ret;
 		this.pluginLock.lock();
 		try {
-			ret = this.loadedPlugins.containsKey(type.getName());
+			ret = this.pluginInfo.containsKey(type);
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -834,31 +853,33 @@ public class PluginManager {
 	 * </p>
 	 *
 	 * @see PluginManager#enableOnLoad()
+	 * 
+	 * @deprecated This is getting phased out, all plugins will be loaded from
+	 *             file
 	 *
 	 * @param toLoad the plugin to load
+	 * @param info The plugin info to use while loading a plugin
 	 * @return true if the plugin was loaded properly, false otherwise
 	 */
-	public boolean loadPlugin(Plugin toLoad) {
-		final String pluginName = toLoad.getName();
-		String loading =
-			SafeResourceLoader.getString("ALERT_LOADING", this.resourceBundle);
-		loading = loading.replaceFirst("\\$PLUGIN", pluginName);
-		loading = loading.replaceFirst("\\$VERSION", "" + toLoad.getVersion());
-		Logging.fine(SystemPlugin.PLUGIN_NAME, loading);
+	@Deprecated
+	public boolean loadPlugin(Plugin toLoad, PluginInfo info) {
+
+		final String pluginName = info.getName();
+		final String pluginVersion = info.getVersion();
+
+		logAlert("ALERT_LOADING", toLoad);
+
 		// if the plugin exists and is older than toLoad, unload
 		if (this.isLoaded(toLoad)) {
-			String alreadyLoaded = SafeResourceLoader
-				.getString("ALERT_PLUGIN_ALREADY_LOADED", this.resourceBundle);
-			alreadyLoaded = alreadyLoaded.replaceFirst("\\$PLUGIN", pluginName);
-			alreadyLoaded = alreadyLoaded.replaceFirst("\\$VERSION",
-				"" + toLoad.getVersion());
-			Logging.fine(SystemPlugin.PLUGIN_NAME, alreadyLoaded);
+
+			logAlert("ALERT_PLUGIN_ALREADY_LOADED", toLoad);
 
 			boolean lowerVersion = false;
 			this.pluginLock.lock();
 			try {
-				lowerVersion = this.loadedPlugins.get(pluginName)
-					.getVersion() < toLoad.getVersion();
+				// TODO real version checking
+				lowerVersion = isNewerVersion(pluginVersion, "0.0.0");
+
 			}
 			finally {
 				this.pluginLock.unlock();
@@ -868,12 +889,7 @@ public class PluginManager {
 				// unload the old plugin and continue loading the new one
 			}
 			else {
-				String outdated = SafeResourceLoader
-					.getString("ALERT_PLUGIN_OUTDATED", this.resourceBundle);
-				outdated = outdated.replaceFirst("\\$PLUGIN", pluginName);
-				outdated = outdated.replaceFirst("\\$VERSION",
-					"" + toLoad.getVersion());
-				Logging.fine(SystemPlugin.PLUGIN_NAME, outdated);
+				logAlert("ALERT_PLUGIN_OUTDATED", toLoad);
 				return false;
 			}
 		}
@@ -1002,19 +1018,12 @@ public class PluginManager {
 		Plugin p = (Plugin) classInstance;
 
 		final String pluginName = info.getName();
-		String loading =
-			SafeResourceLoader.getString("ALERT_LOADING", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", pluginName)
-				.replaceFirst("\\$VERSION", info.getVersion());
-		Logging.fine(SystemPlugin.PLUGIN_NAME, loading);
+
+		logAlert("ALERT_LOADING", p);
 
 		// if the plugin exists and is older than toLoad, unload
 		if (this.isLoaded(pluginName)) {
-			String alreadyLoaded = SafeResourceLoader
-				.getString("ALERT_PLUGIN_ALREADY_LOADED", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", pluginName)
-				.replaceFirst("\\$VERSION", info.getVersion());
-			Logging.fine(SystemPlugin.PLUGIN_NAME, alreadyLoaded);
+			logAlert("ALERT_PLUGIN_ALREADY_LOADED", p);
 
 			boolean existingPluginOld = false;
 			this.pluginLock.lock();
@@ -1031,12 +1040,7 @@ public class PluginManager {
 				// unload the old plugin and continue loading the new one
 			}
 			else {
-				String outdated = SafeResourceLoader
-					.getString("ALERT_PLUGIN_OUTDATED", this.resourceBundle);
-				outdated = outdated.replaceFirst("\\$PLUGIN", pluginName);
-				outdated =
-					outdated.replaceFirst("\\$VERSION", "" + info.getVersion());
-				Logging.fine(SystemPlugin.PLUGIN_NAME, outdated);
+				logAlert("ALERT_PLUGIN_OUTDATED", p);
 				return false;
 			}
 		}
@@ -1237,11 +1241,14 @@ public class PluginManager {
 				"COMMAND_ALREADY_REGISTERED", this.getResourceBundle());
 			msg = msg.replaceFirst("\\$COMMAND", command);
 			msg = msg.replaceFirst("\\$PLUGIN",
-				this.commands.get(index).getOwner().getName());
+				this.commands.get(index).getOwner());
 			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
 			return false;
 		}
-		PluginCommand cmd = new PluginCommand(command, owner);
+
+		final String ownerName = getInfo(owner).get().getName();
+
+		PluginCommand cmd = new PluginCommand(command, ownerName);
 		this.commandLock.lock();
 		try {
 			this.commands.add(cmd);
@@ -1253,8 +1260,9 @@ public class PluginManager {
 		String msg = SafeResourceLoader.getString("REGISTERED_COMMAND",
 			this.getResourceBundle());
 		msg = msg.replaceFirst("\\$COMMAND", command);
-		msg = msg.replaceFirst("\\$PLUGIN", owner.getName());
+		msg = msg.replaceFirst("\\$PLUGIN", ownerName);
 		Logging.finest(SystemPlugin.PLUGIN_NAME, msg);
+
 		this.commandLock.lock();
 		try {
 			java.util.Collections.sort(this.commands);
@@ -1298,10 +1306,17 @@ public class PluginManager {
 	 * @return true if the plugin reloaded successfully, false otherwise
 	 */
 	public boolean reload(Plugin target) {
+		Optional<PluginInfo> p = getInfo(target);
+
+		if (!p.isPresent()) {
+			// TODO log this
+			return false;
+		}
+		PluginInfo pInfo = p.get();
 		if (!this.isLoaded(target)) {
 			String tmp = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", target.getName());
+				.replaceFirst("\\$PLUGIN", pInfo.getName());
 			Logging.warning(SystemPlugin.PLUGIN_NAME, tmp);
 			return false;
 		}
@@ -1316,7 +1331,7 @@ public class PluginManager {
 		this.setPluginState(target, PluginState.UNLOADING);
 		this.unloadPlugin(target);
 		this.setPluginState(target, PluginState.LOADING);
-		if (!this.loadPlugin(target)) {
+		if (!this.loadPlugin(target, pInfo)) {
 			this.setPluginState(target, PluginState.CORRUPTED);
 			return false;
 		}
@@ -1387,7 +1402,7 @@ public class PluginManager {
 		 * in this class is modified and not just the plugin passed to the
 		 * method.
 		 */
-		String type = toUnload.getName();
+		String type = getInfo(toUnload).get().getName();
 		if (!this.isLoaded(type)) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.resourceBundle)
@@ -1406,10 +1421,11 @@ public class PluginManager {
 	 * @return true if the plugin was unloaded properly
 	 */
 	public boolean unloadPlugin(final String toUnload) {
-		String unloading = SafeResourceLoader.getString("ALERT_UNLOADING",
-			this.resourceBundle);
-		unloading = unloading.replaceFirst("\\$PLUGIN", toUnload);
+		String unloading =
+			SafeResourceLoader.getString("ALERT_UNLOADING", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", toUnload);
 		Logging.fine(SystemPlugin.PLUGIN_NAME, unloading);
+
 		if (!this.isLoaded(toUnload)) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.resourceBundle)
@@ -1458,8 +1474,8 @@ public class PluginManager {
 		}
 
 		String unloaded =
-			SafeResourceLoader.getString("ALERT_UNLOADED", this.resourceBundle);
-		unloaded = unloaded.replaceFirst("\\$PLUGIN", toUnload);
+			SafeResourceLoader.getString("ALERT_UNLOADED", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", toUnload);
 		Logging.fine(SystemPlugin.PLUGIN_NAME, unloaded);
 		return true;
 	}
@@ -1502,11 +1518,13 @@ public class PluginManager {
 	 */
 	public void unregisterPluginCommands(Plugin owner) {
 		ArrayList<String> pluginCommands = new ArrayList<>();
+		final String ownerName = getInfo(owner).get().getName();
+
 		this.commandLock.lock();
 		try {
 			// find all the commands registered to the plugin
 			for (PluginCommand c : this.commands) {
-				if (c.getOwner().getName().equalsIgnoreCase(owner.getName())) {
+				if (c.getOwner().equalsIgnoreCase(ownerName)) {
 					pluginCommands.add(c.getCommand());
 				}
 			}

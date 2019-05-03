@@ -13,6 +13,7 @@ import com.ikalagaming.gui.console.events.ReportUnknownCommand;
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginCommand;
+import com.ikalagaming.plugins.PluginInfo;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.plugins.events.PluginDisabled;
@@ -38,17 +39,14 @@ class PMEventListener implements Listener {
 	private String cmd_version;
 
 	private PluginManager manager;
-	private SystemPlugin sysPlugin;
 
 	/**
 	 * Constructs a listener for the default plugin manager.
 	 *
-	 * @param parent the system plugin to handle events for
 	 * @param packManager The plugin management system this listener is for
 	 */
-	public PMEventListener(SystemPlugin parent, PluginManager packManager) {
+	public PMEventListener(PluginManager packManager) {
 		this.manager = packManager;
-		this.sysPlugin = parent;
 
 		this.cmd_help = SafeResourceLoader.getString("COMMAND_HELP",
 			this.manager.getResourceBundle(), "help");
@@ -201,12 +199,40 @@ class PMEventListener implements Listener {
 			this.manager.fireEvent(report);
 		}
 
-		Plugin pack = this.manager.getCommandParent(firstWord);
+		String pack = this.manager.getCommandParent(firstWord);
 		if (pack != null) {
-			this.manager.fireEvent(new PluginCommandSent(pack.getName(),
-				event.getCommand(), "console"));
+			this.manager.fireEvent(
+				new PluginCommandSent(pack, event.getCommand(), "console"));
 		}
+	}
 
+	/**
+	 * Log an alert about a plugin lifecycle, where plugin name and version are
+	 * automatically replaced.
+	 * 
+	 * @param whichAlert The string to read from the resource bundle
+	 * @param plugin The plugin that the alert is about
+	 */
+	void logAlert(String whichAlert, Plugin plugin) {
+		PluginInfo pInfo = manager.getInfo(plugin).get();
+
+		String message = SafeResourceLoader
+			.getString(whichAlert, manager.getResourceBundle())
+			.replaceFirst("\\$PLUGIN", pInfo.getName())
+			.replaceFirst("\\$VERSION", pInfo.getVersion());
+		Logging.fine(SystemPlugin.PLUGIN_NAME, message);
+	}
+
+	/**
+	 * Report that a plugin is not loaded.
+	 * 
+	 * @param pluginName The name of the missing pluginF
+	 */
+	void reportNotLoaded(String pluginName) {
+		ConsoleMessage message = new ConsoleMessage(SafeResourceLoader
+			.getString("PLUGIN_NOT_LOADED", this.manager.getResourceBundle())
+			.replaceFirst("\\$PLUGIN", pluginName));
+		this.manager.fireEvent(message);
 	}
 
 	/**
@@ -216,12 +242,7 @@ class PMEventListener implements Listener {
 	 */
 	@EventHandler
 	public void onPluginDisabled(PluginDisabled event) {
-		Plugin target = event.getPlugin();
-		String msgDisabled = SafeResourceLoader
-			.getString("ALERT_ENABLED", this.manager.getResourceBundle())
-			.replaceFirst("\\$PLUGIN", target.getName())
-			.replaceFirst("\\$VERSION", target.getVersion() + "");
-		Logging.fine(this.sysPlugin.getName(), msgDisabled);
+		logAlert("ALERT_DISABLED", event.getPlugin());
 	}
 
 	/**
@@ -231,12 +252,7 @@ class PMEventListener implements Listener {
 	 */
 	@EventHandler
 	public void onPluginEnabled(PluginEnabled event) {
-		Plugin target = event.getPlugin();
-		String msgEnabled = SafeResourceLoader
-			.getString("ALERT_ENABLED", this.manager.getResourceBundle())
-			.replaceFirst("\\$PLUGIN", target.getName())
-			.replaceFirst("\\$VERSION", target.getVersion() + "");
-		Logging.fine(this.sysPlugin.getName(), msgEnabled);
+		logAlert("ALERT_ENABLED", event.getPlugin());
 	}
 
 	// logging plugin events
@@ -249,14 +265,10 @@ class PMEventListener implements Listener {
 	@EventHandler
 	public void onPluginLoaded(PluginLoaded event) {
 		if (this.manager.enableOnLoad()) {
+			// TODO is this done in the manager?
 			this.manager.enable(event.getPlugin());
 		}
-		String loaded = SafeResourceLoader.getString("ALERT_LOADED",
-			this.manager.getResourceBundle());
-		loaded = loaded.replaceFirst("\\$PLUGIN", event.getPlugin().getName());
-		loaded = loaded.replaceFirst("\\$VERSION",
-			"" + event.getPlugin().getVersion());
-		Logging.fine(this.sysPlugin.getName(), loaded);
+		logAlert("ALERT_LOADED", event.getPlugin());
 	}
 
 	private void printHelp() {
@@ -282,11 +294,7 @@ class PMEventListener implements Listener {
 
 		for (String name : names) {
 			tmp = "";
-			tmp += loadedPlugins.get(name).getName();
-			tmp += " "
-				+ SafeResourceLoader.getString("PLUGIN_VERSION",
-					this.manager.getResourceBundle())
-				+ loadedPlugins.get(name).getVersion();
+			tmp += manager.getInfo(loadedPlugins.get(name)).get().getFullName();
 			if (this.manager.isEnabled(loadedPlugins.get(name))) {
 				tmp +=
 					" " + "(" + SafeResourceLoader.getString("ENABLED_STATUS",
@@ -309,23 +317,17 @@ class PMEventListener implements Listener {
 	 * @param pluginName The plugin to find a version for
 	 */
 	private void printVersion(String pluginName) {
-		String tmp = "";
-		ConsoleMessage message;
-
 		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
 		if (!pack.isPresent()) {
-			tmp = SafeResourceLoader.getString("PLUGIN_VERSION",
-				this.manager.getResourceBundle()) + pack.get().getVersion();
+			reportNotLoaded(pluginName);
+			return;
 		}
-		else {
-			tmp = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED",
-					this.manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginName);
-		}
-		message = new ConsoleMessage(tmp);
-		this.manager.fireEvent(message);
+		String tmp = SafeResourceLoader.getString("PLUGIN_VERSION",
+			this.manager.getResourceBundle())
+			+ manager.getInfo(pack.get()).get().getVersion();
+
+		this.manager.fireEvent(new ConsoleMessage(tmp));
 	}
 
 	/**
@@ -339,15 +341,10 @@ class PMEventListener implements Listener {
 	}
 
 	private void reload(String pluginName) {
-		ConsoleMessage message;
 		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
 		if (!pack.isPresent()) {
-			message = new ConsoleMessage(SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED",
-					this.manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginName));
-			this.manager.fireEvent(message);
+			reportNotLoaded(pluginName);
 			// stop right here. It does not exist
 			return;
 		}
@@ -355,15 +352,10 @@ class PMEventListener implements Listener {
 	}
 
 	private void unload(String pluginName) {
-		ConsoleMessage message;
 		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
 		if (!pack.isPresent()) {
-			message = new ConsoleMessage(SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED",
-					this.manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginName));
-			this.manager.fireEvent(message);
+			reportNotLoaded(pluginName);
 			// stop right here. It does not exist
 			return;
 		}
