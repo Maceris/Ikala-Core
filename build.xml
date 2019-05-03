@@ -15,8 +15,8 @@
 	<property name="packages" value="com.ikalagaming.*" />
 	<property name="leavedebugsymbols" value="true" />
 	<property name="verbose" value="true" />
-	<property name="name" location="Ikala-Core" />
-	<property name="version" location="0.0.1" />
+	<property name="plugin.name" value="Ikala-Core" />
+	<property name="plugin.version" value="0.0.1" />
 
 	<target name="init">
 		<!-- Create the time stamp -->
@@ -83,11 +83,11 @@
 		<!-- Create the distribution directory -->
 		<mkdir dir="${dist.dir}" />
 
-		<jar jarfile="${dist.dir}/${name}-${version}.jar" basedir="${build.dir}">
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}.jar" basedir="${build.dir}">
 			<zipgroupfileset dir="${jars.bundled.dir}" includes="*.jar" />
 		</jar>
-		<jar jarfile="${dist.dir}/${name}-${version}-sources.jar" basedir="${src.dir}" />
-		<jar jarfile="${dist.dir}/${name}-${version}-javadoc.jar" basedir="${doc.dir}" />
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.dir}" />
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}" />
 	</target>
 
 	<target name="clean" description="clean up">
