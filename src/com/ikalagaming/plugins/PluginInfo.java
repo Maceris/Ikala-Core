@@ -9,18 +9,22 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
+import com.ikalagaming.logging.Logging;
 import com.ikalagaming.permissions.DefaultPermissionValue;
 import com.ikalagaming.permissions.Permission;
+import com.ikalagaming.system.SystemPlugin;
+
+import com.github.zafarkhaja.semver.ParseException;
+import com.github.zafarkhaja.semver.Version;
 
 /**
- * Contains data about a particular plugin. This info can be loaded from code
- * or from a file.
+ * Contains data about a particular plugin. This info can be loaded from code or
+ * from a file.
  *
  * @author Ches Burks
  *
  */
 public class PluginInfo {
-	private static final ThreadLocal<Yaml> YAML = new ThreadLocal<>();
 
 	private static List<String> makePluginNameList(final Map<?, ?> map,
 		final String key) throws InvalidDescriptionException {
@@ -35,8 +39,8 @@ public class PluginInfo {
 			}
 		}
 		catch (ClassCastException ex) {
-			throw new InvalidDescriptionException(
-				key + " is of the wrong type", ex);
+			throw new InvalidDescriptionException(key + " is of the wrong type",
+				ex);
 		}
 		catch (NullPointerException ex) {
 			throw new InvalidDescriptionException("invalid " + key + " format",
@@ -59,7 +63,7 @@ public class PluginInfo {
 	private String prefix = null;
 	private List<String> softDepend = new ArrayList<>();
 
-	private double version = -1.0;
+	private Version version = Version.valueOf("0.0.0");
 
 	/**
 	 * Returns a plugin description loaded by the given inputstream.
@@ -72,15 +76,21 @@ public class PluginInfo {
 		// TODO finish javadoc
 		// TODO provide examples
 		// TODO list yaml tags
-		this.loadMap(this.asMap(PluginInfo.YAML.get().load(stream)));
+		if (stream == null) {
+			Logging.fine(SystemPlugin.PLUGIN_NAME,
+				"Attempting to get plugin info from a null stream");
+		}
+
+		Yaml yaml = new Yaml();
+		this.loadMap(this.asMap(yaml.load(stream)));
 	}
 
 	private Map<?, ?> asMap(Object object) throws InvalidDescriptionException {
 		if (object instanceof Map) {
 			return (Map<?, ?>) object;
 		}
-		throw new InvalidDescriptionException(object
-			+ " is not properly structured.");
+		throw new InvalidDescriptionException(
+			object + " is not properly structured.");
 	}
 
 	/**
@@ -114,8 +124,8 @@ public class PluginInfo {
 	 * value of {@link #getName()} for the target plugin to specify it in the
 	 * dependencies. If any plugin in this list is not found, this plugin will
 	 * fail to load at startup. If multiple plugins list each other in depend,
-	 * and they create a <a
-	 * href="https://en.wikipedia.org/wiki/Circular_dependency">circular
+	 * and they create a
+	 * <a href="https://en.wikipedia.org/wiki/Circular_dependency">circular
 	 * dependency</a>, none of the plugins will load.
 	 *
 	 * @return the list of plugins this depends on
@@ -235,22 +245,22 @@ public class PluginInfo {
 	}
 
 	/**
-	 * The version of the plugin. This value is a double that follows the
-	 * MajorVersion.MinorVersion format. It should be increased when new
-	 * features are added or bugs are fixed.
+	 * The version of the plugin. This value is a string that follows the
+	 * MajorVersion.MinorVersion.PatchVersion format. It should be increased
+	 * when new features are added or bugs are fixed.
 	 *
 	 * @return the version of the plugin
 	 */
-	public double getVersion() {
-		return this.version;
+	public String getVersion() {
+		return this.version.getNormalVersion();
 	}
 
 	private void loadMap(Map<?, ?> map) throws InvalidDescriptionException {
 		try {
 			this.name = map.get("name").toString().toLowerCase();
 			if (!this.name.matches("^[a-zA-Z0-9 _.-]+$")) {
-				throw new InvalidDescriptionException("name '" + this.name
-					+ "' contains invalid characters.");
+				throw new InvalidDescriptionException(
+					"name '" + this.name + "' contains invalid characters.");
 			}
 			this.name = this.name.replace(' ', '_');
 		}
@@ -261,7 +271,7 @@ public class PluginInfo {
 			throw new InvalidDescriptionException("name is of wrong type", ex);
 		}
 		try {
-			this.version = (Double) map.get("version");
+			this.version = Version.valueOf((String) map.get("version"));
 		}
 		catch (NullPointerException ex) {
 			throw new InvalidDescriptionException("version is not defined", ex);
@@ -269,6 +279,13 @@ public class PluginInfo {
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException("version is of wrong type",
 				ex);
+		}
+		catch (IllegalArgumentException ex) {
+			throw new InvalidDescriptionException("version is not there", ex);
+		}
+		catch (ParseException ex) {
+			throw new InvalidDescriptionException(
+				"version is in an invalid format", ex);
 		}
 		try {
 			this.main = map.get("main").toString();
@@ -299,14 +316,12 @@ public class PluginInfo {
 										commandSubList.add(commandSubListItem);
 									}
 								}
-								commandMap.put(
-									commandEntry.getKey().toString(),
+								commandMap.put(commandEntry.getKey().toString(),
 									commandSubList);
 
 							}
 							else if (commandEntry.getValue() != null) {
-								commandMap.put(
-									commandEntry.getKey().toString(),
+								commandMap.put(commandEntry.getKey().toString(),
 									commandEntry.getValue());
 							}
 						}
@@ -351,9 +366,8 @@ public class PluginInfo {
 		}
 		if (map.get("default-permission") != null) {
 			try {
-				this.defaultPerm =
-					DefaultPermissionValue.getByName(map.get(
-						"default-permission").toString());
+				this.defaultPerm = DefaultPermissionValue
+					.getByName(map.get("default-permission").toString());
 			}
 			catch (ClassCastException ex) {
 				throw new InvalidDescriptionException(
@@ -366,11 +380,10 @@ public class PluginInfo {
 		}
 		try {
 			this.lazyPermissions = (Map<?, ?>) map.get("permissions");
-			this.permissions =
-				Permission.loadPermissions(this.lazyPermissions,
-					"Permission node '%s' in plugin description file for "
-						+ this.getFullName() + " is invalid",
-					this.defaultPerm.value());
+			this.permissions = Permission.loadPermissions(this.lazyPermissions,
+				"Permission node '%s' in plugin description file for "
+					+ this.getFullName() + " is invalid",
+				this.defaultPerm.value());
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException(
@@ -384,7 +397,7 @@ public class PluginInfo {
 	/**
 	 * @param newClassLoader the classLoaderOf to set
 	 */
-	public void setClassLoader(String newClassLoader) {
+	private void setClassLoader(String newClassLoader) {
 		this.classLoader = newClassLoader;
 	}
 }

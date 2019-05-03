@@ -3,6 +3,7 @@ package com.ikalagaming.system;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Optional;
 
 import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.Listener;
@@ -76,9 +77,9 @@ class PMEventListener implements Listener {
 	 */
 	private void disable(String pluginName) {
 		ConsoleMessage message;
-		Plugin pack = this.manager.getPlugin(pluginName);
+		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
-		if (pack == null) {
+		if (!pack.isPresent()) {
 			message = new ConsoleMessage(SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED",
 					this.manager.getResourceBundle())
@@ -87,20 +88,21 @@ class PMEventListener implements Listener {
 			// stop right here. It does not exist
 			return;
 		}
-		if (!this.manager.isEnabled(pack)) {
+
+		if (!this.manager.isEnabled(pack.get())) {
 			message = new ConsoleMessage(SafeResourceLoader.getString(
 				"PLUGIN_DISABLE_FAIL", this.manager.getResourceBundle()));
 			this.manager.fireEvent(message);
 			return;
 		}
-		this.manager.disable(pack);
+		this.manager.disable(pack.get());
 	}
 
 	private void enable(String pluginName) {
 		ConsoleMessage message;
-		Plugin pack = this.manager.getPlugin(pluginName);
+		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
-		if (pack == null) {
+		if (!pack.isPresent()) {
 			message = new ConsoleMessage(SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED",
 					this.manager.getResourceBundle())
@@ -109,13 +111,13 @@ class PMEventListener implements Listener {
 			// stop right here. It does not exist
 			return;
 		}
-		if (this.manager.isEnabled(pack)) {
+		if (this.manager.isEnabled(pack.get())) {
 			message = new ConsoleMessage(SafeResourceLoader.getString(
 				"PLUGIN_ENABLE_FAIL", this.manager.getResourceBundle()));
 			this.manager.fireEvent(message);
 			return;
 		}
-		this.manager.enable(pack);
+		this.manager.enable(pack.get());
 	}
 
 	/**
@@ -310,11 +312,11 @@ class PMEventListener implements Listener {
 		String tmp = "";
 		ConsoleMessage message;
 
-		Plugin pack = this.manager.getPlugin(pluginName);
+		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
-		if (pack != null) {
+		if (!pack.isPresent()) {
 			tmp = SafeResourceLoader.getString("PLUGIN_VERSION",
-				this.manager.getResourceBundle()) + pack.getVersion();
+				this.manager.getResourceBundle()) + pack.get().getVersion();
 		}
 		else {
 			tmp = SafeResourceLoader
@@ -338,9 +340,9 @@ class PMEventListener implements Listener {
 
 	private void reload(String pluginName) {
 		ConsoleMessage message;
-		Plugin pack = this.manager.getPlugin(pluginName);
+		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
-		if (pack == null) {
+		if (!pack.isPresent()) {
 			message = new ConsoleMessage(SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED",
 					this.manager.getResourceBundle())
@@ -349,14 +351,14 @@ class PMEventListener implements Listener {
 			// stop right here. It does not exist
 			return;
 		}
-		this.manager.reload(pack);
+		this.manager.reload(pack.get());
 	}
 
 	private void unload(String pluginName) {
 		ConsoleMessage message;
-		Plugin pack = this.manager.getPlugin(pluginName);
+		Optional<Plugin> pack = this.manager.getPlugin(pluginName);
 
-		if (pack == null) {
+		if (!pack.isPresent()) {
 			message = new ConsoleMessage(SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED",
 					this.manager.getResourceBundle())
@@ -365,10 +367,10 @@ class PMEventListener implements Listener {
 			// stop right here. It does not exist
 			return;
 		}
-		if (this.manager.isEnabled(pack)) {
-			this.manager.disable(pack);
+		if (this.manager.isEnabled(pack.get())) {
+			this.manager.disable(pack.get());
 		}
-		this.manager.unloadPlugin(pack);
+		this.manager.unloadPlugin(pack.get());
 	}
 
 }

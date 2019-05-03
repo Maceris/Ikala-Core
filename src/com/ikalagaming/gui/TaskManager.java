@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.ButtonGroup;
@@ -26,6 +27,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
+import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.PluginState;
 
@@ -155,7 +157,7 @@ public class TaskManager extends JFrame {
 		mnUpdateSpeed.add(rdbtnmntmHigh);
 
 		JRadioButtonMenuItem rdbtnmntmNormal =
-				new JRadioButtonMenuItem("Normal");
+			new JRadioButtonMenuItem("Normal");
 		rdbtnmntmNormal.setSelected(true);
 		rdbtnmntmNormal.addItemListener(e -> {
 			if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -186,7 +188,7 @@ public class TaskManager extends JFrame {
 
 		this.table = new JTable();
 		this.table.setModel(new DefaultTableModel(new Object[][] {},
-				new String[] {"Plugin Name", "Status"}));
+			new String[] {"Plugin Name", "Status"}));
 		this.table.getColumnModel().getColumn(0).setPreferredWidth(102);
 
 		JPopupMenu popupMenu_1 = new JPopupMenu();
@@ -275,12 +277,12 @@ public class TaskManager extends JFrame {
 		if (row == -1 || column == -1) {
 			return;
 		}
-		com.ikalagaming.plugins.Plugin pack =
-				this.pluginManager.getPlugin(this.table.getValueAt(row,
-						column).toString());
-		if (pack == null) {
+		Optional<Plugin> p = this.pluginManager
+			.getPlugin(this.table.getValueAt(row, column).toString());
+		if (!p.isPresent()) {
 			return;
 		}
+		Plugin pack = p.get();
 		if (change == "Enable") {
 			if (!this.pluginManager.isEnabled(pack)) {
 				this.pluginManager.enable(pack);
@@ -323,34 +325,30 @@ public class TaskManager extends JFrame {
 		String name = "";
 		for (int i = 0; i < this.model.getRowCount(); ++i) {
 			name = (String) this.model.getValueAt(i, 0);
-			currentState =
-					this.pluginManager.getPluginState(this.pluginManager
-							.getPlugin(name));
+			currentState = this.pluginManager
+				.getPluginState(this.pluginManager.getPlugin(name).get());
 			if (!this.model.getValueAt(i, 1).equals(currentState)) {
 				this.model.setValueAt(currentState, i, 1);
 			}
 		}
 		this.threads.setText(java.lang.Thread.activeCount() + "");
 
-		this.memUsed =
-				(Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
-						.freeMemory()) / 1024;
-		this.percentUsed =
-				(Runtime.getRuntime().totalMemory() - Runtime.getRuntime()
-						.freeMemory())
-						* 100
-						/ Runtime.getRuntime().totalMemory();
+		this.memUsed = (Runtime.getRuntime().totalMemory()
+			- Runtime.getRuntime().freeMemory()) / 1024;
+		this.percentUsed = (Runtime.getRuntime().totalMemory()
+			- Runtime.getRuntime().freeMemory()) * 100
+			/ Runtime.getRuntime().totalMemory();
 
 		this.memUsage.setText(this.memUsed + " kb (" + this.percentUsed + "%)");
 	}
 
 	private void updatePluginNames() {
 		Set<String> pluginNames =
-				this.pluginManager.getLoadedPlugins().keySet();
+			this.pluginManager.getLoadedPlugins().keySet();
 		for (String s : pluginNames) {
 			if (!this.plugins.containsKey(s)) {
 				this.plugins.put(s, this.pluginManager
-						.getPluginState(this.pluginManager.getPlugin(s)));
+					.getPluginState(this.pluginManager.getPlugin(s).get()));
 				boolean exists = false;
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {

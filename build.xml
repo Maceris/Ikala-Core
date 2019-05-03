@@ -6,16 +6,18 @@
 	<property name="build" location="bin"/>
 	<property name="dist" location="Jars"/>
 	<property name="doc" location="javadoc"/>
+	<property name="lib.dir" location="thirdParty"/>
 	<property name="packages" value="com.ikalagaming.*"/>
 	
 	<path id = "classpath.base">
-		<pathelement location="${basedir}/thirdParty/luaj-jse-3.0.jar"/>
-		<pathelement location="${basedir}/thirdParty/snakeyaml-1.14.jar"/>
+		<pathelement location="${lib.dir}/luaj-jse-3.0.jar"/>
+		<pathelement location="${lib.dir}/snakeyaml-1.14.jar"/>
+		<pathelement location="${lib.dir}/jsemver-0.9.0.jar"/>
 	</path>
 		
 	<path id = "classpath.test">
-		<pathelement location="${basedir}/thirdParty/junit-4.12.jar"/>
-		<pathelement location="${basedir}/thirdParty/hamcrest-all-1.3.jar"/>
+		<pathelement location="${lib.dir}/junit-4.12.jar"/>
+		<pathelement location="${lib.dir}/hamcrest-all-1.3.jar"/>
 		<pathelement location = "${test}" />
 		<pathelement location = "${src}" />
 		<path refid = "classpath.base" />
@@ -31,7 +33,7 @@
 	<target name="compile" depends="init"
 			description="compile the source">
 		<!-- Compile the java code from ${src} into ${build} -->
-		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false">
+		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false" debug="true">
 			<classpath refid = "classpath.test"/>
 		</javac>
 		<copy verbose="${verbose}" todir="${build}" preservelastmodified="false">
@@ -80,7 +82,9 @@
 		<mkdir dir="${dist}"/>
 
 		<!-- Put everything in ${build} into the ICore-${DSTAMP}.jar file -->
-		<jar jarfile="${dist}/ICore.jar" basedir="${build}"/>
+		<jar jarfile="${dist}/ICore.jar" basedir="${build}">
+			<zipgroupfileset dir="${lib.dir}" includes="luaj-jse-3.0.jar,snakeyaml-1.14.jar,jsemver-0.9.0.jar" />
+		</jar>
 		<!-- Put everything in ${src} into the ICore-source-${DSTAMP}.jar file -->
 		<jar jarfile="${dist}/ICore-sources.jar" basedir="${src}"/>
 		<!-- Put everything in ${doc} into the ICore-javadoc-${DSTAMP}.jar file -->

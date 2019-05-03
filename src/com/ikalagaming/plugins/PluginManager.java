@@ -1,5 +1,19 @@
 package com.ikalagaming.plugins;
 
+import com.ikalagaming.event.Event;
+import com.ikalagaming.event.EventManager;
+import com.ikalagaming.event.Listener;
+import com.ikalagaming.localization.Localization;
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.plugins.events.PluginDisabled;
+import com.ikalagaming.plugins.events.PluginEnabled;
+import com.ikalagaming.plugins.events.PluginLoaded;
+import com.ikalagaming.plugins.events.PluginUnloaded;
+import com.ikalagaming.system.SystemPlugin;
+import com.ikalagaming.util.SafeResourceLoader;
+
+import com.github.zafarkhaja.semver.Version;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,18 +33,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
-import com.ikalagaming.event.Event;
-import com.ikalagaming.event.EventManager;
-import com.ikalagaming.event.Listener;
-import com.ikalagaming.localization.Localization;
-import com.ikalagaming.logging.Logging;
-import com.ikalagaming.plugins.events.PluginDisabled;
-import com.ikalagaming.plugins.events.PluginEnabled;
-import com.ikalagaming.plugins.events.PluginLoaded;
-import com.ikalagaming.plugins.events.PluginUnloaded;
-import com.ikalagaming.system.SystemPlugin;
-import com.ikalagaming.util.SafeResourceLoader;
-
 /**
  * Handles loading, unloading and storage of plugins. This is considered a
  * plugin, but is always enabled and never loaded.
@@ -41,6 +43,26 @@ import com.ikalagaming.util.SafeResourceLoader;
 public class PluginManager {
 
 	private static PluginManager instance;
+
+	/**
+	 * Compare the order of version strings, as if using
+	 * first.compareTo(second). This should be string semantic versions and can
+	 * handle build info and the like but build metadata is ignored.
+	 *
+	 * For example, compareVersions("1.0.0-rc.1+build.1",
+	 * "1.3.7+build.2.b8f12d7") would return a number < 0.
+	 * compareVersions("2.1.3", "1.0.1") would return >0.
+	 * compareVersions("1.0.0+build.1", "1.0.0+build.1") would return 0 because
+	 * they are equal builds.
+	 *
+	 * @param first The first version string
+	 * @param second The second version string
+	 * @return the value of comparing the two versions.
+	 */
+	public final static int compareVersions(final String first,
+		final String second) {
+		return Version.valueOf(first).compareTo(Version.valueOf(second));
+	}
 
 	/**
 	 * Shuts down the static instance (unregisters commands and unloads plugins)
@@ -111,17 +133,38 @@ public class PluginManager {
 		return PluginManager.instance;
 	}
 
+	/**
+	 * Returns true if the first string is a strictly newer version than the
+	 * second, where both are semantic version strings.
+	 *
+	 * For example, isNewerVersion("1.2.3", "0.0.1") returns true.
+	 * isNewerVersion("1.0.0+build.1", "1.0.2") returns false.
+	 * isNewerVersion("1.0.0+build.1", "1.0.0") returns false because it is the
+	 * same.
+	 *
+	 * @param toCheck The string that is unknown relative to the known version.
+	 * @param existing The existing version that is known but could be outdated.
+	 * @return true if the first version is newer than the second, otherwise
+	 *         false.
+	 */
+	public final static boolean isNewerVersion(final String toCheck,
+		final String existing) {
+		return Version.valueOf(toCheck).greaterThan(Version.valueOf(existing));
+	}
+
 	private EventManager eventManager;
 
 	/** Maps strings to plugins loaded in memory */
 	private HashMap<String, Plugin> loadedPlugins;
 
 	/**
-	 * Lock for pluignStates and loadedPlugins
+	 * Lock for plugin related maps
 	 */
 	private ReentrantLock pluginLock;
 
 	private Map<Plugin, PluginState> pluginStates;
+
+	private Map<Plugin, PluginInfo> pluginInfo;
 
 	private ResourceBundle resourceBundle;
 
@@ -160,6 +203,7 @@ public class PluginManager {
 		this.loadedPlugins = new HashMap<>();
 		// Ensure plugin states are synchronized
 		this.pluginStates = Collections.synchronizedMap(new HashMap<>());
+		this.pluginInfo = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
 			"com.ikalagaming.plugins.resources.PluginManager",
 			Localization.getLocale());
@@ -270,7 +314,7 @@ public class PluginManager {
 	 *         was a problem
 	 */
 	public boolean disable(final String target) {
-		Plugin p;
+		Optional<Plugin> p;
 		this.pluginLock.lock();
 		try {
 			p = this.getPlugin(target);
@@ -279,14 +323,15 @@ public class PluginManager {
 			this.pluginLock.unlock();
 		}
 
-		if (p == null) {
+		if (!p.isPresent()) {
 			return false;
 		}
+		Plugin plugin = p.get();
 
-		boolean disabled = this.disable(p);
+		boolean disabled = this.disable(plugin);
 
 		if (!disabled) {
-			this.setPluginState(p, PluginState.CORRUPTED);
+			this.setPluginState(plugin, PluginState.CORRUPTED);
 		}
 		return disabled;
 	}
@@ -342,7 +387,7 @@ public class PluginManager {
 	 *         problem
 	 */
 	public boolean enable(final String target) {
-		Plugin p;
+		Optional<Plugin> p;
 		this.pluginLock.lock();
 		try {
 			p = this.getPlugin(target);
@@ -351,14 +396,16 @@ public class PluginManager {
 			this.pluginLock.unlock();
 		}
 
-		if (p == null) {
+		if (!p.isPresent()) {
 			return false;
 		}
 
-		boolean enabled = this.enable(p);
+		Plugin plugin = p.get();
+
+		boolean enabled = this.enable(plugin);
 
 		if (!enabled) {
-			this.setPluginState(p, PluginState.CORRUPTED);
+			this.setPluginState(plugin, PluginState.CORRUPTED);
 		}
 
 		return enabled;
@@ -383,6 +430,104 @@ public class PluginManager {
 			this.enableLock.unlock();
 		}
 		return res;
+	}
+
+	/**
+	 * Load up the plugin info from the given jar file and return it. If there
+	 * is some error like the file not actually being a jar or plugin info
+	 * missing, then the returned optional is empty.
+	 *
+	 * @param jar the jar to load info from.
+	 * @return an optional containing the plugin info, or an empty optional on
+	 *         failure.
+	 */
+	public Optional<PluginInfo> extractPluginInfo(final File jar) {
+		JarFile jfile;
+		ZipEntry config;
+
+		final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
+		final String fileName = jar.getName();
+
+		/*
+		 * Check for being a jar file check for plugin info file load and check
+		 * for valid info load the file if necessary
+		 */
+		try {
+			jfile = new JarFile(jar);
+			config = jfile.getEntry(PLUGIN_CONFIG_FILENAME);
+			if (config == null) {
+				String msg = SafeResourceLoader
+					.getString("PLUGIN_CONFIG_MISSING", this.resourceBundle)
+					.replaceFirst("\\$FILE", PLUGIN_CONFIG_FILENAME);
+				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+				jfile.close();
+				return Optional.empty();
+			}
+		}
+		catch (Exception e) {
+			String msg = SafeResourceLoader
+				.getString("PLUGIN_JAR_ERROR", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", fileName);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+			return Optional.empty();
+		}
+
+		// grab an input stream for the configuration file
+		InputStream configIStream;
+		try {
+			configIStream = jfile.getInputStream(config);
+		}
+		catch (IOException e1) {
+			String msg = SafeResourceLoader
+				.getString("PLUGIN_CONFIG_READ_ERROR", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", fileName);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+			try {
+				jfile.close();
+			}
+			catch (IOException e) {
+				String errorMsg = SafeResourceLoader
+					.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
+					.replaceFirst("\\$PLUGIN", fileName);
+				Logging.warning(SystemPlugin.PLUGIN_NAME, errorMsg);
+				// wow we really must have messed up
+			}
+			return Optional.empty();
+		}
+
+		// Load in the plugin info from the config file
+		PluginInfo info = null;
+		try {
+			info = new PluginInfo(configIStream);
+		}
+		catch (InvalidDescriptionException e1) {
+			String msg = SafeResourceLoader
+				.getString("PLUGIN_INVALID_DESCRIPTION", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", fileName);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, e1.getMessage());
+			try {
+				jfile.close();
+			}
+			catch (IOException e) {
+				String errorMsg = SafeResourceLoader
+					.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
+					.replaceFirst("\\$PLUGIN", fileName);
+				Logging.warning(SystemPlugin.PLUGIN_NAME, errorMsg);
+			}
+			return Optional.empty();
+		}
+
+		try {
+			jfile.close();// We already loaded in the config info
+		}
+		catch (IOException e1) {
+			String errorMsg = SafeResourceLoader
+				.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", fileName);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, errorMsg);
+		}
+		return Optional.ofNullable(info);
 	}
 
 	/**
@@ -482,6 +627,25 @@ public class PluginManager {
 	}
 
 	/**
+	 * Get the plugin info for a given plugin. If no info exists for the
+	 * specified plugin, an empty optinal is returned.
+	 *
+	 * @param target The plugin to get info from.
+	 * @return The info for the specified plugin.
+	 */
+	public Optional<PluginInfo> getInfo(Plugin target) {
+		Optional<PluginInfo> ret;
+		this.pluginLock.lock();
+		try {
+			ret = Optional.ofNullable(this.pluginInfo.get(target));
+		}
+		finally {
+			this.pluginLock.unlock();
+		}
+		return ret;
+	}
+
+	/**
 	 * Returns the map of plugin name to Plugin of the currently loaded plugins.
 	 *
 	 * @return the plugin map
@@ -500,19 +664,17 @@ public class PluginManager {
 
 	/**
 	 * If a plugin of the given type exists ({@link #isLoaded(String)}), then
-	 * the plugin that is of that type is returned. If no plugin exists of that
-	 * type, null is returned.
+	 * the plugin that is of that type is returned. Otherwise, an empty optional
+	 * is returned.
 	 *
 	 * @param type The plugin type
-	 * @return The Plugin with the given type or null if none exists
+	 * @return The Plugin with the given type
 	 */
-	public Plugin getPlugin(final String type) {
-		Plugin ret = null;
+	public Optional<Plugin> getPlugin(final String type) {
+		Optional<Plugin> ret = null;
 		this.pluginLock.lock();
 		try {
-			if (this.isLoaded(type)) {
-				ret = this.loadedPlugins.get(type);
-			}
+			ret = Optional.ofNullable(this.loadedPlugins.get(type));
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -607,9 +769,9 @@ public class PluginManager {
 		boolean ret = false;
 		this.pluginLock.lock();
 		try {
-			Plugin p = this.getPlugin(target);
-			if (p != null) {
-				ret = this.isEnabled(p);
+			Optional<Plugin> p = this.getPlugin(target);
+			if (p.isPresent()) {
+				ret = this.isEnabled(p.get());
 			}
 		}
 		finally {
@@ -677,17 +839,17 @@ public class PluginManager {
 	 * @return true if the plugin was loaded properly, false otherwise
 	 */
 	public boolean loadPlugin(Plugin toLoad) {
+		final String pluginName = toLoad.getName();
 		String loading =
 			SafeResourceLoader.getString("ALERT_LOADING", this.resourceBundle);
-		loading = loading.replaceFirst("\\$PLUGIN", toLoad.getName());
+		loading = loading.replaceFirst("\\$PLUGIN", pluginName);
 		loading = loading.replaceFirst("\\$VERSION", "" + toLoad.getVersion());
 		Logging.fine(SystemPlugin.PLUGIN_NAME, loading);
 		// if the plugin exists and is older than toLoad, unload
 		if (this.isLoaded(toLoad)) {
 			String alreadyLoaded = SafeResourceLoader
 				.getString("ALERT_PLUGIN_ALREADY_LOADED", this.resourceBundle);
-			alreadyLoaded =
-				alreadyLoaded.replaceFirst("\\$PLUGIN", toLoad.getName());
+			alreadyLoaded = alreadyLoaded.replaceFirst("\\$PLUGIN", pluginName);
 			alreadyLoaded = alreadyLoaded.replaceFirst("\\$VERSION",
 				"" + toLoad.getVersion());
 			Logging.fine(SystemPlugin.PLUGIN_NAME, alreadyLoaded);
@@ -695,20 +857,20 @@ public class PluginManager {
 			boolean lowerVersion = false;
 			this.pluginLock.lock();
 			try {
-				lowerVersion = this.loadedPlugins.get(toLoad.getName())
+				lowerVersion = this.loadedPlugins.get(pluginName)
 					.getVersion() < toLoad.getVersion();
 			}
 			finally {
 				this.pluginLock.unlock();
 			}
 			if (lowerVersion) {
-				this.unloadPlugin(toLoad.getName());
+				this.unloadPlugin(pluginName);
 				// unload the old plugin and continue loading the new one
 			}
 			else {
 				String outdated = SafeResourceLoader
 					.getString("ALERT_PLUGIN_OUTDATED", this.resourceBundle);
-				outdated = outdated.replaceFirst("\\$PLUGIN", toLoad.getName());
+				outdated = outdated.replaceFirst("\\$PLUGIN", pluginName);
 				outdated = outdated.replaceFirst("\\$VERSION",
 					"" + toLoad.getVersion());
 				Logging.fine(SystemPlugin.PLUGIN_NAME, outdated);
@@ -720,7 +882,7 @@ public class PluginManager {
 		this.pluginLock.lock();
 		try {
 			// store the new plugin
-			this.loadedPlugins.put(toLoad.getName(), toLoad);
+			this.loadedPlugins.put(pluginName, toLoad);
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -731,7 +893,7 @@ public class PluginManager {
 		}
 		String msg = SafeResourceLoader
 			.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
-			.replaceFirst("\\$PLUGIN", toLoad.getName());
+			.replaceFirst("\\$PLUGIN", pluginName);
 		Logging.finer(SystemPlugin.PLUGIN_NAME, msg);
 
 		// load it
@@ -745,61 +907,176 @@ public class PluginManager {
 	}
 
 	/**
-	 * For plugin loading. The return value is an empty optional if there was a
-	 * problem accessing the folder from path. If there is a file in the
-	 * optional it should be an existing folder that can be read.
-	 * 
-	 * @param path the path of the folder to return as a File
-	 * @return an optional containing the folder or empty if there was an error
+	 * Loads a plugin by name from a folder.
+	 *
+	 * @param path the path to the folder containing the file
+	 * @param name the filename to load from, without a file extension
+	 * @return true on success, false if it failed
 	 */
-	private Optional<File> plGetFolder(final String path) {
-		File pluginFolder;
+	public boolean loadPlugin(String path, String name) {
+
+		File pluginFolder = null;
+		{// keeps scope name space clean
+			Optional<File> folderMaybe = this.plGetFolder(path);
+			if (!folderMaybe.isPresent()) {
+				return false;
+			}
+			pluginFolder = folderMaybe.get();
+		}
+
+		ArrayList<File> jars = this.plGetAllJars(pluginFolder);
+
+		File jarFile = null;
+
+		{// keeps scope name space clean
+			Optional<File> jarMaybe = this.plPickJarByName(jars, name);
+			if (!jarMaybe.isPresent()) {
+				return false;
+			}
+			jarFile = jarMaybe.get();
+		}
+
+		PluginInfo info = null;
+
+		{// keeps scope name space clean
+			Optional<PluginInfo> infoMaybe = this.extractPluginInfo(jarFile);
+			if (!infoMaybe.isPresent()) {
+				return false;
+			}
+			info = infoMaybe.get();
+		}
+
+		ClassLoader loader;
 		try {
-			pluginFolder = new File(path);
+			loader =
+				URLClassLoader.newInstance(new URL[] {jarFile.toURI().toURL()},
+					this.getClass().getClassLoader());
 		}
-		catch (NullPointerException nullExcept) {
-			String msg = SafeResourceLoader.getString("PLUGIN_PATH_NULL",
-				this.resourceBundle);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-			return Optional.empty();
+		catch (MalformedURLException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_URL_INVALID", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
+			return false;
 		}
+
+		Class<?> clazz;
 		try {
-			if (!pluginFolder.exists()) {
-				String msg = SafeResourceLoader
-					.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
-				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-				return Optional.empty();
+			clazz = Class.forName(info.getMain(), true, loader);
+		}
+		catch (ClassNotFoundException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
+			return false;
+		}
+
+		Object classInstance;
+
+		try {
+			classInstance = clazz.newInstance();
+		}
+		catch (InstantiationException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_CANT_INSTANTIATE_MAIN", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
+			return false;
+		}
+		catch (IllegalAccessException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
+			return false;
+		}
+		if (!(classInstance instanceof Plugin)) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_NOT_A_PLUGIN", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", name);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
+			return false;
+		}
+
+		Plugin p = (Plugin) classInstance;
+
+		final String pluginName = info.getName();
+		String loading =
+			SafeResourceLoader.getString("ALERT_LOADING", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", pluginName)
+				.replaceFirst("\\$VERSION", info.getVersion());
+		Logging.fine(SystemPlugin.PLUGIN_NAME, loading);
+
+		// if the plugin exists and is older than toLoad, unload
+		if (this.isLoaded(pluginName)) {
+			String alreadyLoaded = SafeResourceLoader
+				.getString("ALERT_PLUGIN_ALREADY_LOADED", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", pluginName)
+				.replaceFirst("\\$VERSION", info.getVersion());
+			Logging.fine(SystemPlugin.PLUGIN_NAME, alreadyLoaded);
+
+			boolean existingPluginOld = false;
+			this.pluginLock.lock();
+			try {
+				// TODO real version comparison
+				existingPluginOld =
+					PluginManager.isNewerVersion(info.getVersion(), "0.0.0");
 			}
-			if (!pluginFolder.isDirectory()) {
-				String msg = SafeResourceLoader
-					.getString("PLUGIN_FOLDER_NOT_FOLDER", this.resourceBundle)
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
-				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-				return Optional.empty();
+			finally {
+				this.pluginLock.unlock();
 			}
-			if (!pluginFolder.canRead()) {
-				String msg = SafeResourceLoader
-					.getString("PLUGIN_FOLDER_UNREADABLE", this.resourceBundle)
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
-				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-				return Optional.empty();
+			if (existingPluginOld) {
+				this.unloadPlugin(pluginName);
+				// unload the old plugin and continue loading the new one
+			}
+			else {
+				String outdated = SafeResourceLoader
+					.getString("ALERT_PLUGIN_OUTDATED", this.resourceBundle);
+				outdated = outdated.replaceFirst("\\$PLUGIN", pluginName);
+				outdated =
+					outdated.replaceFirst("\\$VERSION", "" + info.getVersion());
+				Logging.fine(SystemPlugin.PLUGIN_NAME, outdated);
+				return false;
 			}
 		}
-		catch (SecurityException securExcep) {
-			String msg = SafeResourceLoader
-				.getString("PLUGIN_FOLDER_ACCESS_DENIED", this.resourceBundle)
-				.replaceFirst("\\$FOLDER", path);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-			return Optional.empty();
+
+		this.setPluginState(p, PluginState.LOADING);
+
+		this.pluginLock.lock();
+		try {
+			// store the new plugin
+			this.loadedPlugins.put(pluginName, p);
+			this.pluginInfo.put(p, info);
 		}
-		return Optional.of(pluginFolder);
+		finally {
+			this.pluginLock.unlock();
+		}
+
+		for (Listener l : p.getListeners()) {
+			this.eventManager.registerEventListeners(l);
+		}
+		String msg = SafeResourceLoader
+			.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
+			.replaceFirst("\\$PLUGIN", pluginName);
+		Logging.finer(SystemPlugin.PLUGIN_NAME, msg);
+
+		// load it
+		p.onLoad();
+
+		this.setPluginState(p, PluginState.DISABLED);
+		PluginLoaded packLoaded = new PluginLoaded(p);
+		this.fireEvent(packLoaded);
+
+		return true;
+
+		// TODO finish this?
 	}
 
 	/**
 	 * Return all jar files in the specified folder. If none are found, an empty
 	 * list is returned.
-	 * 
+	 *
 	 * @param folder a valid folder
 	 * @return a list of all readable jars in the folder
 	 */
@@ -853,11 +1130,63 @@ public class PluginManager {
 	}
 
 	/**
+	 * For plugin loading. The return value is an empty optional if there was a
+	 * problem accessing the folder from path. If there is a file in the
+	 * optional it should be an existing folder that can be read.
+	 *
+	 * @param path the path of the folder to return as a File
+	 * @return an optional containing the folder or empty if there was an error
+	 */
+	private Optional<File> plGetFolder(final String path) {
+		File pluginFolder;
+		try {
+			pluginFolder = new File(path);
+		}
+		catch (NullPointerException nullExcept) {
+			String msg = SafeResourceLoader.getString("PLUGIN_PATH_NULL",
+				this.resourceBundle);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+			return Optional.empty();
+		}
+		try {
+			if (!pluginFolder.exists()) {
+				String msg = SafeResourceLoader
+					.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
+					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+				return Optional.empty();
+			}
+			if (!pluginFolder.isDirectory()) {
+				String msg = SafeResourceLoader
+					.getString("PLUGIN_FOLDER_NOT_FOLDER", this.resourceBundle)
+					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+				return Optional.empty();
+			}
+			if (!pluginFolder.canRead()) {
+				String msg = SafeResourceLoader
+					.getString("PLUGIN_FOLDER_UNREADABLE", this.resourceBundle)
+					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+				return Optional.empty();
+			}
+		}
+		catch (SecurityException securExcep) {
+			String msg = SafeResourceLoader
+				.getString("PLUGIN_FOLDER_ACCESS_DENIED", this.resourceBundle)
+				.replaceFirst("\\$FOLDER", path);
+			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
+			return Optional.empty();
+		}
+		return Optional.of(pluginFolder);
+	}
+
+	/**
 	 * Returns an optional that contains the jar file with the specified name,
 	 * or an empty optional if none was found in the list of files. The file
 	 * name is without an extension so "example.jar" should be passed as
 	 * "example", and "test.1.0.2.jar" should be "test.1.0.2".
-	 * 
+	 *
 	 * @param files The list of files to look through, must all be valid
 	 *            readable files.
 	 * @param name the name of the jar, without a jar extension.
@@ -891,171 +1220,6 @@ public class PluginManager {
 			.replaceFirst("\\$PLUGIN", name);
 		Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
 		return Optional.empty();
-	}
-
-	/**
-	 * Load up the plugin info from the given jar file and return it. If there
-	 * is some error like the file not actually being a jar or plugin info
-	 * missing, then the returned optional is empty.
-	 * 
-	 * @param jar the jar to load info from.
-	 * @param name the name of the file, for logging purposes.
-	 * @return an optional containing the plugin info, or an empty optional on
-	 *         failure.
-	 */
-	private Optional<PluginInfo> plGetPluginInfo(final File jar,
-		final String name) {
-		JarFile jfile;
-		ZipEntry config;
-
-		/*
-		 * Check for being a jar file check for plugin info file load and check
-		 * for valid info load the file if necessary
-		 */
-		try {
-			jfile = new JarFile(jar);
-			config = jfile.getEntry("plugin.yaml");
-			if (config == null) {
-				String msg = SafeResourceLoader
-					.getString("PLUGIN_CONFIG_MISSING", this.resourceBundle);
-				Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-				jfile.close();
-				return Optional.empty();
-			}
-		}
-		catch (Exception e) {
-			String msg = SafeResourceLoader
-				.getString("PLUGIN_JAR_ERROR", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-			return Optional.empty();
-		}
-
-		// grab an input stream for the configuration file
-		InputStream configIStream;
-		try {
-			configIStream = jfile.getInputStream(config);
-		}
-		catch (IOException e1) {
-			String msg = SafeResourceLoader
-				.getString("PLUGIN_CONFIG_READ_ERROR", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-			try {
-				jfile.close();
-			}
-			catch (IOException e) {
-				String errorMsg = SafeResourceLoader
-					.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
-					.replaceFirst("\\$PLUGIN", name);
-				Logging.warning(SystemPlugin.PLUGIN_NAME, errorMsg);
-				// wow we really must have messed up
-			}
-			return Optional.empty();
-		}
-
-		// Load in the plugin info from the config file
-		PluginInfo info = null;
-		try {
-			info = new PluginInfo(configIStream);
-		}
-		catch (InvalidDescriptionException e1) {
-			String msg = SafeResourceLoader
-				.getString("PLUGIN_INVALID_DESCRIPTION", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, msg);
-			try {
-				jfile.close();
-			}
-			catch (IOException e) {
-				String errorMsg = SafeResourceLoader
-					.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
-					.replaceFirst("\\$PLUGIN", name);
-				Logging.warning(SystemPlugin.PLUGIN_NAME, errorMsg);
-			}
-			return Optional.empty();
-		}
-
-		try {
-			jfile.close();// We already loaded in the config info
-		}
-		catch (IOException e1) {
-			String errorMsg = SafeResourceLoader
-				.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, errorMsg);
-		}
-		return Optional.ofNullable(info);
-	}
-
-	/**
-	 * Loads a plugin by name from a folder.
-	 *
-	 * @param path the path to the folder containing the file
-	 * @param name the filename to load from, without a file extension
-	 * @return true on success, false if it failed
-	 */
-	public boolean loadPlugin(String path, String name) {
-
-		File pluginFolder = null;
-		{// keeps scope name space clean
-			Optional<File> folderMaybe = plGetFolder(path);
-			if (!folderMaybe.isPresent()) {
-				return false;
-			}
-			pluginFolder = folderMaybe.get();
-		}
-
-		ArrayList<File> jars = plGetAllJars(pluginFolder);
-
-		File jarFile = null;
-
-		{// keeps scope name space clean
-			Optional<File> jarMaybe = plPickJarByName(jars, name);
-			if (!jarMaybe.isPresent()) {
-				return false;
-			}
-			jarFile = jarMaybe.get();
-		}
-
-		PluginInfo info = null;
-
-		{// keeps scope name space clean
-			Optional<PluginInfo> infoMaybe = plGetPluginInfo(jarFile, name);
-			if (!infoMaybe.isPresent()) {
-				return false;
-			}
-			info = infoMaybe.get();
-		}
-
-		ClassLoader loader;
-		try {
-			loader =
-				URLClassLoader.newInstance(new URL[] {jarFile.toURI().toURL()},
-					this.getClass().getClassLoader());
-		}
-		catch (MalformedURLException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_URL_INVALID", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
-			return false;
-		}
-		Class<?> clazz;
-		try {
-			clazz = Class.forName(info.getMain(), true, loader);
-		}
-		catch (ClassNotFoundException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			Logging.warning(SystemPlugin.PLUGIN_NAME, err);
-			return false;
-		}
-
-		// TODO finish this
-
-		return false;
 	}
 
 	/**
