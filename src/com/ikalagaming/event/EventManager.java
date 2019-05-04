@@ -1,15 +1,15 @@
 package com.ikalagaming.event;
 
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.logging.events.Log;
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.util.SafeResourceLoader;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.ikalagaming.logging.Logging;
-import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.system.SystemPlugin;
-import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * Manages events and listeners. Based off lahwran's fevents.
@@ -72,11 +72,11 @@ public class EventManager {
 	 * @param listener The listener to create EventListenrs for
 	 * @return A map of events to a set of EventListeners belonging to it
 	 */
-	private Map<Class<? extends Event>, Set<EventListener>> createRegisteredListeners(
-			Listener listener) {
+	private Map<Class<? extends Event>, Set<EventListener>>
+		createRegisteredListeners(Listener listener) {
 
 		Map<Class<? extends Event>, Set<EventListener>> toReturn =
-				new HashMap<>();
+			new HashMap<>();
 		Set<Method> methods;
 		try {
 			Method[] publicMethods = listener.getClass().getMethods();
@@ -95,18 +95,17 @@ public class EventManager {
 		// search the methods for listeners
 		for (final Method method : methods) {
 			final EventHandler handlerAnnotation =
-					method.getAnnotation(EventHandler.class);
+				method.getAnnotation(EventHandler.class);
 			if (handlerAnnotation == null) {
 				continue;
 			}
 			final Class<?> checkClass;
-			if (method.getParameterTypes().length != 1
-					|| !Event.class.isAssignableFrom(checkClass =
-							method.getParameterTypes()[0])) {
+			if (method.getParameterTypes().length != 1 || !Event.class
+				.isAssignableFrom(checkClass = method.getParameterTypes()[0])) {
 				continue;
 			}
 			final Class<? extends Event> eventClass =
-					checkClass.asSubclass(Event.class);
+				checkClass.asSubclass(Event.class);
 			method.setAccessible(true);
 			Set<EventListener> eventSet = toReturn.get(eventClass);
 			if (eventSet == null) {
@@ -130,7 +129,7 @@ public class EventManager {
 			};
 
 			eventSet.add(new EventListener(listener, executor,
-					handlerAnnotation.order()));
+				handlerAnnotation.order()));
 
 		}
 		return toReturn;
@@ -155,11 +154,10 @@ public class EventManager {
 				e.printStackTrace(System.err);
 			}
 			else {
-				String err =
-						SafeResourceLoader.getString("EVT_QUEUE_FULL",
-								"com.ikalagaming.event.strings")
-								+ "in EventManager.fireEvent(Event)";
-				Logging.warning(SystemPlugin.PLUGIN_NAME, err);
+				String err = SafeResourceLoader.getString("EVT_QUEUE_FULL",
+					"com.ikalagaming.event.strings")
+					+ "in EventManager.fireEvent(Event)";
+				Logging.warning(PluginManager.PLUGIN_NAME, err);
 			}
 
 		}
@@ -199,9 +197,8 @@ public class EventManager {
 	public void registerEventListeners(Listener listener) {
 		Map<Class<? extends Event>, Set<EventListener>> listMap;
 		listMap = this.createRegisteredListeners(listener);
-		listMap.entrySet().forEach(
-				(e) -> this.getEventListeners(e.getKey()).registerAll(
-						e.getValue()));
+		listMap.entrySet().forEach((e) -> this.getEventListeners(e.getKey())
+			.registerAll(e.getValue()));
 	}
 
 	/**
@@ -231,8 +228,8 @@ public class EventManager {
 	 */
 	public void unregisterEventListeners(Listener listener) {
 		synchronized (this.handlerMap) {
-			this.handlerMap.values().forEach(
-					(list) -> list.unregister(listener));
+			this.handlerMap.values()
+				.forEach((list) -> list.unregister(listener));
 		}
 	}
 }

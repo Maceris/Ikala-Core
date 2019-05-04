@@ -1,21 +1,19 @@
 package com.ikalagaming.plugins;
 
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.permissions.DefaultPermissionValue;
+import com.ikalagaming.permissions.Permission;
+
+import com.github.zafarkhaja.semver.ParseException;
+import com.github.zafarkhaja.semver.Version;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import org.yaml.snakeyaml.Yaml;
-
-import com.ikalagaming.logging.Logging;
-import com.ikalagaming.permissions.DefaultPermissionValue;
-import com.ikalagaming.permissions.Permission;
-import com.ikalagaming.system.SystemPlugin;
-
-import com.github.zafarkhaja.semver.ParseException;
-import com.github.zafarkhaja.semver.Version;
 
 /**
  * Contains data about a particular plugin. This info can be loaded from code or
@@ -77,7 +75,7 @@ public class PluginInfo {
 		// TODO provide examples
 		// TODO list yaml tags
 		if (stream == null) {
-			Logging.fine(SystemPlugin.PLUGIN_NAME,
+			Logging.fine(PluginManager.PLUGIN_NAME,
 				"Attempting to get plugin info from a null stream");
 		}
 

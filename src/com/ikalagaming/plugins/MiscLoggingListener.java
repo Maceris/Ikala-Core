@@ -1,11 +1,11 @@
-package com.ikalagaming.system;
+package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.logging.events.Log;
-import com.ikalagaming.plugins.PluginInfo;
-import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.plugins.events.PluginDisabled;
+import com.ikalagaming.plugins.events.PluginEnabled;
 import com.ikalagaming.plugins.events.PluginLoaded;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -15,7 +15,7 @@ import com.ikalagaming.util.SafeResourceLoader;
  * @author Ches Burks
  *
  */
-class SystemEventListener implements Listener {
+class MiscLoggingListener implements Listener {
 
 	/**
 	 * Logs the provided information. Attempts to use localized names for the
@@ -42,13 +42,45 @@ class SystemEventListener implements Listener {
 		if (manager.enableOnLoad()) {
 			manager.enable(event.getPlugin());
 		}
-		PluginInfo pInfo = manager.getInfo(event.getPlugin()).get();
+		logAlert("ALERT_LOADED", event.getPlugin());
+	}
+
+	/**
+	 * Log an alert about a plugin lifecycle, where plugin name and version are
+	 * automatically replaced.
+	 *
+	 * @param whichAlert The string to read from the resource bundle
+	 * @param plugin The plugin that the alert is about
+	 */
+	void logAlert(String whichAlert, Plugin plugin) {
+		PluginInfo pInfo = PluginManager.getInstance().getInfo(plugin).get();
 
 		String message = SafeResourceLoader
-			.getString("ALERT_LOADED", manager.getResourceBundle())
+			.getString(whichAlert,
+				PluginManager.getInstance().getResourceBundle())
 			.replaceFirst("\\$PLUGIN", pInfo.getName())
 			.replaceFirst("\\$VERSION", pInfo.getVersion());
-		Logging.fine(SystemPlugin.PLUGIN_NAME, message);
+		Logging.fine(PluginManager.PLUGIN_NAME, message);
+	}
+
+	/**
+	 * Logs the plugin being disabled.
+	 *
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPluginDisabled(PluginDisabled event) {
+		this.logAlert("ALERT_DISABLED", event.getPlugin());
+	}
+
+	/**
+	 * Logs the plugin being enabled.
+	 *
+	 * @param event the event that was received
+	 */
+	@EventHandler
+	public void onPluginEnabled(PluginEnabled event) {
+		this.logAlert("ALERT_ENABLED", event.getPlugin());
 	}
 
 }

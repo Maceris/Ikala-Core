@@ -1,14 +1,14 @@
 package com.ikalagaming.permissions;
 
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.util.SafeResourceLoader;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.ikalagaming.logging.Logging;
-import com.ikalagaming.system.SystemPlugin;
-import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * Represents a unique permission.
@@ -234,7 +234,7 @@ public class Permission {
 				String log =
 						SafeResourceLoader.getString("INVALID_PERMISSIONS",
 								Permission.resourceLocation);
-				Logging.warning(SystemPlugin.PLUGIN_NAME, log);
+				Logging.warning(PluginManager.PLUGIN_NAME, log);
 
 				ex.printStackTrace();
 			}

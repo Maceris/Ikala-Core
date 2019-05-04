@@ -1,11 +1,11 @@
 package com.ikalagaming.event;
 
+import com.ikalagaming.logging.Logging;
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.util.SafeResourceLoader;
+
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
-
-import com.ikalagaming.logging.Logging;
-import com.ikalagaming.system.SystemPlugin;
-import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * Holds an EventQueue and dispatches the events in order when possible.
@@ -53,7 +53,7 @@ class EventDispatcher extends Thread {
 			return;
 		}
 		if (this.eventManager == null) {
-			Logging.severe(SystemPlugin.PLUGIN_NAME,
+			Logging.severe(PluginManager.PLUGIN_NAME,
 					"There is no event manager!");
 			return;
 		}
@@ -70,7 +70,7 @@ class EventDispatcher extends Thread {
 				String error =
 						SafeResourceLoader.getString("DISPATCH_ERROR",
 								"com.ikalagaming.event.resources.strings");
-				Logging.warning(SystemPlugin.PLUGIN_NAME, error);
+				Logging.warning(PluginManager.PLUGIN_NAME, error);
 				System.err.println(e.toString());
 				e.printStackTrace(System.err);
 			}
