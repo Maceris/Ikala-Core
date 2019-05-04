@@ -2,12 +2,10 @@ package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.Listener;
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.plugins.events.PluginDisabled;
 import com.ikalagaming.plugins.events.PluginEnabled;
 import com.ikalagaming.plugins.events.PluginLoaded;
-import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * The event listener for the plugin management system.
@@ -42,25 +40,7 @@ class MiscLoggingListener implements Listener {
 		if (manager.enableOnLoad()) {
 			manager.enable(event.getPlugin());
 		}
-		logAlert("ALERT_LOADED", event.getPlugin());
-	}
-
-	/**
-	 * Log an alert about a plugin lifecycle, where plugin name and version are
-	 * automatically replaced.
-	 *
-	 * @param whichAlert The string to read from the resource bundle
-	 * @param plugin The plugin that the alert is about
-	 */
-	void logAlert(String whichAlert, Plugin plugin) {
-		PluginInfo pInfo = PluginManager.getInstance().getInfo(plugin).get();
-
-		String message = SafeResourceLoader
-			.getString(whichAlert,
-				PluginManager.getInstance().getResourceBundle())
-			.replaceFirst("\\$PLUGIN", pInfo.getName())
-			.replaceFirst("\\$VERSION", pInfo.getVersion());
-		Logging.fine(PluginManager.PLUGIN_NAME, message);
+		manager.logAlert("ALERT_LOADED", event.getPlugin());
 	}
 
 	/**
@@ -70,7 +50,8 @@ class MiscLoggingListener implements Listener {
 	 */
 	@EventHandler
 	public void onPluginDisabled(PluginDisabled event) {
-		this.logAlert("ALERT_DISABLED", event.getPlugin());
+		PluginManager.getInstance().logAlert("ALERT_DISABLED",
+			event.getPlugin());
 	}
 
 	/**
@@ -80,7 +61,8 @@ class MiscLoggingListener implements Listener {
 	 */
 	@EventHandler
 	public void onPluginEnabled(PluginEnabled event) {
-		this.logAlert("ALERT_ENABLED", event.getPlugin());
+		PluginManager.getInstance().logAlert("ALERT_ENABLED",
+			event.getPlugin());
 	}
 
 }

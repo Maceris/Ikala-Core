@@ -1217,14 +1217,33 @@ public class PluginManager {
 	/**
 	 * Attempts to register the command for the given class. If the command
 	 * already exists, an error is logged and the method returns false.
-	 *
+	 * 
 	 * @param command the command to register
 	 * @param callback The function to call when executing a command. Argument
 	 *            list is passed in.
 	 * @return true if the command registered successfully
+	 * 
+	 * @see #registerCommand(String, Consumer, Plugin)
 	 */
 	public boolean registerCommand(final String command,
 		Consumer<String[]> callback) {
+		return registerCommand(command, callback, null);
+	}
+
+	/**
+	 * Attempts to register the command for the given class. If the command
+	 * already exists, an error is logged and the method returns false.
+	 * 
+	 * @param command the command to register
+	 * @param callback The function to call when executing a command. Argument
+	 *            list is passed in.
+	 * @param owner The owner of the plugin
+	 * @return true if the command registered successfully
+	 * 
+	 * @see #registerCommand(String, Consumer)
+	 */
+	public boolean registerCommand(final String command,
+		Consumer<String[]> callback, Plugin owner) {
 		if (this.containsCommand(command)) {
 			String msg = SafeResourceLoader
 				.getString("COMMAND_ALREADY_REGISTERED",
@@ -1234,7 +1253,7 @@ public class PluginManager {
 			return false;
 		}
 
-		PluginCommand cmd = new PluginCommand(command, callback);
+		PluginCommand cmd = new PluginCommand(command, callback, owner);
 		this.commandLock.lock();
 		try {
 			this.commands.add(cmd);
