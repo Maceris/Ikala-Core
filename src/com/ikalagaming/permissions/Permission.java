@@ -24,10 +24,10 @@ public class Permission {
 	private static final boolean DEFAULT_PERMISSION = false;
 
 	private static final String resourceLocation =
-			"com.ikalagaming.permissions.resources.Permissions";
+		"com.ikalagaming.permissions.resources.Permissions";
 
 	private static HashMap<String, Permission> permissionByName =
-			new HashMap<>();
+		new HashMap<>();
 
 	/**
 	 * Checks to see if a permission with the given name has already been
@@ -41,35 +41,33 @@ public class Permission {
 	}
 
 	private static Map<String, Boolean> extractChildren(Map<?, ?> input,
-			String name, boolean defaultPermission, List<Permission> output) {
+		String name, boolean defaultPermission, List<Permission> output) {
 		Map<String, Boolean> children = new LinkedHashMap<>();
 		for (Map.Entry<?, ?> entry : input.entrySet()) {
 			if ((entry.getValue() instanceof Boolean)) {
 				children.put(entry.getKey().toString(),
-						(Boolean) entry.getValue());
+					(Boolean) entry.getValue());
 			}
 			else if ((entry.getValue() instanceof Map)) {
 				try {
-					Permission perm =
-							Permission.loadPermission(
-									entry.getKey().toString(),
-									(Map<?, ?>) entry.getValue(),
-									defaultPermission, output);
+					Permission perm = Permission.loadPermission(
+						entry.getKey().toString(), (Map<?, ?>) entry.getValue(),
+						defaultPermission, output);
 					children.put(name, true);
 					if (output != null) {
 						output.add(perm);
 					}
 				}
 				catch (Throwable ex) {
-					throw new IllegalArgumentException("Permission node '"
-							+ entry.getKey().toString() + "' in child of "
-							+ name + " is invalid", ex);
+					throw new IllegalArgumentException(
+						"Permission node '" + entry.getKey().toString()
+							+ "' in child of " + name + " is invalid",
+						ex);
 				}
 			}
 			else {
 				throw new IllegalArgumentException("Child '"
-						+ entry.getKey().toString()
-						+ "' contains invalid value");
+					+ entry.getKey().toString() + "' contains invalid value");
 			}
 		}
 		return children;
@@ -128,8 +126,8 @@ public class Permission {
 	 * @throws IllegalArgumentException if the permissions had invalid data
 	 */
 	public static Permission loadPermission(String name, Map<?, ?> data,
-			boolean def, List<Permission> output) throws NullPointerException,
-			IllegalArgumentException {
+		boolean def, List<Permission> output)
+		throws NullPointerException, IllegalArgumentException {
 		boolean defau = def;
 		if (name == null) {
 			throw new NullPointerException("Name cannot be null");
@@ -143,12 +141,11 @@ public class Permission {
 			Object theDefault = data.get("default");
 			if (!DefaultPermissionValue.isValid(theDefault.toString())) {
 				throw new IllegalArgumentException(
-						"'default' key contained unknown value");
+					"'default' key contained unknown value");
 			}
 
 			defau =
-					DefaultPermissionValue.getByName(theDefault.toString())
-							.value();
+				DefaultPermissionValue.getByName(theDefault.toString()).value();
 
 		}
 		if (data.get("children") != null) {
@@ -162,13 +159,12 @@ public class Permission {
 				}
 			}
 			else if (childrenNode instanceof Map) {
-				children =
-						Permission.extractChildren((Map<?, ?>) childrenNode,
-								name, defau, output);
+				children = Permission.extractChildren((Map<?, ?>) childrenNode,
+					name, defau, output);
 			}
 			else {
 				throw new IllegalArgumentException(
-						"'children' key is of wrong type");
+					"'children' key is of wrong type");
 			}
 		}
 		if (data.get("description") != null) {
@@ -196,9 +192,9 @@ public class Permission {
 	 * @return Permission the permissions object
 	 */
 	public static Permission loadPermission(String name,
-			Map<String, Object> data) {
+		Map<String, Object> data) {
 		return Permission.loadPermission(name, data,
-				Permission.DEFAULT_PERMISSION, null);
+			Permission.DEFAULT_PERMISSION, null);
 	}
 
 	/**
@@ -220,20 +216,19 @@ public class Permission {
 	 * @param defaultPerm Default permission value to use if missing
 	 * @return Permission object
 	 */
-	public static List<Permission> loadPermissions(Map<?, ?> data,
-			String error, boolean defaultPerm) {
+	public static List<Permission> loadPermissions(Map<?, ?> data, String error,
+		boolean defaultPerm) {
 
 		List<Permission> result = new ArrayList<>();
 
 		for (Map.Entry<?, ?> entry : data.entrySet()) {
 			try {
 				result.add(Permission.loadPermission(entry.getKey().toString(),
-						(Map<?, ?>) entry.getValue(), defaultPerm, result));
+					(Map<?, ?>) entry.getValue(), defaultPerm, result));
 			}
 			catch (Throwable ex) {
-				String log =
-						SafeResourceLoader.getString("INVALID_PERMISSIONS",
-								Permission.resourceLocation);
+				String log = SafeResourceLoader.getString("INVALID_PERMISSIONS",
+					Permission.resourceLocation);
 				Logging.warning(PluginManager.PLUGIN_NAME, log);
 
 				ex.printStackTrace();
@@ -346,7 +341,7 @@ public class Permission {
 	 * @see #Permission(String, String, boolean, Map)
 	 */
 	public Permission(String name, boolean defaultValue,
-			Map<String, Boolean> children) {
+		Map<String, Boolean> children) {
 		this(name, null, defaultValue, children);
 	}
 
@@ -392,7 +387,8 @@ public class Permission {
 	 * Example: "entity.movement"
 	 * </p>
 	 * <p>
-	 * The description is a short description of what the permission is for. <br>
+	 * The description is a short description of what the permission is for.
+	 * <br>
 	 * Example: "This allows entities to move around the world"
 	 * </p>
 	 *
@@ -417,7 +413,8 @@ public class Permission {
 	 * Example: "entity.movement"
 	 * </p>
 	 * <p>
-	 * The description is a short description of what the permission is for. <br>
+	 * The description is a short description of what the permission is for.
+	 * <br>
 	 * Example: "This allows entities to move around the world"
 	 * </p>
 	 * <p>
@@ -448,7 +445,8 @@ public class Permission {
 	 * Example: "entity.movement"
 	 * </p>
 	 * <p>
-	 * The description is a short description of what the permission is for. <br>
+	 * The description is a short description of what the permission is for.
+	 * <br>
 	 * Example: "This allows entities to move around the world"
 	 * </p>
 	 * <p>
@@ -472,14 +470,14 @@ public class Permission {
 	 * @throws IllegalArgumentException If the name is invalid or already exists
 	 */
 	public Permission(String name, String description, boolean defaultValue,
-			Map<String, Boolean> children) {
+		Map<String, Boolean> children) {
 		if (!Permission.isValidName(name)) {
-			throw new IllegalArgumentException("Name '" + name
-					+ "' is invalid.");
+			throw new IllegalArgumentException(
+				"Name '" + name + "' is invalid.");
 		}
 		if (Permission.exists(name)) {
-			throw new IllegalArgumentException("Permission '" + name
-					+ "' already exists.");
+			throw new IllegalArgumentException(
+				"Permission '" + name + "' already exists.");
 
 		}
 		this.permName = name;
@@ -491,7 +489,7 @@ public class Permission {
 		}
 		this.permDefaultValue = defaultValue;
 		this.childPermissions =
-				children == null ? new LinkedHashMap<>() : children;
+			children == null ? new LinkedHashMap<>() : children;
 		Permission.permissionByName.put(name, this);
 	}
 
@@ -506,7 +504,8 @@ public class Permission {
 	 * Example: "entity.movement"
 	 * </p>
 	 * <p>
-	 * The description is a short description of what the permission is for. <br>
+	 * The description is a short description of what the permission is for.
+	 * <br>
 	 * Example: "This allows entities to move around the world"
 	 * </p>
 	 * <p>
@@ -526,7 +525,7 @@ public class Permission {
 	 * @see #Permission(String, String, boolean, Map)
 	 */
 	public Permission(String name, String description,
-			Map<String, Boolean> children) {
+		Map<String, Boolean> children) {
 		this(name, description, Permission.DEFAULT_PERMISSION, children);
 	}
 
@@ -550,7 +549,7 @@ public class Permission {
 
 	/**
 	 * Returns a complete list of permissions this permission grants or revokes.
-	 * It recursively finds all subpermissions, with parents overriding child
+	 * It recursively finds all sub-permissions, with parents overriding child
 	 * permissions.
 	 *
 	 * @return the full list of child permissions
@@ -564,9 +563,11 @@ public class Permission {
 		HashMap<String, Boolean> submap;
 		for (String s : perms.keySet()) {
 			if (!Permission.exists(s)) {
-				System.err.println("Permission " + s + " does not exist"
-						+ " (in Permission.getgetAllSubpermissions())");
-				// TODO log this
+				Logging.warning(PluginManager.PLUGIN_NAME,
+					SafeResourceLoader
+						.getString("NON_EXISTANT_SUBPERMISSON",
+							Permission.resourceLocation)
+						.replaceFirst("$PERMISSION", s));
 				continue;// it was not created somehow
 			}
 			// this is recursive
