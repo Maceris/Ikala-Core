@@ -19,6 +19,12 @@ public class EventManager {
 	private static EventManager instance;
 
 	/**
+	 * The resouce bundle for event manager strings
+	 */
+	public static String resourceBundle =
+		"com.ikalagaming.event.resources.Events";
+
+	/**
 	 * Shuts down the static instance if it exists, and then nullifies the
 	 * reference to it. This exists in case you wish to use your own instances
 	 * of the Event Manager and not use the single static instance provided. If

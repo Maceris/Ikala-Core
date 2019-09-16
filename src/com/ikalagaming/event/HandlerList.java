@@ -1,5 +1,7 @@
 package com.ikalagaming.event;
 
+import com.ikalagaming.util.SafeResourceLoader;
+
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -37,8 +39,8 @@ class HandlerList {
 		ArrayDeque<EventListener> entries = new ArrayDeque<>();
 
 		// add all of the listeners, in priority order, to the entries list
-		this.handlerSlots.entrySet().forEach(
-				(entry) -> entries.addAll(entry.getValue()));
+		this.handlerSlots.entrySet()
+			.forEach((entry) -> entries.addAll(entry.getValue()));
 		// bake the list into an array
 		this.bakedList = entries.toArray(new EventListener[entries.size()]);
 	}
@@ -64,10 +66,10 @@ class HandlerList {
 	 */
 	public synchronized void register(EventListener listener) {
 		if (this.handlerSlots.get(listener.getPriority()).contains(listener)) {
-			// TODO localize this error
 			throw new IllegalStateException(
-					"This listener is already registered to priority "
-							+ listener.getPriority().toString());
+				SafeResourceLoader.getString("LISTENER_ALREADY_REGISTERED",
+					EventManager.resourceBundle).replaceFirst("\\$PRIORITY",
+						listener.getPriority().toString()));
 		}
 		this.bakedList = null;
 		this.handlerSlots.get(listener.getPriority()).add(listener);
@@ -103,8 +105,7 @@ class HandlerList {
 	public synchronized void unregister(Listener listener) {
 		// go through each priority
 		this.handlerSlots.values().forEach(
-				(list) -> list.removeIf((li) -> li.getListener().equals(
-						listener)));
+			(list) -> list.removeIf((li) -> li.getListener().equals(listener)));
 
 		this.bakedList = null;
 	}

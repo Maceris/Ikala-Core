@@ -54,7 +54,7 @@ class EventDispatcher extends Thread {
 		}
 		if (this.eventManager == null) {
 			Logging.severe(PluginManager.PLUGIN_NAME,
-					"There is no event manager!");
+				"There is no event manager!");
 			return;
 		}
 		HandlerList handlers = this.eventManager.getHandlers(event);
@@ -67,9 +67,8 @@ class EventDispatcher extends Thread {
 				registration.callEvent(event);
 			}
 			catch (EventException e) {
-				String error =
-						SafeResourceLoader.getString("DISPATCH_ERROR",
-								"com.ikalagaming.event.resources.strings");
+				String error = SafeResourceLoader.getString("DISPATCH_ERROR",
+					EventManager.resourceBundle);
 				Logging.warning(PluginManager.PLUGIN_NAME, error);
 				System.err.println(e.toString());
 				e.printStackTrace(System.err);

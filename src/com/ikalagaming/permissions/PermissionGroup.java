@@ -32,7 +32,7 @@ public class PermissionGroup implements PermissionHolder {
 				SafeResourceLoader
 					.getString("DUPLICATE_PERMISSION",
 						Permission.resourceLocation)
-					.replaceFirst("$PERMISSION", "root"));
+					.replaceFirst("\\$PERMISSION", "root"));
 		}
 		/*
 		 * May be null at this point, but logs will help determine why things

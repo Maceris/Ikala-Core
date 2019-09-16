@@ -570,7 +570,7 @@ public class Permission {
 					SafeResourceLoader
 						.getString("NON_EXISTANT_SUBPERMISSON",
 							Permission.resourceLocation)
-						.replaceFirst("$PERMISSION", s));
+						.replaceFirst("\\$PERMISSION", s));
 				continue;// it was not created somehow
 			}
 			// this is recursive
