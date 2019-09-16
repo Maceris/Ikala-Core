@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
+import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
@@ -68,16 +69,13 @@ public class Logging {
 			}
 			Logging.eventManager = EventManager.getInstance();
 			try {
-				Logging.resourceBundle =
-						ResourceBundle
-								.getBundle(
-										"com.ikalagaming.logging.resources.LoggingPlugin",
-										Localization.getLocale());
+				Logging.resourceBundle = ResourceBundle.getBundle(
+					"com.ikalagaming.logging.resources.LoggingPlugin",
+					Localization.getLocale());
 			}
 			catch (MissingResourceException missingResource) {
-				// TODO use the system name
-				Logging.log("logging", LogLevel.SEVERE,
-						"locale not found in LoggingPlugin.onLoad()");
+				Logging.log(PluginManager.PLUGIN_NAME, LogLevel.SEVERE,
+					"locale not found in LoggingPlugin.onLoad()");
 			}
 			Logging.dispatcher = new LogDispatcher(Logging.eventManager);
 			Logging.dispatcher.start();
@@ -273,20 +271,17 @@ public class Logging {
 		}
 		String newLog = "";
 		try {
-			newLog =
-					SafeResourceLoader.getString("level_prefix",
-							Logging.resourceBundle, "[")
-							+ level.getLocalizedName()
-							+ SafeResourceLoader.getString("level_postfix",
-									Logging.resourceBundle, "]")
-							+ " "
-							+ SafeResourceLoader.getString("name_prefix",
-									Logging.resourceBundle, "<")
-							+ origin
-							+ SafeResourceLoader.getString("name_postfix",
-									Logging.resourceBundle, ">")
-							+ " "
-							+ details;
+			newLog = SafeResourceLoader.getString("level_prefix",
+				Logging.resourceBundle, "[")
+				+ level.getLocalizedName()
+				+ SafeResourceLoader
+					.getString("level_postfix", Logging.resourceBundle, "]")
+				+ " "
+				+ SafeResourceLoader.getString("name_prefix",
+					Logging.resourceBundle, "<")
+				+ origin + SafeResourceLoader.getString("name_postfix",
+					Logging.resourceBundle, ">")
+				+ " " + details;
 		}
 		catch (Exception e) {
 			System.err.println(level.getName());
