@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.ikalagaming.logging.Logging;
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.util.SafeResourceLoader;
 
 /**
  * A group that can be assigned permissions. Entities that are members of these
@@ -26,9 +28,11 @@ public class PermissionGroup implements PermissionHolder {
 			rootGroup = new PermissionGroup("root", null);
 		}
 		catch (DuplicateGroupException e) {
-			// TODO plugin name, localization
-			Logging.severe("Permissions",
-				"Root permission group already exists");
+			Logging.severe(PluginManager.PLUGIN_NAME,
+				SafeResourceLoader
+					.getString("DUPLICATE_PERMISSION",
+						Permission.resourceLocation)
+					.replaceFirst("$PERMISSION", "root"));
 		}
 		/*
 		 * May be null at this point, but logs will help determine why things

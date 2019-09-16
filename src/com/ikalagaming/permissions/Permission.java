@@ -23,7 +23,10 @@ public class Permission {
 	 */
 	private static final boolean DEFAULT_PERMISSION = false;
 
-	private static final String resourceLocation =
+	/**
+	 * The location for permissions resource bundle
+	 */
+	static final String resourceLocation =
 		"com.ikalagaming.permissions.resources.Permissions";
 
 	private static HashMap<String, Permission> permissionByName =
