@@ -3,6 +3,8 @@ package com.ikalagaming.permissions;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.ikalagaming.logging.Logging;
+
 /**
  * A group that can be assigned permissions. Entities that are members of these
  * groups are assigned the permissions of the group, as well as any permissions
@@ -16,11 +18,27 @@ import java.util.HashMap;
  */
 public class PermissionGroup implements PermissionHolder {
 
-	private static final PermissionGroup ROOT = new PermissionGroup("root",
-			null);
+	private static final PermissionGroup ROOT;
+
+	static {
+		PermissionGroup rootGroup = null;
+		try {
+			rootGroup = new PermissionGroup("root", null);
+		}
+		catch (DuplicateGroupException e) {
+			// TODO plugin name, localization
+			Logging.severe("Permissions",
+				"Root permission group already exists");
+		}
+		/*
+		 * May be null at this point, but logs will help determine why things
+		 * break later
+		 */
+		ROOT = rootGroup;
+	}
 
 	private static HashMap<String, PermissionGroup> groupsByName =
-			new HashMap<>();
+		new HashMap<>();
 
 	/**
 	 * If the group {@link #groupExists(String) exists}, returns the group. If
@@ -80,9 +98,12 @@ public class PermissionGroup implements PermissionHolder {
 	 *
 	 * @param name The name of the group
 	 * @param newPermissions Permissions this group is assigned
+	 * @throws DuplicateGroupException If a group with that name already exists
+	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name,
-			HashMap<Permission, Boolean> newPermissions) {
+		HashMap<Permission, Boolean> newPermissions)
+		throws DuplicateGroupException {
 		this(name, null, null, newPermissions);
 	}
 
@@ -112,9 +133,12 @@ public class PermissionGroup implements PermissionHolder {
 	 * @param name The name of the group
 	 * @param theParent The parent of this group
 	 * @param newPermissions Permissions this group is assigned
+	 * @throws DuplicateGroupException If a group with that name already exists
+	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name, PermissionGroup theParent,
-			HashMap<Permission, Boolean> newPermissions) {
+		HashMap<Permission, Boolean> newPermissions)
+		throws DuplicateGroupException {
 		this(name, null, theParent, newPermissions);
 	}
 
@@ -145,9 +169,12 @@ public class PermissionGroup implements PermissionHolder {
 	 * @param name The name of the group
 	 * @param theDescription The description of the group
 	 * @param newPermissions Permissions this group is assigned
+	 * @throws DuplicateGroupException If a group with that name already exists
+	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name, String theDescription,
-			HashMap<Permission, Boolean> newPermissions) {
+		HashMap<Permission, Boolean> newPermissions)
+		throws DuplicateGroupException {
 		this(name, theDescription, null, newPermissions);
 	}
 
@@ -184,17 +211,17 @@ public class PermissionGroup implements PermissionHolder {
 	 * @param theDescription The description of the group
 	 * @param theParent The parent of this group
 	 * @param newPermissions Permissions this group is assigned
+	 * @throws DuplicateGroupException If a group with that name already exists
+	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name, String theDescription,
-			PermissionGroup theParent,
-			HashMap<Permission, Boolean> newPermissions) {
+		PermissionGroup theParent,
+		HashMap<Permission, Boolean> newPermissions) {
 		if (name == null || name.isEmpty()) {
-			// TODO throw error
-			throw new Error("");
+			throw new EmptyGroupNameException();
 		}
 		if (PermissionGroup.groupExists(name)) {
-			// TODO throw an error
-
+			throw new DuplicateGroupException();
 		}
 		this.groupName = name;
 
@@ -217,7 +244,7 @@ public class PermissionGroup implements PermissionHolder {
 			}
 		}
 		this.permissions =
-				newPermissions == null ? new HashMap<>() : newPermissions;
+			newPermissions == null ? new HashMap<>() : newPermissions;
 
 		// TODO calculate permissions
 		PermissionGroup.groupsByName.put(name, this);
@@ -232,7 +259,7 @@ public class PermissionGroup implements PermissionHolder {
 			for (String s : container.getChildPermissions().keySet()) {
 				if (Permission.getByName(s).contains(child)) {
 					return this.getDepth(Permission.getByName(s), child,
-							oldDepth + 1);
+						oldDepth + 1);
 				}
 			}
 
