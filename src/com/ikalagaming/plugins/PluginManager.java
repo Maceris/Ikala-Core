@@ -212,52 +212,59 @@ public class PluginManager {
 		this.eventManager.registerEventListeners(logListener);
 	}
 
-	private void shutdown() {
-		this.eventManager.unregisterEventListeners(logListener);
-		pluginLock.lock();
-		try {
-			for (String s : loadedPlugins.keySet()) {
-				// TODO would this break things?
-				unloadPlugin(s);
-			}
-		}
-		finally {
-			pluginLock.unlock();
-		}
-
-		PluginManager.instance.clearCommands();
-		PluginManager.instance.eventManager = null;
-		PluginManager.instance.commands = null;
+	private void alertMissingArgs() {
+		String tmp = SafeResourceLoader.getString("COMMAND_ARG_MISSING",
+			this.getResourceBundle());
+		Logging.warning(PluginManager.PLUGIN_NAME, tmp);
 	}
 
-	/**
-	 * Log an alert about a plugin lifecycle, where plugin name and version are
-	 * automatically replaced.
-	 * 
-	 * @param whichAlert The string to read from the resource bundle
-	 * @param plugin The plugin that the alert is about
-	 */
-	void logAlert(String whichAlert, Plugin plugin) {
-		PluginInfo pInfo = getInfo(plugin).get();
-
-		String message =
-			SafeResourceLoader.getString(whichAlert, getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pInfo.getName())
-				.replaceFirst("\\$VERSION", pInfo.getVersion());
-		Logging.fine(PluginManager.PLUGIN_NAME, message);
+	private void cbDisable(String[] args) {
+		if (args.length < 1) {
+			alertMissingArgs();
+			return;
+		}
+		disable(args[0]);
 	}
 
-	/**
-	 * Log the fact that a plugin had its state corrupted.
-	 * 
-	 * @param plugin The plugin that was corrupted.
-	 */
-	void logStateCorrupted(Plugin plugin) {
-		PluginInfo pInfo = getInfo(plugin).get();
-		String msgCorrupted = SafeResourceLoader
-			.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle)
-			.replaceFirst("\\$PLUIGN", pInfo.getName());
-		Logging.warning(PluginManager.PLUGIN_NAME, msgCorrupted);
+	private void cbEnable(String[] args) {
+		if (args.length < 1) {
+			alertMissingArgs();
+			return;
+		}
+		enable(args[0]);
+	}
+
+	private void cbLoad(String[] args) {
+		if (args.length < 1) {
+			alertMissingArgs();
+			return;
+		}
+
+		String tmp =
+			SafeResourceLoader.getString("WIP_TEXT", this.getResourceBundle());
+		Logging.warning(PluginManager.PLUGIN_NAME, tmp);
+		// TODO loading
+		loadPlugin(System.getProperty("user.dir"), args[0]);
+	}
+
+	private void cbReload(String[] args) {
+		if (args.length < 1) {
+			alertMissingArgs();
+			return;
+		}
+		Optional<Plugin> plug = getPlugin(args[0]);
+		if (!plug.isPresent()) {
+			return;
+		}
+		reload(plug.get());
+	}
+
+	private void cbUnload(String[] args) {
+		if (args.length < 1) {
+			alertMissingArgs();
+			return;
+		}
+		unloadPlugin(args[0]);
 	}
 
 	/**
@@ -1016,21 +1023,27 @@ public class PluginManager {
 			boolean existingPluginOld = false;
 			this.pluginLock.lock();
 			try {
-				// TODO real version comparison
-				existingPluginOld =
-					PluginManager.isNewerVersion(info.getVersion(), "0.0.0");
+				Plugin oldPlugin = getPlugin(pluginName).get();
+				Optional<PluginInfo> pInfo = getInfo(oldPlugin);
+				if (!pInfo.isPresent()) {
+					String err = SafeResourceLoader
+						.getString("PLUGIN_INFO_MISSING", this.resourceBundle)
+						.replaceFirst("\\$PLUGIN", pluginName);
+					Logging.warning(PluginManager.PLUGIN_NAME, err);
+					return false;
+				}
+				existingPluginOld = PluginManager.isNewerVersion(
+					info.getVersion(), pInfo.get().getVersion());
 			}
 			finally {
 				this.pluginLock.unlock();
 			}
-			if (existingPluginOld) {
-				this.unloadPlugin(pluginName);
-				// unload the old plugin and continue loading the new one
-			}
-			else {
+			if (!existingPluginOld) {
 				logAlert("ALERT_PLUGIN_OUTDATED", p);
 				return false;
 			}
+
+			this.unloadPlugin(pluginName);
 		}
 
 		this.setPluginState(p, PluginState.LOADING);
@@ -1063,6 +1076,36 @@ public class PluginManager {
 		return true;
 
 		// TODO finish this?
+	}
+
+	/**
+	 * Log an alert about a plugin lifecycle, where plugin name and version are
+	 * automatically replaced.
+	 * 
+	 * @param whichAlert The string to read from the resource bundle
+	 * @param plugin The plugin that the alert is about
+	 */
+	void logAlert(String whichAlert, Plugin plugin) {
+		PluginInfo pInfo = getInfo(plugin).get();
+
+		String message =
+			SafeResourceLoader.getString(whichAlert, getResourceBundle())
+				.replaceFirst("\\$PLUGIN", pInfo.getName())
+				.replaceFirst("\\$VERSION", pInfo.getVersion());
+		Logging.fine(PluginManager.PLUGIN_NAME, message);
+	}
+
+	/**
+	 * Log the fact that a plugin had its state corrupted.
+	 * 
+	 * @param plugin The plugin that was corrupted.
+	 */
+	void logStateCorrupted(Plugin plugin) {
+		PluginInfo pInfo = getInfo(plugin).get();
+		String msgCorrupted = SafeResourceLoader
+			.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle)
+			.replaceFirst("\\$PLUIGN", pInfo.getName());
+		Logging.warning(PluginManager.PLUGIN_NAME, msgCorrupted);
 	}
 
 	/**
@@ -1298,61 +1341,6 @@ public class PluginManager {
 			this::cbReload);
 	}
 
-	private void alertMissingArgs() {
-		String tmp = SafeResourceLoader.getString("COMMAND_ARG_MISSING",
-			this.getResourceBundle());
-		Logging.warning(PluginManager.PLUGIN_NAME, tmp);
-	}
-
-	private void cbEnable(String[] args) {
-		if (args.length < 1) {
-			alertMissingArgs();
-			return;
-		}
-		enable(args[0]);
-	}
-
-	private void cbDisable(String[] args) {
-		if (args.length < 1) {
-			alertMissingArgs();
-			return;
-		}
-		disable(args[0]);
-	}
-
-	private void cbLoad(String[] args) {
-		if (args.length < 1) {
-			alertMissingArgs();
-			return;
-		}
-
-		String tmp =
-			SafeResourceLoader.getString("WIP_TEXT", this.getResourceBundle());
-		Logging.warning(PluginManager.PLUGIN_NAME, tmp);
-		// TODO loading
-		loadPlugin(System.getProperty("user.dir"), args[0]);
-	}
-
-	private void cbUnload(String[] args) {
-		if (args.length < 1) {
-			alertMissingArgs();
-			return;
-		}
-		unloadPlugin(args[0]);
-	}
-
-	private void cbReload(String[] args) {
-		if (args.length < 1) {
-			alertMissingArgs();
-			return;
-		}
-		Optional<Plugin> plug = getPlugin(args[0]);
-		if (!plug.isPresent()) {
-			return;
-		}
-		reload(plug.get());
-	}
-
 	/**
 	 * This is essentially restarting the plugins. The plugin is disabled if it
 	 * is enabled, unloaded, then loaded.
@@ -1445,6 +1433,24 @@ public class PluginManager {
 		}
 	}
 
+	private void shutdown() {
+		this.eventManager.unregisterEventListeners(logListener);
+		pluginLock.lock();
+		try {
+			for (String s : loadedPlugins.keySet()) {
+				// TODO would this break things?
+				unloadPlugin(s);
+			}
+		}
+		finally {
+			pluginLock.unlock();
+		}
+
+		PluginManager.instance.clearCommands();
+		PluginManager.instance.eventManager = null;
+		PluginManager.instance.commands = null;
+	}
+
 	/**
 	 * Attempts to unload the plugin from memory. Does nothing if the plugin is
 	 * not loaded. Plugins are disabled before unloading. This calls
@@ -1499,7 +1505,11 @@ public class PluginManager {
 			this.pluginLock.unlock();
 		}
 		if (pack == null) {
-			return false;// TODO log this problem
+			String notLoaded = SafeResourceLoader
+				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", toUnload);
+			Logging.warning(PluginManager.PLUGIN_NAME, notLoaded);
+			return false;
 		}
 
 		// It has to be disabled before unloading.
