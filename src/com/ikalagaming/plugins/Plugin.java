@@ -11,15 +11,15 @@ import com.ikalagaming.event.Listener;
  * @author Ches Burks
  *
  */
-public interface Plugin {
+public abstract class Plugin {
 
 	/**
-	 * Returns a list of listeners for this plugin. These listeners will be
-	 * used with the event system.
+	 * Returns a list of listeners for this plugin. These listeners will be used
+	 * with the event system.
 	 *
 	 * @return a list of listeners for the plugin.
 	 */
-	public Set<Listener> getListeners();
+	public abstract Set<Listener> getListeners();
 
 	/**
 	 * This method is called when the plugin is disabled, and gives the plugin
@@ -28,7 +28,9 @@ public interface Plugin {
 	 *
 	 * @return True if disabling was successful, false if there was a problem
 	 */
-	public boolean onDisable();
+	public boolean onDisable() {
+		return true;
+	}
 
 	/**
 	 * This method is called when the plugin is enabled. Initialization should
@@ -37,7 +39,9 @@ public interface Plugin {
 	 *
 	 * @return True if enabling was successful, false if there was a problem
 	 */
-	public boolean onEnable();
+	public boolean onEnable() {
+		return true;
+	}
 
 	/**
 	 * Called when the plugin is loaded into memory. The plugin may or may not
@@ -45,16 +49,20 @@ public interface Plugin {
 	 *
 	 * @return True if loading was successful, false if there was a problem
 	 */
-	public boolean onLoad();
+	public boolean onLoad() {
+		return true;
+	}
 
 	/**
 	 * Called just before the plugin is unloaded from memory. If it is enabled,
-	 * then the plugin should disable itself now. Any memory that can
-	 * reasonably be dereferenced by the plugin itself, should be. Files may be
-	 * saved to disk if needed.
+	 * then the plugin should disable itself now. Any memory that can reasonably
+	 * be dereferenced by the plugin itself, should be. Files may be saved to
+	 * disk if needed.
 	 *
 	 * @return True if unloading was successful, false if there was a problem
 	 */
-	public boolean onUnload();
+	public boolean onUnload() {
+		return true;
+	}
 
 }
