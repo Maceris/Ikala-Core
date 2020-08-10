@@ -3,3 +3,5 @@ wiki/
 wiki/*
 javadoc/
 javadoc/*
+dist/
+dist/*
