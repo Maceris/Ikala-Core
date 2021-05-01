@@ -1,8 +1,9 @@
 package com.ikalagaming.plugins;
 
-import java.util.Set;
-
 import com.ikalagaming.event.Listener;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A distinct chunk of the program with a specific purpose and methods for
@@ -11,15 +12,24 @@ import com.ikalagaming.event.Listener;
  * @author Ches Burks
  *
  */
-public interface Plugin {
+public abstract class Plugin {
 
 	/**
-	 * Returns a list of listeners for this plugin. These listeners will be
-	 * used with the event system.
+	 * Created so we have something to return in {@link #getListeners()} without
+	 * creating a new set every time. Private since we want subclasses to handle
+	 * the listeners themselves.
+	 */
+	private Set<Listener> emptyListenerSet = new HashSet<>();
+
+	/**
+	 * Returns a list of listeners for this plugin. These listeners will be used
+	 * with the event system.
 	 *
 	 * @return a list of listeners for the plugin.
 	 */
-	public Set<Listener> getListeners();
+	public Set<Listener> getListeners() {
+		return emptyListenerSet;
+	}
 
 	/**
 	 * This method is called when the plugin is disabled, and gives the plugin
@@ -28,7 +38,9 @@ public interface Plugin {
 	 *
 	 * @return True if disabling was successful, false if there was a problem
 	 */
-	public boolean onDisable();
+	public boolean onDisable() {
+		return true;
+	}
 
 	/**
 	 * This method is called when the plugin is enabled. Initialization should
@@ -37,7 +49,9 @@ public interface Plugin {
 	 *
 	 * @return True if enabling was successful, false if there was a problem
 	 */
-	public boolean onEnable();
+	public boolean onEnable() {
+		return true;
+	}
 
 	/**
 	 * Called when the plugin is loaded into memory. The plugin may or may not
@@ -45,16 +59,20 @@ public interface Plugin {
 	 *
 	 * @return True if loading was successful, false if there was a problem
 	 */
-	public boolean onLoad();
+	public boolean onLoad() {
+		return true;
+	}
 
 	/**
 	 * Called just before the plugin is unloaded from memory. If it is enabled,
-	 * then the plugin should disable itself now. Any memory that can
-	 * reasonably be dereferenced by the plugin itself, should be. Files may be
-	 * saved to disk if needed.
+	 * then the plugin should disable itself now. Any memory that can reasonably
+	 * be dereferenced by the plugin itself, should be. Files may be saved to
+	 * disk if needed.
 	 *
 	 * @return True if unloading was successful, false if there was a problem
 	 */
-	public boolean onUnload();
+	public boolean onUnload() {
+		return true;
+	}
 
 }
