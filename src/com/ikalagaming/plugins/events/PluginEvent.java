@@ -13,23 +13,27 @@ import lombok.Getter;
  *
  */
 @AllArgsConstructor
+@Getter
 public class PluginEvent extends Event {
 
 	/**
 	 * The name of the plugin that sent the event, if any.
+	 * 
+	 * @return the plugin sending the event.
 	 */
-	@Getter
 	private final String from;
 	/**
 	 * The name of the plugin that the event is sent to, if any.
+	 * 
+	 * @return The plugin receiving the event.
 	 */
-	@Getter
 	private final String to;
 
 	/**
 	 * The content of the event.
+	 * 
+	 * @return The contents of the message.
 	 */
-	@Getter
 	private final String message;
 
 }

@@ -14,12 +14,15 @@ import lombok.Getter;
  *
  */
 @AllArgsConstructor
+@Getter
 public class Log extends Event {
 
 	/**
-	 * The info to store or display
+	 * The info to store or display.
+	 * 
+	 * @return The message.
+	 * @param The info to store or display.
 	 */
-	@Getter
 	private final String message;
 
 }

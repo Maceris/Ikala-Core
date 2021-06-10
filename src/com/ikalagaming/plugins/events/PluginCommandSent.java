@@ -10,18 +10,21 @@ import lombok.Getter;
  * @author Ches Burks
  *
  */
+@Getter
 public class PluginCommandSent extends Event {
 
 	/**
 	 * The command that was sent.
+	 * 
+	 * @return The command that was sent.
 	 */
-	@Getter
 	private final String command;
 
 	/**
 	 * The parameters supplied for the command.
+	 * 
+	 * @return The commands arguments.
 	 */
-	@Getter
 	private final String[] arguments;
 
 	/**

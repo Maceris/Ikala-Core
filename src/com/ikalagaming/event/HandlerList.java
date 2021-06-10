@@ -2,6 +2,8 @@ package com.ikalagaming.event;
 
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.Synchronized;
+
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -31,7 +33,8 @@ class HandlerList {
 	 * Creates an array of listeners that can be returned. This is done whenever
 	 * the hashset changes and saves on memory.
 	 */
-	private synchronized void bake() {
+	@Synchronized
+	private void bake() {
 		if (this.bakedList != null) {
 			return;// The list is still valid, so do not bake it again
 		}
@@ -64,7 +67,8 @@ class HandlerList {
 	 * @param listener The listener to register
 	 * @throws IllegalStateException if the listener is already registered
 	 */
-	public synchronized void register(EventListener listener) {
+	@Synchronized
+	public void register(EventListener listener) {
 		if (this.handlerSlots.get(listener.getPriority()).contains(listener)) {
 			throw new IllegalStateException(
 				SafeResourceLoader.getString("LISTENER_ALREADY_REGISTERED",
@@ -91,7 +95,8 @@ class HandlerList {
 	 *
 	 * @param listener The listener to unregister
 	 */
-	public synchronized void unregister(EventListener listener) {
+	@Synchronized
+	public void unregister(EventListener listener) {
 		if (this.handlerSlots.get(listener.getPriority()).remove(listener)) {
 			this.bakedList = null;
 		}
@@ -102,7 +107,8 @@ class HandlerList {
 	 *
 	 * @param listener listener to remove
 	 */
-	public synchronized void unregister(Listener listener) {
+	@Synchronized
+	public void unregister(Listener listener) {
 		// go through each priority
 		this.handlerSlots.values().forEach(
 			(list) -> list.removeIf((li) -> li.getListener().equals(listener)));
@@ -113,7 +119,8 @@ class HandlerList {
 	/**
 	 * Unregisters all handlers.
 	 */
-	public synchronized void unregisterAll() {
+	@Synchronized
+	public void unregisterAll() {
 		this.handlerSlots.values().forEach((list) -> list.clear());
 		this.bakedList = null;
 	}

@@ -76,6 +76,10 @@
 		<mkdir dir="${tmp.lombok.dir}" />
 		<delombok verbose="true" encoding="UTF-8" to="${tmp.lombok.dir}" from="${src.dir}">
 			<format value="suppressWarnings:skip" />
+			<classpath>
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+			</classpath>
 		</delombok>
 		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="1.8" sourcepath="${tmp.lombok.dir}" splitindex="true" use="true" version="true">
 			<classpath>

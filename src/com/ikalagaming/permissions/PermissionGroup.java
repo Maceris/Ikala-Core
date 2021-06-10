@@ -1,11 +1,13 @@
 package com.ikalagaming.permissions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
+
+import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A group that can be assigned permissions. Entities that are members of these
@@ -68,8 +70,20 @@ public class PermissionGroup implements PermissionHolder {
 		return PermissionGroup.groupsByName.containsKey(name);
 	}
 
+	/**
+	 * The name of this group.
+	 * 
+	 * @return The groups name.
+	 */
+	@Getter
 	private final String groupName;
 
+	/**
+	 * The parent group, if it exists. May be null.
+	 * 
+	 * @return This groups parent, may be null.
+	 */
+	@Getter
 	private final PermissionGroup parent;
 
 	/**
@@ -81,6 +95,12 @@ public class PermissionGroup implements PermissionHolder {
 	 */
 	private HashMap<Permission, Boolean> permissions;
 
+	/**
+	 * The description of the group.
+	 * 
+	 * @return a brief description of this group.
+	 */
+	@Getter
 	private final String description;
 
 	/**
@@ -271,33 +291,6 @@ public class PermissionGroup implements PermissionHolder {
 		// It did not contain the value, but should have.
 		// make sure it is not going to be the least depth
 		return Integer.MAX_VALUE - 1;
-	}
-
-	/**
-	 * Returns the description of this group.
-	 *
-	 * @return the groups description
-	 */
-	public String getDescription() {
-		return this.description;
-	}
-
-	/**
-	 * Returns the name of this group.
-	 *
-	 * @return the groups name
-	 */
-	public String getGroupName() {
-		return this.groupName;
-	}
-
-	/**
-	 * Return the parent, if it exists. May return null.
-	 *
-	 * @return this groups parent group
-	 */
-	public PermissionGroup getParent() {
-		return this.parent;
 	}
 
 	/**

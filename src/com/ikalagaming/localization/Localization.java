@@ -1,5 +1,8 @@
 package com.ikalagaming.localization;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Locale;
 
 /**
@@ -9,24 +12,15 @@ import java.util.Locale;
  *
  */
 public class Localization {
-	private static Locale loc = new Locale("en", "US");
 
 	/**
-	 * Returns the current locale. If no locale was set, defaults to "en_US".
-	 *
+	 * The current locale. Defaults to "en_US".
+	 * 
 	 * @return The current locale
-	 */
-	public static Locale getLocale() {
-		return Localization.loc;
-	}
-
-	/**
-	 * Sets the current locale to the given locale.
-	 *
 	 * @param locale The new locale to use
 	 */
-	public static void setLocale(Locale locale) {
-		Localization.loc = locale;
-	}
+	@Getter
+	@Setter
+	private static Locale locale = new Locale("en", "US");
 
 }

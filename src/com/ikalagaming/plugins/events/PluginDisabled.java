@@ -13,12 +13,14 @@ import lombok.Getter;
  *
  */
 @AllArgsConstructor
+@Getter
 public class PluginDisabled extends Event {
 
 	/**
 	 * The plugin which was just disabled.
+	 * 
+	 * @return The plugin that was disabled.
 	 */
-	@Getter
 	private Plugin plugin;
 
 }

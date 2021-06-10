@@ -13,12 +13,14 @@ import lombok.Getter;
  *
  */
 @AllArgsConstructor
+@Getter
 public class PluginUnloaded extends Event {
 
 	/**
 	 * The plugin that was just unloaded.
+	 * 
+	 * @return The plugin that was unloaded.
 	 */
-	@Getter
 	private Plugin thePlugin;
 
 }
