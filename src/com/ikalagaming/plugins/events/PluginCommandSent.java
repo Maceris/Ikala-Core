@@ -2,6 +2,8 @@ package com.ikalagaming.plugins.events;
 
 import com.ikalagaming.event.Event;
 
+import lombok.Getter;
+
 /**
  * A command was sent.
  *
@@ -11,13 +13,15 @@ import com.ikalagaming.event.Event;
 public class PluginCommandSent extends Event {
 
 	/**
-	 * The command.
+	 * The command that was sent.
 	 */
-	private final String cmd;
+	@Getter
+	private final String command;
 
 	/**
-	 * The parameters for the command.
+	 * The parameters supplied for the command.
 	 */
+	@Getter
 	private final String[] arguments;
 
 	/**
@@ -39,7 +43,7 @@ public class PluginCommandSent extends Event {
 	 */
 	public PluginCommandSent(String command, String[] args) {
 		String[] parts = command.trim().split("\\s+");
-		this.cmd = parts[0];
+		this.command = parts[0];
 		String[] argumentArray = args;
 		if (argumentArray == null) {
 			if (parts.length > 1) {
@@ -55,30 +59,12 @@ public class PluginCommandSent extends Event {
 	}
 
 	/**
-	 * Return the list of arguments, {@link #hasArgs() if there are any}.
-	 *
-	 * @return the arguments for the command.
-	 */
-	public String[] getArgs() {
-		return this.arguments;
-	}
-
-	/**
-	 * Returns the command transmitted.
-	 *
-	 * @return the command
-	 */
-	public String getCommand() {
-		return this.cmd;
-	}
-
-	/**
 	 * Returns true if arguments exist, or false if the arguments list is null
 	 * or empty.
 	 *
 	 * @return true if there are arguments
 	 */
-	public boolean hasArgs() {
+	public boolean hasArguments() {
 		if (this.arguments == null) {
 			return false;
 		}
