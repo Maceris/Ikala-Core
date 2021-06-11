@@ -1,9 +1,9 @@
 package com.ikalagaming.permissions;
 
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.CustomLog;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -18,6 +18,7 @@ import java.util.Map;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class Permission {
 
 	/**
@@ -232,9 +233,9 @@ public class Permission {
 					(Map<?, ?>) entry.getValue(), defaultPerm, result));
 			}
 			catch (Throwable ex) {
-				String log = SafeResourceLoader.getString("INVALID_PERMISSIONS",
+				String msg = SafeResourceLoader.getString("INVALID_PERMISSIONS",
 					Permission.resourceLocation);
-				Logging.warning(PluginManager.PLUGIN_NAME, log);
+				log.warning(msg);
 
 				ex.printStackTrace();
 			}
@@ -249,8 +250,8 @@ public class Permission {
 	private boolean defaultValue;
 
 	/**
-	 * The name that identifies the permission, which is the
-	 * same string as would be found in permission yaml files. <br>
+	 * The name that identifies the permission, which is the same string as
+	 * would be found in permission yaml files. <br>
 	 * Example: "entity.movement"
 	 * 
 	 * @return The fully qualified name for this permission.
@@ -595,11 +596,10 @@ public class Permission {
 		HashMap<String, Boolean> submap;
 		for (String s : perms.keySet()) {
 			if (!Permission.exists(s)) {
-				Logging.warning(PluginManager.PLUGIN_NAME,
-					SafeResourceLoader
-						.getString("NON_EXISTANT_SUBPERMISSON",
-							Permission.resourceLocation)
-						.replaceFirst("\\$PERMISSION", s));
+				log.warning(SafeResourceLoader
+					.getString("NON_EXISTANT_SUBPERMISSON",
+						Permission.resourceLocation)
+					.replaceFirst("\\$PERMISSION", s));
 				continue;// it was not created somehow
 			}
 			// this is recursive

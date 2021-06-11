@@ -10,7 +10,8 @@ import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 /**
- * Handles reporting and logging errors.
+ * Handles reporting and logging errors. Actual loggers get created in
+ * {@link LoggerFactory}.
  *
  * @author Ches Burks
  *
@@ -30,23 +31,6 @@ public class Logging {
 
 	private static ReentrantLock initLock = new ReentrantLock();
 	private static ReentrantLock thresholdLock = new ReentrantLock();
-
-	/**
-	 * Logs the given message at the {@link LogLevel#CONFIG config} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #severe(String, String)
-	 * @see #warning(String, String)
-	 * @see #info(String, String)
-	 * @see #fine(String, String)
-	 * @see #finer(String, String)
-	 * @see #finest(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void config(String origin, String details) {
-		Logging.log(origin, LogLevel.CONFIG, details);
-	}
 
 	/**
 	 * Sets up a static logger using the default event manager if one does not
@@ -119,57 +103,6 @@ public class Logging {
 	}
 
 	/**
-	 * Logs the given message at the {@link LogLevel#FINE fine} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #severe(String, String)
-	 * @see #warning(String, String)
-	 * @see #info(String, String)
-	 * @see #config(String, String)
-	 * @see #finer(String, String)
-	 * @see #finest(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void fine(String origin, String details) {
-		Logging.log(origin, LogLevel.FINE, details);
-	}
-
-	/**
-	 * Logs the given message at the {@link LogLevel#FINER finer} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #severe(String, String)
-	 * @see #warning(String, String)
-	 * @see #info(String, String)
-	 * @see #config(String, String)
-	 * @see #fine(String, String)
-	 * @see #finest(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void finer(String origin, String details) {
-		Logging.log(origin, LogLevel.FINER, details);
-	}
-
-	/**
-	 * Logs the given message at the {@link LogLevel#FINEST finest} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #severe(String, String)
-	 * @see #warning(String, String)
-	 * @see #info(String, String)
-	 * @see #config(String, String)
-	 * @see #fine(String, String)
-	 * @see #finer(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void finest(String origin, String details) {
-		Logging.log(origin, LogLevel.FINEST, details);
-	}
-
-	/**
 	 * Returns the current logging level threshold. Logs below this are ignored,
 	 * logs that are equal to or above the threshold are actually logged. If the
 	 * logger is not initialized, it just returns the default threshold value.
@@ -201,23 +134,6 @@ public class Logging {
 	}
 
 	/**
-	 * Logs the given message at the {@link LogLevel#INFO info} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #severe(String, String)
-	 * @see #warning(String, String)
-	 * @see #config(String, String)
-	 * @see #fine(String, String)
-	 * @see #finer(String, String)
-	 * @see #finest(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void info(String origin, String details) {
-		Logging.log(origin, LogLevel.INFO, details);
-	}
-
-	/**
 	 * Returns true if the logger has been created, false if it is in an
 	 * uninitialized state.
 	 *
@@ -242,15 +158,8 @@ public class Logging {
 	 * @param level The level of the requested log
 	 * @param details What to log
 	 * @see #create()
-	 * @see #severe(String, String)
-	 * @see #warning(String, String)
-	 * @see #info(String, String)
-	 * @see #config(String, String)
-	 * @see #fine(String, String)
-	 * @see #finer(String, String)
-	 * @see #finest(String, String)
 	 */
-	public static void log(String origin, LogLevel level, String details) {
+	static void log(String origin, LogLevel level, String details) {
 		initLock.lock();
 		try {
 			if (!Logging.initialized) {
@@ -322,39 +231,5 @@ public class Logging {
 		finally {
 			thresholdLock.unlock();
 		}
-	}
-
-	/**
-	 * Logs the given message at the {@link LogLevel#SEVERE severe} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #warning(String, String)
-	 * @see #info(String, String)
-	 * @see #config(String, String)
-	 * @see #fine(String, String)
-	 * @see #finer(String, String)
-	 * @see #finest(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void severe(String origin, String details) {
-		Logging.log(origin, LogLevel.SEVERE, details);
-	}
-
-	/**
-	 * Logs the given message at the {@link LogLevel#WARNING warning} log level.
-	 *
-	 * @param origin The plugin that is logging the info
-	 * @param details What to log
-	 * @see #severe(String, String)
-	 * @see #info(String, String)
-	 * @see #config(String, String)
-	 * @see #fine(String, String)
-	 * @see #finer(String, String)
-	 * @see #finest(String, String)
-	 * @see #log(String, LogLevel, String)
-	 */
-	public static void warning(String origin, String details) {
-		Logging.log(origin, LogLevel.WARNING, details);
 	}
 }

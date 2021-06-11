@@ -1,12 +1,12 @@
 package com.ikalagaming.plugins;
 
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.permissions.DefaultPermissionValue;
 import com.ikalagaming.permissions.Permission;
 
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
 import lombok.AccessLevel;
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
 import org.yaml.snakeyaml.Yaml;
@@ -25,6 +25,7 @@ import java.util.Map;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class PluginInfo {
 
 	private static List<String> makePluginNameList(final Map<?, ?> map,
@@ -186,8 +187,7 @@ public class PluginInfo {
 		// TODO provide examples
 		// TODO list yaml tags
 		if (stream == null) {
-			Logging.fine(PluginManager.PLUGIN_NAME,
-				"Attempting to get plugin info from a null stream");
+			log.fine("Attempting to get plugin info from a null stream");
 		}
 
 		Yaml yaml = new Yaml();
