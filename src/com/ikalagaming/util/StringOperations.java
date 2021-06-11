@@ -1,5 +1,7 @@
 package com.ikalagaming.util;
 
+import lombok.NonNull;
+
 /**
  * Methods useful for Strings.
  *
@@ -16,7 +18,7 @@ public class StringOperations {
 	 * @param toFind the character to count
 	 * @return how many times the character appears in the string
 	 */
-	public static int countOccurances(String toSearch, char toFind) {
+	public static int countOccurances(@NonNull String toSearch, char toFind) {
 		int count = 0;
 		if (toSearch.length() == 0) {
 			return count;
@@ -39,7 +41,8 @@ public class StringOperations {
 	 * @param toFind the string to count
 	 * @return how many times the substring appears in the string
 	 */
-	public static int countOccurances(String toSearch, String toFind) {
+	public static int countOccurances(@NonNull String toSearch,
+		@NonNull String toFind) {
 		if (toSearch.length() == 0) {
 			return 0;
 		}
@@ -47,6 +50,6 @@ public class StringOperations {
 			return 0;
 		}
 		return (toSearch.length() - toSearch.replace(toFind, "").length())
-				/ toFind.length();
+			/ toFind.length();
 	}
 }

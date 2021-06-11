@@ -27,21 +27,16 @@ public class SafeResourceLoader {
 	 * @return the string from the bundle or name
 	 */
 	public static String getString(String name, ResourceBundle from) {
-		String toReturn = name;
-		boolean failed = false;
 		try {
-			toReturn = from.getString(name);
+			return from.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
-			failed = true;
 		}
 		catch (ClassCastException classCast) {
 			classCast.printStackTrace(System.err);
 		}
-		if (!failed) {
-			return toReturn;
-		}
+
 		ResourceBundle rootOnly = ResourceBundle
 			.getBundle(from.getBaseBundleName(), new ResourceBundle.Control() {
 				@Override
@@ -51,16 +46,15 @@ public class SafeResourceLoader {
 				}
 			});
 		try {
-			toReturn = rootOnly.getString(name);
+			return rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
-			failed = true;
 		}
 		catch (ClassCastException classCast) {
 			classCast.printStackTrace(System.err);
 		}
-		return toReturn;
+		return name;
 	}
 
 	/**
@@ -74,9 +68,8 @@ public class SafeResourceLoader {
 	 */
 	public static String getString(String name, ResourceBundle from,
 		String fallback) {
-		String toReturn = fallback;
 		try {
-			toReturn = from.getString(name);
+			return from.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
@@ -84,7 +77,7 @@ public class SafeResourceLoader {
 		catch (ClassCastException classCast) {
 			classCast.printStackTrace(System.err);
 		}
-		return toReturn;
+		return fallback;
 	}
 
 	/**
@@ -97,22 +90,17 @@ public class SafeResourceLoader {
 	 * @return the string from the bundle or the fallback
 	 */
 	public static String getString(String name, String from) {
-		String toReturn = name;
 		ResourceBundle bundle;
-		boolean failed = false;
 
 		try {
 			bundle = ResourceBundle.getBundle(from, Localization.getLocale());
-			toReturn = bundle.getString(name);
+			return bundle.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
 		}
 		catch (ClassCastException classCast) {
 			classCast.printStackTrace(System.err);
-		}
-		if (!failed) {
-			return toReturn;
 		}
 
 		ResourceBundle rootOnly =
@@ -125,16 +113,15 @@ public class SafeResourceLoader {
 			});
 
 		try {
-			toReturn = rootOnly.getString(name);
+			return rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
-			failed = true;
 		}
 		catch (ClassCastException classCast) {
 			classCast.printStackTrace(System.err);
 		}
-		return toReturn;
+		return name;
 	}
 
 	/**
@@ -147,11 +134,10 @@ public class SafeResourceLoader {
 	 * @return the string from the bundle or the fallback
 	 */
 	public static String getString(String name, String from, String fallback) {
-		String toReturn = fallback;
 		ResourceBundle bundle;
 		try {
 			bundle = ResourceBundle.getBundle(from, Localization.getLocale());
-			toReturn = bundle.getString(name);
+			return bundle.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
 			missingResource.printStackTrace(System.err);
@@ -159,6 +145,6 @@ public class SafeResourceLoader {
 		catch (ClassCastException classCast) {
 			classCast.printStackTrace(System.err);
 		}
-		return toReturn;
+		return fallback;
 	}
 }

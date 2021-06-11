@@ -5,9 +5,11 @@ import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 
 /**
  * A group that can be assigned permissions. Entities that are members of these
@@ -52,11 +54,10 @@ public class PermissionGroup implements PermissionHolder {
 	 * @param name the name of the group to return
 	 * @return the group, or null if no group with that name exists
 	 */
-	public static PermissionGroup getGroupByName(String name) {
-		if (PermissionGroup.groupExists(name)) {
-			return PermissionGroup.groupsByName.get(name);
-		}
-		return null;
+	public static Optional<PermissionGroup>
+		getGroupByName(@NonNull String name) {
+		return Optional.ofNullable(PermissionGroup.groupsByName.get(name));
+
 	}
 
 	/**
@@ -283,9 +284,12 @@ public class PermissionGroup implements PermissionHolder {
 		}
 		if (container.contains(child)) {
 			for (String s : container.getChildPermissions().keySet()) {
-				if (Permission.getByName(s).contains(child)) {
-					return this.getDepth(Permission.getByName(s), child,
-						oldDepth + 1);
+				Optional<Permission> maybePerm = Permission.getByName(s);
+				if (!maybePerm.isPresent()) {
+					continue;
+				}
+				if (maybePerm.get().contains(child)) {
+					return this.getDepth(maybePerm.get(), child, oldDepth + 1);
 				}
 			}
 

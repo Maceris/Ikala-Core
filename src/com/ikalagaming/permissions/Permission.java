@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents a unique permission.
@@ -86,11 +87,9 @@ public class Permission {
 	 * @param permissionName the fully qualified permission name
 	 * @return the permission with the given name, if it exists
 	 */
-	public static Permission getByName(String permissionName) {
-		if (Permission.exists(permissionName)) {
-			return Permission.permissionByName.get(permissionName);
-		}
-		return null;
+	public static Optional<Permission> getByName(String permissionName) {
+		return Optional
+			.ofNullable(Permission.permissionByName.get(permissionName));
 	}
 
 	private static boolean isValidName(String name) {
@@ -593,7 +592,6 @@ public class Permission {
 			return this.fullChildMap;
 		}
 		Map<String, Boolean> perms = this.getChildPermissions();
-		HashMap<String, Boolean> submap;
 		for (String s : perms.keySet()) {
 			if (!Permission.exists(s)) {
 				log.warning(SafeResourceLoader
@@ -603,14 +601,17 @@ public class Permission {
 				continue;// it was not created somehow
 			}
 			// this is recursive
-			submap = Permission.getByName(s).getAllSubpermissions();
-			for (String submapString : submap.keySet()) {
-				if (!perms.containsKey(submapString)) {
-					// add the permission if it does not exist
-					// this will prevent subperms overriding the parents
-					perms.put(submapString, submap.get(submapString));
+			Optional<Permission> possiblePermission = Permission.getByName(s);
+			possiblePermission.ifPresent((value) -> {
+				HashMap<String, Boolean> submap = value.getAllSubpermissions();
+				for (String submapString : submap.keySet()) {
+					if (!perms.containsKey(submapString)) {
+						// add the permission if it does not exist
+						// this will prevent subperms overriding the parents
+						perms.put(submapString, submap.get(submapString));
+					}
 				}
-			}
+			});
 		}
 		this.fullChildMap = new HashMap<>();
 		this.fullChildMap.putAll(perms);

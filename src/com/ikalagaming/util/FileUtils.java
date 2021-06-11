@@ -1,7 +1,10 @@
 package com.ikalagaming.util;
 
+import lombok.NonNull;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  *
@@ -21,25 +24,22 @@ public class FileUtils {
 	 * @param filename the name of the file
 	 * @return true if the file was created, otherwise false
 	 */
-	public static boolean createFile(String path, String filename) {
-		File f;
-		boolean success = true;
-		f = new File(path + filename);
-		if (!FileUtils.fileExists(path + filename)) {
-			try {
-				f.createNewFile();
+	public static boolean createFile(@NonNull String path,
+		@NonNull String filename) {
+
+		try {
+			File f = new File(path + filename);
+			if (f.exists()) {
+				return false;
 			}
-			catch (IOException e) {
-				success = false;
-			}
-			catch (SecurityException e2) {
-				success = false;
-			}
+			return f.createNewFile();
 		}
-		else {
-			success = false;
+		catch (IOException e) {
+			return false;
 		}
-		return success;
+		catch (SecurityException e2) {
+			return false;
+		}
 	}
 
 	/**
@@ -49,90 +49,52 @@ public class FileUtils {
 	 * nonexistent parent directories will be created.
 	 *
 	 * @param path the path of the folder to create
+	 * @param folderName The name of the folder to create.
 	 * @return true if the folder was created, otherwise false
 	 */
-	public static boolean createFolder(String path) {
-		File f;
-		boolean success = true;
-		f = new File(path);
-		if (!FileUtils.fileExists(path)) {
-			try {
-				f.mkdirs();
-			}
-			catch (SecurityException e) {
-				success = false;
-			}
-		}
-		else {
-			success = false;
-		}
-		return success;
-	}
+	public static boolean createFolder(@NonNull String path,
+		@NonNull String folderName) {
 
-	/**
-	 * If the supplied path is a file, it exists, and it can be read and written
-	 * to, then the file is deleted.
-	 *
-	 * @param path the path of the file
-	 */
-	public static void deleteFile(String path) {
-		if (path == null) {
-			return;
-		}
-		File f;
-		f = new File(path);
 		try {
-			if (!f.exists()) {
-				return;
+			File f = new File(path + folderName);
+			if (f.exists()) {
+				return false;
 			}
-			if (!f.isFile()) {
-				return;
-			}
-			if (!f.canRead()) {
-				return;
-			}
-			if (!f.canWrite()) {
-				return;
-			}
-			f.delete();
+			return f.mkdirs();
 		}
 		catch (SecurityException e) {
-			return;// if it can't be accessed, then it can't be deleted.
+			return false;
 		}
 	}
 
 	/**
-	 * If the supplied path is a folder, it exists, is empty, and it can be read
-	 * and written to, then the folder is deleted.
+	 * If the supplied path exists, and it can be read and written to, then the
+	 * file is deleted. If this pathname denotes a directory, then the directory
+	 * must be empty in order to be deleted.
 	 *
-	 * @param path the path of the folder
+	 * @param path The path of the file or directory.
+	 * @return <code>true</code> if and only if the file or directory is
+	 *         successfully deleted; <code>false</code> otherwise
 	 */
-	public static void deleteFolder(String path) {
+	public static boolean deleteFile(String path) {
 		if (path == null) {
-			return;
+			return false;
 		}
-		File f;
-		f = new File(path);
+		File f = new File(path);
 		try {
 			if (!f.exists()) {
-				return;
-			}
-			if (!f.isDirectory()) {
-				return;
+				return false;
 			}
 			if (!f.canRead()) {
-				return;
+				return false;
 			}
 			if (!f.canWrite()) {
-				return;
+				return false;
 			}
-			if (!(f.list().length == 0)) {
-				return;// it contains files
-			}
-			f.delete();
+			return f.delete();
 		}
 		catch (SecurityException e) {
-			return;// if it can't be accessed, then it can't be deleted.
+			return false;// if it can't be accessed, then it can't be deleted.
 		}
 	}
 
@@ -142,27 +104,21 @@ public class FileUtils {
 	 * @param path the path to the file/directory
 	 * @return true if the supplied file/directory exists
 	 */
-	public static boolean fileExists(String path) {
-		if (path == null) {
-			return false;
-		}
-		File f;
+	public static boolean fileExists(@NonNull String path) {
 		/*
 		 * Will not throw an exception because path can't be null
 		 */
-		f = new File(path);
-		boolean exists = false;
+		File f = new File(path);
 		try {
-			exists = f.exists();
+			return f.exists();
 		}
 		catch (SecurityException e) {
 			/*
 			 * Cannot read that location due to security manager, so just assume
 			 * it does not exist.
 			 */
-			exists = false;
+			return false;
 		}
-		return exists;
 	}
 
 	/**
@@ -172,12 +128,7 @@ public class FileUtils {
 	 * @param path the path of the file
 	 * @return the file requested
 	 */
-	public static File getFile(String path) {
-		if (path == null) {
-			return null;
-		}
-		File f;
-		f = new File(path);
-		return f;
+	public static Optional<File> getFile(@NonNull String path) {
+		return Optional.of(new File(path));
 	}
 }
