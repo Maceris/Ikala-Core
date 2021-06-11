@@ -104,9 +104,10 @@
 	</target>
 
 	<target name="clean" description="clean up">
-		<!-- Delete the ${build.dir} and ${dist.dir} directory trees -->
+		<!-- Delete the generated directory trees -->
 		<delete dir="${build.dir}" />
 		<delete dir="${dist.dir}" />
+		<delete dir="${doc.dir}" />
 		<delete dir="${src.delomboked.dir}" />
 	</target>
 </project>
