@@ -2,6 +2,7 @@
 <project name="Ikala-Core" default="compileTest" basedir=".">
 	<!-- set global properties for this build -->
 	<property name="src.dir" location="src" />
+	<property name="src.delomboked.dir" location="src-delomboked" />
 	<property name="test.dir" location="test" />
 	<property name="build.dir" location="bin" />
 	<property name="dist.dir" location="dist" />
@@ -10,7 +11,6 @@
 	<property name="jars.bundled.dir" location="lib/bundled" />
 	<property name="jars.info.dir" location="lib/info" />
 	<property name="jars.test.dir" location="lib/testing" />
-	<property name="tmp.lombok.dir" location="build/src-delomboked" />
 
 	<!-- some configuration -->
 	<property name="packages" value="com.ikalagaming.*" />
@@ -24,6 +24,18 @@
 		<tstamp />
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build.dir}" />
+		<mkdir dir="${src.delomboked.dir}" />
+	</target>
+
+	<target name="delombok" depends="init" description="generates sources from lombok">
+		<taskdef classname="lombok.delombok.ant.Tasks$Delombok" classpath="${jars.bundled.dir}/lombok-1.18.20.jar" name="delombok" />
+		<delombok verbose="true" encoding="UTF-8" to="${src.delomboked.dir}" from="${src.dir}">
+			<format value="suppressWarnings:skip" />
+			<classpath>
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+			</classpath>
+		</delombok>
 	</target>
 
 	<target name="compile" depends="init" description="compile the source">
@@ -71,23 +83,13 @@
 		</junit>
 	</target>
 
-	<target name="javadoc" description="generate javadoc">
-		<taskdef classname="lombok.delombok.ant.Tasks$Delombok" classpath="${jars.bundled.dir}/lombok-1.18.20.jar" name="delombok" />
-		<mkdir dir="${tmp.lombok.dir}" />
-		<delombok verbose="true" encoding="UTF-8" to="${tmp.lombok.dir}" from="${src.dir}">
-			<format value="suppressWarnings:skip" />
-			<classpath>
-				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
-				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
-			</classpath>
-		</delombok>
-		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="1.8" sourcepath="${tmp.lombok.dir}" splitindex="true" use="true" version="true">
+	<target name="javadoc" depends="delombok" description="generate javadoc">
+		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="1.8" sourcepath="${src.delomboked.dir}" splitindex="true" use="true" version="true">
 			<classpath>
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
 				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
 			</classpath>
 		</javadoc>
-		<delete dir="${tmp.lombok.dir}" />
 	</target>
 
 	<target name="dist" depends="compile,javadoc" description="generate distribution jars">
@@ -97,7 +99,7 @@
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}.jar" basedir="${build.dir}">
 			<zipgroupfileset dir="${jars.bundled.dir}" includes="*.jar" />
 		</jar>
-		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.dir}" />
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.delomboked.dir}" />
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}" />
 	</target>
 
@@ -105,5 +107,6 @@
 		<!-- Delete the ${build.dir} and ${dist.dir} directory trees -->
 		<delete dir="${build.dir}" />
 		<delete dir="${dist.dir}" />
+		<delete dir="${src.delomboked.dir}" />
 	</target>
 </project>

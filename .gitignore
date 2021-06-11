@@ -5,6 +5,7 @@ javadoc/
 javadoc/*
 dist/
 dist/*
+src-delomboked/*
 
 # Ignore Gradle project-specific cache directory
 .gradle

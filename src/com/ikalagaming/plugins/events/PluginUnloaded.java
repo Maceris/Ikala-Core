@@ -19,6 +19,7 @@ public class PluginUnloaded extends Event {
 	/**
 	 * The plugin that was just unloaded.
 	 * 
+	 * @param The plugin that was unloaded.
 	 * @return The plugin that was unloaded.
 	 */
 	private Plugin thePlugin;

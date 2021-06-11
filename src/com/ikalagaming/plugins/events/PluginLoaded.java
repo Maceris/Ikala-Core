@@ -19,6 +19,7 @@ public class PluginLoaded extends Event {
 	/**
 	 * The plugin that was just loaded.
 	 * 
+	 * @param The plugin that was loaded.
 	 * @return The plugin that was loaded.
 	 */
 	private Plugin plugin;
