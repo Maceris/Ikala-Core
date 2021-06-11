@@ -2,6 +2,7 @@
 <project name="Ikala-Core" default="compileTest" basedir=".">
 	<!-- set global properties for this build -->
 	<property name="src.dir" location="src" />
+	<property name="src.delomboked.dir" location="src-delomboked" />
 	<property name="test.dir" location="test" />
 	<property name="build.dir" location="bin" />
 	<property name="dist.dir" location="dist" />
@@ -16,13 +17,25 @@
 	<property name="leavedebugsymbols" value="true" />
 	<property name="verbose" value="true" />
 	<property name="plugin.name" value="Ikala-Core" />
-	<property name="plugin.version" value="0.0.1" />
+	<property name="plugin.version" value="0.1.0" />
 
 	<target name="init">
 		<!-- Create the time stamp -->
 		<tstamp />
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build.dir}" />
+		<mkdir dir="${src.delomboked.dir}" />
+	</target>
+
+	<target name="delombok" depends="init" description="generates sources from lombok">
+		<taskdef classname="lombok.delombok.ant.Tasks$Delombok" classpath="${jars.bundled.dir}/lombok-1.18.20.jar" name="delombok" />
+		<delombok verbose="true" encoding="UTF-8" to="${src.delomboked.dir}" from="${src.dir}">
+			<format value="suppressWarnings:skip" />
+			<classpath>
+				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
+				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
+			</classpath>
+		</delombok>
 	</target>
 
 	<target name="compile" depends="init" description="compile the source">
@@ -70,8 +83,8 @@
 		</junit>
 	</target>
 
-	<target name="javadoc" description="generate javadoc">
-		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="1.8" sourcepath="${src.dir}" splitindex="true" use="true" version="true">
+	<target name="javadoc" depends="delombok" description="generate javadoc">
+		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="1.8" sourcepath="${src.delomboked.dir}" splitindex="true" use="true" version="true">
 			<classpath>
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
 				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
@@ -86,13 +99,15 @@
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}.jar" basedir="${build.dir}">
 			<zipgroupfileset dir="${jars.bundled.dir}" includes="*.jar" />
 		</jar>
-		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.dir}" />
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.delomboked.dir}" />
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}" />
 	</target>
 
 	<target name="clean" description="clean up">
-		<!-- Delete the ${build.dir} and ${dist.dir} directory trees -->
+		<!-- Delete the generated directory trees -->
 		<delete dir="${build.dir}" />
 		<delete dir="${dist.dir}" />
+		<delete dir="${doc.dir}" />
+		<delete dir="${src.delomboked.dir}" />
 	</target>
 </project>

@@ -2,6 +2,9 @@ package com.ikalagaming.logging.events;
 
 import com.ikalagaming.event.Event;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 /**
  * A message or error was logged and needs to be recorded. Dispatched by the
  * logging system after it constructs a message from logs if the logs are of
@@ -10,28 +13,17 @@ import com.ikalagaming.event.Event;
  * @author Ches Burks
  *
  */
+@AllArgsConstructor
+@Getter
 public class Log extends Event {
 
-	private final String theMessage;
-
 	/**
-	 * Creates an event to alert any interfaces that might report errors or logs
-	 * to the user or developer.
-	 *
-	 * @param message the info to store or display
+	 * The info to store or display.
+	 * 
+	 * @return The message.
+	 * @param The info to store or display.
 	 */
-	public Log(String message) {
-		this.theMessage = message;
-
-	}
-
-	/**
-	 * Returns a string containing the information to be stored or displayed.
-	 *
-	 * @return the message
-	 */
-	public String getMessage() {
-		return this.theMessage;
-	}
+	@SuppressWarnings("javadoc")
+	private final String message;
 
 }

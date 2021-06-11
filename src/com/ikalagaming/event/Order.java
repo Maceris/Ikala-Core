@@ -1,5 +1,7 @@
 package com.ikalagaming.event;
 
+import lombok.Getter;
+
 /**
  * Represents where in the order of receiving events a particular handler is.
  * Based off lahwran's fevents.
@@ -36,18 +38,17 @@ public enum Order {
 	 */
 	MONITOR(5);
 
-	private final int orderIndex;
+	
+	/**
+	 * Returns the numerical index of this priority, with higher numbers being later.
+	 * @return The numerical order of this priority
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private final int index;
 
 	private Order(int slot) {
-		this.orderIndex = slot;
+		this.index = slot;
 	}
 
-	/**
-	 * Returns the index of this priority
-	 *
-	 * @return the level of importance of this priority
-	 */
-	public int getIndex() {
-		return this.orderIndex;
-	}
 }

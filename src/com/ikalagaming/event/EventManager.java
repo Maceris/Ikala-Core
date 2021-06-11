@@ -1,9 +1,10 @@
 package com.ikalagaming.event;
 
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
+
+import lombok.CustomLog;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Set;
 /**
  * Manages events and listeners. Based off lahwran's fevents.
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class EventManager {
 
 	private static EventManager instance;
@@ -163,7 +165,7 @@ public class EventManager {
 				String err = SafeResourceLoader.getString("EVT_QUEUE_FULL",
 					"com.ikalagaming.event.strings")
 					+ "in EventManager.fireEvent(Event)";
-				Logging.warning(PluginManager.PLUGIN_NAME, err);
+				log.warning(err);
 			}
 
 		}

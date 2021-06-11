@@ -20,5 +20,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/Ikala-Core/lib/info/luaj-doc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/bundled/lombok-1.18.20.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

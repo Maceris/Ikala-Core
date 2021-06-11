@@ -1,5 +1,11 @@
 package com.ikalagaming.gui;
 
+import com.ikalagaming.plugins.Plugin;
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.plugins.PluginState;
+
+import lombok.Getter;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -26,10 +32,6 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-
-import com.ikalagaming.plugins.Plugin;
-import com.ikalagaming.plugins.PluginManager;
-import com.ikalagaming.plugins.PluginState;
 
 /**
  * Displays various information about the program.
@@ -99,9 +101,13 @@ public class TaskManager extends JFrame {
 	private JTable table;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
 	/**
-	 * low long to wait between plugin status updates
+	 * The time to wait between plugin status updates in milliseconds
+	 * 
+	 * @return The delay in ms between updates
 	 */
-	long delay = 1000;
+	@SuppressWarnings("javadoc")
+	@Getter
+	private long delay = 1000;
 	private DefaultTableModel model;
 	private Map<String, PluginState> plugins = new HashMap<>();
 	private final int maxTick = 10;
@@ -300,15 +306,6 @@ public class TaskManager extends JFrame {
 			this.pluginManager.reload(pack);
 		}
 
-	}
-
-	/**
-	 * Returns the length of time to wait between refreshes.
-	 *
-	 * @return the delay time in ms
-	 */
-	public long getDelay() {
-		return this.delay;
 	}
 
 	/**

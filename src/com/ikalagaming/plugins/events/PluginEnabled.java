@@ -3,36 +3,26 @@ package com.ikalagaming.plugins.events;
 import com.ikalagaming.event.Event;
 import com.ikalagaming.plugins.Plugin;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 /**
  * Fired when (after) a plugin is enabled.
  *
  * @author Ches Burks
  *
  */
+@AllArgsConstructor
 public class PluginEnabled extends Event {
 
 	/**
 	 * The plugin that was just enabled.
+	 * 
+	 * @param plugin The plugin that was enabled.
+	 * @return The plugin that was enabled.
 	 */
-	private Plugin thePlugin;
-
-	/**
-	 * Creates a new {@link PluginEnabled} for the given plugin.
-	 *
-	 * @param enabled the plugin that has been enabled
-	 *
-	 */
-	public PluginEnabled(Plugin enabled) {
-		this.thePlugin = enabled;
-	}
-
-	/**
-	 * Returns a reference to the plugin was enabled.
-	 *
-	 * @return the name of the plugin
-	 */
-	public Plugin getPlugin() {
-		return this.thePlugin;
-	}
+	@SuppressWarnings("javadoc")
+	@Getter
+	private Plugin plugin;
 
 }

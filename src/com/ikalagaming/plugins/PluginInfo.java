@@ -1,11 +1,14 @@
 package com.ikalagaming.plugins;
 
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.permissions.DefaultPermissionValue;
 import com.ikalagaming.permissions.Permission;
 
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
+import lombok.AccessLevel;
+import lombok.CustomLog;
+import lombok.Getter;
+import lombok.Setter;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
@@ -22,6 +25,7 @@ import java.util.Map;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class PluginInfo {
 
 	private static List<String> makePluginNameList(final Map<?, ?> map,
@@ -47,19 +51,127 @@ public class PluginInfo {
 		return pluginNameList;
 	}
 
+	/**
+	 * The list of authors for the plugin. This is used to give credit to
+	 * developers.
+	 * 
+	 * @return The list of plugin authors.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private List<String> authors = null;
+
+	/**
+	 * The class loader for the plugin.
+	 * 
+	 * @return The current class loader for the plugin.
+	 * @param classLoader The new class loader.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	@Setter(AccessLevel.PRIVATE)
 	private String classLoader = null;
+
+	/**
+	 * A map from strings to commands.
+	 * 
+	 * @return The command map.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private Map<String, Map<String, Object>> commands = null;
-	private DefaultPermissionValue defaultPerm = DefaultPermissionValue.FALSE;
-	private List<String> depend = new ArrayList<>();
+	/**
+	 * Returns a list of plugins this plugin requires in order to run. Use the
+	 * value of {@link #getName()} for the target plugin to specify it in the
+	 * dependencies. If any plugin in this list is not found, this plugin will
+	 * fail to load at startup.
+	 * 
+	 * @return The list of plugin dependencies.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private List<String> dependencies = new ArrayList<>();
+
+	/**
+	 * This is a short human-friendly description of what the plugin does. It
+	 * may be multiple lines.
+	 * 
+	 * @return The brief description of this plugin.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private String description = null;
+
 	private Map<?, ?> lazyPermissions = null;
+
+	/**
+	 * Plugins to load before this plugin.
+	 * 
+	 * @return The list of plugins to load first before this one.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private List<String> loadBefore = new ArrayList<>();
+
+	/**
+	 * The fully qualified name of the main method for the plugin. This includes
+	 * the class name. The format should follow the
+	 * {@link ClassLoader#loadClass(String)} syntax. This will be the class that
+	 * implements {@link Plugin}.
+	 * 
+	 * @return The absolute path to the main method of the plugin.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private String main = null;
+
+	/**
+	 * The name of the plugin. Names are unique for each plugin. The name can
+	 * contain the following characters:
+	 * <ul>
+	 * <li>a-z</li>
+	 * <li>A-Z</li>
+	 * <li>0-9</li>
+	 * <li>period</li>
+	 * <li>hyphen</li>
+	 * <li>underscore</li>
+	 * </ul>
+	 * 
+	 * @return The name of the plugin.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private String name = null;
+
+	/**
+	 * The default permission value for this plugin.
+	 * 
+	 * @return The default permission value.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private DefaultPermissionValue permissionDefault =
+		DefaultPermissionValue.FALSE;
 	private List<Permission> permissions = null;
+
+	/**
+	 * The prefix to use in logging. This will appear before logs sent by this
+	 * plugin.
+	 * 
+	 * @return The logging prefix.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private String prefix = null;
-	private List<String> softDepend = new ArrayList<>();
+
+	/**
+	 * Returns a list of dependencies that are desired but not needed to run
+	 * 
+	 * @return Soft dependencies for this plugin.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private List<String> softDependencies = new ArrayList<>();
 
 	private Version version = Version.valueOf("0.0.0");
 
@@ -75,8 +187,7 @@ public class PluginInfo {
 		// TODO provide examples
 		// TODO list yaml tags
 		if (stream == null) {
-			Logging.fine(PluginManager.PLUGIN_NAME,
-				"Attempting to get plugin info from a null stream");
+			log.fine("Attempting to get plugin info from a null stream");
 		}
 
 		Yaml yaml = new Yaml();
@@ -92,57 +203,6 @@ public class PluginInfo {
 	}
 
 	/**
-	 * Returns the list of authors for the program. This is used to give credit
-	 * to developers.
-	 *
-	 * @return the list of authors for the plugin
-	 */
-	public List<String> getAuthors() {
-		return this.authors;
-	}
-
-	/**
-	 * @return the classLoader
-	 */
-	public String getClassLoader() {
-		return this.classLoader;
-	}
-
-	/**
-	 * A map of strings to commands
-	 *
-	 * @return the command map
-	 */
-	public Map<String, Map<String, Object>> getCommands() {
-		return this.commands;
-	}
-
-	/**
-	 * Returns a list of plugins this plugin requires in order to run. Use the
-	 * value of {@link #getName()} for the target plugin to specify it in the
-	 * dependencies. If any plugin in this list is not found, this plugin will
-	 * fail to load at startup. If multiple plugins list each other in depend,
-	 * and they create a
-	 * <a href="https://en.wikipedia.org/wiki/Circular_dependency">circular
-	 * dependency</a>, none of the plugins will load.
-	 *
-	 * @return the list of plugins this depends on
-	 */
-	public List<String> getDependencies() {
-		return this.depend;
-	}
-
-	/**
-	 * This is a short human-friendly description of what the plugin does. It
-	 * may be multiple lines.
-	 *
-	 * @return the plugins description
-	 */
-	public String getDescription() {
-		return this.description;
-	}
-
-	/**
 	 * Returns the full name of the plugin. This is a string that describes the
 	 * plugin, such as "Graphics" or "AI", with version info appended.
 	 *
@@ -150,54 +210,6 @@ public class PluginInfo {
 	 */
 	public String getFullName() {
 		return this.name + "-" + this.version;
-	}
-
-	/**
-	 * Plugins to load before this plugin
-	 *
-	 * @return a list of plugins that should be loaded first
-	 */
-	public List<String> getLoadBefore() {
-		return this.loadBefore;
-	}
-
-	/**
-	 * The fully qualified name of the main method for the plugin. This includes
-	 * the class name. The format should follow the
-	 * {@link ClassLoader#loadClass(String)} syntax. This will be the class that
-	 * implements {@link Plugin}.
-	 *
-	 * @return the absolute path to the main method of the plugin
-	 */
-	public String getMain() {
-		return this.main;
-	}
-
-	/**
-	 * Returns the name of the plugin. Names are unique for each plugin. The
-	 * name can contain the following characters:
-	 * <ul>
-	 * <li>a-z</li>
-	 * <li>A-Z</li>
-	 * <li>0-9</li>
-	 * <li>period</li>
-	 * <li>hyphen</li>
-	 * <li>underscore</li>
-	 * </ul>
-	 *
-	 * @return the name of the plugin
-	 */
-	public String getName() {
-		return this.name;
-	}
-
-	/**
-	 * Returns the default permission value for this plugin
-	 *
-	 * @return the default permission value
-	 */
-	public DefaultPermissionValue getPermissionDefault() {
-		return this.defaultPerm;
 	}
 
 	/**
@@ -215,31 +227,12 @@ public class PluginInfo {
 					Permission.loadPermissions(this.lazyPermissions,
 						"Permission node '%s' in plugin description file for "
 							+ this.getFullName() + " is invalid",
-						this.defaultPerm.value());
+						this.permissionDefault.value());
 
 				this.lazyPermissions = null;
 			}
 		}
 		return this.permissions;
-	}
-
-	/**
-	 * Returns the prefix to use in logging. This will appear before logs sent
-	 * by this plugin.
-	 *
-	 * @return this plugins prefix
-	 */
-	public String getPrefix() {
-		return this.prefix;
-	}
-
-	/**
-	 * Returns a list of dependencies that are not needed to run
-	 *
-	 * @return soft dependencies
-	 */
-	public List<String> getSoftDependencies() {
-		return this.softDepend;
 	}
 
 	/**
@@ -336,8 +329,9 @@ public class PluginInfo {
 		if (map.get("class-loader-of") != null) {
 			this.setClassLoader(map.get("class-loader-of").toString());
 		}
-		this.depend = PluginInfo.makePluginNameList(map, "depend");
-		this.softDepend = PluginInfo.makePluginNameList(map, "soft-depend");
+		this.dependencies = PluginInfo.makePluginNameList(map, "depend");
+		this.softDependencies =
+			PluginInfo.makePluginNameList(map, "soft-depend");
 		this.loadBefore = PluginInfo.makePluginNameList(map, "load-before");
 		if (map.get("description") != null) {
 			this.description = map.get("description").toString();
@@ -364,7 +358,7 @@ public class PluginInfo {
 		}
 		if (map.get("default-permission") != null) {
 			try {
-				this.defaultPerm = DefaultPermissionValue
+				this.permissionDefault = DefaultPermissionValue
 					.getByName(map.get("default-permission").toString());
 			}
 			catch (ClassCastException ex) {
@@ -381,7 +375,7 @@ public class PluginInfo {
 			this.permissions = Permission.loadPermissions(this.lazyPermissions,
 				"Permission node '%s' in plugin description file for "
 					+ this.getFullName() + " is invalid",
-				this.defaultPerm.value());
+				this.permissionDefault.value());
 		}
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException(
@@ -392,10 +386,4 @@ public class PluginInfo {
 		}
 	}
 
-	/**
-	 * @param newClassLoader the classLoaderOf to set
-	 */
-	private void setClassLoader(String newClassLoader) {
-		this.classLoader = newClassLoader;
-	}
 }

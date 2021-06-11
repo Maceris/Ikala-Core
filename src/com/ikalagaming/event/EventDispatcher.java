@@ -1,8 +1,9 @@
 package com.ikalagaming.event;
 
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
+
+import lombok.CustomLog;
 
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
@@ -13,6 +14,7 @@ import java.util.NoSuchElementException;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 class EventDispatcher extends Thread {
 
 	/**
@@ -53,8 +55,7 @@ class EventDispatcher extends Thread {
 			return;
 		}
 		if (this.eventManager == null) {
-			Logging.severe(PluginManager.PLUGIN_NAME,
-				"There is no event manager!");
+			log.severe("There is no event manager!");
 			return;
 		}
 		HandlerList handlers = this.eventManager.getHandlers(event);
@@ -69,7 +70,7 @@ class EventDispatcher extends Thread {
 			catch (EventException e) {
 				String error = SafeResourceLoader.getString("DISPATCH_ERROR",
 					EventManager.resourceBundle);
-				Logging.warning(PluginManager.PLUGIN_NAME, error);
+				log.warning(error);
 				System.err.println(e.toString());
 				e.printStackTrace(System.err);
 			}

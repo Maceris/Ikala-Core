@@ -1,8 +1,10 @@
 package com.ikalagaming.permissions;
 
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
+
+import lombok.CustomLog;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +18,7 @@ import java.util.Map;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class Permission {
 
 	/**
@@ -230,9 +233,9 @@ public class Permission {
 					(Map<?, ?>) entry.getValue(), defaultPerm, result));
 			}
 			catch (Throwable ex) {
-				String log = SafeResourceLoader.getString("INVALID_PERMISSIONS",
+				String msg = SafeResourceLoader.getString("INVALID_PERMISSIONS",
 					Permission.resourceLocation);
-				Logging.warning(PluginManager.PLUGIN_NAME, log);
+				log.warning(msg);
 
 				ex.printStackTrace();
 			}
@@ -240,18 +243,45 @@ public class Permission {
 		return result;
 	}
 
-	private boolean permDefaultValue;
+	/**
+	 * The default for this permission. <br>
+	 * Example: "false"
+	 */
+	private boolean defaultValue;
 
-	private final String permName;
+	/**
+	 * The name that identifies the permission, which is the same string as
+	 * would be found in permission yaml files. <br>
+	 * Example: "entity.movement"
+	 * 
+	 * @return The fully qualified name for this permission.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private final String name;
 
-	private final String permDescription;
+	/**
+	 * A short description of the purpose for the permission, if it is set. An
+	 * empty string if it is not set. <br>
+	 * Example: "This allows entities to move around the world"
+	 * 
+	 * @return Brief description of this permission.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private final String description;
 
 	/**
 	 * A mapping of child permissions that this permissions includes. Each child
 	 * permission has a boolean assigned to it. If the boolean is true, the
 	 * child permission will inherit this permissions value. If it is false, it
-	 * will inherit the inverse of this permissions value.
+	 * will inherit the inverse of this permissions value.<br>
+	 * Example: "entity.jump" is mapped to "true"
+	 * 
+	 * @return The list of child permissions.
 	 */
+	@SuppressWarnings("javadoc")
+	@Getter
 	private final Map<String, Boolean> childPermissions;
 
 	/**
@@ -483,14 +513,14 @@ public class Permission {
 				"Permission '" + name + "' already exists.");
 
 		}
-		this.permName = name;
+		this.name = name;
 		if (description == null) {
-			this.permDescription = "";
+			this.description = "";
 		}
 		else {
-			this.permDescription = description.isEmpty() ? "" : description;
+			this.description = description.isEmpty() ? "" : description;
 		}
-		this.permDefaultValue = defaultValue;
+		this.defaultValue = defaultValue;
 		this.childPermissions =
 			children == null ? new LinkedHashMap<>() : children;
 		Permission.permissionByName.put(name, this);
@@ -566,11 +596,10 @@ public class Permission {
 		HashMap<String, Boolean> submap;
 		for (String s : perms.keySet()) {
 			if (!Permission.exists(s)) {
-				Logging.warning(PluginManager.PLUGIN_NAME,
-					SafeResourceLoader
-						.getString("NON_EXISTANT_SUBPERMISSON",
-							Permission.resourceLocation)
-						.replaceFirst("\\$PERMISSION", s));
+				log.warning(SafeResourceLoader
+					.getString("NON_EXISTANT_SUBPERMISSON",
+						Permission.resourceLocation)
+					.replaceFirst("\\$PERMISSION", s));
 				continue;// it was not created somehow
 			}
 			// this is recursive
@@ -590,49 +619,13 @@ public class Permission {
 	}
 
 	/**
-	 * Returns the children is a list of permissions that are granted or revoked
-	 * when this permission is granted/revoked. Each child permission has a
-	 * boolean assigned to it. If the boolean is true, the child permission will
-	 * inherit this permissions value. If it is false, it will inherit the
-	 * inverse of this permissions value. <br>
-	 * Example: "entity.jump" is mapped to "true"
-	 *
-	 * @return the list of child permissions
-	 */
-	public Map<String, Boolean> getChildPermissions() {
-		return this.childPermissions;
-	}
-
-	/**
 	 * Returns the default for this permission. <br>
 	 * Example: "false"
 	 *
 	 * @return default value of this permission.
 	 */
 	public boolean getDefault() {
-		return this.permDefaultValue;
-	}
-
-	/**
-	 * Returns a short description of the purpose for the permission, if it is
-	 * set. Returns an empty string if it is not set. <br>
-	 * Example: "This allows entities to move around the world"
-	 *
-	 * @return Brief description of this permission
-	 */
-	public String getDescription() {
-		return this.permDescription;
-	}
-
-	/**
-	 * Returns the name that identifies the permission, which is the same string
-	 * as would be found in permission yaml files. <br>
-	 * Example: "entity.movement"
-	 *
-	 * @return fully qualified name for this permission
-	 */
-	public String getName() {
-		return this.permName;
+		return this.defaultValue;
 	}
 
 	/**
@@ -646,6 +639,6 @@ public class Permission {
 	 * @param value The new default to set
 	 */
 	public void setDefault(DefaultPermissionValue value) {
-		this.permDefaultValue = value.value();
+		this.defaultValue = value.value();
 	}
 }
