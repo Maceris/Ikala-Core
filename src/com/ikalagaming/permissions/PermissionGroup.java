@@ -75,6 +75,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * 
 	 * @return The groups name.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final String groupName;
 
@@ -83,6 +84,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * 
 	 * @return This groups parent, may be null.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final PermissionGroup parent;
 
@@ -100,6 +102,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * 
 	 * @return a brief description of this group.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final String description;
 

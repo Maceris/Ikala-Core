@@ -255,6 +255,7 @@ public class Permission {
 	 * 
 	 * @return The fully qualified name for this permission.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final String name;
 
@@ -265,6 +266,7 @@ public class Permission {
 	 * 
 	 * @return Brief description of this permission.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final String description;
 
@@ -277,6 +279,7 @@ public class Permission {
 	 * 
 	 * @return The list of child permissions.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final Map<String, Boolean> childPermissions;
 

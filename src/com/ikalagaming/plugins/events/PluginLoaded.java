@@ -22,6 +22,7 @@ public class PluginLoaded extends Event {
 	 * @param The plugin that was loaded.
 	 * @return The plugin that was loaded.
 	 */
+	@SuppressWarnings("javadoc")
 	private Plugin plugin;
 
 }

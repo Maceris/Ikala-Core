@@ -43,6 +43,7 @@ public enum Order {
 	 * Returns the numerical index of this priority, with higher numbers being later.
 	 * @return The numerical order of this priority
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private final int index;
 

@@ -19,6 +19,7 @@ public class Localization {
 	 * @return The current locale
 	 * @param locale The new locale to use
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	@Setter
 	private static Locale locale = new Locale("en", "US");

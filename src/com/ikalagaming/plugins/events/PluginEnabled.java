@@ -21,6 +21,7 @@ public class PluginEnabled extends Event {
 	 * @param plugin The plugin that was enabled.
 	 * @return The plugin that was enabled.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private Plugin plugin;
 

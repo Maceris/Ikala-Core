@@ -56,6 +56,7 @@ public class PluginInfo {
 	 * 
 	 * @return The list of plugin authors.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private List<String> authors = null;
 
@@ -65,6 +66,7 @@ public class PluginInfo {
 	 * @return The current class loader for the plugin.
 	 * @param classLoader The new class loader.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	@Setter(AccessLevel.PRIVATE)
 	private String classLoader = null;
@@ -74,6 +76,7 @@ public class PluginInfo {
 	 * 
 	 * @return The command map.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private Map<String, Map<String, Object>> commands = null;
 	/**
@@ -84,6 +87,7 @@ public class PluginInfo {
 	 * 
 	 * @return The list of plugin dependencies.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private List<String> dependencies = new ArrayList<>();
 
@@ -93,6 +97,7 @@ public class PluginInfo {
 	 * 
 	 * @return The brief description of this plugin.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private String description = null;
 
@@ -103,6 +108,7 @@ public class PluginInfo {
 	 * 
 	 * @return The list of plugins to load first before this one.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private List<String> loadBefore = new ArrayList<>();
 
@@ -114,6 +120,7 @@ public class PluginInfo {
 	 * 
 	 * @return The absolute path to the main method of the plugin.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private String main = null;
 
@@ -131,6 +138,7 @@ public class PluginInfo {
 	 * 
 	 * @return The name of the plugin.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private String name = null;
 
@@ -139,6 +147,7 @@ public class PluginInfo {
 	 * 
 	 * @return The default permission value.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private DefaultPermissionValue permissionDefault =
 		DefaultPermissionValue.FALSE;
@@ -150,6 +159,7 @@ public class PluginInfo {
 	 * 
 	 * @return The logging prefix.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private String prefix = null;
 
@@ -158,6 +168,7 @@ public class PluginInfo {
 	 * 
 	 * @return Soft dependencies for this plugin.
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private List<String> softDependencies = new ArrayList<>();
 

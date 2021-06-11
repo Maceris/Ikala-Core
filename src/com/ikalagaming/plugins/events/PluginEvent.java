@@ -22,6 +22,7 @@ public class PluginEvent extends Event {
 	 * @param The plugin sending the event.
 	 * @return The plugin sending the event.
 	 */
+	@SuppressWarnings("javadoc")
 	private final String from;
 	/**
 	 * The name of the plugin that the event is sent to, if any.
@@ -29,6 +30,7 @@ public class PluginEvent extends Event {
 	 * @param The plugin receiving the event.
 	 * @return The plugin receiving the event.
 	 */
+	@SuppressWarnings("javadoc")
 	private final String to;
 
 	/**
@@ -37,6 +39,7 @@ public class PluginEvent extends Event {
 	 * @param The contents of the message.
 	 * @return The contents of the message.
 	 */
+	@SuppressWarnings("javadoc")
 	private final String message;
 
 }

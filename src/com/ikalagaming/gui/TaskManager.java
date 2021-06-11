@@ -105,6 +105,7 @@ public class TaskManager extends JFrame {
 	 * 
 	 * @return The delay in ms between updates
 	 */
+	@SuppressWarnings("javadoc")
 	@Getter
 	private long delay = 1000;
 	private DefaultTableModel model;

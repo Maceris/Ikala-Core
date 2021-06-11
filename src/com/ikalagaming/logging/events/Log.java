@@ -23,6 +23,7 @@ public class Log extends Event {
 	 * @return The message.
 	 * @param The info to store or display.
 	 */
+	@SuppressWarnings("javadoc")
 	private final String message;
 
 }

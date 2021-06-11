@@ -18,6 +18,7 @@ public class PluginCommandSent extends Event {
 	 * 
 	 * @return The command that was sent.
 	 */
+	@SuppressWarnings("javadoc")
 	private final String command;
 
 	/**
@@ -25,6 +26,7 @@ public class PluginCommandSent extends Event {
 	 * 
 	 * @return The commands arguments.
 	 */
+	@SuppressWarnings("javadoc")
 	private final String[] arguments;
 
 	/**

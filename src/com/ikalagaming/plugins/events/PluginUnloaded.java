@@ -22,6 +22,7 @@ public class PluginUnloaded extends Event {
 	 * @param The plugin that was unloaded.
 	 * @return The plugin that was unloaded.
 	 */
+	@SuppressWarnings("javadoc")
 	private Plugin thePlugin;
 
 }
