@@ -13,6 +13,7 @@ import com.ikalagaming.util.SafeResourceLoader;
 
 import com.github.zafarkhaja.semver.Version;
 import lombok.CustomLog;
+import lombok.Synchronized;
 
 import java.io.File;
 import java.io.IOException;
@@ -152,7 +153,7 @@ public class PluginManager {
 	/**
 	 * Maps strings to info about plugins loaded in memory
 	 */
-	private Map<String, PluginDetails> loadedPlugins;
+	private Map<String, PluginDetails> pluginDetails;
 
 	/**
 	 * Stores a list of names for convenience.
@@ -160,15 +161,15 @@ public class PluginManager {
 	private Map<Plugin, String> pluginNames;
 
 	/**
-	 * Lock for plugin related maps
+	 * Lock object for plugin related activities
 	 */
-	private ReentrantLock pluginLock;
+	private Object pluginLock = new Object();
 
 	/**
 	 * Stores all the classes loaded by plugins. Keys are the unique class
 	 * names.
 	 */
-	private final Map<String, Class<?>> pluginClasses;
+	private final Map<String, Class<?>> pluginClassCache;
 
 	private ResourceBundle resourceBundle;
 
@@ -206,8 +207,8 @@ public class PluginManager {
 		this.enableLock = new ReentrantLock();
 		this.enableOnLoad = false;
 		this.eventManager = evtManager;
-		this.loadedPlugins = Collections.synchronizedMap(new HashMap<>());
-		this.pluginClasses = Collections.synchronizedMap(new HashMap<>());
+		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
+		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.pluginNames = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
 			"com.ikalagaming.plugins.resources.PluginManager",
@@ -334,6 +335,7 @@ public class PluginManager {
 	 * @return true if the plugin has been successfully disabled, false if there
 	 *         was a problem
 	 */
+	@Synchronized("pluginLock")
 	public boolean disable(Plugin target) {
 		this.setPluginState(target, PluginState.DISABLING);
 
@@ -368,15 +370,9 @@ public class PluginManager {
 	 * @return true if the plugin has been successfully disabled, false if there
 	 *         was a problem
 	 */
+	@Synchronized("pluginLock")
 	public boolean disable(final String target) {
-		Optional<Plugin> p;
-		this.pluginLock.lock();
-		try {
-			p = this.getPlugin(target);
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		Optional<Plugin> p = this.getPlugin(target);
 
 		if (!p.isPresent()) {
 			return false;
@@ -405,6 +401,7 @@ public class PluginManager {
 	 * @return true if the plugin was successfully enabled, false if there was a
 	 *         problem
 	 */
+	@Synchronized("pluginLock")
 	public boolean enable(Plugin target) {
 		this.setPluginState(target, PluginState.ENABLING);
 
@@ -438,15 +435,9 @@ public class PluginManager {
 	 * @return true if the plugin was successfully enabled, false if there was a
 	 *         problem
 	 */
+	@Synchronized("pluginLock")
 	public boolean enable(final String target) {
-		Optional<Plugin> p;
-		this.pluginLock.lock();
-		try {
-			p = this.getPlugin(target);
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		Optional<Plugin> p = this.getPlugin(target);
 
 		if (!p.isPresent()) {
 			return false;
@@ -658,17 +649,12 @@ public class PluginManager {
 	 * @param target The plugin to get info from.
 	 * @return The info for the specified plugin.
 	 */
+	@Synchronized("pluginLock")
 	public Optional<PluginInfo> getInfo(Plugin target) {
-		this.pluginLock.lock();
-		try {
-			if (!pluginNames.containsKey(target)) {
-				return Optional.empty();
-			}
-			return getInfo(pluginNames.get(target));
+		if (!pluginNames.containsKey(target)) {
+			return Optional.empty();
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return getInfo(pluginNames.get(target));
 	}
 
 	/**
@@ -678,18 +664,13 @@ public class PluginManager {
 	 * @param target The name of the plugin to get info from.
 	 * @return The info for the specified plugin.
 	 */
+	@Synchronized("pluginLock")
 	public Optional<PluginInfo> getInfo(String target) {
-		this.pluginLock.lock();
-		try {
-			PluginDetails details = this.loadedPlugins.get(target);
-			if (details == null) {
-				return Optional.empty();
-			}
-			return Optional.ofNullable(details.getInfo());
+		PluginDetails details = this.pluginDetails.get(target);
+		if (details == null) {
+			return Optional.empty();
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return Optional.ofNullable(details.getInfo());
 	}
 
 	/**
@@ -697,17 +678,12 @@ public class PluginManager {
 	 *
 	 * @return the plugin map
 	 */
+	@Synchronized("pluginLock")
 	public HashMap<String, Plugin> getLoadedPlugins() {
 		HashMap<String, Plugin> ret = new HashMap<>();
-		this.pluginLock.lock();
-		try {
-			loadedPlugins.forEach((key, value) -> {
-				ret.put(key, value.getPlugin());
-			});
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		pluginDetails.forEach((key, value) -> {
+			ret.put(key, value.getPlugin());
+		});
 		return ret;
 	}
 
@@ -719,18 +695,13 @@ public class PluginManager {
 	 * @param type The plugin type
 	 * @return The Plugin with the given type
 	 */
+	@Synchronized("pluginLock")
 	public Optional<Plugin> getPlugin(final String type) {
-		this.pluginLock.lock();
-		try {
-			PluginDetails details = this.loadedPlugins.get(type);
-			if (details == null) {
-				return Optional.empty();
-			}
-			return Optional.ofNullable(details.getPlugin());
+		PluginDetails details = this.pluginDetails.get(type);
+		if (details == null) {
+			return Optional.empty();
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return Optional.ofNullable(details.getPlugin());
 	}
 
 	/**
@@ -740,17 +711,13 @@ public class PluginManager {
 	 *
 	 * @return a PluginState representing the status of this plugin
 	 */
+	@Synchronized("pluginLock")
 	public PluginState getPluginState(Plugin target) {
 		if (target == null) {
 			return PluginState.NOT_LOADED;
 		}
-		this.pluginLock.lock();
-		try {
-			return getPluginState(pluginNames.get(target));
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+
+		return getPluginState(pluginNames.get(target));
 	}
 
 	/**
@@ -760,20 +727,16 @@ public class PluginManager {
 	 *
 	 * @return a PluginState representing the status of this plugin
 	 */
+	@Synchronized("pluginLock")
 	public PluginState getPluginState(String target) {
 		if (target == null) {
 			return PluginState.NOT_LOADED;
 		}
-		this.pluginLock.lock();
-		try {
-			if (!this.loadedPlugins.containsKey(target)) {
-				return PluginState.NOT_LOADED;
-			}
-			return this.loadedPlugins.get(target).getState();
+
+		if (!this.pluginDetails.containsKey(target)) {
+			return PluginState.NOT_LOADED;
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return this.pluginDetails.get(target).getState();
 	}
 
 	/**
@@ -795,17 +758,12 @@ public class PluginManager {
 	 *
 	 * @return true if the plugin is fully ready to operate
 	 */
+	@Synchronized("pluginLock")
 	public boolean isEnabled(Plugin target) {
 		if (target == null) {
 			return false;
 		}
-		this.pluginLock.lock();
-		try {
-			return isEnabled(this.pluginNames.get(target));
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return isEnabled(this.pluginNames.get(target));
 	}
 
 	/**
@@ -817,22 +775,17 @@ public class PluginManager {
 	 *
 	 * @return true if the plugin is fully ready to operate
 	 */
+	@Synchronized("pluginLock")
 	public boolean isEnabled(final String target) {
 		if (target == null) {
 			return false;
 		}
-		this.pluginLock.lock();
-		try {
-			if (!this.isLoaded(target)) {
-				return false;
-			}
-			PluginState state = this.getPluginState(target);
-			if (PluginState.ENABLED.equals(state)) {
-				return true;
-			}
+		if (!this.isLoaded(target)) {
+			return false;
 		}
-		finally {
-			this.pluginLock.unlock();
+		PluginState state = this.getPluginState(target);
+		if (PluginState.ENABLED.equals(state)) {
+			return true;
 		}
 		return false;
 	}
@@ -845,20 +798,15 @@ public class PluginManager {
 	 * @return true if the plugin is loaded in memory, false if it does not
 	 *         exist
 	 */
+	@Synchronized("pluginLock")
 	public boolean isLoaded(Plugin type) {
 		if (type == null) {
 			return false;
 		}
-		this.pluginLock.lock();
-		try {
-			if (!this.pluginNames.containsKey(type)) {
-				return false;
-			}
-			return isLoaded(this.pluginNames.get(type));
+		if (!this.pluginNames.containsKey(type)) {
+			return false;
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return isLoaded(this.pluginNames.get(type));
 	}
 
 	/**
@@ -875,37 +823,32 @@ public class PluginManager {
 	 * @return true If the plugin is loaded in memory, and not actively being
 	 *         unloaded/removed
 	 */
+	@Synchronized("pluginLock")
 	public boolean isLoaded(final String type) {
 		if (type == null) {
 			return false;
 		}
-		this.pluginLock.lock();
-		try {
-			PluginDetails details = this.loadedPlugins.get(type);
-			if (details == null) {
-				return false;
-			}
-			switch (details.getState()) {
-				case CORRUPTED:
-				case DEPS_CHECKING:
-				case DEPS_MISSING:
-				case DEPS_SATISFIED:
-				case DISABLED:
-				case DISABLING:
-				case DISCOVERED:
-				case ENABLED:
-				case ENABLING:
-				case LOADING:
-					return true;
-				default:
-				case UNLOADING:
-				case PENDING_REMOVAL:
-				case NOT_LOADED:
-					return false;
-			}
+		PluginDetails details = this.pluginDetails.get(type);
+		if (details == null) {
+			return false;
 		}
-		finally {
-			this.pluginLock.unlock();
+		switch (details.getState()) {
+			case CORRUPTED:
+			case DEPS_CHECKING:
+			case DEPS_MISSING:
+			case DEPS_SATISFIED:
+			case DISABLED:
+			case DISABLING:
+			case DISCOVERED:
+			case ENABLED:
+			case ENABLING:
+			case LOADING:
+				return true;
+			default:
+			case UNLOADING:
+			case PENDING_REMOVAL:
+			case NOT_LOADED:
+				return false;
 		}
 	}
 
@@ -931,6 +874,7 @@ public class PluginManager {
 	 * @return true if the plugin was loaded properly, false otherwise
 	 */
 	@Deprecated
+	@Synchronized("pluginLock")
 	public boolean loadPlugin(Plugin toLoad, PluginInfo info) {
 
 		final String pluginName = info.getName();
@@ -944,15 +888,10 @@ public class PluginManager {
 			logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
 			boolean lowerVersion = false;
-			this.pluginLock.lock();
-			try {
-				// TODO real version checking
-				lowerVersion = isNewerVersion(pluginVersion, "0.0.0");
 
-			}
-			finally {
-				this.pluginLock.unlock();
-			}
+			// TODO real version checking
+			lowerVersion = isNewerVersion(pluginVersion, "0.0.0");
+
 			if (lowerVersion) {
 				this.unloadPlugin(pluginName);
 				// unload the old plugin and continue loading the new one
@@ -964,17 +903,11 @@ public class PluginManager {
 		}
 		this.setPluginState(toLoad, PluginState.LOADING);
 
-		this.pluginLock.lock();
-		try {
-			// store the new plugin
-			this.pluginNames.put(toLoad, pluginName);
-			PluginDetails details =
-				new PluginDetails(null, null, toLoad, PluginState.CORRUPTED);
-			this.loadedPlugins.put(pluginName, details);
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		// store the new plugin
+		this.pluginNames.put(toLoad, pluginName);
+		PluginDetails details =
+			new PluginDetails(null, null, toLoad, PluginState.CORRUPTED);
+		this.pluginDetails.put(pluginName, details);
 
 		for (Listener l : toLoad.getListeners()) {
 			this.eventManager.registerEventListeners(l);
@@ -1003,14 +936,14 @@ public class PluginManager {
 	 * @return The class by the given name, or null if not found.
 	 */
 	Class<?> getClassByName(final String name) {
-		Class<?> cachedClass = pluginClasses.get(name);
+		Class<?> cachedClass = pluginClassCache.get(name);
 
 		if (cachedClass != null) {
 			return cachedClass;
 		}
-		for (String pluginName : this.loadedPlugins.keySet()) {
+		for (String pluginName : this.pluginDetails.keySet()) {
 			PluginClassLoader loader =
-				this.loadedPlugins.get(pluginName).getClassLoader();
+				this.pluginDetails.get(pluginName).getClassLoader();
 			try {
 				cachedClass = loader.findClass(name, false);
 			}
@@ -1030,8 +963,8 @@ public class PluginManager {
 	 * @param clazz The corresponding class object.
 	 */
 	void setClass(final String name, final Class<?> clazz) {
-		if (!pluginClasses.containsKey(name)) {
-			pluginClasses.put(name, clazz);
+		if (!pluginClassCache.containsKey(name)) {
+			pluginClassCache.put(name, clazz);
 		}
 	}
 
@@ -1041,7 +974,7 @@ public class PluginManager {
 	 * @param name The name of the class.
 	 */
 	void removeClass(final String name) {
-		pluginClasses.remove(name);
+		pluginClassCache.remove(name);
 	}
 
 	/**
@@ -1050,6 +983,7 @@ public class PluginManager {
 	 * 
 	 * @param folder The folder that contains all the jar files we want to load.
 	 */
+	@Synchronized("pluginLock")
 	public void loadAllPlugins(String folder) {
 
 		File pluginFolder = null;
@@ -1109,7 +1043,7 @@ public class PluginManager {
 			PluginDetails details = new PluginDetails(loader, info,
 				loader.plugin, PluginState.DISCOVERED);
 
-			this.loadedPlugins.put(info.getName(), details);
+			this.pluginDetails.put(info.getName(), details);
 			this.pluginNames.put(loader.plugin, info.getName());
 
 			// setPluginState(loader.plugin, PluginState.DISCOVERED);
@@ -1158,6 +1092,7 @@ public class PluginManager {
 	 * @return true on success, false if it failed
 	 */
 	@Deprecated
+	@Synchronized("pluginLock")
 	public boolean loadPlugin(String path, String name) {
 
 		File pluginFolder = null;
@@ -1223,23 +1158,19 @@ public class PluginManager {
 			logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
 			boolean existingPluginOld = false;
-			this.pluginLock.lock();
-			try {
-				Plugin oldPlugin = getPlugin(pluginName).get();
-				Optional<PluginInfo> pInfo = getInfo(oldPlugin);
-				if (!pInfo.isPresent()) {
-					String err = SafeResourceLoader
-						.getString("PLUGIN_INFO_MISSING", this.resourceBundle)
-						.replaceFirst("\\$PLUGIN", pluginName);
-					log.warning(err);
-					return false;
-				}
-				existingPluginOld = PluginManager.isNewerVersion(
-					info.getVersion(), pInfo.get().getVersion());
+
+			Plugin oldPlugin = getPlugin(pluginName).get();
+			Optional<PluginInfo> pInfo = getInfo(oldPlugin);
+			if (!pInfo.isPresent()) {
+				String err = SafeResourceLoader
+					.getString("PLUGIN_INFO_MISSING", this.resourceBundle)
+					.replaceFirst("\\$PLUGIN", pluginName);
+				log.warning(err);
+				return false;
 			}
-			finally {
-				this.pluginLock.unlock();
-			}
+			existingPluginOld = PluginManager.isNewerVersion(info.getVersion(),
+				pInfo.get().getVersion());
+
 			if (!existingPluginOld) {
 				logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
 				return false;
@@ -1250,17 +1181,11 @@ public class PluginManager {
 
 		this.setPluginState(p, PluginState.LOADING);
 
-		this.pluginLock.lock();
-		try {
-			// store the new plugin
-			this.pluginNames.put(p, pluginName);
-			PluginDetails details =
-				new PluginDetails(null, null, p, PluginState.CORRUPTED);
-			this.loadedPlugins.put(pluginName, details);
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		// store the new plugin
+		this.pluginNames.put(p, pluginName);
+		PluginDetails details =
+			new PluginDetails(null, null, p, PluginState.CORRUPTED);
+		this.pluginDetails.put(pluginName, details);
 
 		// for (Listener l : p.getListeners()) {
 		// this.eventManager.registerEventListeners(l);
@@ -1290,7 +1215,7 @@ public class PluginManager {
 	 * @param pluginName The plugin that the alert is about
 	 */
 	void logAlert(String whichAlert, String pluginName) {
-		PluginDetails details = this.loadedPlugins.get(pluginName);
+		PluginDetails details = this.pluginDetails.get(pluginName);
 		String version;
 		if (details == null || details.getInfo() == null) {
 			version = "?";
@@ -1559,6 +1484,7 @@ public class PluginManager {
 	 *
 	 * @return true if the plugin reloaded successfully, false otherwise
 	 */
+	@Synchronized("pluginLock")
 	public boolean reload(Plugin target) {
 		Optional<PluginInfo> p = getInfo(target);
 
@@ -1612,57 +1538,40 @@ public class PluginManager {
 		}
 	}
 
+	@Synchronized("pluginLock")
 	private boolean setPluginState(Plugin target, PluginState newState) {
-		this.pluginLock.lock();
-		try {
-			if (!this.pluginNames.containsKey(target)) {
-				return false;
-			}
-			return setPluginState(this.pluginNames.get(target), newState);
+		if (!this.pluginNames.containsKey(target)) {
+			return false;
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		return setPluginState(this.pluginNames.get(target), newState);
 	}
 
+	@Synchronized("pluginLock")
 	private boolean setPluginState(String target, PluginState newState) {
-		this.pluginLock.lock();
-		try {
-			if (!this.loadedPlugins.containsKey(target)) {
-				return false;
-			}
-		}
-		finally {
-			this.pluginLock.unlock();
+
+		if (!this.pluginDetails.containsKey(target)) {
+			return false;
 		}
 
-		this.pluginLock.lock();
-		try {
-			// replaces the old state
-			PluginState oldState = this.loadedPlugins.get(target).getState();
-			if (PluginState.PENDING_REMOVAL.equals(oldState)) {
-				// can't change plugins pending removal
-				return false;
-			}
-			this.loadedPlugins.get(target).setState(newState);
-			return true;
+		// replaces the old state
+		PluginState oldState = this.pluginDetails.get(target).getState();
+		if (PluginState.PENDING_REMOVAL.equals(oldState)) {
+			// can't change plugins pending removal
+			return false;
 		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		this.pluginDetails.get(target).setState(newState);
+		return true;
+
 	}
 
 	private void shutdown() {
 		this.eventManager.unregisterEventListeners(logListener);
-		pluginLock.lock();
-		try {
-			for (String s : loadedPlugins.keySet()) {
+
+		synchronized (pluginLock) {
+			for (String s : pluginDetails.keySet()) {
 				// TODO would this break things?
 				unloadPlugin(s);
 			}
-		}
-		finally {
-			pluginLock.unlock();
 		}
 
 		PluginManager.instance.clearCommands();
@@ -1677,6 +1586,7 @@ public class PluginManager {
 	 *
 	 * @param toUnload The type of plugin to unload
 	 */
+	@Synchronized("pluginLock")
 	public void unloadPlugin(Plugin toUnload) {
 		/*
 		 * Using a string the plugins type to ensure the plugin that is stored
@@ -1701,6 +1611,7 @@ public class PluginManager {
 	 * @param toUnload The type of plugin to unload
 	 * @return true if the plugin was unloaded properly
 	 */
+	@Synchronized("pluginLock")
 	public boolean unloadPlugin(final String toUnload) {
 		String unloading =
 			SafeResourceLoader.getString("ALERT_UNLOADING", this.resourceBundle)
@@ -1715,14 +1626,8 @@ public class PluginManager {
 			return false;
 		}
 
-		Plugin pack;
-		this.pluginLock.lock();
-		try {
-			pack = this.loadedPlugins.get(toUnload).getPlugin();
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+		Plugin pack = this.pluginDetails.get(toUnload).getPlugin();
+
 		if (pack == null) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
@@ -1749,14 +1654,9 @@ public class PluginManager {
 			.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle)
 			.replaceFirst("\\$PLUGIN", PluginManager.PLUGIN_NAME);
 		log.finer(unreg);
-		this.pluginLock.lock();
-		try {
-			PluginDetails removedDetails = this.loadedPlugins.remove(toUnload);
-			removedDetails.dispose();
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
+
+		PluginDetails removedDetails = this.pluginDetails.remove(toUnload);
+		removedDetails.dispose();
 
 		String unloaded =
 			SafeResourceLoader.getString("ALERT_UNLOADED", this.resourceBundle)
