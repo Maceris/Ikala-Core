@@ -318,6 +318,7 @@ public class PluginManager {
 	 *         was a problem
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public boolean disable(Plugin target) {
 		this.setPluginState(target, PluginState.DISABLING);
 
@@ -384,6 +385,7 @@ public class PluginManager {
 	 *         problem
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public boolean enable(Plugin target) {
 		this.setPluginState(target, PluginState.ENABLING);
 
@@ -618,6 +620,7 @@ public class PluginManager {
 	 * @return The info for the specified plugin.
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public Optional<PluginInfo> getInfo(Plugin target) {
 		if (!pluginNames.containsKey(target)) {
 			return Optional.empty();
@@ -680,6 +683,7 @@ public class PluginManager {
 	 * @return a PluginState representing the status of this plugin
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public PluginState getPluginState(Plugin target) {
 		if (target == null) {
 			return PluginState.NOT_LOADED;
@@ -727,6 +731,7 @@ public class PluginManager {
 	 * @return true if the plugin is fully ready to operate
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public boolean isEnabled(Plugin target) {
 		if (target == null) {
 			return false;
@@ -767,6 +772,7 @@ public class PluginManager {
 	 *         exist
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public boolean isLoaded(Plugin type) {
 		if (type == null) {
 			return false;
@@ -1443,6 +1449,7 @@ public class PluginManager {
 	 * @return true if the plugin reloaded successfully, false otherwise
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public boolean reload(Plugin target) {
 		Optional<PluginInfo> p = getInfo(target);
 
@@ -1491,6 +1498,7 @@ public class PluginManager {
 	}
 
 	@Synchronized("pluginLock")
+	@Deprecated
 	private boolean setPluginState(Plugin target, PluginState newState) {
 		if (!this.pluginNames.containsKey(target)) {
 			return false;
@@ -1539,6 +1547,7 @@ public class PluginManager {
 	 * @param toUnload The type of plugin to unload
 	 */
 	@Synchronized("pluginLock")
+	@Deprecated
 	public void unloadPlugin(Plugin toUnload) {
 		/*
 		 * Using a string the plugins type to ensure the plugin that is stored
@@ -1648,6 +1657,7 @@ public class PluginManager {
 	 * @param owner the plugin which is having commands removed
 	 */
 	@Synchronized("commandLock")
+	@Deprecated
 	public void unregisterPluginCommands(Plugin owner) {
 		ArrayList<String> pluginCommands = new ArrayList<>();
 		final String ownerName = getInfo(owner).get().getName();
