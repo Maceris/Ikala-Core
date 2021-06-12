@@ -37,7 +37,8 @@ class MiscLoggingListener implements Listener {
 	@EventHandler
 	public void onPluginLoaded(PluginLoaded event) {
 		PluginManager manager = PluginManager.getInstance();
-		if (manager.enableOnLoad()) {
+		//TODO remove this, handle in plugin loading stage
+		if (manager.getEnableOnLoad()) {
 			manager.enable(event.getPlugin());
 		}
 		manager.logAlert("ALERT_LOADED", event.getPlugin());
