@@ -555,7 +555,7 @@ public class PluginManager {
 	 *
 	 * @return true if the event was fired correctly
 	 */
-	public boolean fireEvent(Event event) {
+	private boolean fireEvent(Event event) {
 		if (this.eventManager == null) {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.resourceBundle)
@@ -1595,7 +1595,6 @@ public class PluginManager {
 		this.setPluginState(pack, PluginState.UNLOADING);
 
 		pack.onUnload();
-		// TODO will this not become an invalid reference during event sending?
 		PluginUnloaded packUnloaded = new PluginUnloaded(toUnload);
 		this.fireEvent(packUnloaded);
 
