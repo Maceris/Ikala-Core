@@ -22,6 +22,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -161,6 +163,18 @@ public class PluginManager {
 
 	private Map<Plugin, PluginInfo> pluginInfo;
 
+	/**
+	 * Stores the class loaders for all plugins loaded from .jar files. Keys are
+	 * the unique plugin names.
+	 */
+	private Map<String, PluginClassLoader> pluginClassLoaders;
+
+	/**
+	 * Stores all the classes loaded by plugins. Keys are the unique plugin
+	 * names.
+	 */
+	private final Map<String, Class<?>> pluginClasses;
+
 	private ResourceBundle resourceBundle;
 
 	/**
@@ -201,6 +215,8 @@ public class PluginManager {
 		// Ensure plugin states are synchronized
 		this.pluginStates = Collections.synchronizedMap(new HashMap<>());
 		this.pluginInfo = Collections.synchronizedMap(new HashMap<>());
+		this.pluginClassLoaders = Collections.synchronizedMap(new HashMap<>());
+		this.pluginClasses = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
 			"com.ikalagaming.plugins.resources.PluginManager",
 			Localization.getLocale());
@@ -246,7 +262,7 @@ public class PluginManager {
 			SafeResourceLoader.getString("WIP_TEXT", this.getResourceBundle());
 		log.warning(tmp);
 		// TODO loading
-		loadPlugin(System.getProperty("user.dir"), args[0]);
+		// loadPlugin(System.getProperty("user.dir"), args[0]);
 	}
 
 	private void cbReload(String[] args) {
@@ -920,12 +936,200 @@ public class PluginManager {
 	}
 
 	/**
+	 * Load all the classes present in a given jar file. Remember to store this
+	 * in {@link #pluginClassLoaders}.
+	 * 
+	 * @param jarFile The jar file containing .class files.
+	 * @return The classloader that was used to load the classes.
+	 */
+	private Optional<URLClassLoader> loadAllClassesFromJar(File jarFile) {
+		// TODO map class loader to plugins/files so we can unload later
+		try (JarFile jar = new JarFile(jarFile)) {
+			Enumeration<JarEntry> entryEnum = jar.entries();
+
+			URLClassLoader classLoader =
+				URLClassLoader.newInstance(new URL[] {jarFile.toURI().toURL()});
+
+			while (entryEnum.hasMoreElements()) {
+				JarEntry entry = entryEnum.nextElement();
+				if (entry.isDirectory()
+					|| !entry.getName().endsWith(".class")) {
+					continue;
+				}
+				// -6 because of .class
+				String className =
+					entry.getName().substring(0, entry.getName().length() - 6);
+				className = className.replace('/', '.');
+				Class<?> c = classLoader.loadClass(className);
+			}
+			return Optional.of(classLoader);
+		}
+		catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return Optional.empty();
+	}
+
+	/**
+	 * Find the class by class name. Checks for cached versions, but will search
+	 * through known plugin classloaders to find it. If it cannot be found,
+	 * returns null.
+	 * 
+	 * @param name The name of the class to look for.
+	 * @return The class by the given name, or null if not found.
+	 */
+	Class<?> getClassByName(final String name) {
+		Class<?> cachedClass = pluginClasses.get(name);
+
+		if (cachedClass != null) {
+			return cachedClass;
+		}
+		for (String curLoader : pluginClassLoaders.keySet()) {
+			PluginClassLoader loader = pluginClassLoaders.get(curLoader);
+
+			try {
+				cachedClass = loader.findClass(name, false);
+			}
+			catch (ClassNotFoundException e) {
+			}
+			if (cachedClass != null) {
+				return cachedClass;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Stores the class by name in the cached class list.
+	 * 
+	 * @param name The name of the class.
+	 * @param clazz The corresponding class object.
+	 */
+	void setClass(final String name, final Class<?> clazz) {
+		if (!pluginClasses.containsKey(name)) {
+			pluginClasses.put(name, clazz);
+		}
+	}
+
+	/**
+	 * Load all the plugins from .jar files that are located in the given
+	 * folder.
+	 * 
+	 * @param folder The folder that contains all the jar files we want to load.
+	 */
+	public void loadAllPlugins(String folder) {
+
+		File pluginFolder = null;
+		{// keeps scope name space clean
+			Optional<File> folderMaybe = this.plGetFolder(folder);
+			if (!folderMaybe.isPresent()) {
+				// TODO log this
+				return;
+			}
+			pluginFolder = folderMaybe.get();
+		}
+
+		// find all the jars
+		ArrayList<File> jars = this.plGetAllJars(pluginFolder);
+
+		Map<File, PluginInfo> jarInfoMap = new HashMap<>();
+
+		// grab all the plugin info from them, discard invalid plugins
+		for (File jarFile : jars) {
+			Optional<PluginInfo> info = extractPluginInfo(jarFile);
+			if (!info.isPresent()) {
+				// We don't have a valid plugin
+				// TODO log this
+				continue;
+			}
+			jarInfoMap.put(jarFile, info.get());
+		}
+		// Unload/dereference any files that we don't care about anymore
+		jars.removeIf((file) -> {
+			return !jarInfoMap.containsKey(file);
+		});
+
+		// load the plugins into memory with plugin info, DISCOVERED status
+		Map<Plugin, PluginInfo> pluginInfoMap = new HashMap<>();
+		for (File jarFile : jarInfoMap.keySet()) {
+			PluginInfo info = jarInfoMap.get(jarFile);
+
+			PluginClassLoader loader = null;
+			try {
+				loader = new PluginClassLoader(this,
+					getClass().getClassLoader(), info, jarFile);
+			}
+			catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			catch (InvalidPluginException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (loader == null) {
+				jarInfoMap.remove(jarFile);
+				jars.remove(jarFile);
+				// TODO log this problem
+				continue;
+			}
+
+			pluginClassLoaders.put(info.getName(), loader);
+			pluginInfoMap.put(loader.plugin, info);
+			setPluginState(loader.plugin, PluginState.DISCOVERED);
+			// TODO log discovered plugin
+		}
+		/*
+		 * Resolve easy dependencies. Loop through all plugins once, if all
+		 * dependencies are satisfied (DISCOVERED, loaded/enabled,
+		 * DEPS_SATISFIED, generally existing in the system), or it has no
+		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
+		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
+		 * plugin as DEPS_MISSING. If a plugin does not have missing
+		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
+		 * mark it as DEPS_CHECKING.
+		 */
+		/*
+		 * Handle loops/clusters with BFS. Go through all nodes still
+		 * DEPS_CHECKING and: if all dependencies are DEPS_SATISFIED, the node
+		 * is DEPS_SATISFIED. If there are dependencies not found, or
+		 * DEPS_MISSING, the node and all parent nodes are set to DEPS_MISSING
+		 * and we move to a new node. If a child node is DEPS_CHECKING, and not
+		 * already in the tree, we tack it on and keep navigating down. Once we
+		 * completely exhaust reachable nodes, and everything is DEPS_SATISFIED
+		 * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
+		 */
+		// Report and unload all DEPS_MISSING plugins
+		/*
+		 * All plugins should now be DEPS_SATISFIED, so load them all. During
+		 * the onLoad() method, plugins should deal with connecting to plugins
+		 * that may be in a dependency loop.
+		 */
+		/*
+		 * After all plugins have been loaded, now they can be enabled (if that
+		 * configuration is set). At this point problems with loops should have
+		 * been resolved enough that the plugins can start in any order.
+		 */
+
+	}
+
+	/**
 	 * Loads a plugin by name from a folder.
 	 *
 	 * @param path the path to the folder containing the file
 	 * @param name the filename to load from, without a file extension
 	 * @return true on success, false if it failed
 	 */
+	@Deprecated
 	public boolean loadPlugin(String path, String name) {
 
 		File pluginFolder = null;
@@ -973,46 +1177,14 @@ public class PluginManager {
 			return false;
 		}
 
-		Class<?> clazz;
-		try {
-			clazz = Class.forName(info.getMain(), true, loader);
-		}
-		catch (ClassNotFoundException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			log.warning(err);
-			return false;
-		}
-
-		Object classInstance;
-
-		try {
-			classInstance = clazz.newInstance();
-		}
-		catch (InstantiationException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_CANT_INSTANTIATE_MAIN", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			log.warning(err);
-			return false;
-		}
-		catch (IllegalAccessException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			log.warning(err);
-			return false;
-		}
-		if (!(classInstance instanceof Plugin)) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_NOT_A_PLUGIN", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", name);
-			log.warning(err);
-			return false;
-		}
-
-		Plugin p = (Plugin) classInstance;
+		Plugin p = null;
+		// Optional<Plugin> pluginMaybe = loadPluginMainClass(loader, info);
+		// if (pluginMaybe.isPresent()) {
+		// p = pluginMaybe.get();
+		// }
+		// else {
+		// return false;
+		// }
 
 		final String pluginName = info.getName();
 
@@ -1060,16 +1232,16 @@ public class PluginManager {
 			this.pluginLock.unlock();
 		}
 
-		for (Listener l : p.getListeners()) {
-			this.eventManager.registerEventListeners(l);
-		}
+		// for (Listener l : p.getListeners()) {
+		// this.eventManager.registerEventListeners(l);
+		// }
 		String msg = SafeResourceLoader
 			.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
 			.replaceFirst("\\$PLUGIN", pluginName);
 		log.finer(msg);
 
 		// load it
-		p.onLoad();
+		// p.onLoad();
 
 		this.setPluginState(p, PluginState.DISABLED);
 		PluginLoaded packLoaded = new PluginLoaded(p);
@@ -1222,7 +1394,7 @@ public class PluginManager {
 	 * Returns an optional that contains the jar file with the specified name,
 	 * or an empty optional if none was found in the list of files. The file
 	 * name is without an extension so "example.jar" should be passed as
-	 * "example", and "test.1.0.2.jar" should be "test.1.0.2".
+	 * "example", and "test-1.0.2.jar" should be "test-1.0.2".
 	 *
 	 * @param files The list of files to look through, must all be valid
 	 *            readable files.
