@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -181,16 +180,11 @@ public class PluginManager {
 	private boolean enableOnLoad;
 
 	/**
-	 * Lock for enableOnLoad
-	 */
-	private ReentrantLock enableLock;
-
-	/**
 	 * A list of all of the commands registered. This list is sorted.
 	 */
 	private ArrayList<PluginCommand> commands;
 
-	private ReentrantLock commandLock;
+	private Object commandLock = new Object();
 
 	private MiscLoggingListener logListener;
 
@@ -202,9 +196,6 @@ public class PluginManager {
 	 * @param evtManager The event manager to use for the plugin system
 	 */
 	public PluginManager(EventManager evtManager) {
-		this.pluginLock = new ReentrantLock();
-		this.commandLock = new ReentrantLock();
-		this.enableLock = new ReentrantLock();
 		this.enableOnLoad = false;
 		this.eventManager = evtManager;
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
@@ -281,21 +272,16 @@ public class PluginManager {
 	/**
 	 * Unregisters all commands
 	 */
+	@Synchronized("commandLock")
 	public void clearCommands() {
-		this.commandLock.lock();
-		try {
-			ArrayList<String> cmds = new ArrayList<>();
-			for (PluginCommand s : this.commands) {
-				cmds.add(s.getCommand());
-			}
-			for (String s : cmds) {
-				this.unregisterCommand(s);
-			}
-			this.commands.clear();
+		ArrayList<String> cmds = new ArrayList<>();
+		for (PluginCommand s : this.commands) {
+			cmds.add(s.getCommand());
 		}
-		finally {
-			this.commandLock.unlock();
+		for (String s : cmds) {
+			this.unregisterCommand(s);
 		}
+		this.commands.clear();
 	}
 
 	/**
@@ -304,20 +290,16 @@ public class PluginManager {
 	 * @param s the string to look for
 	 * @return true if the string exists
 	 */
+	@Synchronized("commandLock")
 	public boolean containsCommand(final String s) {
 		int i;
 		boolean res = false;
-		this.commandLock.lock();
-		try {
-			for (i = 0; i < this.commands.size(); ++i) {
-				if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-					res = true;
-					break;
-				}
+
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				res = true;
+				break;
 			}
-		}
-		finally {
-			this.commandLock.unlock();
 		}
 		return res;
 	}
@@ -463,14 +445,8 @@ public class PluginManager {
 	 *         manually enabled
 	 * @see #setEnableOnLoad(boolean)
 	 */
-	public boolean enableOnLoad() {
-		this.enableLock.lock();
-		try {
-			return this.enableOnLoad;
-		}
-		finally {
-			this.enableLock.unlock();
-		}
+	public boolean getEnableOnLoad() {
+		return this.enableOnLoad;
 	}
 
 	/**
@@ -600,16 +576,12 @@ public class PluginManager {
 	 *
 	 * @return a copy of the stored list
 	 */
+	@Synchronized("commandLock")
 	public ArrayList<PluginCommand> getCommands() {
 		ArrayList<PluginCommand> cmds = new ArrayList<>();
-		this.commandLock.lock();
-		try {
-			for (PluginCommand pc : this.commands) {
-				cmds.add(pc);
-			}
-		}
-		finally {
-			this.commandLock.unlock();
+
+		for (PluginCommand pc : this.commands) {
+			cmds.add(pc);
 		}
 		return cmds;
 	}
@@ -621,20 +593,16 @@ public class PluginManager {
 	 * @param s the string to look for
 	 * @return the index of the string
 	 */
+	@Synchronized("commandLock")
 	private int getIndexOfCommand(String s) {
 		int i;
 		boolean found = false;
-		this.commandLock.lock();
-		try {
-			for (i = 0; i < this.commands.size(); ++i) {
-				if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-					found = true;
-					break;
-				}
+
+		for (i = 0; i < this.commands.size(); ++i) {
+			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
+				found = true;
+				break;
 			}
-		}
-		finally {
-			this.commandLock.unlock();
 		}
 		if (!found) {
 			i = -1;
@@ -864,7 +832,7 @@ public class PluginManager {
 	 * is older, then it does not load the new version and returns false.
 	 * </p>
 	 *
-	 * @see PluginManager#enableOnLoad()
+	 * @see PluginManager#getEnableOnLoad()
 	 * 
 	 * @deprecated This is getting phased out, all plugins will be loaded from
 	 *             file
@@ -1420,6 +1388,7 @@ public class PluginManager {
 	 * 
 	 * @see #registerCommand(String, Consumer)
 	 */
+	@Synchronized("commandLock")
 	public boolean registerCommand(final String command,
 		Consumer<String[]> callback, Plugin owner) {
 		if (this.containsCommand(command)) {
@@ -1432,26 +1401,14 @@ public class PluginManager {
 		}
 
 		PluginCommand cmd = new PluginCommand(command, callback, owner);
-		this.commandLock.lock();
-		try {
-			this.commands.add(cmd);
-		}
-		finally {
-			this.commandLock.unlock();
-		}
+		this.commands.add(cmd);
 
 		String msg = SafeResourceLoader
 			.getString("REGISTERED_COMMAND", this.getResourceBundle())
 			.replaceFirst("\\$COMMAND", command);
 		log.finest(msg);
 
-		this.commandLock.lock();
-		try {
-			java.util.Collections.sort(this.commands);
-		}
-		finally {
-			this.commandLock.unlock();
-		}
+		java.util.Collections.sort(this.commands);
 
 		return true;
 	}
@@ -1459,6 +1416,7 @@ public class PluginManager {
 	/**
 	 * Registers commands with the registry that the plugin manager uses
 	 */
+	@Synchronized("commandLock")
 	private void registerCommands() {
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_ENABLE", this.resourceBundle),
@@ -1529,13 +1487,7 @@ public class PluginManager {
 	 *            loading, false if they should be manually enabled
 	 */
 	public void setEnableOnLoad(final boolean newValue) {
-		this.enableLock.lock();
-		try {
-			this.enableOnLoad = newValue;
-		}
-		finally {
-			this.enableLock.unlock();
-		}
+		this.enableOnLoad = newValue;
 	}
 
 	@Synchronized("pluginLock")
@@ -1671,27 +1623,22 @@ public class PluginManager {
 	 * @param command the command to remove
 	 * @return true if the command was removed
 	 */
+	@Synchronized("commandLock")
 	public boolean unregisterCommand(final String command) {
 		boolean found = false;
 
-		this.commandLock.lock();
-		try {
-			if (this.containsCommand(command)) {
+		if (this.containsCommand(command)) {
 
-				while (this.containsCommand(command)) {
-					// just in case there are multiple
-					int index = this.getIndexOfCommand(command);
-					this.commands.remove(index);
-				}
-				String msg = SafeResourceLoader.getString(
-					"UNREGISTERED_COMMAND", this.getResourceBundle());
-				msg = msg.replaceFirst("\\$COMMAND", command);
-				log.finest(msg);
-				found = true;
+			while (this.containsCommand(command)) {
+				// just in case there are multiple
+				int index = this.getIndexOfCommand(command);
+				this.commands.remove(index);
 			}
-		}
-		finally {
-			this.commandLock.unlock();
+			String msg = SafeResourceLoader.getString("UNREGISTERED_COMMAND",
+				this.getResourceBundle());
+			msg = msg.replaceFirst("\\$COMMAND", command);
+			log.finest(msg);
+			found = true;
 		}
 		return found;
 	}
@@ -1701,33 +1648,28 @@ public class PluginManager {
 	 *
 	 * @param owner the plugin which is having commands removed
 	 */
+	@Synchronized("commandLock")
 	public void unregisterPluginCommands(Plugin owner) {
 		ArrayList<String> pluginCommands = new ArrayList<>();
 		final String ownerName = getInfo(owner).get().getName();
 
-		this.commandLock.lock();
-		try {
-			// find all the commands registered to the plugin
-			for (PluginCommand c : this.commands) {
-				if (!c.hasOwner()) {
-					continue;
-				}
-				/*
-				 * Gets the name from PluginInfo about the command owner,
-				 * compares it with the known owner name.
-				 */
-				if (getInfo(c.getOwner().get()).get().getName()
-					.equalsIgnoreCase(ownerName)) {
-					pluginCommands.add(c.getCommand());
-				}
+		// find all the commands registered to the plugin
+		for (PluginCommand c : this.commands) {
+			if (!c.hasOwner()) {
+				continue;
 			}
-			// unload the commands
-			for (String s : pluginCommands) {
-				this.unregisterCommand(s);
+			/*
+			 * Gets the name from PluginInfo about the command owner, compares
+			 * it with the known owner name.
+			 */
+			if (getInfo(c.getOwner().get()).get().getName()
+				.equalsIgnoreCase(ownerName)) {
+				pluginCommands.add(c.getCommand());
 			}
 		}
-		finally {
-			this.commandLock.unlock();
+		// unload the commands
+		for (String s : pluginCommands) {
+			this.unregisterCommand(s);
 		}
 
 	}
