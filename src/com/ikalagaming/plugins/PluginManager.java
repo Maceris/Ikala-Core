@@ -22,7 +22,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -151,26 +149,23 @@ public class PluginManager {
 
 	private EventManager eventManager;
 
-	/** Maps strings to plugins loaded in memory */
-	private HashMap<String, Plugin> loadedPlugins;
+	/**
+	 * Maps strings to info about plugins loaded in memory
+	 */
+	private Map<String, PluginDetails> loadedPlugins;
+
+	/**
+	 * Stores a list of names for convenience.
+	 */
+	private Map<Plugin, String> pluginNames;
 
 	/**
 	 * Lock for plugin related maps
 	 */
 	private ReentrantLock pluginLock;
 
-	private Map<Plugin, PluginState> pluginStates;
-
-	private Map<Plugin, PluginInfo> pluginInfo;
-
 	/**
-	 * Stores the class loaders for all plugins loaded from .jar files. Keys are
-	 * the unique plugin names.
-	 */
-	private Map<String, PluginClassLoader> pluginClassLoaders;
-
-	/**
-	 * Stores all the classes loaded by plugins. Keys are the unique plugin
+	 * Stores all the classes loaded by plugins. Keys are the unique class
 	 * names.
 	 */
 	private final Map<String, Class<?>> pluginClasses;
@@ -211,12 +206,9 @@ public class PluginManager {
 		this.enableLock = new ReentrantLock();
 		this.enableOnLoad = false;
 		this.eventManager = evtManager;
-		this.loadedPlugins = new HashMap<>();
-		// Ensure plugin states are synchronized
-		this.pluginStates = Collections.synchronizedMap(new HashMap<>());
-		this.pluginInfo = Collections.synchronizedMap(new HashMap<>());
-		this.pluginClassLoaders = Collections.synchronizedMap(new HashMap<>());
+		this.loadedPlugins = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClasses = Collections.synchronizedMap(new HashMap<>());
+		this.pluginNames = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
 			"com.ikalagaming.plugins.resources.PluginManager",
 			Localization.getLocale());
@@ -345,12 +337,13 @@ public class PluginManager {
 	public boolean disable(Plugin target) {
 		this.setPluginState(target, PluginState.DISABLING);
 
-		logAlert("ALERT_DISABLING", target);
+		logAlert("ALERT_DISABLING", this.pluginNames.get(target));
 
 		boolean success = target.onDisable();
 		if (success) {
 			this.setPluginState(target, PluginState.DISABLED);
-			PluginDisabled packDisabled = new PluginDisabled(target);
+			PluginDisabled packDisabled =
+				new PluginDisabled(this.pluginNames.get(target));
 			this.fireEvent(packDisabled);
 		}
 		else {
@@ -415,12 +408,13 @@ public class PluginManager {
 	public boolean enable(Plugin target) {
 		this.setPluginState(target, PluginState.ENABLING);
 
-		logAlert("ALERT_ENABLING", target);
+		logAlert("ALERT_ENABLING", this.pluginNames.get(target));
 
 		boolean success = target.onEnable();
 		if (success) {
 			this.setPluginState(target, PluginState.ENABLED);
-			PluginEnabled plugEnabled = new PluginEnabled(target);
+			PluginEnabled plugEnabled =
+				new PluginEnabled(this.pluginNames.get(target));
 			this.fireEvent(plugEnabled);
 		}
 		else {
@@ -479,15 +473,13 @@ public class PluginManager {
 	 * @see #setEnableOnLoad(boolean)
 	 */
 	public boolean enableOnLoad() {
-		boolean res = false;
 		this.enableLock.lock();
 		try {
-			res = this.enableOnLoad;
+			return this.enableOnLoad;
 		}
 		finally {
 			this.enableLock.unlock();
 		}
-		return res;
 	}
 
 	/**
@@ -667,15 +659,37 @@ public class PluginManager {
 	 * @return The info for the specified plugin.
 	 */
 	public Optional<PluginInfo> getInfo(Plugin target) {
-		Optional<PluginInfo> ret;
 		this.pluginLock.lock();
 		try {
-			ret = Optional.ofNullable(this.pluginInfo.get(target));
+			if (!pluginNames.containsKey(target)) {
+				return Optional.empty();
+			}
+			return getInfo(pluginNames.get(target));
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		return ret;
+	}
+
+	/**
+	 * Get the plugin info for a given plugin. If no info exists for the
+	 * specified plugin, an empty optinal is returned.
+	 *
+	 * @param target The name of the plugin to get info from.
+	 * @return The info for the specified plugin.
+	 */
+	public Optional<PluginInfo> getInfo(String target) {
+		this.pluginLock.lock();
+		try {
+			PluginDetails details = this.loadedPlugins.get(target);
+			if (details == null) {
+				return Optional.empty();
+			}
+			return Optional.ofNullable(details.getInfo());
+		}
+		finally {
+			this.pluginLock.unlock();
+		}
 	}
 
 	/**
@@ -687,7 +701,9 @@ public class PluginManager {
 		HashMap<String, Plugin> ret = new HashMap<>();
 		this.pluginLock.lock();
 		try {
-			ret.putAll(this.loadedPlugins);
+			loadedPlugins.forEach((key, value) -> {
+				ret.put(key, value.getPlugin());
+			});
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -704,15 +720,17 @@ public class PluginManager {
 	 * @return The Plugin with the given type
 	 */
 	public Optional<Plugin> getPlugin(final String type) {
-		Optional<Plugin> ret = null;
 		this.pluginLock.lock();
 		try {
-			ret = Optional.ofNullable(this.loadedPlugins.get(type));
+			PluginDetails details = this.loadedPlugins.get(type);
+			if (details == null) {
+				return Optional.empty();
+			}
+			return Optional.ofNullable(details.getPlugin());
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		return ret;
 	}
 
 	/**
@@ -723,21 +741,39 @@ public class PluginManager {
 	 * @return a PluginState representing the status of this plugin
 	 */
 	public PluginState getPluginState(Plugin target) {
-		PluginState ret = PluginState.NOT_LOADED;
+		if (target == null) {
+			return PluginState.NOT_LOADED;
+		}
 		this.pluginLock.lock();
 		try {
-			if (!this.pluginStates.containsKey(target)) {
-				ret = PluginState.NOT_LOADED;
-			}
-			else {
-				ret = this.pluginStates.get(target);
-			}
+			return getPluginState(pluginNames.get(target));
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
+	}
 
-		return ret;
+	/**
+	 * Returns the {@link PluginState current state} of the plugin.
+	 *
+	 * @param target The name of the plugin to fetch the state of
+	 *
+	 * @return a PluginState representing the status of this plugin
+	 */
+	public PluginState getPluginState(String target) {
+		if (target == null) {
+			return PluginState.NOT_LOADED;
+		}
+		this.pluginLock.lock();
+		try {
+			if (!this.loadedPlugins.containsKey(target)) {
+				return PluginState.NOT_LOADED;
+			}
+			return this.loadedPlugins.get(target).getState();
+		}
+		finally {
+			this.pluginLock.unlock();
+		}
 	}
 
 	/**
@@ -760,33 +796,16 @@ public class PluginManager {
 	 * @return true if the plugin is fully ready to operate
 	 */
 	public boolean isEnabled(Plugin target) {
-		boolean ret = true;
+		if (target == null) {
+			return false;
+		}
 		this.pluginLock.lock();
 		try {
-			if (!this.isLoaded(target)) {
-				ret = false;
-			}
+			return isEnabled(this.pluginNames.get(target));
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		if (!ret) {// ret starts as true, if set to false (!loaded), return f.
-			return ret;
-		}
-
-		ret = false;
-		this.pluginLock.lock();
-		try {
-			PluginState state = this.getPluginState(target);
-			if (state.equals(PluginState.ENABLED)) {
-				ret = true;
-			}
-		}
-		finally {
-			this.pluginLock.unlock();
-		}
-
-		return ret;
 	}
 
 	/**
@@ -799,18 +818,23 @@ public class PluginManager {
 	 * @return true if the plugin is fully ready to operate
 	 */
 	public boolean isEnabled(final String target) {
-		boolean ret = false;
+		if (target == null) {
+			return false;
+		}
 		this.pluginLock.lock();
 		try {
-			Optional<Plugin> p = this.getPlugin(target);
-			if (p.isPresent()) {
-				ret = this.isEnabled(p.get());
+			if (!this.isLoaded(target)) {
+				return false;
+			}
+			PluginState state = this.getPluginState(target);
+			if (PluginState.ENABLED.equals(state)) {
+				return true;
 			}
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		return ret;
+		return false;
 	}
 
 	/**
@@ -822,35 +846,67 @@ public class PluginManager {
 	 *         exist
 	 */
 	public boolean isLoaded(Plugin type) {
-		boolean ret;
+		if (type == null) {
+			return false;
+		}
 		this.pluginLock.lock();
 		try {
-			ret = this.pluginInfo.containsKey(type);
+			if (!this.pluginNames.containsKey(type)) {
+				return false;
+			}
+			return isLoaded(this.pluginNames.get(type));
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		return ret;
 	}
 
 	/**
 	 * Returns true if a plugin exists with the given type (for example:
-	 * "Graphics")'
+	 * "Graphics")'. Most existing states count as loaded, but the following do
+	 * not:
+	 * <ul>
+	 * <li>{@link PluginState#UNLOADING}</li>
+	 * <li>{@link PluginState#PENDING_REMOVAL}</li>
+	 * <li>{@link PluginState#NOT_LOADED}</li>
+	 * </ul>
 	 *
-	 * @param type the plugin type
-	 * @return true if the plugin is loaded in memory, false if it does not
-	 *         exist
+	 * @param type The plugin name
+	 * @return true If the plugin is loaded in memory, and not actively being
+	 *         unloaded/removed
 	 */
 	public boolean isLoaded(final String type) {
-		boolean ret;
+		if (type == null) {
+			return false;
+		}
 		this.pluginLock.lock();
 		try {
-			ret = this.loadedPlugins.containsKey(type);
+			PluginDetails details = this.loadedPlugins.get(type);
+			if (details == null) {
+				return false;
+			}
+			switch (details.getState()) {
+				case CORRUPTED:
+				case DEPS_CHECKING:
+				case DEPS_MISSING:
+				case DEPS_SATISFIED:
+				case DISABLED:
+				case DISABLING:
+				case DISCOVERED:
+				case ENABLED:
+				case ENABLING:
+				case LOADING:
+					return true;
+				default:
+				case UNLOADING:
+				case PENDING_REMOVAL:
+				case NOT_LOADED:
+					return false;
+			}
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		return ret;
 	}
 
 	/**
@@ -880,12 +936,12 @@ public class PluginManager {
 		final String pluginName = info.getName();
 		final String pluginVersion = info.getVersion();
 
-		logAlert("ALERT_LOADING", toLoad);
+		logAlert("ALERT_LOADING", pluginName);
 
 		// if the plugin exists and is older than toLoad, unload
 		if (this.isLoaded(toLoad)) {
 
-			logAlert("ALERT_PLUGIN_ALREADY_LOADED", toLoad);
+			logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
 			boolean lowerVersion = false;
 			this.pluginLock.lock();
@@ -902,7 +958,7 @@ public class PluginManager {
 				// unload the old plugin and continue loading the new one
 			}
 			else {
-				logAlert("ALERT_PLUGIN_OUTDATED", toLoad);
+				logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
 				return false;
 			}
 		}
@@ -911,7 +967,10 @@ public class PluginManager {
 		this.pluginLock.lock();
 		try {
 			// store the new plugin
-			this.loadedPlugins.put(pluginName, toLoad);
+			this.pluginNames.put(toLoad, pluginName);
+			PluginDetails details =
+				new PluginDetails(null, null, toLoad, PluginState.CORRUPTED);
+			this.loadedPlugins.put(pluginName, details);
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -929,59 +988,15 @@ public class PluginManager {
 		toLoad.onLoad();
 
 		this.setPluginState(toLoad, PluginState.DISABLED);
-		PluginLoaded packLoaded = new PluginLoaded(toLoad);
+		PluginLoaded packLoaded = new PluginLoaded(pluginName);
 		this.fireEvent(packLoaded);
 
 		return true;
 	}
 
 	/**
-	 * Load all the classes present in a given jar file. Remember to store this
-	 * in {@link #pluginClassLoaders}.
-	 * 
-	 * @param jarFile The jar file containing .class files.
-	 * @return The classloader that was used to load the classes.
-	 */
-	private Optional<URLClassLoader> loadAllClassesFromJar(File jarFile) {
-		// TODO map class loader to plugins/files so we can unload later
-		try (JarFile jar = new JarFile(jarFile)) {
-			Enumeration<JarEntry> entryEnum = jar.entries();
-
-			URLClassLoader classLoader =
-				URLClassLoader.newInstance(new URL[] {jarFile.toURI().toURL()});
-
-			while (entryEnum.hasMoreElements()) {
-				JarEntry entry = entryEnum.nextElement();
-				if (entry.isDirectory()
-					|| !entry.getName().endsWith(".class")) {
-					continue;
-				}
-				// -6 because of .class
-				String className =
-					entry.getName().substring(0, entry.getName().length() - 6);
-				className = className.replace('/', '.');
-				Class<?> c = classLoader.loadClass(className);
-			}
-			return Optional.of(classLoader);
-		}
-		catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		catch (ClassNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		return Optional.empty();
-	}
-
-	/**
 	 * Find the class by class name. Checks for cached versions, but will search
-	 * through known plugin classloaders to find it. If it cannot be found,
+	 * through known plugin class loaders to find it. If it cannot be found,
 	 * returns null.
 	 * 
 	 * @param name The name of the class to look for.
@@ -993,9 +1008,9 @@ public class PluginManager {
 		if (cachedClass != null) {
 			return cachedClass;
 		}
-		for (String curLoader : pluginClassLoaders.keySet()) {
-			PluginClassLoader loader = pluginClassLoaders.get(curLoader);
-
+		for (String pluginName : this.loadedPlugins.keySet()) {
+			PluginClassLoader loader =
+				this.loadedPlugins.get(pluginName).getClassLoader();
 			try {
 				cachedClass = loader.findClass(name, false);
 			}
@@ -1018,6 +1033,15 @@ public class PluginManager {
 		if (!pluginClasses.containsKey(name)) {
 			pluginClasses.put(name, clazz);
 		}
+	}
+
+	/**
+	 * Removes the class by name in the cached class list.
+	 * 
+	 * @param name The name of the class.
+	 */
+	void removeClass(final String name) {
+		pluginClasses.remove(name);
 	}
 
 	/**
@@ -1059,7 +1083,6 @@ public class PluginManager {
 		});
 
 		// load the plugins into memory with plugin info, DISCOVERED status
-		Map<Plugin, PluginInfo> pluginInfoMap = new HashMap<>();
 		for (File jarFile : jarInfoMap.keySet()) {
 			PluginInfo info = jarInfoMap.get(jarFile);
 
@@ -1083,9 +1106,13 @@ public class PluginManager {
 				continue;
 			}
 
-			pluginClassLoaders.put(info.getName(), loader);
-			pluginInfoMap.put(loader.plugin, info);
-			setPluginState(loader.plugin, PluginState.DISCOVERED);
+			PluginDetails details = new PluginDetails(loader, info,
+				loader.plugin, PluginState.DISCOVERED);
+
+			this.loadedPlugins.put(info.getName(), details);
+			this.pluginNames.put(loader.plugin, info.getName());
+
+			// setPluginState(loader.plugin, PluginState.DISCOVERED);
 			// TODO log discovered plugin
 		}
 		/*
@@ -1098,6 +1125,7 @@ public class PluginManager {
 		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
 		 * mark it as DEPS_CHECKING.
 		 */
+
 		/*
 		 * Handle loops/clusters with BFS. Go through all nodes still
 		 * DEPS_CHECKING and: if all dependencies are DEPS_SATISFIED, the node
@@ -1188,11 +1216,11 @@ public class PluginManager {
 
 		final String pluginName = info.getName();
 
-		logAlert("ALERT_LOADING", p);
+		logAlert("ALERT_LOADING", pluginName);
 
 		// if the plugin exists and is older than toLoad, unload
 		if (this.isLoaded(pluginName)) {
-			logAlert("ALERT_PLUGIN_ALREADY_LOADED", p);
+			logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
 			boolean existingPluginOld = false;
 			this.pluginLock.lock();
@@ -1213,7 +1241,7 @@ public class PluginManager {
 				this.pluginLock.unlock();
 			}
 			if (!existingPluginOld) {
-				logAlert("ALERT_PLUGIN_OUTDATED", p);
+				logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
 				return false;
 			}
 
@@ -1225,8 +1253,10 @@ public class PluginManager {
 		this.pluginLock.lock();
 		try {
 			// store the new plugin
-			this.loadedPlugins.put(pluginName, p);
-			this.pluginInfo.put(p, info);
+			this.pluginNames.put(p, pluginName);
+			PluginDetails details =
+				new PluginDetails(null, null, p, PluginState.CORRUPTED);
+			this.loadedPlugins.put(pluginName, details);
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -1244,7 +1274,7 @@ public class PluginManager {
 		// p.onLoad();
 
 		this.setPluginState(p, PluginState.DISABLED);
-		PluginLoaded packLoaded = new PluginLoaded(p);
+		PluginLoaded packLoaded = new PluginLoaded(pluginName);
 		this.fireEvent(packLoaded);
 
 		return true;
@@ -1257,15 +1287,21 @@ public class PluginManager {
 	 * automatically replaced.
 	 * 
 	 * @param whichAlert The string to read from the resource bundle
-	 * @param plugin The plugin that the alert is about
+	 * @param pluginName The plugin that the alert is about
 	 */
-	void logAlert(String whichAlert, Plugin plugin) {
-		PluginInfo pInfo = getInfo(plugin).get();
-
+	void logAlert(String whichAlert, String pluginName) {
+		PluginDetails details = this.loadedPlugins.get(pluginName);
+		String version;
+		if (details == null || details.getInfo() == null) {
+			version = "?";
+		}
+		else {
+			version = details.getInfo().getVersion();
+		}
 		String message =
 			SafeResourceLoader.getString(whichAlert, getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pInfo.getName())
-				.replaceFirst("\\$VERSION", pInfo.getVersion());
+				.replaceFirst("\\$PLUGIN", pluginName)
+				.replaceFirst("\\$VERSION", version);
 		log.fine(message);
 	}
 
@@ -1576,31 +1612,40 @@ public class PluginManager {
 		}
 	}
 
-	private void setPluginState(Plugin target, PluginState newState) {
-		boolean added = false;
-
+	private boolean setPluginState(Plugin target, PluginState newState) {
 		this.pluginLock.lock();
 		try {
-			if (!this.pluginStates.containsKey(target)) {
-				this.pluginStates.put(target, newState);
-				added = true;
+			if (!this.pluginNames.containsKey(target)) {
+				return false;
+			}
+			return setPluginState(this.pluginNames.get(target), newState);
+		}
+		finally {
+			this.pluginLock.unlock();
+		}
+	}
+
+	private boolean setPluginState(String target, PluginState newState) {
+		this.pluginLock.lock();
+		try {
+			if (!this.loadedPlugins.containsKey(target)) {
+				return false;
 			}
 		}
 		finally {
 			this.pluginLock.unlock();
 		}
-		if (added) {
-			return;
-		}
 
 		this.pluginLock.lock();
 		try {
 			// replaces the old state
-			PluginState oldState = this.pluginStates.get(target);
-			if (!oldState.equals(PluginState.PENDING_REMOVAL)) {
+			PluginState oldState = this.loadedPlugins.get(target).getState();
+			if (PluginState.PENDING_REMOVAL.equals(oldState)) {
 				// can't change plugins pending removal
-				this.pluginStates.put(target, newState);
+				return false;
 			}
+			this.loadedPlugins.get(target).setState(newState);
+			return true;
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -1673,7 +1718,7 @@ public class PluginManager {
 		Plugin pack;
 		this.pluginLock.lock();
 		try {
-			pack = this.loadedPlugins.get(toUnload);
+			pack = this.loadedPlugins.get(toUnload).getPlugin();
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -1694,7 +1739,7 @@ public class PluginManager {
 
 		pack.onUnload();
 		// TODO will this not become an invalid reference during event sending?
-		PluginUnloaded packUnloaded = new PluginUnloaded(pack);
+		PluginUnloaded packUnloaded = new PluginUnloaded(toUnload);
 		this.fireEvent(packUnloaded);
 
 		for (Listener l : pack.getListeners()) {
@@ -1706,8 +1751,8 @@ public class PluginManager {
 		log.finer(unreg);
 		this.pluginLock.lock();
 		try {
-			this.loadedPlugins.remove(toUnload);
-			this.pluginStates.remove(pack);
+			PluginDetails removedDetails = this.loadedPlugins.remove(toUnload);
+			removedDetails.dispose();
 		}
 		finally {
 			this.pluginLock.unlock();
@@ -1733,8 +1778,8 @@ public class PluginManager {
 		try {
 			if (this.containsCommand(command)) {
 
-				while (this.containsCommand(command)) {// just in case there are
-														// multiple
+				while (this.containsCommand(command)) {
+					// just in case there are multiple
 					int index = this.getIndexOfCommand(command);
 					this.commands.remove(index);
 				}

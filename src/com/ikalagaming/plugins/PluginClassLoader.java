@@ -22,6 +22,9 @@ import java.util.Set;
 @CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class PluginClassLoader extends URLClassLoader {
 
+	/**
+	 * Classes known by this class loader, keyed by the class name.
+	 */
 	private final Map<String, Class<?>> classes = new HashMap<>();
 	private final PluginManager manager;
 	/**
@@ -142,6 +145,17 @@ public class PluginClassLoader extends URLClassLoader {
 	 */
 	Set<String> getClasses() {
 		return this.classes.keySet();
+	}
+
+	/**
+	 * Unregisters all it's classes from the plugin manager class cache, and
+	 * cleans up references.
+	 */
+	void dispose() {
+		getClasses().forEach((clazz) -> {
+			manager.removeClass(clazz);
+		});
+		classes.clear();
 	}
 
 }

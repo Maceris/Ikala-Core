@@ -1,7 +1,6 @@
 package com.ikalagaming.plugins.events;
 
 import com.ikalagaming.event.Event;
-import com.ikalagaming.plugins.Plugin;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,10 +18,10 @@ public class PluginLoaded extends Event {
 	/**
 	 * The plugin that was just loaded.
 	 * 
-	 * @param The plugin that was loaded.
-	 * @return The plugin that was loaded.
+	 * @param The name of the plugin that was loaded.
+	 * @return The name of the plugin that was loaded.
 	 */
 	@SuppressWarnings("javadoc")
-	private Plugin plugin;
+	private String plugin;
 
 }
