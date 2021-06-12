@@ -5,10 +5,8 @@ import com.ikalagaming.permissions.Permission;
 
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
-import lombok.AccessLevel;
 import lombok.CustomLog;
 import lombok.Getter;
-import lombok.Setter;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
@@ -60,17 +58,6 @@ public class PluginInfo {
 	@SuppressWarnings("javadoc")
 	@Getter
 	private List<String> authors = null;
-
-	/**
-	 * The class loader for the plugin.
-	 * 
-	 * @return The current class loader for the plugin.
-	 * @param classLoader The new class loader.
-	 */
-	@SuppressWarnings("javadoc")
-	@Getter
-	@Setter(AccessLevel.PRIVATE)
-	private String classLoader = null;
 
 	/**
 	 * A map from strings to commands.
@@ -325,9 +312,6 @@ public class PluginInfo {
 					"commands are of the wrong type", ex);
 			}
 			this.commands = commandsMap;
-		}
-		if (map.get("class-loader-of") != null) {
-			this.setClassLoader(map.get("class-loader-of").toString());
 		}
 		this.dependencies = PluginInfo.makePluginNameList(map, "depend");
 		this.softDependencies =
