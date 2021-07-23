@@ -18,6 +18,7 @@ import lombok.Synchronized;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -1223,17 +1224,88 @@ public class PluginManager {
 
 		// Report and unload all DEPS_MISSING plugins
 
+		for (String pluginName : findPluginsByState(PluginState.DEPS_MISSING)) {
+			// TODO log missing plugin
+			PluginDetails details = pluginDetails.get(pluginName);
+			Plugin plugin = details.getPlugin();
+			details.dispose();
+			pluginDetails.remove(pluginName);
+			pluginNames.remove(plugin);
+		}
+
 		/*
 		 * All plugins should now be DEPS_SATISFIED, so load them all. During
 		 * the onLoad() method, plugins should deal with connecting to plugins
 		 * that may be in a dependency loop.
 		 */
+		List<String> toLoad = findPluginsByState(PluginState.DEPS_SATISFIED);
+		for (String pluginName : toLoad) {
+			logAlert("ALERT_LOADING", pluginName);
+
+			// TODO if already loaded, compare versions and load if newer
+
+			PluginDetails details = this.pluginDetails.get(pluginName);
+			PluginInfo info = details.getInfo();
+
+			Class<?> pluginClass;
+			try {
+				pluginClass =
+					details.getClassLoader().loadClass(info.getMain());
+			}
+			catch (ClassNotFoundException e1) {
+				// TODO log the failure to load the main class
+				continue;
+			}
+
+			if (!Plugin.class.isAssignableFrom(pluginClass)) {
+				// TODO log the invalid plugin class
+				setPluginState(pluginName, PluginState.CORRUPTED);
+				continue;
+			}
+
+			Constructor<?>[] constructors = pluginClass.getConstructors();
+			if (0 == constructors.length) {
+				// TODO log the lack of public constructors
+				continue;
+			}
+
+			for (Constructor<?> constructor : constructors) {
+				if (0 != constructor.getParameterCount()) {
+					continue;
+				}
+				Plugin plugin;
+				try {
+					plugin = (Plugin) constructor.newInstance();
+				}
+				catch (Exception e) {
+					// TODO log exception
+					continue;
+				}
+
+				if (!plugin.onLoad()) {
+					// TODO log failure to load
+					// TODO unload
+				}
+				for (Listener l : plugin.getListeners()) {
+					this.eventManager.registerEventListeners(l);
+				}
+				String msg = SafeResourceLoader
+					.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
+					.replaceFirst("\\$PLUGIN", pluginName);
+				log.finer(msg);
+			}
+		}
+
 		/*
 		 * After all plugins have been loaded, now they can be enabled (if that
 		 * configuration is set). At this point problems with loops should have
 		 * been resolved enough that the plugins can start in any order.
 		 */
-
+		if (enableOnLoad) {
+			for (String pluginName : toLoad) {
+				// TODO enable plugin
+			}
+		}
 	}
 
 	/**

@@ -101,12 +101,11 @@ public class PluginInfo {
 	private List<String> loadBefore = new ArrayList<>();
 
 	/**
-	 * The fully qualified name of the main method for the plugin. This includes
-	 * the class name. The format should follow the
-	 * {@link ClassLoader#loadClass(String)} syntax. This will be the class that
-	 * implements {@link Plugin}.
+	 * The fully qualified name of the class that extends {@link Plugin} for
+	 * this plugin. The format should follow the
+	 * {@link ClassLoader#loadClass(String)} syntax.
 	 * 
-	 * @return The absolute path to the main method of the plugin.
+	 * @return The absolute path to the main plugin class.
 	 */
 	@SuppressWarnings("javadoc")
 	@Getter
