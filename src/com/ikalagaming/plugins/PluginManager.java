@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1039,67 +1040,78 @@ public class PluginManager {
 	 * dependency. This return value is used to propagate failures up the tree.
 	 * This will set the state of any plugin it reaches which is still checking.
 	 * 
-	 * @param root The current root node for the sake of processing.
-	 * @param namesInTheTree The list of all plugins seen in the current tree.
-	 *            When calling this method, this must contain the name of the
-	 *            root.
-	 * @return True if the whole tree is resolved, false if any dependency is
-	 *         missing for the root node.
+	 * @param root The root node we are building a tree from.
 	 */
-	private boolean resolveDependencies(PluginDependencyNode root,
-		List<String> namesInTheTree) {
-		if (null == root || null == namesInTheTree) {
-			return false;
+	private void resolveDependencies(PluginDependencyNode root) {
+		if (null == root) {
+			return;
 		}
+		List<String> namesInTheTree = new ArrayList<>();
+		namesInTheTree.add(root.getName());
+		ArrayDeque<PluginDependencyNode> queue = new ArrayDeque<>();
 
-		PluginInfo info = this.pluginDetails.get(root.getName()).getInfo();
-		for (String dependencyName : info.getDependencies()) {
-			PluginState state = getPluginState(dependencyName);
-			switch (state) {
-				case DEPS_CHECKING:
-					if (!namesInTheTree.contains(dependencyName)) {
-						root.addChild(dependencyName);
-						namesInTheTree.add(dependencyName);
-					}
-					break;
-				case DEPS_SATISFIED:
-				case DISABLED:
-				case DISABLING:
-				case DISCOVERED:
-				case ENABLED:
-				case ENABLING:
-				case LOADING:
-				default:
-					// satisfied, we don't need to do anything here
-					break;
-				case DEPS_MISSING:
-				case CORRUPTED:
-				case NOT_LOADED:
-				case PENDING_REMOVAL:
-				case UNLOADING:
-					setPluginState(root.getName(), PluginState.DEPS_MISSING);
-					// propagates up
-					return false;
+		PluginDependencyNode currentNode;
+		queue.add(root);
+
+		while (!queue.isEmpty()) {
+			currentNode = queue.pollFirst();
+
+			PluginInfo info =
+				this.pluginDetails.get(currentNode.getName()).getInfo();
+			for (String dependencyName : info.getDependencies()) {
+				PluginState state = getPluginState(dependencyName);
+				switch (state) {
+					case DEPS_CHECKING:
+						if (!namesInTheTree.contains(dependencyName)) {
+							namesInTheTree.add(dependencyName);
+							PluginDependencyNode child =
+								new PluginDependencyNode(dependencyName);
+							child.setParent(root);
+							currentNode.getChildren().add(child);
+							queue.add(child);
+						}
+						break;
+					case DEPS_SATISFIED:
+					case DISABLED:
+					case DISABLING:
+					case DISCOVERED:
+					case ENABLED:
+					case ENABLING:
+					case LOADING:
+					default:
+						// satisfied, we don't need to do anything here
+						break;
+					case DEPS_MISSING:
+					case CORRUPTED:
+					case NOT_LOADED:
+					case PENDING_REMOVAL:
+					case UNLOADING:
+						// propagate failure up to the root and bail
+						setPluginState(currentNode.getName(),
+							PluginState.DEPS_MISSING);
+						PluginDependencyNode parent = currentNode.getParent();
+						while (null != parent) {
+							setPluginState(parent.getName(),
+								PluginState.DEPS_MISSING);
+							parent = parent.getParent();
+						}
+						return;
+				}
 			}
 		}
 
 		/*
-		 * Check all the children, if any of them don't have dependencies
-		 * satisfied, we immediately mark it as missing and propagate that
-		 * failure up to the root.
+		 * We went through the whole tree and never failed. Therefore we can go
+		 * mark everything as satisfied. Also we don't get to this point until
+		 * the queue is empty.
 		 */
-		for (PluginDependencyNode child : root.getChildren()) {
-			if (!resolveDependencies(child, namesInTheTree)) {
-				setPluginState(root.getName(), PluginState.DEPS_MISSING);
-				return false;
-			}
+		queue.add(root);
+		while (!queue.isEmpty()) {
+			currentNode = queue.pollFirst();
+			setPluginState(currentNode.getName(), PluginState.DEPS_SATISFIED);
+			// fine since we avoided cycles when setting up children earlier
+			queue.addAll(currentNode.getChildren());
 		}
-		/*
-		 * The dependency (sub-)tree has been checked, and nothing failed, so we
-		 * are good. Mark satisfied and keep going with the parent node.
-		 */
-		setPluginState(root.getName(), PluginState.DEPS_SATISFIED);
-		return true;
 	}
 
 	/**
@@ -1205,15 +1217,12 @@ public class PluginManager {
 			findPluginsByState(PluginState.DEPS_CHECKING);
 		while (stillChecking.size() != 0) {
 			String name = stillChecking.get(0);
-			PluginDependencyNode root = new PluginDependencyNode(name);
-			List<String> namesInTheTree = new ArrayList<>();
-			namesInTheTree.add(name);
-
-			resolveDependencies(root, namesInTheTree);
+			resolveDependencies(new PluginDependencyNode(name));
 			stillChecking = findPluginsByState(PluginState.DEPS_CHECKING);
 		}
 
 		// Report and unload all DEPS_MISSING plugins
+
 		/*
 		 * All plugins should now be DEPS_SATISFIED, so load them all. During
 		 * the onLoad() method, plugins should deal with connecting to plugins
