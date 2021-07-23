@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
 /**
@@ -701,7 +702,7 @@ public class PluginManager {
 	 */
 	@Synchronized("pluginLock")
 	public PluginState getPluginState(String target) {
-		if (target == null) {
+		if (null == target) {
 			return PluginState.NOT_LOADED;
 		}
 
@@ -952,6 +953,156 @@ public class PluginManager {
 	}
 
 	/**
+	 * Calculate the state of a plugin based on whether the dependencies have
+	 * been satisfied. Does not calculate the state of the children, multiple
+	 * passes may be required to determine the final state. This is used during
+	 * the process of loading multiple plugins at once and determining if
+	 * dependencies are satisfied.
+	 * 
+	 * @param pluginInfo The plugin information we are checking.
+	 * @return The state of the plugin in context of loading multiple plugins.
+	 */
+	private PluginState calculatePluginState(PluginInfo pluginInfo) {
+		if (null == pluginInfo) {
+			return PluginState.NOT_LOADED;
+		}
+		/*
+		 * If all dependencies are satisfied (DISCOVERED, loaded/enabled,
+		 * DEPS_SATISFIED, generally existing in the system), or it has no
+		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
+		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
+		 * plugin as DEPS_MISSING. If a plugin does not have missing
+		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
+		 * mark it as DEPS_CHECKING.
+		 */
+		boolean stillEvaluatingChildren = false;
+		for (String dependencyName : pluginInfo.getDependencies()) {
+			PluginState state = getPluginState(dependencyName);
+			switch (state) {
+				case DEPS_CHECKING:
+					/*
+					 * Not yet confirmed until children nodes are validated, so
+					 * set the flag and keep checking children.
+					 */
+					stillEvaluatingChildren = true;
+					break;
+				case DEPS_SATISFIED:
+				case DISABLED:
+				case DISABLING:
+				case DISCOVERED:
+				case ENABLED:
+				case ENABLING:
+				case LOADING:
+					// satisfied, we can keep going
+					break;
+				case DEPS_MISSING:
+					// propagate the failure up
+				case CORRUPTED:
+				case NOT_LOADED:
+				case PENDING_REMOVAL:
+				case UNLOADING:
+					/*
+					 * Not satisfied or won't be, impossible to load so we just
+					 * bail out of the method immediately
+					 */
+					return PluginState.DEPS_MISSING;
+				default:
+					break;
+			}
+		}
+		/*
+		 * At this point no child was missing dependencies or invalid, so if all
+		 * were good we can continue, but if any were still needing to be
+		 * checked themselves, we need to note that.
+		 */
+		if (stillEvaluatingChildren) {
+			return PluginState.DEPS_CHECKING;
+		}
+		return PluginState.DEPS_SATISFIED;
+	}
+
+	/**
+	 * Find all the names of plugins that have a given state.
+	 * 
+	 * @param state The state to look for.
+	 * @return The names of plugins with that given state.
+	 */
+	private List<String> findPluginsByState(PluginState state) {
+		return this.pluginDetails.keySet().stream().filter((name) -> {
+			return state == this.pluginDetails.get(name).getState();
+		}).collect(Collectors.toList());
+	}
+
+	/**
+	 * Resolve the dependencies of all children using a breadth-first search.
+	 * Returns true if everything is fine, but false if there is an unresolved
+	 * dependency. This return value is used to propagate failures up the tree.
+	 * This will set the state of any plugin it reaches which is still checking.
+	 * 
+	 * @param root The current root node for the sake of processing.
+	 * @param namesInTheTree The list of all plugins seen in the current tree.
+	 *            When calling this method, this must contain the name of the
+	 *            root.
+	 * @return True if the whole tree is resolved, false if any dependency is
+	 *         missing for the root node.
+	 */
+	private boolean resolveDependencies(PluginDependencyNode root,
+		List<String> namesInTheTree) {
+		if (null == root || null == namesInTheTree) {
+			return false;
+		}
+
+		PluginInfo info = this.pluginDetails.get(root.getName()).getInfo();
+		for (String dependencyName : info.getDependencies()) {
+			PluginState state = getPluginState(dependencyName);
+			switch (state) {
+				case DEPS_CHECKING:
+					if (!namesInTheTree.contains(dependencyName)) {
+						root.addChild(dependencyName);
+						namesInTheTree.add(dependencyName);
+					}
+					break;
+				case DEPS_SATISFIED:
+				case DISABLED:
+				case DISABLING:
+				case DISCOVERED:
+				case ENABLED:
+				case ENABLING:
+				case LOADING:
+				default:
+					// satisfied, we don't need to do anything here
+					break;
+				case DEPS_MISSING:
+				case CORRUPTED:
+				case NOT_LOADED:
+				case PENDING_REMOVAL:
+				case UNLOADING:
+					setPluginState(root.getName(), PluginState.DEPS_MISSING);
+					// propagates up
+					return false;
+			}
+		}
+
+		/*
+		 * Check all the children, if any of them don't have dependencies
+		 * satisfied, we immediately mark it as missing and propagate that
+		 * failure up to the root.
+		 */
+		for (PluginDependencyNode child : root.getChildren()) {
+			if (!resolveDependencies(child, namesInTheTree)) {
+				setPluginState(root.getName(), PluginState.DEPS_MISSING);
+				return false;
+			}
+		}
+		/*
+		 * The dependency (sub-)tree has been checked, and nothing failed, so we
+		 * are good. Mark satisfied and keep going with the parent node.
+		 */
+		setPluginState(root.getName(), PluginState.DEPS_SATISFIED);
+		return true;
+	}
+
+	/**
 	 * Load all the plugins from .jar files that are located in the given
 	 * folder.
 	 * 
@@ -1033,6 +1184,11 @@ public class PluginManager {
 		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
 		 * mark it as DEPS_CHECKING.
 		 */
+		for (String pluginName : this.pluginDetails.keySet()) {
+			PluginDetails details = this.pluginDetails.get(pluginName);
+			PluginState state = calculatePluginState(details.getInfo());
+			details.setState(state);
+		}
 
 		/*
 		 * Handle loops/clusters with BFS. Go through all nodes still
@@ -1044,6 +1200,19 @@ public class PluginManager {
 		 * completely exhaust reachable nodes, and everything is DEPS_SATISFIED
 		 * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
 		 */
+
+		List<String> stillChecking =
+			findPluginsByState(PluginState.DEPS_CHECKING);
+		while (stillChecking.size() != 0) {
+			String name = stillChecking.get(0);
+			PluginDependencyNode root = new PluginDependencyNode(name);
+			List<String> namesInTheTree = new ArrayList<>();
+			namesInTheTree.add(name);
+
+			resolveDependencies(root, namesInTheTree);
+			stillChecking = findPluginsByState(PluginState.DEPS_CHECKING);
+		}
+
 		// Report and unload all DEPS_MISSING plugins
 		/*
 		 * All plugins should now be DEPS_SATISFIED, so load them all. During
