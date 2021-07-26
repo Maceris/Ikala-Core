@@ -66,7 +66,7 @@ public class PluginManager {
 	 *
 	 * @param first The first version string
 	 * @param second The second version string
-	 * @return the value of comparing the two versions.
+	 * @return The value of comparing the two versions.
 	 */
 	public final static int compareVersions(final String first,
 		final String second) {
@@ -98,7 +98,7 @@ public class PluginManager {
 	 * get the instance which all other classes should share. If there is no
 	 * instance yet, one will be created.
 	 *
-	 * @return the static instance of the Plugin Manager
+	 * @return The static instance of the Plugin Manager.
 	 * @see #getInstance(EventManager)
 	 * @see PluginManager#destoryInstance()
 	 */
@@ -118,7 +118,7 @@ public class PluginManager {
 	 *
 	 * @param manager the event manager to use for the static instance
 	 *
-	 * @return the static instance of the Plugin Manager
+	 * @return The static instance of the Plugin Manager.
 	 * @see #getInstance()
 	 * @see #destoryInstance()
 	 */
@@ -140,7 +140,7 @@ public class PluginManager {
 	 *
 	 * @param toCheck The string that is unknown relative to the known version.
 	 * @param existing The existing version that is known but could be outdated.
-	 * @return true if the first version is newer than the second, otherwise
+	 * @return True if the first version is newer than the second, otherwise
 	 *         false.
 	 */
 	public final static boolean isNewerVersion(final String toCheck,
@@ -285,8 +285,8 @@ public class PluginManager {
 	/**
 	 * Returns true if the array contains the given string.
 	 *
-	 * @param s the string to look for
-	 * @return true if the string exists
+	 * @param s The string to look for.
+	 * @return True if the string exists.
 	 */
 	@Synchronized("commandLock")
 	public boolean containsCommand(final String s) {
@@ -324,7 +324,7 @@ public class PluginManager {
 
 		PluginDetails details = this.pluginDetails.get(target);
 		if (null == details) {
-			// TODO log null details
+			logAlert("PLUGIN_DETAILS_MISSING", target);
 			return false;
 		}
 
@@ -333,10 +333,12 @@ public class PluginManager {
 			this.setPluginState(target, PluginState.DISABLED);
 			PluginDisabled packDisabled = new PluginDisabled(target);
 			this.fireEvent(packDisabled);
+			logAlert("ALERT_DISABLED", target);
 		}
 		else {
 			this.setPluginState(target, PluginState.CORRUPTED);
 			logStateCorrupted(target);
+			logAlert("PLUGIN_DISABLE_FAIL", target);
 		}
 
 		return success;
@@ -363,7 +365,7 @@ public class PluginManager {
 
 		PluginDetails details = this.pluginDetails.get(target);
 		if (null == details) {
-			// TODO log null details
+			logAlert("PLUGIN_DETAILS_MISSING", target);
 			return false;
 		}
 
@@ -372,10 +374,12 @@ public class PluginManager {
 			this.setPluginState(target, PluginState.ENABLED);
 			PluginEnabled plugEnabled = new PluginEnabled(target);
 			this.fireEvent(plugEnabled);
+			logAlert("ALERT_ENABLED", target);
 		}
 		else {
 			this.setPluginState(target, PluginState.CORRUPTED);
 			logStateCorrupted(target);
+			logAlert("PLUGIN_ENABLE_FAIL", target);
 		}
 
 		return success;
@@ -723,10 +727,8 @@ public class PluginManager {
 
 			logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
-			boolean lowerVersion = false;
-
-			// TODO real version checking
-			lowerVersion = isNewerVersion(pluginVersion, "0.0.0");
+			boolean lowerVersion = isNewerVersion(pluginVersion,
+				this.pluginDetails.get(pluginName).getInfo().getVersion());
 
 			if (lowerVersion) {
 				this.unloadPlugin(pluginName);
@@ -752,6 +754,7 @@ public class PluginManager {
 			.replaceFirst("\\$PLUGIN", pluginName);
 		log.finer(msg);
 
+		// TODO handle failure
 		// load it
 		toLoad.onLoad();
 
@@ -979,15 +982,16 @@ public class PluginManager {
 	 * @param jars The jars we want to load.
 	 */
 	private void plLoadPlugins(@NonNull List<File> jars) {
-
 		Map<File, PluginInfo> jarInfoMap = new HashMap<>();
 
 		// grab all the plugin info from them, discard invalid plugins
 		for (File jarFile : jars) {
 			Optional<PluginInfo> info = extractPluginInfo(jarFile);
 			if (!info.isPresent()) {
-				// We don't have a valid plugin
-				// TODO log this
+				/*
+				 * We don't have a valid plugin, the error was already logged
+				 * when extracting plugin info
+				 */
 				continue;
 			}
 			jarInfoMap.put(jarFile, info.get());
@@ -997,9 +1001,31 @@ public class PluginManager {
 			return !jarInfoMap.containsKey(file);
 		});
 
+		// Plugins that were already had a newer version loaded
+		List<File> skipped = new ArrayList<>();
+		
 		// load the plugins into memory with plugin info, DISCOVERED status
 		for (File jarFile : jarInfoMap.keySet()) {
 			PluginInfo info = jarInfoMap.get(jarFile);
+
+			String pluginName = info.getName();
+			if (this.isLoaded(pluginName)) {
+
+				logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
+
+				boolean lowerVersion = isNewerVersion(info.getVersion(),
+					this.pluginDetails.get(pluginName).getInfo().getVersion());
+
+				if (lowerVersion) {
+					this.unloadPlugin(pluginName);
+					// unload the old plugin and continue loading the new one
+				}
+				else {
+					logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
+					skipped.add(jarFile);
+					continue;
+				}
+			}
 
 			PluginClassLoader loader = null;
 			try {
@@ -1007,17 +1033,15 @@ public class PluginManager {
 					getClass().getClassLoader(), info, jarFile);
 			}
 			catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logAlert("PLUGIN_URL_INVALID", jarFile.getName());
 			}
 			catch (InvalidPluginException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// The class loader already logs the problem
+				continue;
 			}
 			if (loader == null) {
 				jarInfoMap.remove(jarFile);
 				jars.remove(jarFile);
-				// TODO log this problem
 				continue;
 			}
 
@@ -1025,10 +1049,11 @@ public class PluginManager {
 				loader.plugin, PluginState.DISCOVERED);
 
 			this.pluginDetails.put(info.getName(), details);
-
-			// setPluginState(loader.plugin, PluginState.DISCOVERED);
-			// TODO log discovered plugin
+			logAlert("ALERT_DISCOVERED", info.getName());
 		}
+
+		jars.removeAll(skipped);
+
 		/*
 		 * Resolve easy dependencies. Loop through all plugins once, if all
 		 * dependencies are satisfied (DISCOVERED, loaded/enabled,
@@ -1067,7 +1092,7 @@ public class PluginManager {
 		// Report and unload all DEPS_MISSING plugins
 
 		for (String pluginName : findPluginsByState(PluginState.DEPS_MISSING)) {
-			// TODO log missing plugin
+			logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
 			PluginDetails details = pluginDetails.remove(pluginName);
 			details.dispose();
 		}
@@ -1082,13 +1107,11 @@ public class PluginManager {
 			setPluginState(pluginName, PluginState.LOADING);
 			logAlert("ALERT_LOADING", pluginName);
 
-			// TODO if already loaded, compare versions and load if newer
-
 			PluginDetails details = this.pluginDetails.get(pluginName);
 			Plugin plugin = details.getPlugin();
 
 			if (!plugin.onLoad()) {
-				// TODO log failure to load
+				logAlert("PLUGIN_LOAD_FAIL", pluginName);
 				unloadPlugin(pluginName);
 			}
 			for (Listener l : plugin.getListeners()) {
@@ -1099,7 +1122,8 @@ public class PluginManager {
 				.replaceFirst("\\$PLUGIN", pluginName);
 			log.finer(msg);
 			setPluginState(pluginName, PluginState.DISABLED);
-			// TODO log loaded plugin
+
+			logAlert("ALERT_LOADED", pluginName);
 		}
 
 		/*
@@ -1108,10 +1132,9 @@ public class PluginManager {
 		 * been resolved enough that the plugins can start in any order.
 		 */
 		if (enableOnLoad) {
-			for (String pluginName : toLoad) {
-				// TODO enable plugin
-				enable(pluginName);
-			}
+			toLoad.forEach((plugin) -> {
+				enable(plugin);
+			});
 		}
 	}
 
@@ -1127,7 +1150,10 @@ public class PluginManager {
 		File pluginFolder = null;
 		Optional<File> folderMaybe = this.plGetFolder(folder);
 		if (!folderMaybe.isPresent()) {
-			// TODO log this
+			String warning = SafeResourceLoader
+				.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
+				.replaceFirst("\\$FOLDER", "folder");
+			log.warning(warning);
 			return;
 		}
 		pluginFolder = folderMaybe.get();
@@ -1422,7 +1448,7 @@ public class PluginManager {
 		Optional<PluginInfo> p = getInfo(target);
 
 		if (!p.isPresent()) {
-			// TODO log this
+			logAlert("PLUGIN_INFO_MISSING", target);
 			return false;
 		}
 		PluginInfo pInfo = p.get();
@@ -1489,15 +1515,16 @@ public class PluginManager {
 		this.eventManager.unregisterEventListeners(logListener);
 
 		synchronized (pluginLock) {
-			for (String s : pluginDetails.keySet()) {
-				// TODO would this break things?
+			List<String> toUnload = new ArrayList<>(pluginDetails.keySet());
+			for (String s : toUnload) {
 				unloadPlugin(s);
 			}
 		}
-
-		PluginManager.instance.clearCommands();
-		PluginManager.instance.eventManager = null;
-		PluginManager.instance.commands = null;
+		synchronized (commandLock) {
+			clearCommands();
+			commands = null;
+		}
+		eventManager = null;
 	}
 
 	/**
@@ -1509,16 +1536,11 @@ public class PluginManager {
 	 */
 	@Synchronized("pluginLock")
 	public boolean unloadPlugin(final String toUnload) {
-		String unloading =
-			SafeResourceLoader.getString("ALERT_UNLOADING", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", toUnload);
-		log.fine(unloading);
+
+		logAlert("ALERT_UNLOADING", toUnload);
 
 		if (!this.isLoaded(toUnload)) {
-			String notLoaded = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", toUnload);
-			log.fine(notLoaded);
+			logAlert("PLUGIN_NOT_LOADED", toUnload);
 			PluginDetails removedDetails = this.pluginDetails.remove(toUnload);
 			if (null != removedDetails) {
 				removedDetails.dispose();
@@ -1554,6 +1576,7 @@ public class PluginManager {
 		}
 		this.setPluginState(toUnload, PluginState.UNLOADING);
 
+		// TODO handle failure
 		plugin.onUnload();
 		PluginUnloaded packUnloaded = new PluginUnloaded(toUnload);
 		this.fireEvent(packUnloaded);
@@ -1561,18 +1584,14 @@ public class PluginManager {
 		for (Listener l : plugin.getListeners()) {
 			this.eventManager.unregisterEventListeners(l);
 		}
-		String unreg = SafeResourceLoader
-			.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle)
+		String unreg = SafeResourceLoader.getString("", this.resourceBundle)
 			.replaceFirst("\\$PLUGIN", PluginManager.PLUGIN_NAME);
 		log.finer(unreg);
 
 		details = this.pluginDetails.remove(toUnload);
 		details.dispose();
 
-		String unloaded =
-			SafeResourceLoader.getString("ALERT_UNLOADED", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", toUnload);
-		log.fine(unloaded);
+		logAlert("ALERT_UNLOADED", toUnload);
 		return true;
 	}
 
