@@ -331,8 +331,7 @@ public class PluginManager {
 		boolean success = details.getPlugin().onDisable();
 		if (success) {
 			this.setPluginState(target, PluginState.DISABLED);
-			PluginDisabled packDisabled = new PluginDisabled(target);
-			this.fireEvent(packDisabled);
+			this.fireEvent(new PluginDisabled(target));
 			logAlert("ALERT_DISABLED", target);
 		}
 		else {
@@ -372,8 +371,7 @@ public class PluginManager {
 		boolean success = details.getPlugin().onEnable();
 		if (success) {
 			this.setPluginState(target, PluginState.ENABLED);
-			PluginEnabled plugEnabled = new PluginEnabled(target);
-			this.fireEvent(plugEnabled);
+			this.fireEvent(new PluginEnabled(target));
 			logAlert("ALERT_ENABLED", target);
 		}
 		else {
@@ -504,7 +502,7 @@ public class PluginManager {
 	 *
 	 * @return true if the event was fired correctly
 	 */
-	private boolean fireEvent(Event event) {
+	private boolean fireEvent(@NonNull Event event) {
 		if (this.eventManager == null) {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.resourceBundle)
@@ -513,9 +511,7 @@ public class PluginManager {
 			return false;
 		}
 
-		if (event != null) {// just in case the assignment failed
-			this.eventManager.fireEvent(event);
-		}
+		this.eventManager.fireEvent(event);
 
 		return true;
 	}
@@ -690,79 +686,6 @@ public class PluginManager {
 			case NOT_LOADED:
 				return false;
 		}
-	}
-
-	/**
-	 * <p>
-	 * Loads the given plugin into memory, stores it by type, and enables it if
-	 * plugins are enabled on load by default.
-	 * </p>
-	 * <p>
-	 * If the type of plugin already exists in the manager, and the new plugin
-	 * has a higher version number, then the old plugin is unloaded and the new
-	 * one is loaded in its place. If the versions are equal, or the new plugin
-	 * is older, then it does not load the new version and returns false.
-	 * </p>
-	 *
-	 * @see PluginManager#getEnableOnLoad()
-	 * 
-	 * @deprecated This is getting phased out, all plugins will be loaded from
-	 *             file
-	 *
-	 * @param toLoad the plugin to load
-	 * @param info The plugin info to use while loading a plugin
-	 * @return true if the plugin was loaded properly, false otherwise
-	 */
-	@Deprecated
-	@Synchronized("pluginLock")
-	public boolean loadPlugin(Plugin toLoad, PluginInfo info) {
-
-		final String pluginName = info.getName();
-		final String pluginVersion = info.getVersion();
-
-		logAlert("ALERT_LOADING", pluginName);
-
-		// if the plugin exists and is older than toLoad, unload
-		if (this.isLoaded(pluginName)) {
-
-			logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
-
-			boolean lowerVersion = isNewerVersion(pluginVersion,
-				this.pluginDetails.get(pluginName).getInfo().getVersion());
-
-			if (lowerVersion) {
-				this.unloadPlugin(pluginName);
-				// unload the old plugin and continue loading the new one
-			}
-			else {
-				logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
-				return false;
-			}
-		}
-		this.setPluginState(pluginName, PluginState.LOADING);
-
-		// store the new plugin
-		PluginDetails details =
-			new PluginDetails(null, null, toLoad, PluginState.CORRUPTED);
-		this.pluginDetails.put(pluginName, details);
-
-		for (Listener l : toLoad.getListeners()) {
-			this.eventManager.registerEventListeners(l);
-		}
-		String msg = SafeResourceLoader
-			.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
-			.replaceFirst("\\$PLUGIN", pluginName);
-		log.finer(msg);
-
-		// TODO handle failure
-		// load it
-		toLoad.onLoad();
-
-		this.setPluginState(pluginName, PluginState.DISABLED);
-		PluginLoaded packLoaded = new PluginLoaded(pluginName);
-		this.fireEvent(packLoaded);
-
-		return true;
 	}
 
 	/**
@@ -1124,6 +1047,7 @@ public class PluginManager {
 			setPluginState(pluginName, PluginState.DISABLED);
 
 			logAlert("ALERT_LOADED", pluginName);
+			fireEvent(new PluginLoaded(pluginName));
 		}
 
 		/*
