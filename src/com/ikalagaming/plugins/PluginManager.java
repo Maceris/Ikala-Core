@@ -46,12 +46,12 @@ import java.util.zip.ZipEntry;
 @CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class PluginManager {
 
+	private static PluginManager instance;
+
 	/**
 	 * The name of the core system, since it is not technically a plugin.
 	 */
 	public static final String PLUGIN_NAME = "Ikala-Core";
-
-	private static PluginManager instance;
 
 	/**
 	 * Compare the order of version strings, as if using
@@ -148,7 +148,31 @@ public class PluginManager {
 		return Version.valueOf(toCheck).greaterThan(Version.valueOf(existing));
 	}
 
+	private Object commandLock = new Object();
+
+	/**
+	 * A list of all of the commands registered. This list is sorted.
+	 */
+	private ArrayList<PluginCommand> commands;
+
+	/**
+	 * If plugins should be enabled by the plugin manager when they are loaded.
+	 * If this is false then plugins must be enabled manually after they are
+	 * loaded.
+	 */
+	private boolean enableOnLoad;
+
 	private EventManager eventManager;
+
+	private MiscLoggingListener logListener;
+
+	private final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
+
+	/**
+	 * Stores all the classes loaded by plugins. Keys are the unique class
+	 * names.
+	 */
+	private final Map<String, Class<?>> pluginClassCache;
 
 	/**
 	 * Maps strings to info about plugins loaded in memory
@@ -161,12 +185,6 @@ public class PluginManager {
 	private Object pluginLock = new Object();
 
 	/**
-	 * Stores all the classes loaded by plugins. Keys are the unique class
-	 * names.
-	 */
-	private final Map<String, Class<?>> pluginClassCache;
-
-	/**
 	 * The current resource bundle for the plugin manager.
 	 * 
 	 * @return The current resource bundle, which may be null.
@@ -174,24 +192,6 @@ public class PluginManager {
 	@SuppressWarnings("javadoc")
 	@Getter
 	private ResourceBundle resourceBundle;
-
-	/**
-	 * If plugins should be enabled by the plugin manager when they are loaded.
-	 * If this is false then plugins must be enabled manually after they are
-	 * loaded.
-	 */
-	private boolean enableOnLoad;
-
-	/**
-	 * A list of all of the commands registered. This list is sorted.
-	 */
-	private ArrayList<PluginCommand> commands;
-
-	private Object commandLock = new Object();
-
-	private MiscLoggingListener logListener;
-
-	private final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
 
 	/**
 	 * Constructs a new {@link PluginManager} and initializes variables.
@@ -220,6 +220,75 @@ public class PluginManager {
 		String tmp = SafeResourceLoader.getString("COMMAND_ARG_MISSING",
 			this.getResourceBundle());
 		log.warning(tmp);
+	}
+
+	/**
+	 * Calculate the state of a plugin based on whether the dependencies have
+	 * been satisfied. Does not calculate the state of the children, multiple
+	 * passes may be required to determine the final state. This is used during
+	 * the process of loading multiple plugins at once and determining if
+	 * dependencies are satisfied.
+	 * 
+	 * @param pluginInfo The plugin information we are checking.
+	 * @return The state of the plugin in context of loading multiple plugins.
+	 */
+	private PluginState calculatePluginState(PluginInfo pluginInfo) {
+		if (null == pluginInfo) {
+			return PluginState.NOT_LOADED;
+		}
+		/*
+		 * If all dependencies are satisfied (DISCOVERED, loaded/enabled,
+		 * DEPS_SATISFIED, generally existing in the system), or it has no
+		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
+		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
+		 * plugin as DEPS_MISSING. If a plugin does not have missing
+		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
+		 * mark it as DEPS_CHECKING.
+		 */
+		boolean stillEvaluatingChildren = false;
+		for (String dependencyName : pluginInfo.getDependencies()) {
+			PluginState state = getPluginState(dependencyName);
+			switch (state) {
+				case DEPS_CHECKING:
+					/*
+					 * Not yet confirmed until children nodes are validated, so
+					 * set the flag and keep checking children.
+					 */
+					stillEvaluatingChildren = true;
+					break;
+				case DEPS_SATISFIED:
+				case DISABLED:
+				case DISABLING:
+				case DISCOVERED:
+				case ENABLED:
+				case ENABLING:
+				case LOADING:
+					// satisfied, we can keep going
+					break;
+				case DEPS_MISSING:
+					// propagate the failure up
+				case CORRUPTED:
+				case NOT_LOADED:
+				case PENDING_REMOVAL:
+				case UNLOADING:
+					/*
+					 * Not satisfied or won't be, impossible to load so we just
+					 * bail out of the method immediately
+					 */
+					return PluginState.DEPS_MISSING;
+				default:
+					break;
+			}
+		}
+		/*
+		 * At this point no child was missing dependencies or invalid, so if all
+		 * were good we can continue, but if any were still needing to be
+		 * checked themselves, we need to note that.
+		 */
+		if (stillEvaluatingChildren) {
+			return PluginState.DEPS_CHECKING;
+		}
+		return PluginState.DEPS_SATISFIED;
 	}
 
 	private void cbDisable(String[] args) {
@@ -384,19 +453,6 @@ public class PluginManager {
 	}
 
 	/**
-	 * Returns true if this plugin manager automatically enables plugins when
-	 * they are loaded. If they are not enabled on load, they must be enabled
-	 * manually after being loaded.
-	 *
-	 * @return true if the plugins enable after loading, false if they must be
-	 *         manually enabled
-	 * @see #setEnableOnLoad(boolean)
-	 */
-	public boolean getEnableOnLoad() {
-		return this.enableOnLoad;
-	}
-
-	/**
 	 * Load up the plugin info from the given jar file and return it. If there
 	 * is some error like the file not actually being a jar or plugin info
 	 * missing, then the returned optional is empty.
@@ -494,6 +550,18 @@ public class PluginManager {
 	}
 
 	/**
+	 * Find all the names of plugins that have a given state.
+	 * 
+	 * @param state The state to look for.
+	 * @return The names of plugins with that given state.
+	 */
+	private List<String> findPluginsByState(PluginState state) {
+		return this.pluginDetails.keySet().stream().filter((name) -> {
+			return state == this.pluginDetails.get(name).getState();
+		}).collect(Collectors.toList());
+	}
+
+	/**
 	 * Fires an event with a message to a plugin type from the plugin manager.
 	 * If an error occurs, this will return false. The event should not have
 	 * been sent if false was returned.
@@ -517,6 +585,35 @@ public class PluginManager {
 	}
 
 	/**
+	 * Find the class by class name. Checks for cached versions, but will search
+	 * through known plugin class loaders to find it. If it cannot be found,
+	 * returns null.
+	 * 
+	 * @param name The name of the class to look for.
+	 * @return The class by the given name, or null if not found.
+	 */
+	Class<?> getClassByName(final String name) {
+		Class<?> cachedClass = pluginClassCache.get(name);
+
+		if (cachedClass != null) {
+			return cachedClass;
+		}
+		for (String pluginName : this.pluginDetails.keySet()) {
+			PluginClassLoader loader =
+				this.pluginDetails.get(pluginName).getClassLoader();
+			try {
+				cachedClass = loader.findClass(name, false);
+			}
+			catch (ClassNotFoundException e) {
+			}
+			if (cachedClass != null) {
+				return cachedClass;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Returns a clone of the commands list.
 	 *
 	 * @return a copy of the stored list
@@ -529,6 +626,19 @@ public class PluginManager {
 			cmds.add(pc);
 		}
 		return cmds;
+	}
+
+	/**
+	 * Returns true if this plugin manager automatically enables plugins when
+	 * they are loaded. If they are not enabled on load, they must be enabled
+	 * manually after being loaded.
+	 *
+	 * @return true if the plugins enable after loading, false if they must be
+	 *         manually enabled
+	 * @see #setEnableOnLoad(boolean)
+	 */
+	public boolean getEnableOnLoad() {
+		return this.enableOnLoad;
 	}
 
 	/**
@@ -685,380 +795,6 @@ public class PluginManager {
 			case PENDING_REMOVAL:
 			case NOT_LOADED:
 				return false;
-		}
-	}
-
-	/**
-	 * Find the class by class name. Checks for cached versions, but will search
-	 * through known plugin class loaders to find it. If it cannot be found,
-	 * returns null.
-	 * 
-	 * @param name The name of the class to look for.
-	 * @return The class by the given name, or null if not found.
-	 */
-	Class<?> getClassByName(final String name) {
-		Class<?> cachedClass = pluginClassCache.get(name);
-
-		if (cachedClass != null) {
-			return cachedClass;
-		}
-		for (String pluginName : this.pluginDetails.keySet()) {
-			PluginClassLoader loader =
-				this.pluginDetails.get(pluginName).getClassLoader();
-			try {
-				cachedClass = loader.findClass(name, false);
-			}
-			catch (ClassNotFoundException e) {
-			}
-			if (cachedClass != null) {
-				return cachedClass;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Stores the class by name in the cached class list.
-	 * 
-	 * @param name The name of the class.
-	 * @param clazz The corresponding class object.
-	 */
-	void setClass(final String name, final Class<?> clazz) {
-		if (!pluginClassCache.containsKey(name)) {
-			pluginClassCache.put(name, clazz);
-		}
-	}
-
-	/**
-	 * Removes the class by name in the cached class list.
-	 * 
-	 * @param name The name of the class.
-	 */
-	void removeClass(final String name) {
-		pluginClassCache.remove(name);
-	}
-
-	/**
-	 * Calculate the state of a plugin based on whether the dependencies have
-	 * been satisfied. Does not calculate the state of the children, multiple
-	 * passes may be required to determine the final state. This is used during
-	 * the process of loading multiple plugins at once and determining if
-	 * dependencies are satisfied.
-	 * 
-	 * @param pluginInfo The plugin information we are checking.
-	 * @return The state of the plugin in context of loading multiple plugins.
-	 */
-	private PluginState calculatePluginState(PluginInfo pluginInfo) {
-		if (null == pluginInfo) {
-			return PluginState.NOT_LOADED;
-		}
-		/*
-		 * If all dependencies are satisfied (DISCOVERED, loaded/enabled,
-		 * DEPS_SATISFIED, generally existing in the system), or it has no
-		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
-		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
-		 * plugin as DEPS_MISSING. If a plugin does not have missing
-		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
-		 * mark it as DEPS_CHECKING.
-		 */
-		boolean stillEvaluatingChildren = false;
-		for (String dependencyName : pluginInfo.getDependencies()) {
-			PluginState state = getPluginState(dependencyName);
-			switch (state) {
-				case DEPS_CHECKING:
-					/*
-					 * Not yet confirmed until children nodes are validated, so
-					 * set the flag and keep checking children.
-					 */
-					stillEvaluatingChildren = true;
-					break;
-				case DEPS_SATISFIED:
-				case DISABLED:
-				case DISABLING:
-				case DISCOVERED:
-				case ENABLED:
-				case ENABLING:
-				case LOADING:
-					// satisfied, we can keep going
-					break;
-				case DEPS_MISSING:
-					// propagate the failure up
-				case CORRUPTED:
-				case NOT_LOADED:
-				case PENDING_REMOVAL:
-				case UNLOADING:
-					/*
-					 * Not satisfied or won't be, impossible to load so we just
-					 * bail out of the method immediately
-					 */
-					return PluginState.DEPS_MISSING;
-				default:
-					break;
-			}
-		}
-		/*
-		 * At this point no child was missing dependencies or invalid, so if all
-		 * were good we can continue, but if any were still needing to be
-		 * checked themselves, we need to note that.
-		 */
-		if (stillEvaluatingChildren) {
-			return PluginState.DEPS_CHECKING;
-		}
-		return PluginState.DEPS_SATISFIED;
-	}
-
-	/**
-	 * Find all the names of plugins that have a given state.
-	 * 
-	 * @param state The state to look for.
-	 * @return The names of plugins with that given state.
-	 */
-	private List<String> findPluginsByState(PluginState state) {
-		return this.pluginDetails.keySet().stream().filter((name) -> {
-			return state == this.pluginDetails.get(name).getState();
-		}).collect(Collectors.toList());
-	}
-
-	/**
-	 * Resolve the dependencies of all children using a breadth-first search.
-	 * Returns true if everything is fine, but false if there is an unresolved
-	 * dependency. This return value is used to propagate failures up the tree.
-	 * This will set the state of any plugin it reaches which is still checking.
-	 * 
-	 * @param root The root node we are building a tree from.
-	 */
-	private void resolveDependencies(PluginDependencyNode root) {
-		if (null == root) {
-			return;
-		}
-		List<String> namesInTheTree = new ArrayList<>();
-		namesInTheTree.add(root.getName());
-		ArrayDeque<PluginDependencyNode> queue = new ArrayDeque<>();
-
-		PluginDependencyNode currentNode;
-		queue.add(root);
-
-		while (!queue.isEmpty()) {
-			currentNode = queue.pollFirst();
-
-			PluginInfo info =
-				this.pluginDetails.get(currentNode.getName()).getInfo();
-			for (String dependencyName : info.getDependencies()) {
-				PluginState state = getPluginState(dependencyName);
-				switch (state) {
-					case DEPS_CHECKING:
-						if (!namesInTheTree.contains(dependencyName)) {
-							namesInTheTree.add(dependencyName);
-							PluginDependencyNode child =
-								new PluginDependencyNode(dependencyName);
-							child.setParent(root);
-							currentNode.getChildren().add(child);
-							queue.add(child);
-						}
-						break;
-					case DEPS_SATISFIED:
-					case DISABLED:
-					case DISABLING:
-					case DISCOVERED:
-					case ENABLED:
-					case ENABLING:
-					case LOADING:
-					default:
-						// satisfied, we don't need to do anything here
-						break;
-					case DEPS_MISSING:
-					case CORRUPTED:
-					case NOT_LOADED:
-					case PENDING_REMOVAL:
-					case UNLOADING:
-						// propagate failure up to the root and bail
-						setPluginState(currentNode.getName(),
-							PluginState.DEPS_MISSING);
-						PluginDependencyNode parent = currentNode.getParent();
-						while (null != parent) {
-							setPluginState(parent.getName(),
-								PluginState.DEPS_MISSING);
-							parent = parent.getParent();
-						}
-						return;
-				}
-			}
-		}
-
-		/*
-		 * We went through the whole tree and never failed. Therefore we can go
-		 * mark everything as satisfied. Also we don't get to this point until
-		 * the queue is empty.
-		 */
-		queue.add(root);
-		while (!queue.isEmpty()) {
-			currentNode = queue.pollFirst();
-			setPluginState(currentNode.getName(), PluginState.DEPS_SATISFIED);
-			// fine since we avoided cycles when setting up children earlier
-			queue.addAll(currentNode.getChildren());
-		}
-	}
-
-	/**
-	 * Attempt to load all the provided jars as plugins.
-	 * 
-	 * @param jars The jars we want to load.
-	 */
-	private void plLoadPlugins(@NonNull List<File> jars) {
-		Map<File, PluginInfo> jarInfoMap = new HashMap<>();
-
-		// grab all the plugin info from them, discard invalid plugins
-		for (File jarFile : jars) {
-			Optional<PluginInfo> info = extractPluginInfo(jarFile);
-			if (!info.isPresent()) {
-				/*
-				 * We don't have a valid plugin, the error was already logged
-				 * when extracting plugin info
-				 */
-				continue;
-			}
-			jarInfoMap.put(jarFile, info.get());
-		}
-		// Unload/dereference any files that we don't care about anymore
-		jars.removeIf((file) -> {
-			return !jarInfoMap.containsKey(file);
-		});
-
-		// Plugins that were already had a newer version loaded
-		List<File> skipped = new ArrayList<>();
-		
-		// load the plugins into memory with plugin info, DISCOVERED status
-		for (File jarFile : jarInfoMap.keySet()) {
-			PluginInfo info = jarInfoMap.get(jarFile);
-
-			String pluginName = info.getName();
-			if (this.isLoaded(pluginName)) {
-
-				logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
-
-				boolean lowerVersion = isNewerVersion(info.getVersion(),
-					this.pluginDetails.get(pluginName).getInfo().getVersion());
-
-				if (lowerVersion) {
-					this.unloadPlugin(pluginName);
-					// unload the old plugin and continue loading the new one
-				}
-				else {
-					logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
-					skipped.add(jarFile);
-					continue;
-				}
-			}
-
-			PluginClassLoader loader = null;
-			try {
-				loader = new PluginClassLoader(this,
-					getClass().getClassLoader(), info, jarFile);
-			}
-			catch (MalformedURLException e) {
-				logAlert("PLUGIN_URL_INVALID", jarFile.getName());
-			}
-			catch (InvalidPluginException e) {
-				// The class loader already logs the problem
-				continue;
-			}
-			if (loader == null) {
-				jarInfoMap.remove(jarFile);
-				jars.remove(jarFile);
-				continue;
-			}
-
-			PluginDetails details = new PluginDetails(loader, info,
-				loader.plugin, PluginState.DISCOVERED);
-
-			this.pluginDetails.put(info.getName(), details);
-			logAlert("ALERT_DISCOVERED", info.getName());
-		}
-
-		jars.removeAll(skipped);
-
-		/*
-		 * Resolve easy dependencies. Loop through all plugins once, if all
-		 * dependencies are satisfied (DISCOVERED, loaded/enabled,
-		 * DEPS_SATISFIED, generally existing in the system), or it has no
-		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
-		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
-		 * plugin as DEPS_MISSING. If a plugin does not have missing
-		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
-		 * mark it as DEPS_CHECKING.
-		 */
-		for (String pluginName : this.pluginDetails.keySet()) {
-			PluginDetails details = this.pluginDetails.get(pluginName);
-			PluginState state = calculatePluginState(details.getInfo());
-			details.setState(state);
-		}
-
-		/*
-		 * Handle loops/clusters with BFS. Go through all nodes still
-		 * DEPS_CHECKING and: if all dependencies are DEPS_SATISFIED, the node
-		 * is DEPS_SATISFIED. If there are dependencies not found, or
-		 * DEPS_MISSING, the node and all parent nodes are set to DEPS_MISSING
-		 * and we move to a new node. If a child node is DEPS_CHECKING, and not
-		 * already in the tree, we tack it on and keep navigating down. Once we
-		 * completely exhaust reachable nodes, and everything is DEPS_SATISFIED
-		 * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
-		 */
-
-		List<String> stillChecking =
-			findPluginsByState(PluginState.DEPS_CHECKING);
-		while (stillChecking.size() != 0) {
-			String name = stillChecking.get(0);
-			resolveDependencies(new PluginDependencyNode(name));
-			stillChecking = findPluginsByState(PluginState.DEPS_CHECKING);
-		}
-
-		// Report and unload all DEPS_MISSING plugins
-
-		for (String pluginName : findPluginsByState(PluginState.DEPS_MISSING)) {
-			logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
-			PluginDetails details = pluginDetails.remove(pluginName);
-			details.dispose();
-		}
-
-		/*
-		 * All plugins should now be DEPS_SATISFIED, so load them all. During
-		 * the onLoad() method, plugins should deal with connecting to plugins
-		 * that may be in a dependency loop.
-		 */
-		List<String> toLoad = findPluginsByState(PluginState.DEPS_SATISFIED);
-		for (String pluginName : toLoad) {
-			setPluginState(pluginName, PluginState.LOADING);
-			logAlert("ALERT_LOADING", pluginName);
-
-			PluginDetails details = this.pluginDetails.get(pluginName);
-			Plugin plugin = details.getPlugin();
-
-			if (!plugin.onLoad()) {
-				logAlert("PLUGIN_LOAD_FAIL", pluginName);
-				unloadPlugin(pluginName);
-			}
-			for (Listener l : plugin.getListeners()) {
-				this.eventManager.registerEventListeners(l);
-			}
-			String msg = SafeResourceLoader
-				.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", pluginName);
-			log.finer(msg);
-			setPluginState(pluginName, PluginState.DISABLED);
-
-			logAlert("ALERT_LOADED", pluginName);
-			fireEvent(new PluginLoaded(pluginName));
-		}
-
-		/*
-		 * After all plugins have been loaded, now they can be enabled (if that
-		 * configuration is set). At this point problems with loops should have
-		 * been resolved enough that the plugins can start in any order.
-		 */
-		if (enableOnLoad) {
-			toLoad.forEach((plugin) -> {
-				enable(plugin);
-			});
 		}
 	}
 
@@ -1260,6 +996,169 @@ public class PluginManager {
 	}
 
 	/**
+	 * Attempt to load all the provided jars as plugins.
+	 * 
+	 * @param jars The jars we want to load.
+	 */
+	private void plLoadPlugins(@NonNull List<File> jars) {
+		Map<File, PluginInfo> jarInfoMap = new HashMap<>();
+
+		// grab all the plugin info from them, discard invalid plugins
+		for (File jarFile : jars) {
+			Optional<PluginInfo> info = extractPluginInfo(jarFile);
+			if (!info.isPresent()) {
+				/*
+				 * We don't have a valid plugin, the error was already logged
+				 * when extracting plugin info
+				 */
+				continue;
+			}
+			jarInfoMap.put(jarFile, info.get());
+		}
+		// Unload/dereference any files that we don't care about anymore
+		jars.removeIf((file) -> {
+			return !jarInfoMap.containsKey(file);
+		});
+
+		// Plugins that were already had a newer version loaded
+		List<File> skipped = new ArrayList<>();
+		
+		// load the plugins into memory with plugin info, DISCOVERED status
+		for (File jarFile : jarInfoMap.keySet()) {
+			PluginInfo info = jarInfoMap.get(jarFile);
+
+			String pluginName = info.getName();
+			if (this.isLoaded(pluginName)) {
+
+				logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
+
+				boolean lowerVersion = isNewerVersion(info.getVersion(),
+					this.pluginDetails.get(pluginName).getInfo().getVersion());
+
+				if (lowerVersion) {
+					this.unloadPlugin(pluginName);
+					// unload the old plugin and continue loading the new one
+				}
+				else {
+					logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
+					skipped.add(jarFile);
+					continue;
+				}
+			}
+
+			PluginClassLoader loader = null;
+			try {
+				loader = new PluginClassLoader(this,
+					getClass().getClassLoader(), info, jarFile);
+			}
+			catch (MalformedURLException e) {
+				logAlert("PLUGIN_URL_INVALID", jarFile.getName());
+			}
+			catch (InvalidPluginException e) {
+				// The class loader already logs the problem
+				continue;
+			}
+			if (loader == null) {
+				jarInfoMap.remove(jarFile);
+				jars.remove(jarFile);
+				continue;
+			}
+
+			PluginDetails details = new PluginDetails(loader, info,
+				loader.plugin, PluginState.DISCOVERED);
+
+			this.pluginDetails.put(info.getName(), details);
+			logAlert("ALERT_DISCOVERED", info.getName());
+		}
+
+		jars.removeAll(skipped);
+
+		/*
+		 * Resolve easy dependencies. Loop through all plugins once, if all
+		 * dependencies are satisfied (DISCOVERED, loaded/enabled,
+		 * DEPS_SATISFIED, generally existing in the system), or it has no
+		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
+		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
+		 * plugin as DEPS_MISSING. If a plugin does not have missing
+		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
+		 * mark it as DEPS_CHECKING.
+		 */
+		for (String pluginName : this.pluginDetails.keySet()) {
+			PluginDetails details = this.pluginDetails.get(pluginName);
+			PluginState state = calculatePluginState(details.getInfo());
+			details.setState(state);
+		}
+
+		/*
+		 * Handle loops/clusters with BFS. Go through all nodes still
+		 * DEPS_CHECKING and: if all dependencies are DEPS_SATISFIED, the node
+		 * is DEPS_SATISFIED. If there are dependencies not found, or
+		 * DEPS_MISSING, the node and all parent nodes are set to DEPS_MISSING
+		 * and we move to a new node. If a child node is DEPS_CHECKING, and not
+		 * already in the tree, we tack it on and keep navigating down. Once we
+		 * completely exhaust reachable nodes, and everything is DEPS_SATISFIED
+		 * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
+		 */
+
+		List<String> stillChecking =
+			findPluginsByState(PluginState.DEPS_CHECKING);
+		while (stillChecking.size() != 0) {
+			String name = stillChecking.get(0);
+			resolveDependencies(new PluginDependencyNode(name));
+			stillChecking = findPluginsByState(PluginState.DEPS_CHECKING);
+		}
+
+		// Report and unload all DEPS_MISSING plugins
+
+		for (String pluginName : findPluginsByState(PluginState.DEPS_MISSING)) {
+			logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
+			PluginDetails details = pluginDetails.remove(pluginName);
+			details.dispose();
+		}
+
+		/*
+		 * All plugins should now be DEPS_SATISFIED, so load them all. During
+		 * the onLoad() method, plugins should deal with connecting to plugins
+		 * that may be in a dependency loop.
+		 */
+		List<String> toLoad = findPluginsByState(PluginState.DEPS_SATISFIED);
+		for (String pluginName : toLoad) {
+			setPluginState(pluginName, PluginState.LOADING);
+			logAlert("ALERT_LOADING", pluginName);
+
+			PluginDetails details = this.pluginDetails.get(pluginName);
+			Plugin plugin = details.getPlugin();
+
+			if (!plugin.onLoad()) {
+				logAlert("PLUGIN_LOAD_FAIL", pluginName);
+				unloadPlugin(pluginName);
+			}
+			for (Listener l : plugin.getListeners()) {
+				this.eventManager.registerEventListeners(l);
+			}
+			String msg = SafeResourceLoader
+				.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", pluginName);
+			log.finer(msg);
+			setPluginState(pluginName, PluginState.DISABLED);
+
+			logAlert("ALERT_LOADED", pluginName);
+			fireEvent(new PluginLoaded(pluginName));
+		}
+
+		/*
+		 * After all plugins have been loaded, now they can be enabled (if that
+		 * configuration is set). At this point problems with loops should have
+		 * been resolved enough that the plugins can start in any order.
+		 */
+		if (enableOnLoad) {
+			toLoad.forEach((plugin) -> {
+				enable(plugin);
+			});
+		}
+	}
+
+	/**
 	 * Returns an optional that contains the jar file with the specified name,
 	 * or an empty optional if none was found in the list of files. The file
 	 * name is without an extension so "example.jar" should be passed as
@@ -1401,6 +1300,107 @@ public class PluginManager {
 		// TODO load plugin
 
 		return true;
+	}
+
+	/**
+	 * Removes the class by name in the cached class list.
+	 * 
+	 * @param name The name of the class.
+	 */
+	void removeClass(final String name) {
+		pluginClassCache.remove(name);
+	}
+
+	/**
+	 * Resolve the dependencies of all children using a breadth-first search.
+	 * Returns true if everything is fine, but false if there is an unresolved
+	 * dependency. This return value is used to propagate failures up the tree.
+	 * This will set the state of any plugin it reaches which is still checking.
+	 * 
+	 * @param root The root node we are building a tree from.
+	 */
+	private void resolveDependencies(PluginDependencyNode root) {
+		if (null == root) {
+			return;
+		}
+		List<String> namesInTheTree = new ArrayList<>();
+		namesInTheTree.add(root.getName());
+		ArrayDeque<PluginDependencyNode> queue = new ArrayDeque<>();
+
+		PluginDependencyNode currentNode;
+		queue.add(root);
+
+		while (!queue.isEmpty()) {
+			currentNode = queue.pollFirst();
+
+			PluginInfo info =
+				this.pluginDetails.get(currentNode.getName()).getInfo();
+			for (String dependencyName : info.getDependencies()) {
+				PluginState state = getPluginState(dependencyName);
+				switch (state) {
+					case DEPS_CHECKING:
+						if (!namesInTheTree.contains(dependencyName)) {
+							namesInTheTree.add(dependencyName);
+							PluginDependencyNode child =
+								new PluginDependencyNode(dependencyName);
+							child.setParent(root);
+							currentNode.getChildren().add(child);
+							queue.add(child);
+						}
+						break;
+					case DEPS_SATISFIED:
+					case DISABLED:
+					case DISABLING:
+					case DISCOVERED:
+					case ENABLED:
+					case ENABLING:
+					case LOADING:
+					default:
+						// satisfied, we don't need to do anything here
+						break;
+					case DEPS_MISSING:
+					case CORRUPTED:
+					case NOT_LOADED:
+					case PENDING_REMOVAL:
+					case UNLOADING:
+						// propagate failure up to the root and bail
+						setPluginState(currentNode.getName(),
+							PluginState.DEPS_MISSING);
+						PluginDependencyNode parent = currentNode.getParent();
+						while (null != parent) {
+							setPluginState(parent.getName(),
+								PluginState.DEPS_MISSING);
+							parent = parent.getParent();
+						}
+						return;
+				}
+			}
+		}
+
+		/*
+		 * We went through the whole tree and never failed. Therefore we can go
+		 * mark everything as satisfied. Also we don't get to this point until
+		 * the queue is empty.
+		 */
+		queue.add(root);
+		while (!queue.isEmpty()) {
+			currentNode = queue.pollFirst();
+			setPluginState(currentNode.getName(), PluginState.DEPS_SATISFIED);
+			// fine since we avoided cycles when setting up children earlier
+			queue.addAll(currentNode.getChildren());
+		}
+	}
+
+	/**
+	 * Stores the class by name in the cached class list.
+	 * 
+	 * @param name The name of the class.
+	 * @param clazz The corresponding class object.
+	 */
+	void setClass(final String name, final Class<?> clazz) {
+		if (!pluginClassCache.containsKey(name)) {
+			pluginClassCache.put(name, clazz);
+		}
 	}
 
 	/**
