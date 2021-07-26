@@ -1505,10 +1505,16 @@ public class PluginManager {
 		}
 		this.setPluginState(toUnload, PluginState.UNLOADING);
 
-		// TODO handle failure
-		plugin.onUnload();
-		PluginUnloaded packUnloaded = new PluginUnloaded(toUnload);
-		this.fireEvent(packUnloaded);
+		if (!plugin.onUnload()) {
+			String notLoaded = SafeResourceLoader
+				.getString("PLUGIN_UNLOAD_FAIL", this.resourceBundle)
+				.replaceFirst("\\$PLUGIN", toUnload);
+			log.warning(notLoaded);
+			this.setPluginState(toUnload, PluginState.CORRUPTED);
+			return false;
+		}
+
+		this.fireEvent(new PluginUnloaded(toUnload));
 
 		for (Listener l : plugin.getListeners()) {
 			this.eventManager.unregisterEventListeners(l);
