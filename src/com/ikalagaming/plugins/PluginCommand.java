@@ -23,13 +23,15 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 */
 	@SuppressWarnings("javadoc")
 	private final String command;
+	
 	/**
-	 * The callback functionl to call when the command is run.
+	 * The callback functional to call when the command is run.
 	 *
 	 * @param callback The callback function for the command.
 	 */
 	@SuppressWarnings("javadoc")
 	private final Consumer<String[]> callback;
+	
 	/**
 	 * The plugin that this command was registered to.
 	 *
