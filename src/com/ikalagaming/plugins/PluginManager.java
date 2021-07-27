@@ -1,6 +1,5 @@
 package com.ikalagaming.plugins;
 
-import com.ikalagaming.event.Event;
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.localization.Localization;
@@ -82,7 +81,6 @@ public class PluginManager {
 	 * is requested later.
 	 *
 	 * @see #getInstance()
-	 * @see #getInstance(EventManager)
 	 */
 	public static void destoryInstance() {
 		if (PluginManager.instance == null) {
@@ -99,32 +97,12 @@ public class PluginManager {
 	 * instance yet, one will be created.
 	 *
 	 * @return The static instance of the Plugin Manager.
-	 * @see #getInstance(EventManager)
 	 * @see PluginManager#destoryInstance()
 	 */
 	public static PluginManager getInstance() {
 		if (PluginManager.instance == null) {
 			PluginManager.instance =
 				new PluginManager(EventManager.getInstance());
-		}
-		return PluginManager.instance;
-	}
-
-	/**
-	 * Returns the static instance of the plugin manager. Since there should
-	 * only be one of these, having a static instance is fine and any class can
-	 * get the instance which all other classes should share. If there is no
-	 * instance yet, one will be created.
-	 *
-	 * @param manager the event manager to use for the static instance
-	 *
-	 * @return The static instance of the Plugin Manager.
-	 * @see #getInstance()
-	 * @see #destoryInstance()
-	 */
-	public static PluginManager getInstance(EventManager manager) {
-		if (PluginManager.instance == null) {
-			PluginManager.instance = new PluginManager(manager);
 		}
 		return PluginManager.instance;
 	}
@@ -162,8 +140,6 @@ public class PluginManager {
 	 */
 	private boolean enableOnLoad;
 
-	private EventManager eventManager;
-
 	private MiscLoggingListener logListener;
 
 	private final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
@@ -200,7 +176,6 @@ public class PluginManager {
 	 */
 	public PluginManager(EventManager evtManager) {
 		this.enableOnLoad = false;
-		this.eventManager = evtManager;
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
@@ -213,7 +188,7 @@ public class PluginManager {
 		Logging.create();
 
 		this.registerCommands();
-		this.eventManager.registerEventListeners(this.logListener);
+		EventManager.getInstance().registerEventListeners(this.logListener);
 	}
 
 	private void alertMissingArgs() {
@@ -400,7 +375,7 @@ public class PluginManager {
 		boolean success = details.getPlugin().onDisable();
 		if (success) {
 			this.setPluginState(target, PluginState.DISABLED);
-			this.fireEvent(new PluginDisabled(target));
+			new PluginDisabled(target).fire();
 			logAlert("ALERT_DISABLED", target);
 		}
 		else {
@@ -440,7 +415,7 @@ public class PluginManager {
 		boolean success = details.getPlugin().onEnable();
 		if (success) {
 			this.setPluginState(target, PluginState.ENABLED);
-			this.fireEvent(new PluginEnabled(target));
+			new PluginEnabled(target).fire();
 			logAlert("ALERT_ENABLED", target);
 		}
 		else {
@@ -559,29 +534,6 @@ public class PluginManager {
 		return this.pluginDetails.keySet().stream().filter((name) -> {
 			return state == this.pluginDetails.get(name).getState();
 		}).collect(Collectors.toList());
-	}
-
-	/**
-	 * Fires an event with a message to a plugin type from the plugin manager.
-	 * If an error occurs, this will return false. The event should not have
-	 * been sent if false was returned.
-	 *
-	 * @param event the event to fire
-	 *
-	 * @return true if the event was fired correctly
-	 */
-	private boolean fireEvent(@NonNull Event event) {
-		if (this.eventManager == null) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", PluginManager.PLUGIN_NAME);
-			System.err.println(err);
-			return false;
-		}
-
-		this.eventManager.fireEvent(event);
-
-		return true;
 	}
 
 	/**
@@ -1137,7 +1089,7 @@ public class PluginManager {
 				this.unloadPlugin(pluginName);
 			}
 			for (Listener l : plugin.getListeners()) {
-				this.eventManager.registerEventListeners(l);
+				EventManager.getInstance().registerEventListeners(l);
 			}
 			String msg = SafeResourceLoader
 				.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
@@ -1146,7 +1098,7 @@ public class PluginManager {
 			this.setPluginState(pluginName, PluginState.DISABLED);
 
 			this.logAlert("ALERT_LOADED", pluginName);
-			this.fireEvent(new PluginLoaded(pluginName));
+			new PluginLoaded(pluginName).fire();
 		}
 
 		/*
@@ -1440,7 +1392,7 @@ public class PluginManager {
 	}
 
 	private void shutdown() {
-		this.eventManager.unregisterEventListeners(this.logListener);
+		EventManager.getInstance().unregisterEventListeners(this.logListener);
 
 		synchronized (this.pluginLock) {
 			List<String> toUnload =
@@ -1453,7 +1405,7 @@ public class PluginManager {
 			this.clearCommands();
 			this.commands = null;
 		}
-		this.eventManager = null;
+		EventManager.destoryInstance();
 	}
 
 	/**
@@ -1514,10 +1466,10 @@ public class PluginManager {
 			return false;
 		}
 
-		this.fireEvent(new PluginUnloaded(toUnload));
+		new PluginUnloaded(toUnload).fire();
 
 		for (Listener l : plugin.getListeners()) {
-			this.eventManager.unregisterEventListeners(l);
+			EventManager.getInstance().unregisterEventListeners(l);
 		}
 		String unreg = SafeResourceLoader.getString("", this.resourceBundle)
 			.replaceFirst("\\$PLUGIN", PluginManager.PLUGIN_NAME);
