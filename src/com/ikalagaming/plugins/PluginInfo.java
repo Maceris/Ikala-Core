@@ -1,8 +1,5 @@
 package com.ikalagaming.plugins;
 
-import com.ikalagaming.permissions.DefaultPermissionValue;
-import com.ikalagaming.permissions.Permission;
-
 import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
 import lombok.CustomLog;
@@ -89,17 +86,6 @@ public class PluginInfo {
 	@Getter
 	private String description = null;
 
-	private Map<?, ?> lazyPermissions = null;
-
-	/**
-	 * Plugins to load before this plugin.
-	 * 
-	 * @return The list of plugins to load first before this one.
-	 */
-	@SuppressWarnings("javadoc")
-	@Getter
-	private List<String> loadBefore = new ArrayList<>();
-
 	/**
 	 * The fully qualified name of the class that extends {@link Plugin} for
 	 * this plugin. The format should follow the
@@ -128,17 +114,6 @@ public class PluginInfo {
 	@SuppressWarnings("javadoc")
 	@Getter
 	private String name = null;
-
-	/**
-	 * The default permission value for this plugin.
-	 * 
-	 * @return The default permission value.
-	 */
-	@SuppressWarnings("javadoc")
-	@Getter
-	private DefaultPermissionValue permissionDefault =
-		DefaultPermissionValue.FALSE;
-	private List<Permission> permissions = null;
 
 	/**
 	 * The prefix to use in logging. This will appear before logs sent by this
@@ -196,29 +171,6 @@ public class PluginInfo {
 	 */
 	public String getFullName() {
 		return this.name + "-" + this.version;
-	}
-
-	/**
-	 * Returns a list of permissions for this plugin
-	 *
-	 * @return this plugins permissions
-	 */
-	public List<Permission> getPermissions() {
-		if (this.permissions == null) {
-			if (this.lazyPermissions == null) {
-				this.permissions = new ArrayList<>();
-			}
-			else {
-				this.permissions =
-					Permission.loadPermissions(this.lazyPermissions,
-						"Permission node '%s' in plugin description file for "
-							+ this.getFullName() + " is invalid",
-						this.permissionDefault.value());
-
-				this.lazyPermissions = null;
-			}
-		}
-		return this.permissions;
 	}
 
 	/**
@@ -315,7 +267,6 @@ public class PluginInfo {
 		this.dependencies = PluginInfo.makePluginNameList(map, "depend");
 		this.softDependencies =
 			PluginInfo.makePluginNameList(map, "soft-depend");
-		this.loadBefore = PluginInfo.makePluginNameList(map, "load-before");
 		if (map.get("description") != null) {
 			this.description = map.get("description").toString();
 		}
@@ -338,31 +289,6 @@ public class PluginInfo {
 		}
 		else {
 			this.authors = new ArrayList<>();
-		}
-		if (map.get("default-permission") != null) {
-			try {
-				this.permissionDefault = DefaultPermissionValue
-					.getByName(map.get("default-permission").toString());
-			}
-			catch (ClassCastException ex) {
-				throw new InvalidDescriptionException(
-					"default-permission is of the wrong type", ex);
-			}
-			catch (IllegalArgumentException ex) {
-				throw new InvalidDescriptionException(
-					"default-permission is not a valid choice", ex);
-			}
-		}
-		try {
-			this.lazyPermissions = (Map<?, ?>) map.get("permissions");
-			this.permissions = Permission.loadPermissions(this.lazyPermissions,
-				"Permission node '%s' in plugin description file for "
-					+ this.getFullName() + " is invalid",
-				this.permissionDefault.value());
-		}
-		catch (ClassCastException ex) {
-			throw new InvalidDescriptionException(
-				"permissions are of the wrong type", ex);
 		}
 		if (map.get("prefix") != null) {
 			this.prefix = map.get("prefix").toString();
