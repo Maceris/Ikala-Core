@@ -52,7 +52,7 @@ public class PluginClassLoader extends URLClassLoader {
 
 		Class<?> clazz;
 		try {
-			clazz = Class.forName(pluginInfo.getMain(), true, this);
+			clazz = Class.forName(pluginInfo.getMainClass(), true, this);
 		}
 		catch (ClassNotFoundException e) {
 			String err = SafeResourceLoader
