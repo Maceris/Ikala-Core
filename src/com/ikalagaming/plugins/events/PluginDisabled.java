@@ -1,7 +1,6 @@
 package com.ikalagaming.plugins.events;
 
 import com.ikalagaming.event.Event;
-import com.ikalagaming.plugins.Plugin;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,10 +18,10 @@ public class PluginDisabled extends Event {
 	/**
 	 * The plugin which was just disabled.
 	 * 
-	 * @param The plugin that was disabled.
-	 * @return The plugin that was disabled.
+	 * @param The name of the plugin that was disabled.
+	 * @return The name of the plugin that was disabled.
 	 */
 	@SuppressWarnings("javadoc")
-	private Plugin plugin;
+	private String plugin;
 
 }

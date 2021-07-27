@@ -1,6 +1,5 @@
 package com.ikalagaming.gui;
 
-import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.PluginState;
 
@@ -14,7 +13,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.ButtonGroup;
@@ -283,12 +281,7 @@ public class TaskManager extends JFrame {
 		if (row == -1 || column == -1) {
 			return;
 		}
-		Optional<Plugin> p = this.pluginManager
-			.getPlugin(this.table.getValueAt(row, column).toString());
-		if (!p.isPresent()) {
-			return;
-		}
-		Plugin pack = p.get();
+		String pack = this.table.getValueAt(row, column).toString();
 		if (change == "Enable") {
 			if (!this.pluginManager.isEnabled(pack)) {
 				this.pluginManager.enable(pack);
@@ -322,8 +315,7 @@ public class TaskManager extends JFrame {
 		String name = "";
 		for (int i = 0; i < this.model.getRowCount(); ++i) {
 			name = (String) this.model.getValueAt(i, 0);
-			currentState = this.pluginManager
-				.getPluginState(this.pluginManager.getPlugin(name).get());
+			currentState = this.pluginManager.getPluginState(name);
 			if (!this.model.getValueAt(i, 1).equals(currentState)) {
 				this.model.setValueAt(currentState, i, 1);
 			}
@@ -344,8 +336,7 @@ public class TaskManager extends JFrame {
 			this.pluginManager.getLoadedPlugins().keySet();
 		for (String s : pluginNames) {
 			if (!this.plugins.containsKey(s)) {
-				this.plugins.put(s, this.pluginManager
-					.getPluginState(this.pluginManager.getPlugin(s).get()));
+				this.plugins.put(s, this.pluginManager.getPluginState(s));
 				boolean exists = false;
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {

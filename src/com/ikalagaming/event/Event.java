@@ -1,21 +1,18 @@
 package com.ikalagaming.event;
 
 /**
- * An abstract event to be extended. Based off lahwran's fevents.
+ * An abstract event to be extended. These should always be passive
+ * observations, e.g. "X happened" not "do X". Based off lahwran's fevents.
  */
 public abstract class Event {
-	private String name;
 
 	/**
-	 * Returns the name of the event.
-	 *
-	 * @return The events name (simple class name if no name is specified)
+	 * Fires this event using the static instance of the {@link EventManager}.
+	 * 
+	 * For example: <code>new CustomEvent("That was easy").fire();</code>
 	 */
-	public String getEventName() {
-		if (this.name == null) {
-			this.name = this.getClass().getSimpleName();
-		}
-		return this.name;
+	public void fire() {
+		EventManager.getInstance().fireEvent(this);
 	}
 
 }
