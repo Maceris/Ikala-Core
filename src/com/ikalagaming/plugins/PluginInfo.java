@@ -8,8 +8,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -26,10 +24,11 @@ public class PluginInfo {
 	private static List<String> makePluginNameList(final Map<?, ?> map,
 		final String key) throws InvalidDescriptionException {
 		final Object value = map.get(key);
-		if (value == null) {
-			return new ArrayList<>();
-		}
 		final ArrayList<String> pluginNameList = new ArrayList<>();
+		if (value == null) {
+			return pluginNameList;
+		}
+
 		try {
 			for (final Object entry : (Iterable<?>) value) {
 				pluginNameList.add(entry.toString().replace(' ', '_'));
@@ -56,14 +55,6 @@ public class PluginInfo {
 	@Getter
 	private List<String> authors = null;
 
-	/**
-	 * A map from strings to commands.
-	 * 
-	 * @return The command map.
-	 */
-	@SuppressWarnings("javadoc")
-	@Getter
-	private Map<String, Map<String, Object>> commands = null;
 	/**
 	 * Returns a list of plugins this plugin requires in order to run. Use the
 	 * value of {@link #getName()} for the target plugin to specify it in the
@@ -95,7 +86,7 @@ public class PluginInfo {
 	 */
 	@SuppressWarnings("javadoc")
 	@Getter
-	private String main = null;
+	private String mainClass = null;
 
 	/**
 	 * The name of the plugin. Names are unique for each plugin. The name can
@@ -114,16 +105,6 @@ public class PluginInfo {
 	@SuppressWarnings("javadoc")
 	@Getter
 	private String name = null;
-
-	/**
-	 * The prefix to use in logging. This will appear before logs sent by this
-	 * plugin.
-	 * 
-	 * @return The logging prefix.
-	 */
-	@SuppressWarnings("javadoc")
-	@Getter
-	private String prefix = null;
 
 	/**
 	 * Returns a list of dependencies that are desired but not needed to run
@@ -199,6 +180,7 @@ public class PluginInfo {
 		catch (ClassCastException ex) {
 			throw new InvalidDescriptionException("name is of wrong type", ex);
 		}
+
 		try {
 			this.version = Version.valueOf((String) map.get("version"));
 		}
@@ -216,8 +198,9 @@ public class PluginInfo {
 			throw new InvalidDescriptionException(
 				"version is in an invalid format", ex);
 		}
+
 		try {
-			this.main = map.get("main").toString();
+			this.mainClass = map.get("main-class").toString();
 		}
 		catch (NullPointerException ex) {
 			throw new InvalidDescriptionException("main class is not defined",
@@ -227,49 +210,15 @@ public class PluginInfo {
 			throw new InvalidDescriptionException("main is of the wrong type",
 				ex);
 		}
-		if (map.get("commands") != null) {
-			HashMap<String, Map<String, Object>> commandsMap = new HashMap<>();
-			try {
-				for (Map.Entry<?, ?> command : ((Map<?, ?>) map.get("commands"))
-					.entrySet()) {
-					HashMap<String, Object> commandMap = new HashMap<>();
-					if (command.getValue() != null) {
-						for (Map.Entry<?, ?> commandEntry : ((Map<?, ?>) command
-							.getValue()).entrySet()) {
-							if (commandEntry.getValue() instanceof Iterable) {
-								HashSet<Object> commandSubList =
-									new HashSet<>();
-								for (Object commandSubListItem : (Iterable<?>) commandEntry
-									.getValue()) {
-									if (commandSubListItem != null) {
-										commandSubList.add(commandSubListItem);
-									}
-								}
-								commandMap.put(commandEntry.getKey().toString(),
-									commandSubList);
 
-							}
-							else if (commandEntry.getValue() != null) {
-								commandMap.put(commandEntry.getKey().toString(),
-									commandEntry.getValue());
-							}
-						}
-					}
-					commandsMap.put(command.getKey().toString(), commandMap);
-				}
-			}
-			catch (ClassCastException ex) {
-				throw new InvalidDescriptionException(
-					"commands are of the wrong type", ex);
-			}
-			this.commands = commandsMap;
-		}
-		this.dependencies = PluginInfo.makePluginNameList(map, "depend");
+		this.dependencies = PluginInfo.makePluginNameList(map, "dependencies");
 		this.softDependencies =
-			PluginInfo.makePluginNameList(map, "soft-depend");
+			PluginInfo.makePluginNameList(map, "soft-dependencies");
+
 		if (map.get("description") != null) {
 			this.description = map.get("description").toString();
 		}
+
 		if (map.get("authors") != null) {
 			ArrayList<String> authorsList = new ArrayList<>();
 			try {
@@ -289,9 +238,6 @@ public class PluginInfo {
 		}
 		else {
 			this.authors = new ArrayList<>();
-		}
-		if (map.get("prefix") != null) {
-			this.prefix = map.get("prefix").toString();
 		}
 	}
 
