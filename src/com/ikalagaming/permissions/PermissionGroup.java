@@ -34,7 +34,7 @@ public class PermissionGroup implements PermissionHolder {
 			rootGroup = new PermissionGroup("root", null);
 		}
 		catch (DuplicateGroupException e) {
-			log.severe(SafeResourceLoader
+			PermissionGroup.log.severe(SafeResourceLoader
 				.getString("DUPLICATE_PERMISSION", Permission.RESOURCE_LOCATION)
 				.replaceFirst("\\$PERMISSION", "root"));
 		}
@@ -73,7 +73,7 @@ public class PermissionGroup implements PermissionHolder {
 
 	/**
 	 * The name of this group.
-	 * 
+	 *
 	 * @return The groups name.
 	 */
 	@SuppressWarnings("javadoc")
@@ -82,7 +82,7 @@ public class PermissionGroup implements PermissionHolder {
 
 	/**
 	 * The parent group, if it exists. May be null.
-	 * 
+	 *
 	 * @return This groups parent, may be null.
 	 */
 	@SuppressWarnings("javadoc")
@@ -100,7 +100,7 @@ public class PermissionGroup implements PermissionHolder {
 
 	/**
 	 * The description of the group.
-	 * 
+	 *
 	 * @return a brief description of this group.
 	 */
 	@SuppressWarnings("javadoc")

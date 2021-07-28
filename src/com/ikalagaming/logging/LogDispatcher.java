@@ -1,10 +1,10 @@
 package com.ikalagaming.logging;
 
-import java.util.ArrayDeque;
-import java.util.NoSuchElementException;
-
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.logging.events.Log;
+
+import java.util.ArrayDeque;
+import java.util.NoSuchElementException;
 
 /**
  * Holds an internal queue and dispatches the events in order when possible.
@@ -92,16 +92,6 @@ class LogDispatcher extends Thread {
 	}
 
 	/**
-	 * Wakes this thread up when it is sleeping
-	 */
-	private void wakeUp() {
-		synchronized (this.syncObject) {
-			// Wake the thread up as there is now an event
-			this.syncObject.notifyAll();
-		}
-	}
-
-	/**
 	 * Checks for Strings in the queue, and logs them if possible. Does not do
 	 * anything if {@link #terminate()} has been called.
 	 *
@@ -141,5 +131,15 @@ class LogDispatcher extends Thread {
 		this.hasLogs = false;
 		this.running = false;
 		this.wakeUp();
+	}
+
+	/**
+	 * Wakes this thread up when it is sleeping
+	 */
+	private void wakeUp() {
+		synchronized (this.syncObject) {
+			// Wake the thread up as there is now an event
+			this.syncObject.notifyAll();
+		}
 	}
 }

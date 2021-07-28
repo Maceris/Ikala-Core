@@ -25,7 +25,7 @@ public class EventManager {
 
 	/**
 	 * The resource bundle for event manager.
-	 * 
+	 *
 	 * @return The current resource bundle, which may be null.
 	 */
 	@SuppressWarnings("javadoc")
@@ -159,7 +159,7 @@ public class EventManager {
 				String err = SafeResourceLoader.getString("EVT_QUEUE_FULL",
 					"com.ikalagaming.event.strings")
 					+ "in EventManager.fireEvent(Event)";
-				log.warning(err);
+				EventManager.log.warning(err);
 			}
 
 		}

@@ -55,7 +55,7 @@ class EventDispatcher extends Thread {
 			return;
 		}
 		if (this.eventManager == null) {
-			log.severe("There is no event manager!");
+			EventDispatcher.log.severe("There is no event manager!");
 			return;
 		}
 		HandlerList handlers = this.eventManager.getHandlers(event);
@@ -70,7 +70,7 @@ class EventDispatcher extends Thread {
 			catch (EventException e) {
 				String error = SafeResourceLoader.getString("DISPATCH_ERROR",
 					EventManager.getResourceBundle());
-				log.warning(error);
+				EventDispatcher.log.warning(error);
 				e.printStackTrace();
 			}
 		}
@@ -119,21 +119,11 @@ class EventDispatcher extends Thread {
 			this.hasEvents = false;
 			String error = SafeResourceLoader.getString("EVT_QUEUE_EMPTY",
 				EventManager.getResourceBundle());
-			log.warning(error);
+			EventDispatcher.log.warning(error);
 			return;
 		}
 		this.dispatch(event);
 
-	}
-
-	/**
-	 * Wakes this thread up when it is sleeping
-	 */
-	private void wakeUp() {
-		synchronized (this.syncObject) {
-			// Wake the thread up as there is now an event
-			this.syncObject.notifyAll();
-		}
 	}
 
 	/**
@@ -153,7 +143,7 @@ class EventDispatcher extends Thread {
 						String error =
 							SafeResourceLoader.getString("THREAD_INTERRUPTED",
 								EventManager.getResourceBundle());
-						log.warning(error);
+						EventDispatcher.log.warning(error);
 						// Re-interrupt as per SonarLint java:S2142
 						Thread.currentThread().interrupt();
 					}
@@ -180,5 +170,15 @@ class EventDispatcher extends Thread {
 		this.running = false;
 		this.eventManager = null;
 		this.wakeUp();
+	}
+
+	/**
+	 * Wakes this thread up when it is sleeping
+	 */
+	private void wakeUp() {
+		synchronized (this.syncObject) {
+			// Wake the thread up as there is now an event
+			this.syncObject.notifyAll();
+		}
 	}
 }

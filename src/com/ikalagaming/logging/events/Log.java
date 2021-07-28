@@ -19,7 +19,7 @@ public class Log extends Event {
 
 	/**
 	 * The info to store or display.
-	 * 
+	 *
 	 * @return The message.
 	 * @param The info to store or display.
 	 */

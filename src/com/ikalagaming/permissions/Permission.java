@@ -233,7 +233,7 @@ public class Permission {
 			catch (Exception ex) {
 				String msg = SafeResourceLoader.getString("INVALID_PERMISSIONS",
 					Permission.RESOURCE_LOCATION);
-				log.warning(msg);
+				Permission.log.warning(msg);
 
 				ex.printStackTrace();
 			}
@@ -251,7 +251,7 @@ public class Permission {
 	 * The name that identifies the permission, which is the same string as
 	 * would be found in permission yaml files. <br>
 	 * Example: "entity.movement"
-	 * 
+	 *
 	 * @return The fully qualified name for this permission.
 	 */
 	@SuppressWarnings("javadoc")
@@ -262,7 +262,7 @@ public class Permission {
 	 * A short description of the purpose for the permission, if it is set. An
 	 * empty string if it is not set. <br>
 	 * Example: "This allows entities to move around the world"
-	 * 
+	 *
 	 * @return Brief description of this permission.
 	 */
 	@SuppressWarnings("javadoc")
@@ -275,7 +275,7 @@ public class Permission {
 	 * child permission will inherit this permissions value. If it is false, it
 	 * will inherit the inverse of this permissions value.<br>
 	 * Example: "entity.jump" is mapped to "true"
-	 * 
+	 *
 	 * @return The list of child permissions.
 	 */
 	@SuppressWarnings("javadoc")
@@ -590,7 +590,7 @@ public class Permission {
 		Map<String, Boolean> perms = this.getChildPermissions();
 		for (String s : perms.keySet()) {
 			if (!Permission.exists(s)) {
-				log.warning(SafeResourceLoader
+				Permission.log.warning(SafeResourceLoader
 					.getString("NON_EXISTANT_SUBPERMISSON",
 						Permission.RESOURCE_LOCATION)
 					.replaceFirst("\\$PERMISSION", s));

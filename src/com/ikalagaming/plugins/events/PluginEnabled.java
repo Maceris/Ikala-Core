@@ -16,7 +16,7 @@ public class PluginEnabled extends Event {
 
 	/**
 	 * The plugin that was just enabled.
-	 * 
+	 *
 	 * @param plugin The name of the plugin that was enabled.
 	 * @return The name of the plugin that was enabled.
 	 */

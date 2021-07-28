@@ -16,7 +16,7 @@ class EventListener {
 	 * @param priority The priority of the listener
 	 */
 	public EventListener(final Listener listener, final EventExecutor executor,
-			final Order priority) {
+		final Order priority) {
 		this.theListener = listener;
 		this.theExecutor = executor;
 		this.thePriority = priority;

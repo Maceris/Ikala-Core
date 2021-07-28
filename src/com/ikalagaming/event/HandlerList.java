@@ -72,8 +72,8 @@ class HandlerList {
 		if (this.handlerSlots.get(listener.getPriority()).contains(listener)) {
 			throw new IllegalStateException(
 				SafeResourceLoader.getString("LISTENER_ALREADY_REGISTERED",
-					EventManager.resourceBundle).replaceFirst("\\$PRIORITY",
-						listener.getPriority().toString()));
+					EventManager.getResourceBundle()).replaceFirst(
+						"\\$PRIORITY", listener.getPriority().toString()));
 		}
 		this.bakedList = null;
 		this.handlerSlots.get(listener.getPriority()).add(listener);

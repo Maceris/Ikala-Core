@@ -1,10 +1,10 @@
 package com.ikalagaming.logging;
 
-import java.util.Locale;
-import java.util.logging.Level;
-
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.util.SafeResourceLoader;
+
+import java.util.Locale;
+import java.util.logging.Level;
 
 /**
  * A set of levels for logging. This is the standard java logging list in an

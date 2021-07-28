@@ -140,7 +140,7 @@ public class PluginInfo {
 
 	/**
 	 * Extract the required fields as part of {@link #loadMap(Map)}.
-	 * 
+	 *
 	 * @param map The map we are loading from.
 	 * @throws InvalidDescriptionException If the description is invalid.
 	 */

@@ -38,9 +38,10 @@ public enum Order {
 	 */
 	MONITOR(5);
 
-	
 	/**
-	 * Returns the numerical index of this priority, with higher numbers being later.
+	 * Returns the numerical index of this priority, with higher numbers being
+	 * later.
+	 *
 	 * @return The numerical order of this priority
 	 */
 	@SuppressWarnings("javadoc")

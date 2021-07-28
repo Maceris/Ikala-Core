@@ -133,7 +133,7 @@ public class NameRegistry {
 		this.mapLock.lock();
 		try {
 			smallest =
-					this.registeredNames.get(baseName).getSmallestUnusedInt();
+				this.registeredNames.get(baseName).getSmallestUnusedInt();
 		}
 		finally {
 			this.mapLock.unlock();

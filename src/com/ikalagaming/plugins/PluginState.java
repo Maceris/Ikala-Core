@@ -15,9 +15,9 @@ package com.ikalagaming.plugins;
  */
 public enum PluginState {
 	/**
-	 * The plugin is being loaded and is not yet in memory fully. It is not
-	 * able to be usable yet. Related files are likely locked and some basic
-	 * data is being loaded into memory.
+	 * The plugin is being loaded and is not yet in memory fully. It is not able
+	 * to be usable yet. Related files are likely locked and some basic data is
+	 * being loaded into memory.
 	 */
 	LOADING,
 	/**
@@ -52,9 +52,9 @@ public enum PluginState {
 	 */
 	PENDING_REMOVAL,
 	/**
-	 * There was a problem and the plugin is now in an unstable state. It may
-	 * be partially loaded/enabled or unloaded/disabled. The system will attempt
-	 * to fix the problem, but if it cannot then the plugin will be removed.
+	 * There was a problem and the plugin is now in an unstable state. It may be
+	 * partially loaded/enabled or unloaded/disabled. The system will attempt to
+	 * fix the problem, but if it cannot then the plugin will be removed.
 	 */
 	CORRUPTED,
 	/**
@@ -83,9 +83,8 @@ public enum PluginState {
 	 */
 	DEPS_SATISFIED,
 	/**
-	 * The plugin has dependencies which no currently loaded plugin, or
-	 * plugin loaded simultaneously, satisfies. This will be reported and
-	 * unloaded.
+	 * The plugin has dependencies which no currently loaded plugin, or plugin
+	 * loaded simultaneously, satisfies. This will be reported and unloaded.
 	 */
 	DEPS_MISSING;
 

@@ -35,10 +35,12 @@ public class SafeResourceLoader {
 			return from.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			logMissingResource(name, from.getBaseBundleName());
+			SafeResourceLoader.logMissingResource(name,
+				from.getBaseBundleName());
 		}
 		catch (ClassCastException classCast) {
-			logClassCastException(name, from.getBaseBundleName());
+			SafeResourceLoader.logClassCastException(name,
+				from.getBaseBundleName());
 		}
 
 		ResourceBundle rootOnly = ResourceBundle
@@ -53,10 +55,12 @@ public class SafeResourceLoader {
 			return rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			logMissingResource(name, from.getBaseBundleName());
+			SafeResourceLoader.logMissingResource(name,
+				from.getBaseBundleName());
 		}
 		catch (ClassCastException classCast) {
-			logClassCastException(name, from.getBaseBundleName());
+			SafeResourceLoader.logClassCastException(name,
+				from.getBaseBundleName());
 		}
 		return name;
 	}
@@ -76,10 +80,12 @@ public class SafeResourceLoader {
 			return from.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			logMissingResource(name, from.getBaseBundleName());
+			SafeResourceLoader.logMissingResource(name,
+				from.getBaseBundleName());
 		}
 		catch (ClassCastException classCast) {
-			logClassCastException(name, from.getBaseBundleName());
+			SafeResourceLoader.logClassCastException(name,
+				from.getBaseBundleName());
 		}
 		return fallback;
 	}
@@ -101,10 +107,10 @@ public class SafeResourceLoader {
 			return bundle.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			logMissingResource(name, from);
+			SafeResourceLoader.logMissingResource(name, from);
 		}
 		catch (ClassCastException classCast) {
-			logClassCastException(name, from);
+			SafeResourceLoader.logClassCastException(name, from);
 		}
 
 		ResourceBundle rootOnly =
@@ -120,10 +126,10 @@ public class SafeResourceLoader {
 			return rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			logMissingResource(name, from);
+			SafeResourceLoader.logMissingResource(name, from);
 		}
 		catch (ClassCastException classCast) {
-			logClassCastException(name, from);
+			SafeResourceLoader.logClassCastException(name, from);
 		}
 		return name;
 	}
@@ -144,22 +150,22 @@ public class SafeResourceLoader {
 			return bundle.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			logMissingResource(name, from);
+			SafeResourceLoader.logMissingResource(name, from);
 		}
 		catch (ClassCastException classCast) {
-			logClassCastException(name, from);
+			SafeResourceLoader.logClassCastException(name, from);
 		}
 		return fallback;
 	}
 
-	private static void logMissingResource(String name, String bundle) {
-		log.warning(
-			"Missing the " + name + " key from the " + bundle + " bundle");
+	private static void logClassCastException(String name, String bundle) {
+		SafeResourceLoader.log.warning("The " + name + " key from the " + bundle
+			+ " bundle is not a string ");
 	}
 
-	private static void logClassCastException(String name, String bundle) {
-		log.warning("The " + name + " key from the " + bundle
-			+ " bundle is not a string ");
+	private static void logMissingResource(String name, String bundle) {
+		SafeResourceLoader.log.warning(
+			"Missing the " + name + " key from the " + bundle + " bundle");
 	}
 
 	/**

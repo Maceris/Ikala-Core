@@ -3,7 +3,7 @@ package com.ikalagaming.permissions;
 /**
  * Thrown when trying to create a permission group with a name that is already
  * used.
- * 
+ *
  * @author Ches Burks
  *
  */

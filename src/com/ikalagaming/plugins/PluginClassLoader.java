@@ -90,6 +90,15 @@ public class PluginClassLoader extends URLClassLoader {
 		}
 	}
 
+	/**
+	 * Unregisters all it's classes from the plugin manager class cache, and
+	 * cleans up references.
+	 */
+	void dispose() {
+		this.getClasses().forEach(this.manager::removeClass);
+		this.classes.clear();
+	}
+
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
 		return this.findClass(name, true);
@@ -141,15 +150,6 @@ public class PluginClassLoader extends URLClassLoader {
 	 */
 	Set<String> getClasses() {
 		return this.classes.keySet();
-	}
-
-	/**
-	 * Unregisters all it's classes from the plugin manager class cache, and
-	 * cleans up references.
-	 */
-	void dispose() {
-		getClasses().forEach(this.manager::removeClass);
-		classes.clear();
 	}
 
 }

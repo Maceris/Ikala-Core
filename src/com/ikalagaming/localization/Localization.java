@@ -15,7 +15,7 @@ public class Localization {
 
 	/**
 	 * The current locale. Defaults to "en_US".
-	 * 
+	 *
 	 * @return The current locale
 	 * @param locale The new locale to use
 	 */
