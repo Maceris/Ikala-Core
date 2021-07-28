@@ -19,6 +19,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 * The callback functional to call when the command is run.
 	 *
 	 * @param callback The callback function for the command.
+	 * @return The callback function for the command.
 	 */
 	@SuppressWarnings("javadoc")
 	private final Consumer<String[]> callback;
@@ -36,6 +37,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 * The plugin that this command was registered to.
 	 *
 	 * @param owner The name of the owner of the plugin.
+	 * @return The name of the owner of the plugin.
 	 */
 	@SuppressWarnings("javadoc")
 	private final String owner;
