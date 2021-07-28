@@ -47,10 +47,32 @@ public class PluginManager {
 
 	private static PluginManager instance;
 
+	private static final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
+
 	/**
 	 * The name of the core system, since it is not technically a plugin.
 	 */
 	public static final String PLUGIN_NAME = "Ikala-Core";
+
+	/**
+	 * Used to find and replace the command text in localized text.
+	 */
+	private static final String REGEX_COMMAND = "\\$COMMAND";
+
+	/**
+	 * Used to find and replace the name of a file in localized text.
+	 */
+	private static final String REGEX_FILE = "\\$FILE";
+
+	/**
+	 * Used to find and replace the name of a folder in localized text.
+	 */
+	private static final String REGEX_FOLDER = "\\$FOLDER";
+
+	/**
+	 * Used to find and replace the plugin name in localized text.
+	 */
+	static final String REGEX_PLUGIN = "\\$PLUGIN";
 
 	/**
 	 * Compare the order of version strings, as if using
@@ -67,7 +89,7 @@ public class PluginManager {
 	 * @param second The second version string
 	 * @return The value of comparing the two versions.
 	 */
-	public final static int compareVersions(final String first,
+	public static final int compareVersions(final String first,
 		final String second) {
 		return Version.valueOf(first).compareTo(Version.valueOf(second));
 	}
@@ -121,7 +143,7 @@ public class PluginManager {
 	 * @return True if the first version is newer than the second, otherwise
 	 *         false.
 	 */
-	public final static boolean isNewerVersion(final String toCheck,
+	public static final boolean isNewerVersion(final String toCheck,
 		final String existing) {
 		return Version.valueOf(toCheck).greaterThan(Version.valueOf(existing));
 	}
@@ -141,8 +163,6 @@ public class PluginManager {
 	private boolean enableOnLoad;
 
 	private MiscLoggingListener logListener;
-
-	private final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
 
 	/**
 	 * Stores all the classes loaded by plugins. Keys are the unique class
@@ -292,7 +312,6 @@ public class PluginManager {
 			SafeResourceLoader.getString("WIP_TEXT", this.getResourceBundle());
 		PluginManager.log.warning(tmp);
 		// TODO loading
-		// loadPlugin(System.getProperty("user.dir"), args[0]);
 	}
 
 	private void cbReload(String[] args) {
@@ -437,7 +456,6 @@ public class PluginManager {
 	 *         failure.
 	 */
 	public Optional<PluginInfo> extractPluginInfo(final File jar) {
-		JarFile jfile;
 		ZipEntry config;
 
 		final String fileName = jar.getName();
@@ -446,82 +464,43 @@ public class PluginManager {
 		 * Check for being a jar file check for plugin info file load and check
 		 * for valid info load the file if necessary
 		 */
-		try {
-			jfile = new JarFile(jar);
-			config = jfile.getEntry(this.PLUGIN_CONFIG_FILENAME);
+		try (JarFile jfile = new JarFile(jar)) {
+			config = jfile.getEntry(PluginManager.PLUGIN_CONFIG_FILENAME);
 			if (config == null) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_CONFIG_MISSING", this.resourceBundle)
-					.replaceFirst("\\$FILE", this.PLUGIN_CONFIG_FILENAME);
+					.replaceFirst(PluginManager.REGEX_FILE,
+						PluginManager.PLUGIN_CONFIG_FILENAME);
 				PluginManager.log.warning(msg);
-				jfile.close();
 				return Optional.empty();
 			}
-		}
-		catch (Exception e) {
-			String msg = SafeResourceLoader
-				.getString("PLUGIN_JAR_ERROR", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", fileName);
-			PluginManager.log.warning(msg);
-			return Optional.empty();
-		}
 
-		// grab an input stream for the configuration file
-		InputStream configIStream;
-		try {
-			configIStream = jfile.getInputStream(config);
+			InputStream configIStream = jfile.getInputStream(config);
+			PluginInfo info = new PluginInfo(configIStream);
+			return Optional.ofNullable(info);
 		}
 		catch (IOException e1) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_CONFIG_READ_ERROR", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", fileName);
+				.replaceFirst(PluginManager.REGEX_PLUGIN, fileName);
 			PluginManager.log.warning(msg);
-			try {
-				jfile.close();
-			}
-			catch (IOException e) {
-				String errorMsg = SafeResourceLoader
-					.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
-					.replaceFirst("\\$PLUGIN", fileName);
-				PluginManager.log.warning(errorMsg);
-				// wow we really must have messed up
-			}
 			return Optional.empty();
-		}
-
-		// Load in the plugin info from the config file
-		PluginInfo info = null;
-		try {
-			info = new PluginInfo(configIStream);
 		}
 		catch (InvalidDescriptionException e1) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_INVALID_DESCRIPTION", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", fileName);
+				.replaceFirst(PluginManager.REGEX_PLUGIN, fileName);
 			PluginManager.log.warning(msg);
 			PluginManager.log.warning(e1.getMessage());
-			try {
-				jfile.close();
-			}
-			catch (IOException e) {
-				String errorMsg = SafeResourceLoader
-					.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
-					.replaceFirst("\\$PLUGIN", fileName);
-				PluginManager.log.warning(errorMsg);
-			}
 			return Optional.empty();
 		}
-
-		try {
-			jfile.close();// We already loaded in the config info
+		catch (Exception e) {
+			String msg = SafeResourceLoader
+				.getString("PLUGIN_JAR_ERROR", this.resourceBundle)
+				.replaceFirst(PluginManager.REGEX_PLUGIN, fileName);
+			PluginManager.log.warning(msg);
+			return Optional.empty();
 		}
-		catch (IOException e1) {
-			String errorMsg = SafeResourceLoader
-				.getString("PLUGIN_JAR_CLOSE_ERROR", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", fileName);
-			PluginManager.log.warning(errorMsg);
-		}
-		return Optional.ofNullable(info);
 	}
 
 	/**
@@ -531,9 +510,9 @@ public class PluginManager {
 	 * @return The names of plugins with that given state.
 	 */
 	private List<String> findPluginsByState(PluginState state) {
-		return this.pluginDetails.keySet().stream().filter((name) -> {
-			return state == this.pluginDetails.get(name).getState();
-		}).collect(Collectors.toList());
+		return this.pluginDetails.keySet().stream()
+			.filter(name -> state == this.pluginDetails.get(name).getState())
+			.collect(Collectors.toList());
 	}
 
 	/**
@@ -550,13 +529,15 @@ public class PluginManager {
 		if (cachedClass != null) {
 			return cachedClass;
 		}
-		for (String pluginName : this.pluginDetails.keySet()) {
-			PluginClassLoader loader =
-				this.pluginDetails.get(pluginName).getClassLoader();
+		for (Map.Entry<String, PluginDetails> entry : this.pluginDetails
+			.entrySet()) {
+			PluginClassLoader loader = entry.getValue().getClassLoader();
 			try {
 				cachedClass = loader.findClass(name, false);
 			}
 			catch (ClassNotFoundException e) {
+				// We couldn't find it here, try another
+				continue;
 			}
 			if (cachedClass != null) {
 				return cachedClass;
@@ -571,7 +552,7 @@ public class PluginManager {
 	 * @return a copy of the stored list
 	 */
 	@Synchronized("commandLock")
-	public ArrayList<PluginCommand> getCommands() {
+	public List<PluginCommand> getCommands() {
 		ArrayList<PluginCommand> cmds = new ArrayList<>();
 
 		for (PluginCommand pc : this.commands) {
@@ -639,11 +620,9 @@ public class PluginManager {
 	 * @return the plugin map
 	 */
 	@Synchronized("pluginLock")
-	public HashMap<String, Plugin> getLoadedPlugins() {
+	public Map<String, Plugin> getLoadedPlugins() {
 		HashMap<String, Plugin> ret = new HashMap<>();
-		pluginDetails.forEach((key, value) -> {
-			ret.put(key, value.getPlugin());
-		});
+		pluginDetails.forEach((key, value) -> ret.put(key, value.getPlugin()));
 		return ret;
 	}
 
@@ -701,10 +680,7 @@ public class PluginManager {
 			return false;
 		}
 		PluginState state = this.getPluginState(target);
-		if (PluginState.ENABLED.equals(state)) {
-			return true;
-		}
-		return false;
+		return PluginState.ENABLED.equals(state);
 	}
 
 	/**
@@ -764,7 +740,7 @@ public class PluginManager {
 		if (!folderMaybe.isPresent()) {
 			String warning = SafeResourceLoader
 				.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
-				.replaceFirst("\\$FOLDER", "folder");
+				.replaceFirst(REGEX_FOLDER, "folder");
 			log.warning(warning);
 			return;
 		}
@@ -783,7 +759,6 @@ public class PluginManager {
 	 * @param name the filename to load from, without a file extension
 	 * @return true on success, false if it failed
 	 */
-	@Deprecated
 	@Synchronized("pluginLock")
 	public boolean loadPlugin(String path, String name) {
 		Optional<File> folderMaybe = this.plGetFolder(path);
@@ -822,7 +797,7 @@ public class PluginManager {
 		}
 		String message =
 			SafeResourceLoader.getString(whichAlert, this.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginName)
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName)
 				.replaceFirst("\\$VERSION", version);
 		PluginManager.log.fine(message);
 	}
@@ -840,6 +815,81 @@ public class PluginManager {
 	}
 
 	/**
+	 * Calculate the state of plugins that are being loaded based on their
+	 * dependencies, and unload the ones that are missing dependencies.
+	 */
+	private void plDependencyResolutionStage() {
+		/*
+		 * Resolve easy dependencies. Loop through all plugins once, if all
+		 * dependencies are satisfied (DISCOVERED, loaded/enabled,
+		 * DEPS_SATISFIED, generally existing in the system), or it has no
+		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
+		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
+		 * plugin as DEPS_MISSING. If a plugin does not have missing
+		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
+		 * mark it as DEPS_CHECKING.
+		 */
+		for (Map.Entry<String, PluginDetails> entry : this.pluginDetails
+			.entrySet()) {
+			PluginDetails details = entry.getValue();
+			PluginState state = this.calculatePluginState(details.getInfo());
+			details.setState(state);
+		}
+
+		/*
+		 * Handle loops/clusters with BFS. Go through all nodes still
+		 * DEPS_CHECKING and: if all dependencies are DEPS_SATISFIED, the node
+		 * is DEPS_SATISFIED. If there are dependencies not found, or
+		 * DEPS_MISSING, the node and all parent nodes are set to DEPS_MISSING
+		 * and we move to a new node. If a child node is DEPS_CHECKING, and not
+		 * already in the tree, we tack it on and keep navigating down. Once we
+		 * completely exhaust reachable nodes, and everything is DEPS_SATISFIED
+		 * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
+		 */
+
+		List<String> stillChecking =
+			this.findPluginsByState(PluginState.DEPS_CHECKING);
+		while (!stillChecking.isEmpty()) {
+			String name = stillChecking.get(0);
+			this.plResolveDependencies(new PluginDependencyNode(name));
+			stillChecking = this.findPluginsByState(PluginState.DEPS_CHECKING);
+		}
+
+		// Report and unload all DEPS_MISSING plugins
+
+		for (String pluginName : this
+			.findPluginsByState(PluginState.DEPS_MISSING)) {
+			this.logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
+			PluginDetails details = this.pluginDetails.remove(pluginName);
+			details.dispose();
+		}
+	}
+
+	/**
+	 * Go through the list of jars and remove the ones that don't have valid
+	 * info. Populates the info map with info if found.
+	 *
+	 * @param jars The jars we are looking at. This list will be modified.
+	 * @param jarInfoMap The map of info for each jar. This list will be
+	 *            modified.
+	 */
+	private void plDiscardInvalidPlugins(List<File> jars,
+		Map<File, PluginInfo> jarInfoMap) {
+		// grab all the plugin info from them, discard invalid plugins
+		for (File jarFile : jars) {
+			Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
+			if (!info.isPresent()) {
+				/*
+				 * We don't have a valid plugin, the error was already logged
+				 * when extracting plugin info
+				 */
+				continue;
+			}
+			jarInfoMap.put(jarFile, info.get());
+		}
+	}
+
+	/**
 	 * Return all jar files in the specified folder. If none are found, an empty
 	 * list is returned.
 	 *
@@ -854,14 +904,16 @@ public class PluginManager {
 		if (files == null) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_FILES_NULL", this.resourceBundle)
-				.replaceFirst("\\$FOLDER", folder.getAbsolutePath());
+				.replaceFirst(PluginManager.REGEX_FOLDER,
+					folder.getAbsolutePath());
 			PluginManager.log.warning(msg);
 			return jars;
 		}
 		if (files.length == 0) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_FOLDER_EMPTY", this.resourceBundle)
-				.replaceFirst("\\$FOLDER", folder.getAbsolutePath());
+				.replaceFirst(PluginManager.REGEX_FOLDER,
+					folder.getAbsolutePath());
 			PluginManager.log.warning(msg);
 			return jars;
 		}
@@ -884,7 +936,7 @@ public class PluginManager {
 			catch (SecurityException secExcep) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FILE_SECURITY_ERR", this.resourceBundle)
-					.replaceFirst("\\$FILE", file.getName());
+					.replaceFirst(PluginManager.REGEX_FILE, file.getName());
 				PluginManager.log.fine(msg);
 				// Maybe one or more files can't be read
 				continue;
@@ -918,21 +970,24 @@ public class PluginManager {
 			if (!pluginFolder.exists()) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+					.replaceFirst(PluginManager.REGEX_FOLDER,
+						pluginFolder.getAbsolutePath());
 				PluginManager.log.warning(msg);
 				return Optional.empty();
 			}
 			if (!pluginFolder.isDirectory()) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FOLDER_NOT_FOLDER", this.resourceBundle)
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+					.replaceFirst(PluginManager.REGEX_FOLDER,
+						pluginFolder.getAbsolutePath());
 				PluginManager.log.warning(msg);
 				return Optional.empty();
 			}
 			if (!pluginFolder.canRead()) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FOLDER_UNREADABLE", this.resourceBundle)
-					.replaceFirst("\\$FOLDER", pluginFolder.getAbsolutePath());
+					.replaceFirst(PluginManager.REGEX_FOLDER,
+						pluginFolder.getAbsolutePath());
 				PluginManager.log.warning(msg);
 				return Optional.empty();
 			}
@@ -940,7 +995,7 @@ public class PluginManager {
 		catch (SecurityException securExcep) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_FOLDER_ACCESS_DENIED", this.resourceBundle)
-				.replaceFirst("\\$FOLDER", path);
+				.replaceFirst(PluginManager.REGEX_FOLDER, path);
 			PluginManager.log.warning(msg);
 			return Optional.empty();
 		}
@@ -955,33 +1010,17 @@ public class PluginManager {
 	private void plLoadPlugins(@NonNull List<File> jars) {
 		Map<File, PluginInfo> jarInfoMap = new HashMap<>();
 
-		// grab all the plugin info from them, discard invalid plugins
-		for (File jarFile : jars) {
-			Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
-			if (!info.isPresent()) {
-				/*
-				 * We don't have a valid plugin, the error was already logged
-				 * when extracting plugin info
-				 */
-				continue;
-			}
-			jarInfoMap.put(jarFile, info.get());
-		}
-		// Unload/dereference any files that we don't care about anymore
-		jars.removeIf((file) -> {
-			return !jarInfoMap.containsKey(file);
-		});
+		this.plDiscardInvalidPlugins(jars, jarInfoMap);
 
 		// Plugins that were already had a newer version loaded
 		List<File> skipped = new ArrayList<>();
 
 		// load the plugins into memory with plugin info, DISCOVERED status
-		for (File jarFile : jarInfoMap.keySet()) {
-			PluginInfo info = jarInfoMap.get(jarFile);
+		for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
+			PluginInfo info = entry.getValue();
 
 			String pluginName = info.getName();
 			if (this.isLoaded(pluginName)) {
-
 				this.logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
 				boolean lowerVersion = PluginManager.isNewerVersion(
@@ -994,7 +1033,7 @@ public class PluginManager {
 				}
 				else {
 					this.logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
-					skipped.add(jarFile);
+					skipped.add(entry.getKey());
 					continue;
 				}
 			}
@@ -1002,18 +1041,16 @@ public class PluginManager {
 			PluginClassLoader loader = null;
 			try {
 				loader = new PluginClassLoader(this,
-					this.getClass().getClassLoader(), info, jarFile);
+					this.getClass().getClassLoader(), info, entry.getKey());
 			}
 			catch (MalformedURLException e) {
-				this.logAlert("PLUGIN_URL_INVALID", jarFile.getName());
+				this.logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
 			}
 			catch (InvalidPluginException e) {
 				// The class loader already logs the problem
 				continue;
 			}
 			if (loader == null) {
-				jarInfoMap.remove(jarFile);
-				jars.remove(jarFile);
 				continue;
 			}
 
@@ -1024,52 +1061,15 @@ public class PluginManager {
 			this.logAlert("ALERT_DISCOVERED", info.getName());
 		}
 
-		jars.removeAll(skipped);
+		this.plDependencyResolutionStage();
+		this.plLoadSatisfiedDependencies();
+	}
 
-		/*
-		 * Resolve easy dependencies. Loop through all plugins once, if all
-		 * dependencies are satisfied (DISCOVERED, loaded/enabled,
-		 * DEPS_SATISFIED, generally existing in the system), or it has no
-		 * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
-		 * unsatisfied dependencies, such as something NOT_LOADED, mark the
-		 * plugin as DEPS_MISSING. If a plugin does not have missing
-		 * dependencies, but it has dependencies that are also DEPS_CHECKING,
-		 * mark it as DEPS_CHECKING.
-		 */
-		for (String pluginName : this.pluginDetails.keySet()) {
-			PluginDetails details = this.pluginDetails.get(pluginName);
-			PluginState state = this.calculatePluginState(details.getInfo());
-			details.setState(state);
-		}
-
-		/*
-		 * Handle loops/clusters with BFS. Go through all nodes still
-		 * DEPS_CHECKING and: if all dependencies are DEPS_SATISFIED, the node
-		 * is DEPS_SATISFIED. If there are dependencies not found, or
-		 * DEPS_MISSING, the node and all parent nodes are set to DEPS_MISSING
-		 * and we move to a new node. If a child node is DEPS_CHECKING, and not
-		 * already in the tree, we tack it on and keep navigating down. Once we
-		 * completely exhaust reachable nodes, and everything is DEPS_SATISFIED
-		 * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
-		 */
-
-		List<String> stillChecking =
-			this.findPluginsByState(PluginState.DEPS_CHECKING);
-		while (stillChecking.size() != 0) {
-			String name = stillChecking.get(0);
-			this.resolveDependencies(new PluginDependencyNode(name));
-			stillChecking = this.findPluginsByState(PluginState.DEPS_CHECKING);
-		}
-
-		// Report and unload all DEPS_MISSING plugins
-
-		for (String pluginName : this
-			.findPluginsByState(PluginState.DEPS_MISSING)) {
-			this.logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
-			PluginDetails details = this.pluginDetails.remove(pluginName);
-			details.dispose();
-		}
-
+	/**
+	 * Load the satisfied dependencies, and enable them if configured to do so
+	 * on load.
+	 */
+	private void plLoadSatisfiedDependencies() {
 		/*
 		 * All plugins should now be DEPS_SATISFIED, so load them all. During
 		 * the onLoad() method, plugins should deal with connecting to plugins
@@ -1093,7 +1093,7 @@ public class PluginManager {
 			}
 			String msg = SafeResourceLoader
 				.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", pluginName);
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName);
 			PluginManager.log.finer(msg);
 			this.setPluginState(pluginName, PluginState.DISABLED);
 
@@ -1107,9 +1107,31 @@ public class PluginManager {
 		 * been resolved enough that the plugins can start in any order.
 		 */
 		if (this.enableOnLoad) {
-			toLoad.forEach((plugin) -> {
-				this.enable(plugin);
-			});
+			toLoad.forEach(this::enable);
+		}
+	}
+
+	/**
+	 * Go through and mark everything in the tree starting at the given root to
+	 * have it's dependencies satisfied.
+	 *
+	 * @param root The root node to start marking satisfied from.
+	 */
+	private void plMarkSatisfied(PluginDependencyNode root) {
+		ArrayDeque<PluginDependencyNode> queue = new ArrayDeque<>();
+		PluginDependencyNode currentNode;
+		/*
+		 * We went through the whole tree and never failed. Therefore we can go
+		 * mark everything as satisfied. Also we don't get to this point until
+		 * the queue is empty.
+		 */
+		queue.add(root);
+		while (!queue.isEmpty()) {
+			currentNode = queue.pollFirst();
+			this.setPluginState(currentNode.getName(),
+				PluginState.DEPS_SATISFIED);
+			// fine since we avoided cycles when setting up children earlier
+			queue.addAll(currentNode.getChildren());
 		}
 	}
 
@@ -1139,19 +1161,87 @@ public class PluginManager {
 			catch (SecurityException secExcep) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FILE_SECURITY_ERR", this.resourceBundle)
-					.replaceFirst("\\$FILE", file.getName());
+					.replaceFirst(PluginManager.REGEX_FILE, file.getName());
 				PluginManager.log.fine(msg);
 				// Maybe one or more files can't be read
-				continue;
 			}
 		}
 
 		// It hasn't returned by now which means it couldn't find a match
 		String msg = SafeResourceLoader
 			.getString("PLUGIN_NOT_FOUND", this.resourceBundle)
-			.replaceFirst("\\$PLUGIN", name);
+			.replaceFirst(PluginManager.REGEX_PLUGIN, name);
 		PluginManager.log.warning(msg);
 		return Optional.empty();
+	}
+
+	/**
+	 * Resolve the dependencies of all children using a breadth-first search.
+	 * Returns true if everything is fine, but false if there is an unresolved
+	 * dependency. This return value is used to propagate failures up the tree.
+	 * This will set the state of any plugin it reaches which is still checking.
+	 *
+	 * @param root The root node we are building a tree from.
+	 */
+	private void plResolveDependencies(PluginDependencyNode root) {
+		if (null == root) {
+			return;
+		}
+		List<String> namesInTheTree = new ArrayList<>();
+		namesInTheTree.add(root.getName());
+		ArrayDeque<PluginDependencyNode> queue = new ArrayDeque<>();
+
+		PluginDependencyNode currentNode;
+		queue.add(root);
+
+		while (!queue.isEmpty()) {
+			currentNode = queue.pollFirst();
+
+			PluginInfo info =
+				this.pluginDetails.get(currentNode.getName()).getInfo();
+			for (String dependencyName : info.getDependencies()) {
+				PluginState state = this.getPluginState(dependencyName);
+				switch (state) {
+					case DEPS_CHECKING:
+						if (!namesInTheTree.contains(dependencyName)) {
+							namesInTheTree.add(dependencyName);
+							PluginDependencyNode child =
+								new PluginDependencyNode(dependencyName);
+							child.setParent(root);
+							currentNode.getChildren().add(child);
+							queue.add(child);
+						}
+						break;
+					case DEPS_MISSING:
+					case CORRUPTED:
+					case NOT_LOADED:
+					case PENDING_REMOVAL:
+					case UNLOADING:
+						// propagate failure up to the root and bail
+						this.setPluginState(currentNode.getName(),
+							PluginState.DEPS_MISSING);
+						PluginDependencyNode parent = currentNode.getParent();
+						while (null != parent) {
+							this.setPluginState(parent.getName(),
+								PluginState.DEPS_MISSING);
+							parent = parent.getParent();
+						}
+						return;
+					case DEPS_SATISFIED:
+					case DISABLED:
+					case DISABLING:
+					case DISCOVERED:
+					case ENABLED:
+					case ENABLING:
+					case LOADING:
+					default:
+						// satisfied, we don't need to do anything here
+						break;
+				}
+			}
+		}
+
+		this.plMarkSatisfied(root);
 	}
 
 	/**
@@ -1172,17 +1262,17 @@ public class PluginManager {
 			String msg = SafeResourceLoader
 				.getString("COMMAND_ALREADY_REGISTERED",
 					this.getResourceBundle())
-				.replaceFirst("\\$COMMAND", command);
+				.replaceFirst(REGEX_COMMAND, command);
 			log.warning(msg);
 			return false;
 		}
 
-		PluginCommand cmd = new PluginCommand(command, callback, owner);
+		PluginCommand cmd = new PluginCommand(callback, command, owner);
 		this.commands.add(cmd);
 
 		String msg = SafeResourceLoader
 			.getString("REGISTERED_COMMAND", this.getResourceBundle())
-			.replaceFirst("\\$COMMAND", command);
+			.replaceFirst(REGEX_COMMAND, command);
 		log.finest(msg);
 
 		java.util.Collections.sort(this.commands);
@@ -1233,25 +1323,18 @@ public class PluginManager {
 		if (!this.isLoaded(target)) {
 			String tmp = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pInfo.getName());
+				.replaceFirst(REGEX_PLUGIN, pInfo.getName());
 			log.warning(tmp);
 			return false;
 		}
-		if (this.isEnabled(target)) {
-			if (!this.disable(target)) {
-				// disable failed
-				this.setPluginState(target, PluginState.CORRUPTED);
-
-				return false;
-			}
+		if (this.isEnabled(target) && !this.disable(target)) {
+			// disable failed
+			this.setPluginState(target, PluginState.CORRUPTED);
+			return false;
 		}
 		this.setPluginState(target, PluginState.UNLOADING);
 		this.unloadPlugin(target);
 		this.setPluginState(target, PluginState.LOADING);
-		// if (!this.loadPlugin(target, pInfo)) {
-		// this.setPluginState(target, PluginState.CORRUPTED);
-		// return false;
-		// }
 		// TODO load plugin
 
 		return true;
@@ -1267,96 +1350,13 @@ public class PluginManager {
 	}
 
 	/**
-	 * Resolve the dependencies of all children using a breadth-first search.
-	 * Returns true if everything is fine, but false if there is an unresolved
-	 * dependency. This return value is used to propagate failures up the tree.
-	 * This will set the state of any plugin it reaches which is still checking.
-	 *
-	 * @param root The root node we are building a tree from.
-	 */
-	private void resolveDependencies(PluginDependencyNode root) {
-		if (null == root) {
-			return;
-		}
-		List<String> namesInTheTree = new ArrayList<>();
-		namesInTheTree.add(root.getName());
-		ArrayDeque<PluginDependencyNode> queue = new ArrayDeque<>();
-
-		PluginDependencyNode currentNode;
-		queue.add(root);
-
-		while (!queue.isEmpty()) {
-			currentNode = queue.pollFirst();
-
-			PluginInfo info =
-				this.pluginDetails.get(currentNode.getName()).getInfo();
-			for (String dependencyName : info.getDependencies()) {
-				PluginState state = this.getPluginState(dependencyName);
-				switch (state) {
-					case DEPS_CHECKING:
-						if (!namesInTheTree.contains(dependencyName)) {
-							namesInTheTree.add(dependencyName);
-							PluginDependencyNode child =
-								new PluginDependencyNode(dependencyName);
-							child.setParent(root);
-							currentNode.getChildren().add(child);
-							queue.add(child);
-						}
-						break;
-					case DEPS_SATISFIED:
-					case DISABLED:
-					case DISABLING:
-					case DISCOVERED:
-					case ENABLED:
-					case ENABLING:
-					case LOADING:
-					default:
-						// satisfied, we don't need to do anything here
-						break;
-					case DEPS_MISSING:
-					case CORRUPTED:
-					case NOT_LOADED:
-					case PENDING_REMOVAL:
-					case UNLOADING:
-						// propagate failure up to the root and bail
-						this.setPluginState(currentNode.getName(),
-							PluginState.DEPS_MISSING);
-						PluginDependencyNode parent = currentNode.getParent();
-						while (null != parent) {
-							this.setPluginState(parent.getName(),
-								PluginState.DEPS_MISSING);
-							parent = parent.getParent();
-						}
-						return;
-				}
-			}
-		}
-
-		/*
-		 * We went through the whole tree and never failed. Therefore we can go
-		 * mark everything as satisfied. Also we don't get to this point until
-		 * the queue is empty.
-		 */
-		queue.add(root);
-		while (!queue.isEmpty()) {
-			currentNode = queue.pollFirst();
-			this.setPluginState(currentNode.getName(),
-				PluginState.DEPS_SATISFIED);
-			// fine since we avoided cycles when setting up children earlier
-			queue.addAll(currentNode.getChildren());
-		}
-	}
-
-	/**
 	 * Stores the class by name in the cached class list.
 	 *
 	 * @param name The name of the class.
 	 * @param clazz The corresponding class object.
 	 */
-	void setClass(final String name, final Class<?> clazz) {
-		if (!this.pluginClassCache.containsKey(name)) {
-			this.pluginClassCache.put(name, clazz);
-		}
+	void setClass(@NonNull final String name, @NonNull final Class<?> clazz) {
+		this.pluginClassCache.computeIfAbsent(name, ignored -> clazz);
 	}
 
 	/**
@@ -1434,7 +1434,7 @@ public class PluginManager {
 		if (null == details) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", toUnload);
+				.replaceFirst(REGEX_PLUGIN, toUnload);
 			log.warning(notLoaded);
 			return false;
 		}
@@ -1444,7 +1444,7 @@ public class PluginManager {
 		if (null == plugin) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", toUnload);
+				.replaceFirst(REGEX_PLUGIN, toUnload);
 			log.warning(notLoaded);
 			details.dispose();
 			this.pluginDetails.remove(toUnload);
@@ -1460,7 +1460,7 @@ public class PluginManager {
 		if (!plugin.onUnload()) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_UNLOAD_FAIL", this.resourceBundle)
-				.replaceFirst("\\$PLUGIN", toUnload);
+				.replaceFirst(REGEX_PLUGIN, toUnload);
 			log.warning(notLoaded);
 			this.setPluginState(toUnload, PluginState.CORRUPTED);
 			return false;
@@ -1472,7 +1472,7 @@ public class PluginManager {
 			EventManager.getInstance().unregisterEventListeners(l);
 		}
 		String unreg = SafeResourceLoader.getString("", this.resourceBundle)
-			.replaceFirst("\\$PLUGIN", PluginManager.PLUGIN_NAME);
+			.replaceFirst(REGEX_PLUGIN, PluginManager.PLUGIN_NAME);
 		log.finer(unreg);
 
 		details = this.pluginDetails.remove(toUnload);
@@ -1501,7 +1501,7 @@ public class PluginManager {
 			}
 			String msg = SafeResourceLoader.getString("UNREGISTERED_COMMAND",
 				this.getResourceBundle());
-			msg = msg.replaceFirst("\\$COMMAND", command);
+			msg = msg.replaceFirst(REGEX_COMMAND, command);
 			log.finest(msg);
 			found = true;
 		}
@@ -1515,11 +1515,9 @@ public class PluginManager {
 	 */
 	@Synchronized("commandLock")
 	public void unregisterPluginCommands(@NonNull String owner) {
-		this.commands.stream().filter((command) -> {
-			return owner.equalsIgnoreCase(command.getOwner());
-		}).forEach((command) -> {
-			this.unregisterCommand(command.getCommand());
-		});
+		this.commands.stream()
+			.filter(command -> owner.equalsIgnoreCase(command.getOwner()))
+			.forEach(command -> this.unregisterCommand(command.getCommand()));
 	}
 
 }

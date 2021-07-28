@@ -139,27 +139,13 @@ public class PluginInfo {
 	}
 
 	/**
-	 * Returns the full name of the plugin. This is a string that describes the
-	 * plugin, such as "Graphics" or "AI", with version info appended.
-	 *
-	 * @return the full name
+	 * Extract the required fields as part of {@link #loadMap(Map)}.
+	 * 
+	 * @param map The map we are loading from.
+	 * @throws InvalidDescriptionException If the description is invalid.
 	 */
-	public String getFullName() {
-		return this.name + "-" + this.version;
-	}
-
-	/**
-	 * The version of the plugin. This value is a string that follows the
-	 * MajorVersion.MinorVersion.PatchVersion format. It should be increased
-	 * when new features are added or bugs are fixed.
-	 *
-	 * @return the version of the plugin
-	 */
-	public String getVersion() {
-		return this.version.getNormalVersion();
-	}
-
-	private void loadMap(Map<?, ?> map) throws InvalidDescriptionException {
+	private void extractRequiredFields(Map<?, ?> map)
+		throws InvalidDescriptionException {
 		try {
 			this.name = map.get("name").toString().toLowerCase();
 			if (!this.name.matches("^[a-zA-Z0-9 _.-]+$")) {
@@ -204,6 +190,31 @@ public class PluginInfo {
 			throw new InvalidDescriptionException("main is of the wrong type",
 				ex);
 		}
+	}
+
+	/**
+	 * Returns the full name of the plugin. This is a string that describes the
+	 * plugin, such as "Graphics" or "AI", with version info appended.
+	 *
+	 * @return the full name
+	 */
+	public String getFullName() {
+		return this.name + "-" + this.version;
+	}
+
+	/**
+	 * The version of the plugin. This value is a string that follows the
+	 * MajorVersion.MinorVersion.PatchVersion format. It should be increased
+	 * when new features are added or bugs are fixed.
+	 *
+	 * @return the version of the plugin
+	 */
+	public String getVersion() {
+		return this.version.getNormalVersion();
+	}
+
+	private void loadMap(Map<?, ?> map) throws InvalidDescriptionException {
+		this.extractRequiredFields(map);
 
 		this.dependencies = PluginInfo.makePluginNameList(map, "dependencies");
 		this.softDependencies =

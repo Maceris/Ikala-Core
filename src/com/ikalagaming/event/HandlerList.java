@@ -24,7 +24,7 @@ class HandlerList {
 	public HandlerList() {
 		this.handlerSlots = new EnumMap<>(Order.class);
 		for (Order o : Order.values()) {
-			this.handlerSlots.put(o, new ArrayDeque<EventListener>());
+			this.handlerSlots.put(o, new ArrayDeque<>());
 		}
 		this.bakedList = null;
 	}
@@ -43,7 +43,7 @@ class HandlerList {
 
 		// add all of the listeners, in priority order, to the entries list
 		this.handlerSlots.entrySet()
-			.forEach((entry) -> entries.addAll(entry.getValue()));
+			.forEach(entry -> entries.addAll(entry.getValue()));
 		// bake the list into an array
 		this.bakedList = entries.toArray(new EventListener[entries.size()]);
 	}
@@ -111,7 +111,7 @@ class HandlerList {
 	public void unregister(Listener listener) {
 		// go through each priority
 		this.handlerSlots.values().forEach(
-			(list) -> list.removeIf((li) -> li.getListener().equals(listener)));
+			list -> list.removeIf(li -> li.getListener().equals(listener)));
 
 		this.bakedList = null;
 	}
@@ -121,7 +121,7 @@ class HandlerList {
 	 */
 	@Synchronized
 	public void unregisterAll() {
-		this.handlerSlots.values().forEach((list) -> list.clear());
+		this.handlerSlots.values().forEach(ArrayDeque::clear);
 		this.bakedList = null;
 	}
 

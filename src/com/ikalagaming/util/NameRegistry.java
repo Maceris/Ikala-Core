@@ -204,8 +204,7 @@ public class NameRegistry {
 			tree.insert(addition);
 		}
 		catch (DuplicateEntry e) {
-			System.err.println(e.getCause());
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 		}
 		finally {
 			this.mapLock.unlock();

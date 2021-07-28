@@ -24,4 +24,9 @@ public class Localization {
 	@Setter
 	private static Locale locale = new Locale("en", "US");
 
+	/**
+	 * Private constructor so this class is not instantiated.
+	 */
+	private Localization() {}
+
 }

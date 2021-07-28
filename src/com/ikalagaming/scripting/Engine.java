@@ -41,4 +41,9 @@ public class Engine {
 		return Engine.luaEngine;
 	}
 
+	/**
+	 * Private method so this class is not instantiated.
+	 */
+	private Engine() {}
+
 }

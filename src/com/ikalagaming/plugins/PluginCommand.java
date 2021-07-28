@@ -16,6 +16,14 @@ import java.util.function.Consumer;
 @Getter
 public class PluginCommand implements Comparable<PluginCommand> {
 	/**
+	 * The callback functional to call when the command is run.
+	 *
+	 * @param callback The callback function for the command.
+	 */
+	@SuppressWarnings("javadoc")
+	private final Consumer<String[]> callback;
+
+	/**
 	 * The command registered.
 	 *
 	 * @param command The command registered.
@@ -23,15 +31,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 */
 	@SuppressWarnings("javadoc")
 	private final String command;
-	
-	/**
-	 * The callback functional to call when the command is run.
-	 *
-	 * @param callback The callback function for the command.
-	 */
-	@SuppressWarnings("javadoc")
-	private final Consumer<String[]> callback;
-	
+
 	/**
 	 * The plugin that this command was registered to.
 	 *
@@ -44,6 +44,31 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	public int compareTo(PluginCommand o) {
 		return this.getCommand().toLowerCase()
 			.compareTo(o.getCommand().toLowerCase());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (null == obj) {
+			return false;
+		}
+		if (!(obj instanceof PluginCommand)) {
+			return super.equals(obj);
+		}
+
+		String otherCommand = ((PluginCommand) obj).getCommand();
+		if (null == this.command) {
+			return null == otherCommand;
+		}
+
+		return this.command.equalsIgnoreCase(otherCommand);
+	}
+
+	@Override
+	public int hashCode() {
+		if (null == this.command) {
+			return super.hashCode();
+		}
+		return this.command.hashCode();
 	}
 
 }

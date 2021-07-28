@@ -508,9 +508,9 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param toRemove the object to remove
 	 */
 	public void remove(T toRemove) {
-		BinaryTreeNode<T> to_remove = this.find(toRemove, this.treeRoot);
-		if (to_remove != null) {
-			this.remove(to_remove);
+		BinaryTreeNode<T> nodeToRemove = this.find(toRemove, this.treeRoot);
+		if (nodeToRemove != null) {
+			this.remove(nodeToRemove);
 		}
 		--this.size;
 	}
@@ -661,20 +661,6 @@ public class BinaryTree<T extends Comparable<T>> {
 			this.parent = null;
 			this.key = null;
 			this.height = 0;
-		}
-
-		/**
-		 * Dereferences all other objects this object has pointers to. This will
-		 * cause any children to be cleaned up as well.
-		 */
-		@Override
-		protected void finalize() throws Throwable {
-			this.left = null;
-			this.right = null;
-			this.parent = null;
-			this.key = null;
-			this.height = 0;
-			super.finalize();
 		}
 
 		/**

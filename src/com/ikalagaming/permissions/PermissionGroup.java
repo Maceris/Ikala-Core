@@ -9,6 +9,7 @@ import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -34,7 +35,7 @@ public class PermissionGroup implements PermissionHolder {
 		}
 		catch (DuplicateGroupException e) {
 			log.severe(SafeResourceLoader
-				.getString("DUPLICATE_PERMISSION", Permission.resourceLocation)
+				.getString("DUPLICATE_PERMISSION", Permission.RESOURCE_LOCATION)
 				.replaceFirst("\\$PERMISSION", "root"));
 		}
 		/*
@@ -95,7 +96,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * permission is granted to the group, and false if the permission is
 	 * revoked from the group.
 	 */
-	private HashMap<Permission, Boolean> permissions;
+	private Map<Permission, Boolean> permissions;
 
 	/**
 	 * The description of the group.
@@ -128,8 +129,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * @throws DuplicateGroupException If a group with that name already exists
 	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
-	public PermissionGroup(String name,
-		HashMap<Permission, Boolean> newPermissions)
+	public PermissionGroup(String name, Map<Permission, Boolean> newPermissions)
 		throws DuplicateGroupException {
 		this(name, null, null, newPermissions);
 	}
@@ -164,7 +164,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name, PermissionGroup theParent,
-		HashMap<Permission, Boolean> newPermissions)
+		Map<Permission, Boolean> newPermissions)
 		throws DuplicateGroupException {
 		this(name, null, theParent, newPermissions);
 	}
@@ -200,7 +200,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name, String theDescription,
-		HashMap<Permission, Boolean> newPermissions)
+		Map<Permission, Boolean> newPermissions)
 		throws DuplicateGroupException {
 		this(name, theDescription, null, newPermissions);
 	}
@@ -242,8 +242,7 @@ public class PermissionGroup implements PermissionHolder {
 	 * @throws EmptyGroupNameException If the group name is empty or null
 	 */
 	public PermissionGroup(String name, String theDescription,
-		PermissionGroup theParent,
-		HashMap<Permission, Boolean> newPermissions) {
+		PermissionGroup theParent, Map<Permission, Boolean> newPermissions) {
 		if (name == null || name.isEmpty()) {
 			throw new EmptyGroupNameException();
 		}
@@ -313,12 +312,13 @@ public class PermissionGroup implements PermissionHolder {
 	public boolean hasPermission(Permission perm) {
 		ArrayList<Permission> containers = new ArrayList<>();
 		boolean duplicateEntryFlag = false;
-		for (Permission firstLevel : this.permissions.keySet()) {
-			if (firstLevel.getName() == perm.getName()) {
-				return this.permissions.get(firstLevel);
+		for (Map.Entry<Permission, Boolean> entry : this.permissions
+			.entrySet()) {
+			if (entry.getKey().getName().equals(perm.getName())) {
+				return entry.getValue();
 			}
-			else if (firstLevel.contains(perm)) {
-				containers.add(firstLevel);
+			else if (entry.getKey().contains(perm)) {
+				containers.add(entry.getKey());
 				duplicateEntryFlag = true;
 			}
 		}
@@ -357,6 +357,8 @@ public class PermissionGroup implements PermissionHolder {
 	}
 
 	@Override
-	public void recalculatePermissions() {}
+	public void recalculatePermissions() {
+		// TODO implement this
+	}
 
 }

@@ -34,4 +34,9 @@ public class LoggerFactory {
 		loggers.put(pluginName, log);
 		return log;
 	}
+
+	/**
+	 * Private constructor so this class is not instantiated.
+	 */
+	private LoggerFactory() {}
 }

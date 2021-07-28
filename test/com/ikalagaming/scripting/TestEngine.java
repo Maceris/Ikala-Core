@@ -25,6 +25,11 @@ public class TestEngine {
 	public void showLuaEngineInfo() {
 		ScriptEngineFactory f = Engine.getLuaEngine().getFactory();
 		Assert.assertNotNull(f);
+		Assert.assertEquals("Luaj",f.getEngineName());
+		Assert.assertNotNull(f.getEngineVersion());
+		Assert.assertEquals("lua", f.getLanguageName());
+		Assert.assertNotNull(f.getLanguageVersion());
+		
 		System.out.println("Engine name: " + f.getEngineName());
 		System.out.println("Engine Version: " + f.getEngineVersion());
 		System.out.println("LanguageName: " + f.getLanguageName());

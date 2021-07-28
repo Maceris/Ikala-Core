@@ -21,9 +21,9 @@ public enum DefaultPermissionValue {
 	 */
 	FALSE("false", "f", "no");
 
-	private final static Map<String, Boolean> lookup = new HashMap<>();
-	private final static Map<String, DefaultPermissionValue> values =
-			new HashMap<>();
+	private static final Map<String, Boolean> lookup = new HashMap<>();
+	private static final Map<String, DefaultPermissionValue> values =
+		new HashMap<>();
 
 	static {
 		for (String name : TRUE.namesArray) {
@@ -44,8 +44,8 @@ public enum DefaultPermissionValue {
 	 */
 	public static DefaultPermissionValue getByName(String name) {
 		if (DefaultPermissionValue.values.containsKey(name)) {
-			return DefaultPermissionValue.values.get(name.toLowerCase()
-					.replaceAll("[^a-z!]", ""));
+			return DefaultPermissionValue.values
+				.get(name.toLowerCase().replaceAll("[^a-z!]", ""));
 		}
 		return FALSE;
 	}
@@ -77,12 +77,12 @@ public enum DefaultPermissionValue {
 	 * @return a boolean representing the value of this object
 	 */
 	public boolean value() {
-		if (this == TRUE) {
-			return true;
+		switch (this) {
+			case TRUE:
+				return true;
+			case FALSE:
+			default:
+				return false;
 		}
-		if (this == FALSE) {
-			return false;
-		}
-		return false;
 	}
 }

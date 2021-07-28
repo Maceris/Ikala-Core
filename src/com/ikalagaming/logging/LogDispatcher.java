@@ -21,7 +21,6 @@ class LogDispatcher extends Thread {
 	private static final long WAIT_TIMEOUT = 10000;
 
 	private ArrayDeque<String> queue;
-	private String currentStr;
 	private boolean running;
 	private boolean hasLogs;
 	private EventManager manager;
@@ -53,18 +52,16 @@ class LogDispatcher extends Thread {
 				this.hasLogs = false;
 				return;
 			}
-			this.currentStr = this.queue.remove();
 			// log it to the system output stream
-			Log log = new Log(this.currentStr);
+			Log log = new Log(this.queue.remove());
 			this.manager.fireEvent(log);
 		}
 		catch (NoSuchElementException noElement) {
 			// the queue is empty
 			this.hasLogs = false;
-			return;
 		}
 		catch (Exception e) {
-			System.err.println(e.toString());
+			e.printStackTrace();
 		}
 	}
 
@@ -84,11 +81,11 @@ class LogDispatcher extends Thread {
 			throw illegalState;
 		}
 		catch (NullPointerException nullPointer) {
-			;// do nothing since its a null event
+			// do nothing since its a null event
 			return;// don't wake up thread
 		}
 		catch (Exception e) {
-			System.err.println(e.toString());
+			e.printStackTrace();
 			return;// don't wake up thread
 		}
 		this.wakeUp();
@@ -100,7 +97,7 @@ class LogDispatcher extends Thread {
 	private void wakeUp() {
 		synchronized (this.syncObject) {
 			// Wake the thread up as there is now an event
-			this.syncObject.notify();
+			this.syncObject.notifyAll();
 		}
 	}
 
@@ -119,8 +116,9 @@ class LogDispatcher extends Thread {
 						this.syncObject.wait(LogDispatcher.WAIT_TIMEOUT);
 					}
 					catch (InterruptedException e) {
-						// TODO log this
-						e.printStackTrace(System.err);
+						e.printStackTrace();
+						// Re-interrupt as per SonarLint java:S2142
+						Thread.currentThread().interrupt();
 					}
 				}
 				// in case it was terminated while waiting

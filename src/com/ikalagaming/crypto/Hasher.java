@@ -63,7 +63,7 @@ public class Hasher {
 	 * @throws InvalidKeySpecException if the keyspec is wrong
 	 */
 	public static String createHash(char[] password)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		throws NoSuchAlgorithmException, InvalidKeySpecException {
 		// Generate a random salt
 		byte[] salt = Hasher.getRandomSaltBytes();
 		return Hasher.createHash(password, salt);
@@ -79,14 +79,13 @@ public class Hasher {
 	 * @throws InvalidKeySpecException if the keyspec is wrong
 	 */
 	public static String createHash(char[] password, byte[] salt)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		throws NoSuchAlgorithmException, InvalidKeySpecException {
 		// Hash the password
-		byte[] hash =
-				Hasher.pbkdf2(password, salt, Hasher.PBKDF2_ITERATIONS,
-						Hasher.HASH_BYTE_SIZE);
+		byte[] hash = Hasher.pbkdf2(password, salt, Hasher.PBKDF2_ITERATIONS,
+			Hasher.HASH_BYTE_SIZE);
 		// format iterations:salt:hash
 		return Hasher.PBKDF2_ITERATIONS + ":" + Hasher.toHex(salt) + ":"
-				+ Hasher.toHex(hash);
+			+ Hasher.toHex(hash);
 	}
 
 	/**
@@ -98,7 +97,7 @@ public class Hasher {
 	 * @throws InvalidKeySpecException if the keyspec is wrong
 	 */
 	public static String createHash(String password)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		throws NoSuchAlgorithmException, InvalidKeySpecException {
 		return Hasher.createHash(password.toCharArray());
 	}
 
@@ -112,8 +111,7 @@ public class Hasher {
 		byte[] binary = new byte[hex.length() / 2];
 		for (int i = 0; i < binary.length; i++) {
 			binary[i] =
-					(byte) Integer
-							.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
+				(byte) Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
 		}
 		return binary;
 	}
@@ -157,10 +155,10 @@ public class Hasher {
 	 *             key.
 	 */
 	private static byte[] pbkdf2(char[] password, byte[] salt, int iterations,
-			int bytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		int bytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, bytes * 8);
 		SecretKeyFactory skf =
-				SecretKeyFactory.getInstance(Hasher.PBKDF2_ALGORITHM);
+			SecretKeyFactory.getInstance(Hasher.PBKDF2_ALGORITHM);
 		return skf.generateSecret(spec).getEncoded();
 	}
 
@@ -192,7 +190,9 @@ public class Hasher {
 		String hex = bi.toString(16);
 		int paddingLength = (array.length * 2) - hex.length();
 		if (paddingLength > 0) {
-			return String.format("%0" + paddingLength + "d", 0) + hex;
+			// padding, followed by a string which is already hex
+			String format = "%0" + paddingLength + "d%s";
+			return String.format(format, 0, hex);
 		}
 		return hex;
 	}
@@ -207,7 +207,7 @@ public class Hasher {
 	 * @throws InvalidKeySpecException if the keyspec is wrong
 	 */
 	public static boolean validatePassword(char[] password, String correctHash)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		throws NoSuchAlgorithmException, InvalidKeySpecException {
 		// Decode the hash into its parameters
 		String[] params = correctHash.split(":");
 		int iterations = Integer.parseInt(params[Hasher.ITERATION_INDEX]);
@@ -216,7 +216,7 @@ public class Hasher {
 		// Compute the hash of the provided password, using the same salt,
 		// iteration count, and hash length
 		byte[] testHash =
-				Hasher.pbkdf2(password, salt, iterations, hash.length);
+			Hasher.pbkdf2(password, salt, iterations, hash.length);
 		// Compare the hashes in constant time. The password is correct if
 		// both hashes match.
 		return Hasher.slowEquals(hash, testHash);
@@ -232,8 +232,13 @@ public class Hasher {
 	 * @throws InvalidKeySpecException if the keyspec is wrong
 	 */
 	public static boolean validatePassword(String password, String correctHash)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		throws NoSuchAlgorithmException, InvalidKeySpecException {
 		return Hasher.validatePassword(password.toCharArray(), correctHash);
 	}
+
+	/**
+	 * Private constructor so nobody instantiates this class.
+	 */
+	private Hasher() {}
 
 }

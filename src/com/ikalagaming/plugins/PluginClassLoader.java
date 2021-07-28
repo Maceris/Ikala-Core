@@ -55,10 +55,9 @@ public class PluginClassLoader extends URLClassLoader {
 			clazz = Class.forName(pluginInfo.getMainClass(), true, this);
 		}
 		catch (ClassNotFoundException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_METHOD_MISSING",
-					manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginInfo.getName());
+			String err = SafeResourceLoader.getString(
+				"PLUGIN_MAIN_METHOD_MISSING", manager.getResourceBundle())
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
 			PluginClassLoader.log.warning(err);
 			throw new InvalidPluginException(err);
 		}
@@ -69,26 +68,23 @@ public class PluginClassLoader extends URLClassLoader {
 			this.plugin = pluginClass.newInstance();
 		}
 		catch (ClassCastException ex) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_NOT_A_PLUGIN",
-					manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginInfo.getName());
+			String err = SafeResourceLoader.getString(
+				"PLUGIN_MAIN_NOT_A_PLUGIN", manager.getResourceBundle())
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
 			PluginClassLoader.log.warning(err);
 			throw new InvalidPluginException(err);
 		}
 		catch (InstantiationException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_CANT_INSTANTIATE_MAIN",
-					manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginInfo.getName());
+			String err = SafeResourceLoader.getString(
+				"PLUGIN_CANT_INSTANTIATE_MAIN", manager.getResourceBundle())
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
 			PluginClassLoader.log.warning(err);
 			throw new InvalidPluginException(err);
 		}
 		catch (IllegalAccessException e) {
-			String err = SafeResourceLoader
-				.getString("PLUGIN_MAIN_ILLEGAL_ACCESS",
-					manager.getResourceBundle())
-				.replaceFirst("\\$PLUGIN", pluginInfo.getName());
+			String err = SafeResourceLoader.getString(
+				"PLUGIN_MAIN_ILLEGAL_ACCESS", manager.getResourceBundle())
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
 			PluginClassLoader.log.warning(err);
 			throw new InvalidPluginException(err);
 		}
@@ -152,9 +148,7 @@ public class PluginClassLoader extends URLClassLoader {
 	 * cleans up references.
 	 */
 	void dispose() {
-		getClasses().forEach((clazz) -> {
-			manager.removeClass(clazz);
-		});
+		getClasses().forEach(this.manager::removeClass);
 		classes.clear();
 	}
 

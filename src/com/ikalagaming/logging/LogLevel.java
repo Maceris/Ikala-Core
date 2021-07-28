@@ -121,21 +121,17 @@ public enum LogLevel {
 	 */
 	private final String getCachedLocalizedLevelName() {
 
-		if (this.localizedLevelName != null) {
-			if (this.cachedLocale != null) {
-				if (this.cachedLocale.equals(Localization.getLocale())) {
-					// OK: our cached value was looked up with the same
-					// locale. We can use it.
-					return this.localizedLevelName;
-				}
-			}
+		if (this.localizedLevelName != null && this.cachedLocale != null
+			&& this.cachedLocale.equals(Localization.getLocale())) {
+			// OK: our cached value was looked up with the same
+			// locale. We can use it.
+			return this.localizedLevelName;
 		}
 		// We need to compute the localized name.
 		// Either because it's the first time, or because our cached
 		// value is for a different locale.
-		this.localizedLevelName =
-				SafeResourceLoader.getString(this.levelName,
-						"com.ikalagaming.logging.resources.LoggingLevel");
+		this.localizedLevelName = SafeResourceLoader.getString(this.levelName,
+			"com.ikalagaming.logging.resources.LoggingLevel");
 		this.cachedLocale = Localization.getLocale();
 
 		return this.localizedLevelName;

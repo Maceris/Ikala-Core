@@ -160,6 +160,22 @@ public class Logging {
 	 * @see #create()
 	 */
 	static void log(String origin, LogLevel level, String details) {
+		thresholdLock.lock();
+		try {
+			if (level.intValue() < Logging.threshold.intValue()) {
+				/*
+				 * We don't care about the log as it's not higher importance
+				 * than the threshold, so we bail out of the method. For some
+				 * reason SonarLint rule java:S3626 picks this up as redundant,
+				 * despite skipping the whole rest of the method.
+				 */
+				return;// NOSONAR
+			}
+		}
+		finally {
+			thresholdLock.unlock();
+		}
+
 		initLock.lock();
 		try {
 			if (!Logging.initialized) {
@@ -169,15 +185,7 @@ public class Logging {
 		finally {
 			initLock.unlock();
 		}
-		thresholdLock.lock();
-		try {
-			if (level.intValue() < Logging.threshold.intValue()) {
-				return;
-			}
-		}
-		finally {
-			thresholdLock.unlock();
-		}
+
 		String newLog = "";
 		try {
 			newLog = SafeResourceLoader.getString("level_prefix",
@@ -193,9 +201,13 @@ public class Logging {
 				+ " " + details;
 		}
 		catch (Exception e) {
-			System.err.println(level.getName());
-			System.err.println(details);
-			e.printStackTrace(System.err);// we need to know what broke the log
+			/*
+			 * This is the logger, and it's broken, so as a last resort we are
+			 * printing to System.err
+			 */
+			System.err.println(level.getName());// NOSONAR
+			System.err.println(details);// NOSONAR
+			e.printStackTrace();// we need to know what broke the log
 		}
 		Logging.dispatcher.log(newLog);
 	}
@@ -232,4 +244,9 @@ public class Logging {
 			thresholdLock.unlock();
 		}
 	}
+
+	/**
+	 * Private constructor so this class is not instantiated.
+	 */
+	private Logging() {}
 }

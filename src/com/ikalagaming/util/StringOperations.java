@@ -52,4 +52,9 @@ public class StringOperations {
 		return (toSearch.length() - toSearch.replace(toFind, "").length())
 			/ toFind.length();
 	}
+
+	/**
+	 * Private constructor so that this plugin is not initialized.
+	 */
+	private StringOperations() {}
 }

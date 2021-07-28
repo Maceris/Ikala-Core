@@ -30,7 +30,7 @@ public class Permission {
 	/**
 	 * The location for permissions resource bundle
 	 */
-	static final String resourceLocation =
+	static final String RESOURCE_LOCATION =
 		"com.ikalagaming.permissions.resources.Permissions";
 
 	private static HashMap<String, Permission> permissionByName =
@@ -65,7 +65,7 @@ public class Permission {
 						output.add(perm);
 					}
 				}
-				catch (Throwable ex) {
+				catch (Exception ex) {
 					throw new IllegalArgumentException(
 						"Permission node '" + entry.getKey().toString()
 							+ "' in child of " + name + " is invalid",
@@ -217,11 +217,10 @@ public class Permission {
 	 * </ul>
 	 *
 	 * @param data Map of permissions
-	 * @param error An error message to show if a permission is invalid.
 	 * @param defaultPerm Default permission value to use if missing
 	 * @return Permission object
 	 */
-	public static List<Permission> loadPermissions(Map<?, ?> data, String error,
+	public static List<Permission> loadPermissions(Map<?, ?> data,
 		boolean defaultPerm) {
 
 		List<Permission> result = new ArrayList<>();
@@ -231,9 +230,9 @@ public class Permission {
 				result.add(Permission.loadPermission(entry.getKey().toString(),
 					(Map<?, ?>) entry.getValue(), defaultPerm, result));
 			}
-			catch (Throwable ex) {
+			catch (Exception ex) {
 				String msg = SafeResourceLoader.getString("INVALID_PERMISSIONS",
-					Permission.resourceLocation);
+					Permission.RESOURCE_LOCATION);
 				log.warning(msg);
 
 				ex.printStackTrace();
@@ -573,10 +572,7 @@ public class Permission {
 		if (this.equals(other)) {
 			return true;
 		}
-		if (this.getAllSubpermissions().containsKey(other.getName())) {
-			return true;
-		}
-		return false;
+		return this.getAllSubpermissions().containsKey(other.getName());
 	}
 
 	/**
@@ -587,7 +583,7 @@ public class Permission {
 	 * @return the full list of child permissions
 	 * @see #getChildPermissions()
 	 */
-	public HashMap<String, Boolean> getAllSubpermissions() {
+	public Map<String, Boolean> getAllSubpermissions() {
 		if (this.childrenCalculated) {
 			return this.fullChildMap;
 		}
@@ -596,20 +592,17 @@ public class Permission {
 			if (!Permission.exists(s)) {
 				log.warning(SafeResourceLoader
 					.getString("NON_EXISTANT_SUBPERMISSON",
-						Permission.resourceLocation)
+						Permission.RESOURCE_LOCATION)
 					.replaceFirst("\\$PERMISSION", s));
 				continue;// it was not created somehow
 			}
 			// this is recursive
 			Optional<Permission> possiblePermission = Permission.getByName(s);
-			possiblePermission.ifPresent((value) -> {
-				HashMap<String, Boolean> submap = value.getAllSubpermissions();
-				for (String submapString : submap.keySet()) {
-					if (!perms.containsKey(submapString)) {
-						// add the permission if it does not exist
-						// this will prevent subperms overriding the parents
-						perms.put(submapString, submap.get(submapString));
-					}
+			possiblePermission.ifPresent(value -> {
+				Map<String, Boolean> submap = value.getAllSubpermissions();
+				for (Map.Entry<String, Boolean> entry : submap.entrySet()) {
+					perms.computeIfAbsent(entry.getKey(),
+						ignored -> entry.getValue());
 				}
 			});
 		}

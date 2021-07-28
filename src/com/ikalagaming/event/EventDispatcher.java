@@ -69,10 +69,9 @@ class EventDispatcher extends Thread {
 			}
 			catch (EventException e) {
 				String error = SafeResourceLoader.getString("DISPATCH_ERROR",
-					EventManager.resourceBundle);
+					EventManager.getResourceBundle());
 				log.warning(error);
-				System.err.println(e.toString());
-				e.printStackTrace(System.err);
+				e.printStackTrace();
 			}
 		}
 	}
@@ -97,12 +96,8 @@ class EventDispatcher extends Thread {
 		catch (IllegalStateException illegalState) {
 			throw illegalState;
 		}
-		catch (NullPointerException nullPointer) {
-			;// do nothing since its a null event
-			return;// don't wake up thread
-		}
 		catch (Exception e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 			return;// don't wake up thread
 		}
 		this.wakeUp();
@@ -122,7 +117,9 @@ class EventDispatcher extends Thread {
 		catch (NoSuchElementException noElement) {
 			// the queue is empty
 			this.hasEvents = false;
-			System.err.println(noElement.toString());
+			String error = SafeResourceLoader.getString("EVT_QUEUE_EMPTY",
+				EventManager.getResourceBundle());
+			log.warning(error);
 			return;
 		}
 		this.dispatch(event);
@@ -135,7 +132,7 @@ class EventDispatcher extends Thread {
 	private void wakeUp() {
 		synchronized (this.syncObject) {
 			// Wake the thread up as there is now an event
-			this.syncObject.notify();
+			this.syncObject.notifyAll();
 		}
 	}
 
@@ -153,8 +150,12 @@ class EventDispatcher extends Thread {
 						this.syncObject.wait(EventDispatcher.WAIT_TIMEOUT);
 					}
 					catch (InterruptedException e) {
-						// TODO log this
-						e.printStackTrace(System.err);
+						String error =
+							SafeResourceLoader.getString("THREAD_INTERRUPTED",
+								EventManager.getResourceBundle());
+						log.warning(error);
+						// Re-interrupt as per SonarLint java:S2142
+						Thread.currentThread().interrupt();
 					}
 				}
 				// in case it was terminated while waiting
