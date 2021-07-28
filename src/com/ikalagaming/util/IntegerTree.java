@@ -24,11 +24,8 @@ public class IntegerTree extends BinaryTree<Integer> {
 		boolean exitNextLoop = false;
 
 		while (true) {
-			if ((this.find(smallest, node) != null)) {
-				++smallest;
-				exitNextLoop = false;
-			}
-			else if (this.find(smallest, node.getParent()) != null) {
+			if ((this.find(smallest, node) != null)
+				|| this.find(smallest, node.getParent()) != null) {
 				++smallest;
 				exitNextLoop = false;
 			}

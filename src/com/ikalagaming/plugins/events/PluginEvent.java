@@ -18,7 +18,7 @@ public class PluginEvent extends Event {
 
 	/**
 	 * The name of the plugin that sent the event, if any.
-	 * 
+	 *
 	 * @param The plugin sending the event.
 	 * @return The plugin sending the event.
 	 */
@@ -26,7 +26,7 @@ public class PluginEvent extends Event {
 	private final String from;
 	/**
 	 * The name of the plugin that the event is sent to, if any.
-	 * 
+	 *
 	 * @param The plugin receiving the event.
 	 * @return The plugin receiving the event.
 	 */
@@ -35,7 +35,7 @@ public class PluginEvent extends Event {
 
 	/**
 	 * The content of the event.
-	 * 
+	 *
 	 * @param The contents of the message.
 	 * @return The contents of the message.
 	 */

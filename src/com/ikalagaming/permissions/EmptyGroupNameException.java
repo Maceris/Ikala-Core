@@ -1,9 +1,9 @@
 package com.ikalagaming.permissions;
 
 /**
- * 
+ *
  * Thrown when a permission group is created with a blank or null name.
- * 
+ *
  * @author Ches Burks
  *
  */

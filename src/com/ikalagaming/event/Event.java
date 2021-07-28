@@ -8,7 +8,7 @@ public abstract class Event {
 
 	/**
 	 * Fires this event using the static instance of the {@link EventManager}.
-	 * 
+	 *
 	 * For example: <code>new CustomEvent("That was easy").fire();</code>
 	 */
 	public void fire() {

@@ -1,15 +1,18 @@
 package com.ikalagaming.event;
 
+import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.CustomLog;
+import lombok.Getter;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 /**
@@ -21,10 +24,14 @@ public class EventManager {
 	private static EventManager instance;
 
 	/**
-	 * The resouce bundle for event manager strings
+	 * The resource bundle for event manager.
+	 *
+	 * @return The current resource bundle, which may be null.
 	 */
-	public static String resourceBundle =
-		"com.ikalagaming.event.resources.Events";
+	@SuppressWarnings("javadoc")
+	@Getter
+	private static ResourceBundle resourceBundle = ResourceBundle.getBundle(
+		"com.ikalagaming.event.resources.Events", Localization.getLocale());
 
 	/**
 	 * Shuts down the static instance if it exists, and then nullifies the
@@ -85,42 +92,30 @@ public class EventManager {
 
 		Map<Class<? extends Event>, Set<EventListener>> toReturn =
 			new HashMap<>();
-		Set<Method> methods;
-		try {
-			Method[] publicMethods = listener.getClass().getMethods();
-			methods = new HashSet<>(publicMethods.length, Float.MAX_VALUE);
-			for (Method method : publicMethods) {
-				methods.add(method);
-			}
-			for (Method method : listener.getClass().getDeclaredMethods()) {
-				methods.add(method);
-			}
-		}
-		catch (NoClassDefFoundError e) {
-			return toReturn;
-		}
 
 		// search the methods for listeners
-		for (final Method method : methods) {
+		for (final Method method : listener.getClass().getDeclaredMethods()) {
 			final EventHandler handlerAnnotation =
 				method.getAnnotation(EventHandler.class);
 			if (handlerAnnotation == null) {
 				continue;
 			}
-			final Class<?> checkClass;
-			if (method.getParameterTypes().length != 1 || !Event.class
-				.isAssignableFrom(checkClass = method.getParameterTypes()[0])) {
+			final Class<?> checkClass = method.getParameterTypes()[0];
+			if (method.getParameterTypes().length != 1
+				|| !Event.class.isAssignableFrom(checkClass)) {
 				continue;
 			}
 			final Class<? extends Event> eventClass =
 				checkClass.asSubclass(Event.class);
-			method.setAccessible(true);
-			Set<EventListener> eventSet = toReturn.get(eventClass);
-			if (eventSet == null) {
-				eventSet = new HashSet<>();
-				// add the listener methods to the list of events
-				toReturn.put(eventClass, eventSet);
-			}
+			/*
+			 * We need the method to be publicly visible so that it can be
+			 * called and passed events. SonarLint java:S3011 complains about
+			 * this but we don't have much better options.
+			 */
+			method.setAccessible(true);// NOSONAR
+
+			Set<EventListener> eventSet = toReturn.computeIfAbsent(eventClass,
+				ignored -> new HashSet<>());
 
 			// creates a class to execute the listener for the event
 			EventExecutor executor = (listener1, event) -> {
@@ -130,9 +125,8 @@ public class EventManager {
 					}
 					method.invoke(listener1, event);
 				}
-				catch (Throwable t) {
-					EventException evtExcept = new EventException(t);
-					throw evtExcept;
+				catch (Exception t) {
+					throw new EventException(t);
 				}
 			};
 
@@ -159,13 +153,13 @@ public class EventManager {
 		}
 		catch (Exception e) {
 			if (event instanceof Log) {
-				e.printStackTrace(System.err);
+				e.printStackTrace();
 			}
 			else {
 				String err = SafeResourceLoader.getString("EVT_QUEUE_FULL",
 					"com.ikalagaming.event.strings")
 					+ "in EventManager.fireEvent(Event)";
-				log.warning(err);
+				EventManager.log.warning(err);
 			}
 
 		}
@@ -180,9 +174,7 @@ public class EventManager {
 	 */
 	private HandlerList getEventListeners(Class<? extends Event> type) {
 		synchronized (this.handlerMap) {
-			if (!this.handlerMap.containsKey(type)) {
-				this.handlerMap.put(type, new HandlerList());
-			}
+			this.handlerMap.computeIfAbsent(type, ignored -> new HandlerList());
 			return this.handlerMap.get(type);
 		}
 	}
@@ -205,8 +197,8 @@ public class EventManager {
 	public void registerEventListeners(Listener listener) {
 		Map<Class<? extends Event>, Set<EventListener>> listMap;
 		listMap = this.createRegisteredListeners(listener);
-		listMap.entrySet().forEach((e) -> this.getEventListeners(e.getKey())
-			.registerAll(e.getValue()));
+		listMap.entrySet().forEach(
+			e -> this.getEventListeners(e.getKey()).registerAll(e.getValue()));
 	}
 
 	/**
@@ -216,7 +208,7 @@ public class EventManager {
 	public void shutdown() {
 		// TODO make sure this is called
 		synchronized (this.handlerMap) {
-			this.handlerMap.values().forEach((l) -> l.unregisterAll());
+			this.handlerMap.values().forEach(HandlerList::unregisterAll);
 			this.handlerMap.clear();
 		}
 
@@ -225,7 +217,9 @@ public class EventManager {
 			this.dispatcher.join();
 		}
 		catch (InterruptedException e) {
-			e.printStackTrace(System.err);
+			e.printStackTrace();
+			// Re-interrupt as per SonarLint java:S2142
+			Thread.currentThread().interrupt();
 		}
 	}
 
@@ -236,8 +230,7 @@ public class EventManager {
 	 */
 	public void unregisterEventListeners(Listener listener) {
 		synchronized (this.handlerMap) {
-			this.handlerMap.values()
-				.forEach((list) -> list.unregister(listener));
+			this.handlerMap.values().forEach(list -> list.unregister(listener));
 		}
 	}
 }

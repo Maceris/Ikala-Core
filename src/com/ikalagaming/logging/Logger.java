@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 /**
  * Logs messages for a specific plugin. What logs actually get recorded is
  * configured in {@link Logging}.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -14,7 +14,7 @@ public class Logger {
 
 	/**
 	 * The plugin that is logging messages.
-	 * 
+	 *
 	 * @param The origin of these messages.
 	 */
 	@SuppressWarnings("javadoc")
@@ -33,7 +33,7 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void config(String details) {
-		Logging.log(origin, LogLevel.CONFIG, details);
+		Logging.log(this.origin, LogLevel.CONFIG, details);
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void fine(String details) {
-		Logging.log(origin, LogLevel.FINE, details);
+		Logging.log(this.origin, LogLevel.FINE, details);
 	}
 
 	/**
@@ -65,7 +65,7 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void finer(String details) {
-		Logging.log(origin, LogLevel.FINER, details);
+		Logging.log(this.origin, LogLevel.FINER, details);
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void finest(String details) {
-		Logging.log(origin, LogLevel.FINEST, details);
+		Logging.log(this.origin, LogLevel.FINEST, details);
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void info(String details) {
-		Logging.log(origin, LogLevel.INFO, details);
+		Logging.log(this.origin, LogLevel.INFO, details);
 	}
 
 	/**
@@ -114,7 +114,7 @@ public class Logger {
 	 * @see #finest(String)
 	 */
 	public void log(LogLevel level, String details) {
-		Logging.log(origin, level, details);
+		Logging.log(this.origin, level, details);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void severe(String details) {
-		Logging.log(origin, LogLevel.SEVERE, details);
+		Logging.log(this.origin, LogLevel.SEVERE, details);
 	}
 
 	/**
@@ -146,6 +146,6 @@ public class Logger {
 	 * @see #log(LogLevel, String)
 	 */
 	public void warning(String details) {
-		Logging.log(origin, LogLevel.WARNING, details);
+		Logging.log(this.origin, LogLevel.WARNING, details);
 	}
 }

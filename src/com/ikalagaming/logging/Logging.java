@@ -1,13 +1,13 @@
 package com.ikalagaming.logging;
 
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
+
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Handles reporting and logging errors. Actual loggers get created in
@@ -39,17 +39,17 @@ public class Logging {
 	 * @see Logging#destory()
 	 */
 	public static void create() {
-		initLock.lock();
+		Logging.initLock.lock();
 		try {
 			if (Logging.initialized) {
 				return;
 			}
-			thresholdLock.lock();
+			Logging.thresholdLock.lock();
 			try {
 				Logging.threshold = Logging.DEFAULT_THRESHOLD;
 			}
 			finally {
-				thresholdLock.unlock();
+				Logging.thresholdLock.unlock();
 			}
 			Logging.eventManager = EventManager.getInstance();
 			try {
@@ -67,7 +67,7 @@ public class Logging {
 			Logging.initialized = true;
 		}
 		finally {
-			initLock.unlock();
+			Logging.initLock.unlock();
 		}
 	}
 
@@ -79,7 +79,7 @@ public class Logging {
 	 * @see #create()
 	 */
 	public static void destory() {
-		initLock.lock();
+		Logging.initLock.lock();
 		try {
 			if (!Logging.initialized) {
 				return;
@@ -89,16 +89,16 @@ public class Logging {
 			Logging.resourceBundle = null;
 			Logging.eventManager = null;
 			Logging.initialized = false;
-			thresholdLock.lock();
+			Logging.thresholdLock.lock();
 			try {
 				Logging.threshold = null;
 			}
 			finally {
-				thresholdLock.unlock();
+				Logging.thresholdLock.unlock();
 			}
 		}
 		finally {
-			initLock.unlock();
+			Logging.initLock.unlock();
 		}
 	}
 
@@ -111,24 +111,24 @@ public class Logging {
 	 * @see #setLogLevel(LogLevel)
 	 */
 	public static LogLevel getLogLevel() {
-		initLock.lock();
+		Logging.initLock.lock();
 		LogLevel ret;
 		try {
 			if (!Logging.initialized) {
 				ret = Logging.DEFAULT_THRESHOLD;
 			}
 			else {
-				thresholdLock.lock();
+				Logging.thresholdLock.lock();
 				try {
 					ret = Logging.threshold;
 				}
 				finally {
-					thresholdLock.unlock();
+					Logging.thresholdLock.unlock();
 				}
 			}
 		}
 		finally {
-			initLock.unlock();
+			Logging.initLock.unlock();
 		}
 		return ret;
 	}
@@ -140,12 +140,12 @@ public class Logging {
 	 * @return true if the logger has been created, false otherwise
 	 */
 	public static boolean isInitialized() {
-		initLock.lock();
+		Logging.initLock.lock();
 		try {
 			return Logging.initialized;
 		}
 		finally {
-			initLock.unlock();
+			Logging.initLock.unlock();
 		}
 	}
 
@@ -160,24 +160,32 @@ public class Logging {
 	 * @see #create()
 	 */
 	static void log(String origin, LogLevel level, String details) {
-		initLock.lock();
+		Logging.thresholdLock.lock();
+		try {
+			if (level.intValue() < Logging.threshold.intValue()) {
+				/*
+				 * We don't care about the log as it's not higher importance
+				 * than the threshold, so we bail out of the method. For some
+				 * reason SonarLint rule java:S3626 picks this up as redundant,
+				 * despite skipping the whole rest of the method.
+				 */
+				return;// NOSONAR
+			}
+		}
+		finally {
+			Logging.thresholdLock.unlock();
+		}
+
+		Logging.initLock.lock();
 		try {
 			if (!Logging.initialized) {
 				Logging.create();
 			}
 		}
 		finally {
-			initLock.unlock();
+			Logging.initLock.unlock();
 		}
-		thresholdLock.lock();
-		try {
-			if (level.intValue() < Logging.threshold.intValue()) {
-				return;
-			}
-		}
-		finally {
-			thresholdLock.unlock();
-		}
+
 		String newLog = "";
 		try {
 			newLog = SafeResourceLoader.getString("level_prefix",
@@ -193,9 +201,13 @@ public class Logging {
 				+ " " + details;
 		}
 		catch (Exception e) {
-			System.err.println(level.getName());
-			System.err.println(details);
-			e.printStackTrace(System.err);// we need to know what broke the log
+			/*
+			 * This is the logger, and it's broken, so as a last resort we are
+			 * printing to System.err
+			 */
+			System.err.println(level.getName());// NOSONAR
+			System.err.println(details);// NOSONAR
+			e.printStackTrace();// we need to know what broke the log
 		}
 		Logging.dispatcher.log(newLog);
 	}
@@ -212,16 +224,16 @@ public class Logging {
 	 * @see #create()
 	 */
 	public static void setLogLevel(LogLevel newLevel) {
-		initLock.lock();
+		Logging.initLock.lock();
 		try {
 			if (!Logging.initialized) {
 				Logging.create();
 			}
 		}
 		finally {
-			initLock.unlock();
+			Logging.initLock.unlock();
 		}
-		thresholdLock.lock();
+		Logging.thresholdLock.lock();
 		try {
 			if (newLevel == null) {
 				Logging.threshold = Logging.DEFAULT_THRESHOLD;
@@ -229,7 +241,12 @@ public class Logging {
 			Logging.threshold = newLevel;
 		}
 		finally {
-			thresholdLock.unlock();
+			Logging.thresholdLock.unlock();
 		}
 	}
+
+	/**
+	 * Private constructor so this class is not instantiated.
+	 */
+	private Logging() {}
 }

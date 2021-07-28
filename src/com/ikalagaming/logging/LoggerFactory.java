@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Generates {@link Logger loggers} for a specific plugin. What logs actually
  * get recorded is configured in {@link Logging}.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -20,7 +20,7 @@ public class LoggerFactory {
 	/**
 	 * Return a logger for the given plugin. If one already exists, then we will
 	 * give a cached version.
-	 * 
+	 *
 	 * @param pluginName The name of the plugin logging, what you want to show
 	 *            in the logs.
 	 * @return The logger for that plugin.
@@ -34,4 +34,9 @@ public class LoggerFactory {
 		loggers.put(pluginName, log);
 		return log;
 	}
+
+	/**
+	 * Private constructor so this class is not instantiated.
+	 */
+	private LoggerFactory() {}
 }

@@ -34,10 +34,7 @@ public class FileUtils {
 			}
 			return f.createNewFile();
 		}
-		catch (IOException e) {
-			return false;
-		}
-		catch (SecurityException e2) {
+		catch (IOException | SecurityException e) {
 			return false;
 		}
 	}
@@ -91,7 +88,12 @@ public class FileUtils {
 			if (!f.canWrite()) {
 				return false;
 			}
-			return f.delete();
+			/*
+			 * This is less informative than Files.delete, but we throw away
+			 * information anyways so this will not help us. Ignoring
+			 * java:S4042.
+			 */
+			return f.delete();// NOSONAR
 		}
 		catch (SecurityException e) {
 			return false;// if it can't be accessed, then it can't be deleted.
@@ -131,4 +133,9 @@ public class FileUtils {
 	public static Optional<File> getFile(@NonNull String path) {
 		return Optional.of(new File(path));
 	}
+
+	/**
+	 * Private constructor so this class is not instantiated.
+	 */
+	private FileUtils() {}
 }

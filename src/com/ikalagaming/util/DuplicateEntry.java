@@ -54,7 +54,7 @@ public class DuplicateEntry extends Exception {
 	 * @return Inner exception, or null if one does not exist
 	 */
 	@Override
-	public Throwable getCause() {
+	public synchronized Throwable getCause() {
 		return this.theCause;
 	}
 }

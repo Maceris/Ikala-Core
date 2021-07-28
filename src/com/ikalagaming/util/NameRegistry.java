@@ -133,7 +133,7 @@ public class NameRegistry {
 		this.mapLock.lock();
 		try {
 			smallest =
-					this.registeredNames.get(baseName).getSmallestUnusedInt();
+				this.registeredNames.get(baseName).getSmallestUnusedInt();
 		}
 		finally {
 			this.mapLock.unlock();
@@ -204,8 +204,7 @@ public class NameRegistry {
 			tree.insert(addition);
 		}
 		catch (DuplicateEntry e) {
-			System.err.println(e.getCause());
-			e.printStackTrace(System.err);
+			e.printStackTrace();
 		}
 		finally {
 			this.mapLock.unlock();

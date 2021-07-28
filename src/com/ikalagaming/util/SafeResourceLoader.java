@@ -1,6 +1,9 @@
 package com.ikalagaming.util;
 
 import com.ikalagaming.localization.Localization;
+import com.ikalagaming.plugins.PluginManager;
+
+import lombok.CustomLog;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.ResourceBundle;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = PluginManager.PLUGIN_NAME)
 public class SafeResourceLoader {
 
 	/**
@@ -31,10 +35,12 @@ public class SafeResourceLoader {
 			return from.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			missingResource.printStackTrace(System.err);
+			SafeResourceLoader.logMissingResource(name,
+				from.getBaseBundleName());
 		}
 		catch (ClassCastException classCast) {
-			classCast.printStackTrace(System.err);
+			SafeResourceLoader.logClassCastException(name,
+				from.getBaseBundleName());
 		}
 
 		ResourceBundle rootOnly = ResourceBundle
@@ -49,10 +55,12 @@ public class SafeResourceLoader {
 			return rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			missingResource.printStackTrace(System.err);
+			SafeResourceLoader.logMissingResource(name,
+				from.getBaseBundleName());
 		}
 		catch (ClassCastException classCast) {
-			classCast.printStackTrace(System.err);
+			SafeResourceLoader.logClassCastException(name,
+				from.getBaseBundleName());
 		}
 		return name;
 	}
@@ -72,10 +80,12 @@ public class SafeResourceLoader {
 			return from.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			missingResource.printStackTrace(System.err);
+			SafeResourceLoader.logMissingResource(name,
+				from.getBaseBundleName());
 		}
 		catch (ClassCastException classCast) {
-			classCast.printStackTrace(System.err);
+			SafeResourceLoader.logClassCastException(name,
+				from.getBaseBundleName());
 		}
 		return fallback;
 	}
@@ -97,10 +107,10 @@ public class SafeResourceLoader {
 			return bundle.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			missingResource.printStackTrace(System.err);
+			SafeResourceLoader.logMissingResource(name, from);
 		}
 		catch (ClassCastException classCast) {
-			classCast.printStackTrace(System.err);
+			SafeResourceLoader.logClassCastException(name, from);
 		}
 
 		ResourceBundle rootOnly =
@@ -116,10 +126,10 @@ public class SafeResourceLoader {
 			return rootOnly.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			missingResource.printStackTrace(System.err);
+			SafeResourceLoader.logMissingResource(name, from);
 		}
 		catch (ClassCastException classCast) {
-			classCast.printStackTrace(System.err);
+			SafeResourceLoader.logClassCastException(name, from);
 		}
 		return name;
 	}
@@ -140,11 +150,26 @@ public class SafeResourceLoader {
 			return bundle.getString(name);
 		}
 		catch (MissingResourceException missingResource) {
-			missingResource.printStackTrace(System.err);
+			SafeResourceLoader.logMissingResource(name, from);
 		}
 		catch (ClassCastException classCast) {
-			classCast.printStackTrace(System.err);
+			SafeResourceLoader.logClassCastException(name, from);
 		}
 		return fallback;
 	}
+
+	private static void logClassCastException(String name, String bundle) {
+		SafeResourceLoader.log.warning("The " + name + " key from the " + bundle
+			+ " bundle is not a string ");
+	}
+
+	private static void logMissingResource(String name, String bundle) {
+		SafeResourceLoader.log.warning(
+			"Missing the " + name + " key from the " + bundle + " bundle");
+	}
+
+	/**
+	 * Private constructor so that this class is not instantiated.
+	 */
+	private SafeResourceLoader() {}
 }

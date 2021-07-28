@@ -36,4 +36,9 @@ public class ArrayOperations {
 
 		return output;
 	}
+
+	/**
+	 * Private method so this class is not instantiated.
+	 */
+	private ArrayOperations() {}
 }

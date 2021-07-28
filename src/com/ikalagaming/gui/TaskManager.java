@@ -56,12 +56,20 @@ public class TaskManager extends JFrame {
 				}
 				catch (InterruptedException e) {
 					e.printStackTrace();
+					// Re-interrupt as per SonarLint java:S2142
+					Thread.currentThread().interrupt();
 				}
 			}
 		}
 	}
 
+	private static final String DISABLE = "Disable";
+	private static final String ENABLE = "Enable";
+	private static final String RELOAD = "Reload";
+
 	private static final long serialVersionUID = -4427516209866980363L;
+
+	private static final String UNLOAD = "Unload";
 
 	private static void addPopup(Component component, final JPopupMenu popup) {
 		component.addMouseListener(new MouseAdapter() {
@@ -95,28 +103,24 @@ public class TaskManager extends JFrame {
 		});
 	}
 
-	private JPanel contentPane;
-	private JTable table;
 	private final ButtonGroup buttonGroup = new ButtonGroup();
+	private JPanel contentPane;
 	/**
 	 * The time to wait between plugin status updates in milliseconds
-	 * 
+	 *
 	 * @return The delay in ms between updates
 	 */
 	@SuppressWarnings("javadoc")
 	@Getter
 	private long delay = 1000;
-	private DefaultTableModel model;
-	private Map<String, PluginState> plugins = new HashMap<>();
-	private final int maxTick = 10;
-	private int tickCount = 0;// counts down to refreshing plugin list
-	private JLabel threads;
 	private JLabel memUsage;
-	private long memUsed = 0;
+	private DefaultTableModel model;
+	private transient PluginManager pluginManager;
+	private Map<String, PluginState> plugins = new HashMap<>();
+	private JTable table;
+	private JLabel threads;
 
-	private long percentUsed = 0;
-
-	private PluginManager pluginManager;
+	private int tickCount = 0;// counts down to refreshing plugin list
 
 	/**
 	 * Create the frame.
@@ -195,63 +199,63 @@ public class TaskManager extends JFrame {
 			new String[] {"Plugin Name", "Status"}));
 		this.table.getColumnModel().getColumn(0).setPreferredWidth(102);
 
-		JPopupMenu popupMenu_1 = new JPopupMenu();
+		JPopupMenu popupMenu = new JPopupMenu();
 
-		JMenuItem mntmEnable = new JMenuItem("Enable");
+		JMenuItem mntmEnable = new JMenuItem(TaskManager.ENABLE);
 		mntmEnable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				TaskManager.this.changeState("Enable");
+				TaskManager.this.changeState(TaskManager.ENABLE);
 			}
 		});
-		popupMenu_1.add(mntmEnable);
+		popupMenu.add(mntmEnable);
 
-		JMenuItem mntmDisable = new JMenuItem("Disable");
+		JMenuItem mntmDisable = new JMenuItem(TaskManager.DISABLE);
 		mntmDisable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				TaskManager.this.changeState("Disable");
+				TaskManager.this.changeState(TaskManager.DISABLE);
 			}
 		});
-		popupMenu_1.add(mntmDisable);
+		popupMenu.add(mntmDisable);
 
-		JMenuItem mntmUnload = new JMenuItem("Unload");
+		JMenuItem mntmUnload = new JMenuItem(TaskManager.UNLOAD);
 		mntmUnload.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				TaskManager.this.changeState("Unload");
+				TaskManager.this.changeState(TaskManager.UNLOAD);
 			}
 		});
-		popupMenu_1.add(mntmUnload);
+		popupMenu.add(mntmUnload);
 
-		JMenuItem mntmReload = new JMenuItem("Reload");
+		JMenuItem mntmReload = new JMenuItem(TaskManager.RELOAD);
 		mntmReload.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				TaskManager.this.changeState("Reload");
+				TaskManager.this.changeState(TaskManager.RELOAD);
 			}
 		});
-		popupMenu_1.add(mntmReload);
+		popupMenu.add(mntmReload);
 
-		TaskManager.addPopup(this.table, popupMenu_1);
+		TaskManager.addPopup(this.table, popupMenu);
 
 		scrollPane.setViewportView(this.table);
 
-		JPanel panel_1 = new JPanel();
-		this.contentPane.add(panel_1, BorderLayout.SOUTH);
-		panel_1.setLayout(new GridLayout(1, 0, 0, 0));
+		JPanel statsPanel = new JPanel();
+		this.contentPane.add(statsPanel, BorderLayout.SOUTH);
+		statsPanel.setLayout(new GridLayout(1, 0, 0, 0));
 
 		JLabel lblMemoryUsage = new JLabel("Memory Usage:");
-		panel_1.add(lblMemoryUsage);
+		statsPanel.add(lblMemoryUsage);
 
 		this.memUsage = new JLabel("0");
-		panel_1.add(this.memUsage);
+		statsPanel.add(this.memUsage);
 
 		JLabel lblThreads = new JLabel("Threads:");
-		panel_1.add(lblThreads);
+		statsPanel.add(lblThreads);
 
 		this.threads = new JLabel("0");
-		panel_1.add(this.threads);
+		statsPanel.add(this.threads);
 		this.model = (DefaultTableModel) this.table.getModel();
 
 		Updater update = new Updater(this);
@@ -282,20 +286,20 @@ public class TaskManager extends JFrame {
 			return;
 		}
 		String pack = this.table.getValueAt(row, column).toString();
-		if (change == "Enable") {
+		if (TaskManager.ENABLE.equals(change)) {
 			if (!this.pluginManager.isEnabled(pack)) {
 				this.pluginManager.enable(pack);
 			}
 		}
-		else if (change == "Disable") {
+		else if (TaskManager.DISABLE.equals(change)) {
 			if (this.pluginManager.isEnabled(pack)) {
 				this.pluginManager.disable(pack);
 			}
 		}
-		else if (change == "Unload") {
+		else if (TaskManager.UNLOAD.equals(change)) {
 			this.pluginManager.unloadPlugin(pack);
 		}
-		else if (change == "Reload") {
+		else if (TaskManager.RELOAD.equals(change)) {
 			this.pluginManager.reload(pack);
 		}
 
@@ -307,7 +311,7 @@ public class TaskManager extends JFrame {
 	public void tick() {
 		if (this.tickCount == 0) {
 			this.updatePluginNames();
-			this.tickCount = this.maxTick;
+			this.tickCount = 10;
 		}
 		--this.tickCount;
 
@@ -322,36 +326,29 @@ public class TaskManager extends JFrame {
 		}
 		this.threads.setText(java.lang.Thread.activeCount() + "");
 
-		this.memUsed = (Runtime.getRuntime().totalMemory()
+		long memUsed = (Runtime.getRuntime().totalMemory()
 			- Runtime.getRuntime().freeMemory()) / 1024;
-		this.percentUsed = (Runtime.getRuntime().totalMemory()
+		long percentUsed = (Runtime.getRuntime().totalMemory()
 			- Runtime.getRuntime().freeMemory()) * 100
 			/ Runtime.getRuntime().totalMemory();
 
-		this.memUsage.setText(this.memUsed + " kb (" + this.percentUsed + "%)");
+		this.memUsage.setText(memUsed + " kb (" + percentUsed + "%)");
 	}
 
 	private void updatePluginNames() {
 		Set<String> pluginNames =
 			this.pluginManager.getLoadedPlugins().keySet();
 		for (String s : pluginNames) {
-			if (!this.plugins.containsKey(s)) {
-				this.plugins.put(s, this.pluginManager.getPluginState(s));
-				boolean exists = false;
-				for (int i = 0; i < this.model.getRowCount(); ++i) {
-					if (this.model.getValueAt(i, 0).equals(s)) {
-						exists = true;
-						break;
-					}
-				}
-				if (!exists) {
-					this.model.addRow(new Object[] {s, this.plugins.get(s)});
-				}
-			}
+
+			this.plugins.computeIfAbsent(s, name -> {
+				PluginState state = this.pluginManager.getPluginState(name);
+				this.model.addRow(new Object[] {s, state});
+				return state;
+			});
+
 		}
 		for (String s : this.plugins.keySet()) {
 			if (!pluginNames.contains(s)) {
-				this.plugins.remove(s);
 				for (int i = 0; i < this.model.getRowCount(); ++i) {
 					if (this.model.getValueAt(i, 0).equals(s)) {
 						this.model.removeRow(i);
@@ -360,7 +357,7 @@ public class TaskManager extends JFrame {
 				}
 			}
 		}
-		pluginNames = null;
-
+		this.plugins.entrySet()
+			.removeIf(entry -> !pluginNames.contains(entry.getKey()));
 	}
 }

@@ -14,7 +14,7 @@ public class SystemProperties {
 	/**
 	 * The type of operating system the engine is running on
 	 */
-	private static String OS;
+	private static String operatingSystem;
 
 	/**
 	 * Equivalent to the current systems appdata folder
@@ -38,7 +38,8 @@ public class SystemProperties {
 	 * </tr>
 	 * <tr>
 	 * <td><code>MAC</code></td>
-	 * <td>Users home directory + <code>"/Library/Application Support"</code></td>
+	 * <td>Users home directory +
+	 * <code>"/Library/Application Support"</code></td>
 	 * </tr>
 	 * <tr>
 	 * <td><code>LINUX</code></td>
@@ -77,10 +78,10 @@ public class SystemProperties {
 	 * @return the name of the OS
 	 */
 	public static String getOS() {
-		if (SystemProperties.OS == null) {
+		if (SystemProperties.operatingSystem == null) {
 			SystemProperties.obtainOS();
 		}
-		return SystemProperties.OS;
+		return SystemProperties.operatingSystem;
 	}
 
 	/**
@@ -130,20 +131,18 @@ public class SystemProperties {
 	 * home dir string to the folder path.
 	 */
 	private static void obtainHomeDir() {
-		if (SystemProperties.OS == null) {
+		if (SystemProperties.operatingSystem == null) {
 			SystemProperties.obtainOS();
 		}
 		String theDir = "";
-		if (SystemProperties.OS == "WINDOWS") {
+		if ("WINDOWS".equals(SystemProperties.operatingSystem)) {
 			theDir = System.getenv("APPDATA");
 		}
-		else if (SystemProperties.OS == "MAC") {
-			theDir =
-					System.getProperty("user.home") + File.separator
-							+ "Library" + File.separator
-							+ "Application Support";
+		else if ("MAC".equals(SystemProperties.operatingSystem)) {
+			theDir = System.getProperty("user.home") + File.separator
+				+ "Library" + File.separator + "Application Support";
 		}
-		else if (SystemProperties.OS == "LINUX") {
+		else if ("LINUX".equals(SystemProperties.operatingSystem)) {
 			theDir = System.getProperty("user.home");
 		}
 		else {
@@ -157,7 +156,7 @@ public class SystemProperties {
 	 */
 	private static void obtainOS() {
 		String osName = System.getProperty("os.name").toLowerCase();
-		String toSet = "UNKNOWN";
+		String toSet;
 		if (osName.contains("win")) {
 			toSet = "WINDOWS";
 		}
@@ -170,7 +169,12 @@ public class SystemProperties {
 		else {
 			toSet = "UNKNOWN";
 		}
-		SystemProperties.OS = toSet;
+		SystemProperties.operatingSystem = toSet;
 	}
+
+	/**
+	 * Private constructor so that this class is not instantiated.
+	 */
+	private SystemProperties() {}
 
 }

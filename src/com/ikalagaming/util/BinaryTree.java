@@ -10,9 +10,182 @@ package com.ikalagaming.util;
  */
 public class BinaryTree<T extends Comparable<T>> {
 	/**
+	 * A binary tree node used in the {@link BinaryTree} class.
+	 *
+	 * @author Ches Burks
+	 * @param <R> the Type of object this node holds
+	 *
+	 */
+	class BinaryTreeNode<R extends Comparable<R>> {
+		/**
+		 * The value stored in this node.
+		 */
+		protected R key;
+		/**
+		 * The height of the largest subtree that starts at this node.
+		 */
+		protected int height;
+		/**
+		 * A pointer to the left child. Null if there is no left child.
+		 */
+		protected BinaryTreeNode<R> left;
+		/**
+		 * A pointer to the right child. Null if there is no right child.
+		 */
+		protected BinaryTreeNode<R> right;
+		/**
+		 * A pointer to the parent node. The parent should be null if and only
+		 * if it is the root of the tree.
+		 */
+		protected BinaryTreeNode<R> parent;
+
+		/**
+		 * Constructs a new BinaryTree node for the given object with null
+		 * pointers for left, right, and parent.
+		 *
+		 * @param newKey the key to store
+		 */
+		public BinaryTreeNode(R newKey) {
+			this(newKey, null, null, null);
+		}
+
+		/**
+		 * Constructs a new BinaryTree node for the given object and
+		 * children/parent. The other nodes may be null. Height defaults to 1.
+		 *
+		 * @param newKey the key to store
+		 * @param leftNode the left node
+		 * @param parentNode the parent node
+		 * @param rightNode the right node
+		 */
+		public BinaryTreeNode(R newKey, BinaryTreeNode<R> leftNode,
+			BinaryTreeNode<R> parentNode, BinaryTreeNode<R> rightNode) {
+			this.key = newKey;
+			this.height = 1;
+			this.left = leftNode;
+			this.parent = parentNode;
+			this.right = rightNode;
+		}
+
+		/**
+		 * Recursively calls delete on all children then removes all references
+		 * to the children, parents and keys. Also zeroes the height.
+		 */
+		public void delete() {
+			if (this.left != null) {
+				this.left.delete();
+			}
+			this.left = null;
+			if (this.right != null) {
+				this.right.delete();
+			}
+			this.right = null;
+			this.parent = null;
+			this.key = null;
+			this.height = 0;
+		}
+
+		/**
+		 * Returns the height of the largest subtree starting at this node.
+		 * Stored in the node for speed.
+		 *
+		 * @return this nodes height
+		 */
+		public int getHeight() {
+			return this.height;
+		}
+
+		/**
+		 * Returns the key stored in this node.
+		 *
+		 * @return the key
+		 */
+		public R getKey() {
+			return this.key;
+		}
+
+		/**
+		 * Returns the left child of this node. This will be null if there is no
+		 * left child.
+		 *
+		 * @return the left child, or null
+		 */
+		public BinaryTreeNode<R> getLeft() {
+			return this.left;
+		}
+
+		/**
+		 * Returns the parent of this node. This will be null if this node is
+		 * the root of the tree.
+		 *
+		 * @return the parent, or null
+		 */
+		public BinaryTreeNode<R> getParent() {
+			return this.parent;
+		}
+
+		/**
+		 * Returns the right child of this node. This will be null if there is
+		 * no right child.
+		 *
+		 * @return the right child, or null
+		 */
+		public BinaryTreeNode<R> getRight() {
+			return this.right;
+		}
+
+		/**
+		 * Sets the height of this node.
+		 *
+		 * @param newHeight the new height of this node
+		 */
+		public void setHeight(int newHeight) {
+			this.height = newHeight;
+		}
+
+		/**
+		 * Set the key value stored in this node.
+		 *
+		 * @param newKey the new key
+		 */
+		public void setKey(R newKey) {
+			this.key = newKey;
+		}
+
+		/**
+		 * Sets the left child of this node to the supplied node.
+		 *
+		 * @param newLeft the new left child
+		 */
+		public void setLeft(BinaryTreeNode<R> newLeft) {
+			this.left = newLeft;
+		}
+
+		/**
+		 * Sets the parent of this node to the supplied node.
+		 *
+		 * @param newParent the new parent
+		 */
+		public void setParent(BinaryTreeNode<R> newParent) {
+			this.parent = newParent;
+		}
+
+		/**
+		 * Sets the right child of this node to the supplied node.
+		 *
+		 * @param newRight the new right child
+		 */
+		public void setRight(BinaryTreeNode<R> newRight) {
+			this.right = newRight;
+		}
+
+	}
+
+	/**
 	 * The base of the tree. This is null if the tree is empty.
 	 */
 	protected BinaryTreeNode<T> treeRoot;
+
 	/**
 	 * How many elements are stored in the tree.
 	 */
@@ -132,7 +305,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 */
 	@SuppressWarnings("all")
 	protected BinaryTreeNode<T> insert(BinaryTreeNode<T> theRoot, T ins)
-			throws DuplicateEntry {
+		throws DuplicateEntry {
 		if (this.treeRoot == null) {
 			this.treeRoot = new BinaryTreeNode<>(ins, null, null, null);
 			return this.treeRoot;
@@ -140,7 +313,7 @@ public class BinaryTree<T extends Comparable<T>> {
 
 		if (theRoot == null || theRoot.key == null) {
 			BinaryTreeNode<T> newRoot =
-					new BinaryTreeNode<>(ins, null, null, null);
+				new BinaryTreeNode<>(ins, null, null, null);
 			return newRoot;
 		}
 
@@ -166,9 +339,8 @@ public class BinaryTree<T extends Comparable<T>> {
 		 * occurs after the recursive function call, so it will update the
 		 * height appropriately
 		 */
-		theRoot.height =
-				this.max(this.getHeight(theRoot.left),
-						this.getHeight(theRoot.right)) + 1;
+		theRoot.height = this.max(this.getHeight(theRoot.left),
+			this.getHeight(theRoot.right)) + 1;
 
 		int balance = this.getBalance(theRoot);
 
@@ -400,7 +572,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		// if-else chain
 		else {
 			BinaryTreeNode<T> smallestRight =
-					this.getSmallestSubnode(toRemove.right);
+				this.getSmallestSubnode(toRemove.right);
 			BinaryTreeNode<T> parent = smallestRight.parent;
 			if (toRemove.parent == null) {
 				// this is the root node
@@ -508,9 +680,9 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param toRemove the object to remove
 	 */
 	public void remove(T toRemove) {
-		BinaryTreeNode<T> to_remove = this.find(toRemove, this.treeRoot);
-		if (to_remove != null) {
-			this.remove(to_remove);
+		BinaryTreeNode<T> nodeToRemove = this.find(toRemove, this.treeRoot);
+		if (nodeToRemove != null) {
+			this.remove(nodeToRemove);
 		}
 		--this.size;
 	}
@@ -579,198 +751,11 @@ public class BinaryTree<T extends Comparable<T>> {
 		if (changed == null) {
 			return;
 		}
-		changed.height =
-				this.max(this.getHeight(changed.left),
-						this.getHeight(changed.right)) + 1;
+		changed.height = this.max(this.getHeight(changed.left),
+			this.getHeight(changed.right)) + 1;
 		if (changed.parent != null) {
 			this.updateHeight(changed.parent);
 		}
-	}
-
-	/**
-	 * A binary tree node used in the {@link BinaryTree} class.
-	 *
-	 * @author Ches Burks
-	 * @param <R> the Type of object this node holds
-	 *
-	 */
-	class BinaryTreeNode<R extends Comparable<R>> {
-		/**
-		 * The value stored in this node.
-		 */
-		protected R key;
-		/**
-		 * The height of the largest subtree that starts at this node.
-		 */
-		protected int height;
-		/**
-		 * A pointer to the left child. Null if there is no left child.
-		 */
-		protected BinaryTreeNode<R> left;
-		/**
-		 * A pointer to the right child. Null if there is no right child.
-		 */
-		protected BinaryTreeNode<R> right;
-		/**
-		 * A pointer to the parent node. The parent should be null if and only
-		 * if it is the root of the tree.
-		 */
-		protected BinaryTreeNode<R> parent;
-
-		/**
-		 * Constructs a new BinaryTree node for the given object with null
-		 * pointers for left, right, and parent.
-		 *
-		 * @param newKey the key to store
-		 */
-		public BinaryTreeNode(R newKey) {
-			this(newKey, null, null, null);
-		}
-
-		/**
-		 * Constructs a new BinaryTree node for the given object and
-		 * children/parent. The other nodes may be null. Height defaults to 1.
-		 *
-		 * @param newKey the key to store
-		 * @param leftNode the left node
-		 * @param parentNode the parent node
-		 * @param rightNode the right node
-		 */
-		public BinaryTreeNode(R newKey, BinaryTreeNode<R> leftNode,
-				BinaryTreeNode<R> parentNode, BinaryTreeNode<R> rightNode) {
-			this.key = newKey;
-			this.height = 1;
-			this.left = leftNode;
-			this.parent = parentNode;
-			this.right = rightNode;
-		}
-
-		/**
-		 * Recursively calls delete on all children then removes all references
-		 * to the children, parents and keys. Also zeroes the height.
-		 */
-		public void delete() {
-			if (this.left != null) {
-				this.left.delete();
-			}
-			this.left = null;
-			if (this.right != null) {
-				this.right.delete();
-			}
-			this.right = null;
-			this.parent = null;
-			this.key = null;
-			this.height = 0;
-		}
-
-		/**
-		 * Dereferences all other objects this object has pointers to. This will
-		 * cause any children to be cleaned up as well.
-		 */
-		@Override
-		protected void finalize() throws Throwable {
-			this.left = null;
-			this.right = null;
-			this.parent = null;
-			this.key = null;
-			this.height = 0;
-			super.finalize();
-		}
-
-		/**
-		 * Returns the height of the largest subtree starting at this node.
-		 * Stored in the node for speed.
-		 *
-		 * @return this nodes height
-		 */
-		public int getHeight() {
-			return this.height;
-		}
-
-		/**
-		 * Returns the key stored in this node.
-		 *
-		 * @return the key
-		 */
-		public R getKey() {
-			return this.key;
-		}
-
-		/**
-		 * Returns the left child of this node. This will be null if there is no
-		 * left child.
-		 *
-		 * @return the left child, or null
-		 */
-		public BinaryTreeNode<R> getLeft() {
-			return this.left;
-		}
-
-		/**
-		 * Returns the parent of this node. This will be null if this node is
-		 * the root of the tree.
-		 *
-		 * @return the parent, or null
-		 */
-		public BinaryTreeNode<R> getParent() {
-			return this.parent;
-		}
-
-		/**
-		 * Returns the right child of this node. This will be null if there is
-		 * no right child.
-		 *
-		 * @return the right child, or null
-		 */
-		public BinaryTreeNode<R> getRight() {
-			return this.right;
-		}
-
-		/**
-		 * Sets the height of this node.
-		 *
-		 * @param newHeight the new height of this node
-		 */
-		public void setHeight(int newHeight) {
-			this.height = newHeight;
-		}
-
-		/**
-		 * Set the key value stored in this node.
-		 *
-		 * @param newKey the new key
-		 */
-		public void setKey(R newKey) {
-			this.key = newKey;
-		}
-
-		/**
-		 * Sets the left child of this node to the supplied node.
-		 *
-		 * @param newLeft the new left child
-		 */
-		public void setLeft(BinaryTreeNode<R> newLeft) {
-			this.left = newLeft;
-		}
-
-		/**
-		 * Sets the parent of this node to the supplied node.
-		 *
-		 * @param newParent the new parent
-		 */
-		public void setParent(BinaryTreeNode<R> newParent) {
-			this.parent = newParent;
-		}
-
-		/**
-		 * Sets the right child of this node to the supplied node.
-		 *
-		 * @param newRight the new right child
-		 */
-		public void setRight(BinaryTreeNode<R> newRight) {
-			this.right = newRight;
-		}
-
 	}
 
 }

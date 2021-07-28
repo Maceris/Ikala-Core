@@ -1,7 +1,5 @@
 package com.ikalagaming.scripting;
 
-import static org.junit.Assert.fail;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,6 +23,11 @@ public class TestEngine {
 	public void showLuaEngineInfo() {
 		ScriptEngineFactory f = Engine.getLuaEngine().getFactory();
 		Assert.assertNotNull(f);
+		Assert.assertEquals("Luaj", f.getEngineName());
+		Assert.assertNotNull(f.getEngineVersion());
+		Assert.assertEquals("lua", f.getLanguageName());
+		Assert.assertNotNull(f.getLanguageVersion());
+
 		System.out.println("Engine name: " + f.getEngineName());
 		System.out.println("Engine Version: " + f.getEngineVersion());
 		System.out.println("LanguageName: " + f.getLanguageName());
@@ -42,7 +45,7 @@ public class TestEngine {
 			eng.eval("print('This should show in stdout')");
 		}
 		catch (ScriptException e) {
-			fail("Exception in print string");
+			Assert.fail("Exception in print string");
 		}
 	}
 

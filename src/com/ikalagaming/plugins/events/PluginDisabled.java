@@ -17,7 +17,7 @@ public class PluginDisabled extends Event {
 
 	/**
 	 * The plugin which was just disabled.
-	 * 
+	 *
 	 * @param The name of the plugin that was disabled.
 	 * @return The name of the plugin that was disabled.
 	 */
