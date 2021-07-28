@@ -20,6 +20,11 @@ import java.util.Map;
  */
 public class PluginInfo {
 
+	/**
+	 * The regular expression describing what a valid plugin name looks like.
+	 */
+	private static final String NAME_REGEX = "^[a-zA-Z0-9_-]+$";
+
 	private static List<String> makePluginNameList(final Map<?, ?> map,
 		final String key) throws InvalidDescriptionException {
 		final Object value = map.get(key);
@@ -30,7 +35,13 @@ public class PluginInfo {
 
 		try {
 			for (final Object entry : (Iterable<?>) value) {
-				pluginNameList.add(entry.toString().replace(' ', '_'));
+				String dependency = entry.toString();
+				if (!dependency.matches(NAME_REGEX)) {
+					throw new InvalidDescriptionException("Dependency '"
+						+ dependency + "' contains invalid characters.");
+				}
+
+				pluginNameList.add(dependency);
 			}
 		}
 		catch (ClassCastException ex) {
@@ -94,7 +105,6 @@ public class PluginInfo {
 	 * <li>a-z</li>
 	 * <li>A-Z</li>
 	 * <li>0-9</li>
-	 * <li>period</li>
 	 * <li>hyphen</li>
 	 * <li>underscore</li>
 	 * </ul>
@@ -148,11 +158,10 @@ public class PluginInfo {
 		throws InvalidDescriptionException {
 		try {
 			this.name = map.get("name").toString().toLowerCase();
-			if (!this.name.matches("^[a-zA-Z0-9 _.-]+$")) {
+			if (!this.name.matches(NAME_REGEX)) {
 				throw new InvalidDescriptionException(
 					"name '" + this.name + "' contains invalid characters.");
 			}
-			this.name = this.name.replace(' ', '_');
 		}
 		catch (NullPointerException ex) {
 			throw new InvalidDescriptionException("name is not defined", ex);
