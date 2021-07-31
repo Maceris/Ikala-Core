@@ -11,19 +11,16 @@
 	<property name="jars.bundled.dir" location="lib/bundled" />
 	<property name="jars.info.dir" location="lib/info" />
 	<property name="jars.test.dir" location="lib/testing" />
-	<property name="javaVersion" value="1.8" />
-
 
 	<!-- some configuration -->
 	<property name="packages" value="com.ikalagaming.*" />
 	<property name="leavedebugsymbols" value="true" />
-	<property name="verbose" value="true" />
+	<property name="verbose" value="false" />
 	<property name="plugin.name" value="Ikala-Core" />
 	<property name="plugin.version" value="0.2.0" />
+	<property name="javaVersion" value="1.8" />
 
 	<target name="init">
-		<!-- Create the time stamp -->
-		<tstamp />
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build.dir}" />
 		<mkdir dir="${src.delomboked.dir}" />
@@ -42,7 +39,7 @@
 
 	<target name="compile" depends="init" description="compile the source">
 		<!-- Compile the java code from ${src.dir} into ${build.dir} -->
-		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${leavedebugsymbols}">
+		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${leavedebugsymbols}" source="${javaVersion}">
 			<classpath>
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
 				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
