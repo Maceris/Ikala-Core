@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1077,29 +1078,21 @@ public class PluginManager {
 		 */
 		List<String> toLoad =
 			this.findPluginsByState(PluginState.DEPS_SATISFIED);
-		for (String pluginName : toLoad) {
-			this.setPluginState(pluginName, PluginState.LOADING);
-			this.logAlert("ALERT_LOADING", pluginName);
 
-			PluginDetails details = this.pluginDetails.get(pluginName);
-			Plugin plugin = details.getPlugin();
+		// we don't want people making assumptions about load order
+		Collections.shuffle(toLoad);
 
-			if (!plugin.onLoad()) {
-				this.logAlert("PLUGIN_LOAD_FAIL", pluginName);
-				this.unloadPlugin(pluginName);
-			}
-			for (Listener l : plugin.getListeners()) {
-				EventManager.getInstance().registerEventListeners(l);
-			}
-			String msg = SafeResourceLoader
-				.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
-				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName);
-			PluginManager.log.finer(msg);
-			this.setPluginState(pluginName, PluginState.DISABLED);
+		// we want to be able to quickly remove arbitrary elements
+		LinkedList<String> unchecked = new LinkedList<>(toLoad);
 
-			this.logAlert("ALERT_LOADED", pluginName);
-			new PluginLoaded(pluginName).fire();
+		ArrayDeque<String> loadQueue = new ArrayDeque<>();
+
+		while (!unchecked.isEmpty()) {
+			String current = unchecked.poll();
+			this.plTraverseDependencies(unchecked, current, loadQueue);
 		}
+
+		loadQueue.forEach(this::plLoadSinglePlugin);
 
 		/*
 		 * After all plugins have been loaded, now they can be enabled (if that
@@ -1109,6 +1102,36 @@ public class PluginManager {
 		if (this.enableOnLoad) {
 			toLoad.forEach(this::enable);
 		}
+	}
+
+	/**
+	 * Load a single plugin, given the name. Used in
+	 * {@link #plLoadSatisfiedDependencies()} to load in dependency order.
+	 *
+	 * @param pluginName The name of the plugin to load.
+	 */
+	private void plLoadSinglePlugin(String pluginName) {
+		this.setPluginState(pluginName, PluginState.LOADING);
+		this.logAlert("ALERT_LOADING", pluginName);
+
+		PluginDetails details = this.pluginDetails.get(pluginName);
+		Plugin plugin = details.getPlugin();
+
+		if (!plugin.onLoad()) {
+			this.logAlert("PLUGIN_LOAD_FAIL", pluginName);
+			this.unloadPlugin(pluginName);
+		}
+		for (Listener l : plugin.getListeners()) {
+			EventManager.getInstance().registerEventListeners(l);
+		}
+		String msg = SafeResourceLoader
+			.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
+			.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName);
+		PluginManager.log.finer(msg);
+		this.setPluginState(pluginName, PluginState.DISABLED);
+
+		this.logAlert("ALERT_LOADED", pluginName);
+		new PluginLoaded(pluginName).fire();
 	}
 
 	/**
@@ -1242,6 +1265,45 @@ public class PluginManager {
 		}
 
 		this.plMarkSatisfied(root);
+	}
+
+	/**
+	 * Append root and dependencies to the load queue so that dependencies load
+	 * of a plugin load before it does.
+	 *
+	 * @param unchecked All plugins that have not been visited or added to the
+	 *            load queue yet. This will be modified.
+	 * @param root The root of the dependency tree.
+	 * @param loadQueue The full list of plugins, in the order they should be
+	 *            loaded in. This will be modified.
+	 */
+	private void plTraverseDependencies(List<String> unchecked, String root,
+		ArrayDeque<String> loadQueue) {
+
+		// we immediately remove the nodes we have seen before
+		unchecked.remove(root);
+		List<String> dependencies = new ArrayList<>();
+
+		PluginInfo info = this.pluginDetails.get(root).getInfo();
+		if (null == info) {
+			// wasn't a real plugin.
+			return;
+		}
+
+		dependencies.addAll(info.getDependencies());
+		dependencies.addAll(info.getSoftDependencies());
+
+		for (String dependency : dependencies) {
+			if (!unchecked.contains(dependency)) {
+				/*
+				 * Skip already visited plugins, soft dependencies that don't
+				 * exist.
+				 */
+				continue;
+			}
+			this.plTraverseDependencies(unchecked, dependency, loadQueue);
+		}
+		loadQueue.add(root);
 	}
 
 	/**
