@@ -2,6 +2,7 @@ package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
+import com.ikalagaming.launcher.Constants;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.events.PluginDisabled;
@@ -308,11 +309,9 @@ public class PluginManager {
 			this.alertMissingArgs();
 			return;
 		}
-
-		String tmp =
-			SafeResourceLoader.getString("WIP_TEXT", this.getResourceBundle());
-		PluginManager.log.warning(tmp);
-		// TODO loading
+		this.loadPlugin(
+			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
+			args[0]);
 	}
 
 	private void cbReload(String[] args) {
@@ -1397,8 +1396,9 @@ public class PluginManager {
 		this.setPluginState(target, PluginState.UNLOADING);
 		this.unloadPlugin(target);
 		this.setPluginState(target, PluginState.LOADING);
-		// TODO load plugin
-
+		this.loadPlugin(
+			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
+			target);
 		return true;
 	}
 
