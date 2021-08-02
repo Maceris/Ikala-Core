@@ -202,6 +202,35 @@ public class EventManager {
 	}
 
 	/**
+	 * Registers event listeners for the given event montior.
+	 * 
+	 * @param <T> The type of event we are recording a listener for.
+	 *
+	 * @param monitor The listener to register.
+	 */
+	<T extends Event> void registerEventListeners(EventMonitor<T> monitor) {
+
+		@SuppressWarnings("unchecked")
+		EventExecutor executor = (listener, event) -> {
+			try {
+				/*
+				 * This executor only runs for the given monitor instance, so we
+				 * can cast it to the type that it is.
+				 */
+				((EventMonitor<T>) listener).onEvent((T) event);
+			}
+			catch (Exception t) {
+				throw new EventException(t);
+			}
+		};
+
+		HandlerList handlers = this.getEventListeners(monitor.getEventType());
+		EventListener listener =
+			new EventListener(monitor, executor, Order.MONITOR);
+		handlers.register(listener);
+	}
+
+	/**
 	 * Clears up the handlers and stops the dispatching thread. Acts like an
 	 * onUnload method.
 	 */
