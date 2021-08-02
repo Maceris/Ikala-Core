@@ -4,7 +4,8 @@
 	<property name="src.dir" location="src" />
 	<property name="src.delomboked.dir" location="src-delomboked" />
 	<property name="test.dir" location="test" />
-	<property name="build.dir" location="bin" />
+	<property name="build.dir" location="bin/classes" />
+	<property name="build.testdir" location="bin/test-classes" />
 	<property name="dist.dir" location="dist" />
 	<property name="doc.dir" location="javadoc" />
 	<property name="jars.plugins.dir" location="lib/plugins" />
@@ -19,10 +20,12 @@
 	<property name="plugin.name" value="Ikala-Core" />
 	<property name="plugin.version" value="0.2.0" />
 	<property name="javaVersion" value="1.8" />
+	<property name="release" value="8" />
 
 	<target name="init">
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build.dir}" />
+		<mkdir dir="${build.testdir}" />
 		<mkdir dir="${src.delomboked.dir}" />
 	</target>
 
@@ -39,7 +42,7 @@
 
 	<target name="compile" depends="init" description="compile the source">
 		<!-- Compile the java code from ${src.dir} into ${build.dir} -->
-		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${leavedebugsymbols}" source="${javaVersion}">
+		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${leavedebugsymbols}" debuglevel="lines,vars,source" source="${javaVersion}" target="${javaVersion}" release="${release}">
 			<classpath>
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
 				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
@@ -58,8 +61,9 @@
 	</target>
 
 	<target name="compileTest" depends="compile" description="compile the JUnit tests">
-		<javac srcdir="${test.dir}" destdir="${build.dir}" includeAntRuntime="false" source="${javaVersion}">
+		<javac srcdir="${test.dir}" destdir="${build.testdir}" includeAntRuntime="false" debug="${leavedebugsymbols}" debuglevel="lines,vars,source" source="${javaVersion}" target="${javaVersion}" release="${release}">
 			<classpath>
+				<pathelement location="${build.dir}" />
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
 				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
 				<fileset dir="${jars.test.dir}" includes="*.jar" />
@@ -71,6 +75,7 @@
 		<junit>
 			<classpath>
 				<pathelement location="${build.dir}" />
+				<pathelement location="${build.testdir}" />
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
 				<fileset dir="${jars.bundled.dir}" includes="*.jar" />
 				<fileset dir="${jars.test.dir}" includes="*.jar" />
@@ -105,6 +110,7 @@
 	<target name="clean" description="clean up">
 		<!-- Delete the generated directory trees -->
 		<delete dir="${build.dir}" />
+		<delete dir="${build.testdir}" />
 		<delete dir="${dist.dir}" />
 		<delete dir="${doc.dir}" />
 		<delete dir="${src.delomboked.dir}" />
