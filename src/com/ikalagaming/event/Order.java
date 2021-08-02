@@ -48,7 +48,7 @@ public enum Order {
 	@Getter
 	private final int index;
 
-	private Order(int slot) {
+	Order(int slot) {
 		this.index = slot;
 	}
 

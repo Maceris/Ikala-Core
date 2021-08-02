@@ -106,7 +106,7 @@ public enum LogLevel {
 	 * @param name the name of the level
 	 * @param value an integer value for the level
 	 */
-	private LogLevel(String name, int value) {
+	LogLevel(String name, int value) {
 		this.levelName = name;
 		this.levelValue = value;
 	}

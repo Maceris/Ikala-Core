@@ -12,6 +12,6 @@ interface EventExecutor {
 	 * @param event The event to execute
 	 * @throws EventException If the listener throws an exception
 	 */
-	public void execute(Listener listener, Event event) throws EventException;
+	void execute(Listener listener, Event event) throws EventException;
 
 }

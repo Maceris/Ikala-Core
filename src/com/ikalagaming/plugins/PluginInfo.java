@@ -36,7 +36,7 @@ public class PluginInfo {
 		try {
 			for (final Object entry : (Iterable<?>) value) {
 				String dependency = entry.toString();
-				if (!dependency.matches(NAME_REGEX)) {
+				if (!dependency.matches(PluginInfo.NAME_REGEX)) {
 					throw new InvalidDescriptionException("Dependency '"
 						+ dependency + "' contains invalid characters.");
 				}
@@ -158,7 +158,7 @@ public class PluginInfo {
 		throws InvalidDescriptionException {
 		try {
 			this.name = map.get("name").toString().toLowerCase();
-			if (!this.name.matches(NAME_REGEX)) {
+			if (!this.name.matches(PluginInfo.NAME_REGEX)) {
 				throw new InvalidDescriptionException(
 					"name '" + this.name + "' contains invalid characters.");
 			}

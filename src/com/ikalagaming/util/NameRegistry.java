@@ -163,7 +163,7 @@ public class NameRegistry {
 	 * @return the newly created unique name for the object
 	 */
 	public String registerName(final String baseName) {
-		String ret = baseName;
+		StringBuilder ret = new StringBuilder(baseName);
 		IntegerTree tree;
 		int addition;
 
@@ -210,8 +210,8 @@ public class NameRegistry {
 			this.mapLock.unlock();
 		}
 
-		ret = ret + "-" + addition;
-		return ret;
+		ret.append("-").append(addition);
+		return ret.toString();
 	}
 
 	/**

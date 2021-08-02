@@ -17,7 +17,7 @@ public interface PermissionHolder {
 	 * @param perm Permission to get
 	 * @return Value of the permission
 	 */
-	public boolean hasPermission(Permission perm);
+	boolean hasPermission(Permission perm);
 
 	/**
 	 * Checks if this object contains an override for the specified
@@ -26,7 +26,7 @@ public interface PermissionHolder {
 	 * @param perm Permission to check
 	 * @return true if the permission is set, otherwise false
 	 */
-	public boolean isPermissionSet(Permission perm);
+	boolean isPermissionSet(Permission perm);
 
 	/**
 	 * Recalculates the permissions for this object, if the attachments have
@@ -34,5 +34,5 @@ public interface PermissionHolder {
 	 * <p>
 	 * This should very rarely need to be called from a plugin.
 	 */
-	public void recalculatePermissions();
+	void recalculatePermissions();
 }

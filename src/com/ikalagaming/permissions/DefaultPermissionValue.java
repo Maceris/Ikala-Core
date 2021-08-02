@@ -62,7 +62,7 @@ public enum DefaultPermissionValue {
 
 	private final String[] namesArray;
 
-	private DefaultPermissionValue(String... names) {
+	DefaultPermissionValue(String... names) {
 		this.namesArray = names;
 	}
 

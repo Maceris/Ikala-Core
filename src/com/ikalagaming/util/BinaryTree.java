@@ -16,7 +16,7 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param <R> the Type of object this node holds
 	 *
 	 */
-	class BinaryTreeNode<R extends Comparable<R>> {
+	static class BinaryTreeNode<R extends Comparable<R>> {
 		/**
 		 * The value stored in this node.
 		 */

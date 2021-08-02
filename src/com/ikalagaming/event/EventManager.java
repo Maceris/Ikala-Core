@@ -190,20 +190,8 @@ public class EventManager {
 	}
 
 	/**
-	 * Registers event listeners in the supplied listener.
-	 *
-	 * @param listener The listener to register
-	 */
-	public void registerEventListeners(Listener listener) {
-		Map<Class<? extends Event>, Set<EventListener>> listMap;
-		listMap = this.createRegisteredListeners(listener);
-		listMap.entrySet().forEach(
-			e -> this.getEventListeners(e.getKey()).registerAll(e.getValue()));
-	}
-
-	/**
 	 * Registers event listeners for the given event montior.
-	 * 
+	 *
 	 * @param <T> The type of event we are recording a listener for.
 	 *
 	 * @param monitor The listener to register.
@@ -228,6 +216,18 @@ public class EventManager {
 		EventListener listener =
 			new EventListener(monitor, executor, Order.MONITOR);
 		handlers.register(listener);
+	}
+
+	/**
+	 * Registers event listeners in the supplied listener.
+	 *
+	 * @param listener The listener to register
+	 */
+	public void registerEventListeners(Listener listener) {
+		Map<Class<? extends Event>, Set<EventListener>> listMap;
+		listMap = this.createRegisteredListeners(listener);
+		listMap.entrySet().forEach(
+			e -> this.getEventListeners(e.getKey()).registerAll(e.getValue()));
 	}
 
 	/**
