@@ -26,6 +26,7 @@ public class TestEventManager {
 	@AfterClass
 	public static void afterClass() {
 		EventManager.destoryInstance();
+		EventAssert.stopListeningForEverything();
 	}
 
 	/**
@@ -35,7 +36,7 @@ public class TestEventManager {
 	public static void beforeClass() {
 		EventManager.getInstance();
 	}
-	
+
 	/**
 	 * Test that events get sent to event listeners.
 	 */
@@ -47,5 +48,5 @@ public class TestEventManager {
 		Assert.assertTrue("Class was not fired",
 			EventAssert.wasFired(TestEvent.class, 1000));
 	}
-	
+
 }
