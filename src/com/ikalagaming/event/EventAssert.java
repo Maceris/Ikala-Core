@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Tools for testing if events have been fired for use in test suites. This
@@ -101,6 +102,20 @@ public class EventAssert {
 		}
 		EventManager.getInstance()
 			.unregisterEventListeners(EventAssert.monitors.remove(eventClass));
+	}
+
+	/**
+	 * Stop listening for all events.
+	 *
+	 */
+	public static void stopListeningForEverything() {
+		for (Entry<Class<? extends Event>, EventMonitor<?>> entry : EventAssert.monitors
+			.entrySet()) {
+			EventManager.getInstance()
+				.unregisterEventListeners(entry.getValue());
+			entry.getValue().resetHitCount();
+		}
+		EventAssert.monitors.clear();
 	}
 
 	/**
