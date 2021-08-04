@@ -190,7 +190,7 @@ public class EventManager {
 	}
 
 	/**
-	 * Registers event listeners for the given event montior.
+	 * Registers event listeners for the given event monitor.
 	 *
 	 * @param <T> The type of event we are recording a listener for.
 	 *
