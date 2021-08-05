@@ -22,7 +22,7 @@ public class Logging {
 	/**
 	 * Only logs events that are of this level or higher
 	 */
-	private static LogLevel threshold;
+	private static LogLevel threshold = Logging.DEFAULT_THRESHOLD;
 	private static ResourceBundle resourceBundle;
 	private static LogDispatcher dispatcher;
 	private static EventManager eventManager;
@@ -43,13 +43,6 @@ public class Logging {
 		try {
 			if (Logging.initialized) {
 				return;
-			}
-			Logging.thresholdLock.lock();
-			try {
-				Logging.threshold = Logging.DEFAULT_THRESHOLD;
-			}
-			finally {
-				Logging.thresholdLock.unlock();
 			}
 			Logging.eventManager = EventManager.getInstance();
 			try {
