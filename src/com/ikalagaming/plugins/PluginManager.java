@@ -815,6 +815,57 @@ public class PluginManager {
 	}
 
 	/**
+	 * Go through the list list of plugins, unload any older versions that may
+	 * be loaded, and create classloaders for each file.
+	 *
+	 * @param jarInfoMap The mapping of file to PluginInfo for the plugin
+	 *            represented by that jar.
+	 * @param skipped The list of files we have skipped over in this method, so
+	 *            we can ignore them later.
+	 * @param loaders The map of loaders for each file that should be populated
+	 *            by this method.
+	 */
+	private void plCreateClassloaders(Map<File, PluginInfo> jarInfoMap,
+		List<File> skipped, Map<File, PluginClassLoader> loaders) {
+		for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
+			PluginInfo info = entry.getValue();
+
+			String pluginName = info.getName();
+			if (this.isLoaded(pluginName)) {
+				this.logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
+
+				boolean lowerVersion = PluginManager.isNewerVersion(
+					info.getVersion(),
+					this.pluginDetails.get(pluginName).getInfo().getVersion());
+
+				if (lowerVersion) {
+					this.unloadPlugin(pluginName);
+					// unload the old plugin and continue loading the new one
+				}
+				else {
+					this.logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
+					skipped.add(entry.getKey());
+					continue;
+				}
+			}
+
+			PluginClassLoader loader = null;
+			try {
+				loader = new PluginClassLoader(this,
+					this.getClass().getClassLoader(), entry.getKey());
+			}
+			catch (MalformedURLException e) {
+				this.logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
+			}
+
+			if (loader == null) {
+				continue;
+			}
+			loaders.put(entry.getKey(), loader);
+		}
+	}
+
+	/**
 	 * Calculate the state of plugins that are being loaded based on their
 	 * dependencies, and unload the ones that are missing dependencies.
 	 */
@@ -1003,6 +1054,59 @@ public class PluginManager {
 	}
 
 	/**
+	 * Attempt to instantiate a plugins main class using the classloader for the
+	 * jar that contains it.
+	 *
+	 * @param pluginInfo The plugin info for the plugin.
+	 * @param classLoader The classloader that can find classes in the plugin
+	 *            jar.
+	 * @return The newly created Plugin object.
+	 * @throws InvalidPluginException If there was an issue creating the plugin.
+	 */
+	private Plugin plInstantiatePluginClass(final PluginInfo pluginInfo,
+		PluginClassLoader classLoader) throws InvalidPluginException {
+
+		Class<?> clazz;
+		try {
+			clazz = Class.forName(pluginInfo.getMainClass(), true, classLoader);
+		}
+		catch (ClassNotFoundException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle)
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
+			PluginManager.log.warning(err);
+			throw new InvalidPluginException(err);
+		}
+
+		Class<? extends Plugin> pluginClass;
+		try {
+			pluginClass = clazz.asSubclass(Plugin.class);
+			return pluginClass.newInstance();
+		}
+		catch (ClassCastException ex) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_NOT_A_PLUGIN", this.resourceBundle)
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
+			PluginManager.log.warning(err);
+			throw new InvalidPluginException(err);
+		}
+		catch (InstantiationException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_CANT_INSTANTIATE_MAIN", this.resourceBundle)
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
+			PluginManager.log.warning(err);
+			throw new InvalidPluginException(err);
+		}
+		catch (IllegalAccessException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", this.resourceBundle)
+				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
+			PluginManager.log.warning(err);
+			throw new InvalidPluginException(err);
+		}
+	}
+
+	/**
 	 * Attempt to load all the provided jars as plugins.
 	 *
 	 * @param jars The jars we want to load.
@@ -1015,47 +1119,31 @@ public class PluginManager {
 		// Plugins that were already had a newer version loaded
 		List<File> skipped = new ArrayList<>();
 
-		// load the plugins into memory with plugin info, DISCOVERED status
+		Map<File, PluginClassLoader> loaders = new HashMap<>();
+
+		this.plCreateClassloaders(jarInfoMap, skipped, loaders);
+
 		for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
+			if (skipped.contains(entry.getKey())) {
+				continue;
+			}
 			PluginInfo info = entry.getValue();
+			PluginClassLoader loader = loaders.get(entry.getKey());
 
-			String pluginName = info.getName();
-			if (this.isLoaded(pluginName)) {
-				this.logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
-
-				boolean lowerVersion = PluginManager.isNewerVersion(
-					info.getVersion(),
-					this.pluginDetails.get(pluginName).getInfo().getVersion());
-
-				if (lowerVersion) {
-					this.unloadPlugin(pluginName);
-					// unload the old plugin and continue loading the new one
-				}
-				else {
-					this.logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
-					skipped.add(entry.getKey());
-					continue;
-				}
-			}
-
-			PluginClassLoader loader = null;
+			Plugin plugin;
 			try {
-				loader = new PluginClassLoader(this,
-					this.getClass().getClassLoader(), info, entry.getKey());
-			}
-			catch (MalformedURLException e) {
-				this.logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
+				plugin =
+					this.plInstantiatePluginClass(entry.getValue(), loader);
 			}
 			catch (InvalidPluginException e) {
-				// The class loader already logs the problem
-				continue;
-			}
-			if (loader == null) {
+				// The method already logs the problem
+				loaders.remove(entry.getKey());
+				loader.dispose();
 				continue;
 			}
 
-			PluginDetails details = new PluginDetails(loader, info,
-				loader.plugin, PluginState.DISCOVERED);
+			PluginDetails details =
+				new PluginDetails(loader, info, plugin, PluginState.DISCOVERED);
 
 			this.pluginDetails.put(info.getName(), details);
 			this.logAlert("ALERT_DISCOVERED", info.getName());
