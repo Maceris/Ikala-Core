@@ -6,6 +6,7 @@ import lombok.CustomLog;
 import lombok.NonNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,76 +28,49 @@ public class PluginClassLoader extends URLClassLoader {
 	 */
 	private final Map<String, Class<?>> classes = new HashMap<>();
 	private final PluginManager manager;
-	/**
-	 * The plugin this class loader loads classes for.
-	 */
-	final Plugin plugin;
 
 	/**
 	 * Create a new plugin class loader.
 	 *
 	 * @param manager The PluginManager handling this plugin loader.
 	 * @param parent The parent classloader to use.
-	 * @param pluginInfo Info about the plugin.
 	 * @param file The file where the plugin is located.
 	 *
-	 * @throws InvalidPluginException If the plugin cannot be loaded properly.
 	 * @throws MalformedURLException If the file URL cannot be parsed.
 	 */
 	public PluginClassLoader(@NonNull final PluginManager manager,
-		final ClassLoader parent, final PluginInfo pluginInfo, final File file)
-		throws InvalidPluginException, MalformedURLException {
+		final ClassLoader parent, final File file)
+		throws MalformedURLException {
+
 		super(new URL[] {file.toURI().toURL()}, parent);
-
 		this.manager = manager;
-
-		Class<?> clazz;
-		try {
-			clazz = Class.forName(pluginInfo.getMainClass(), true, this);
-		}
-		catch (ClassNotFoundException e) {
-			String err = SafeResourceLoader.getString(
-				"PLUGIN_MAIN_METHOD_MISSING", manager.getResourceBundle())
-				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginClassLoader.log.warning(err);
-			throw new InvalidPluginException(err);
-		}
-
-		Class<? extends Plugin> pluginClass;
-		try {
-			pluginClass = clazz.asSubclass(Plugin.class);
-			this.plugin = pluginClass.newInstance();
-		}
-		catch (ClassCastException ex) {
-			String err = SafeResourceLoader.getString(
-				"PLUGIN_MAIN_NOT_A_PLUGIN", manager.getResourceBundle())
-				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginClassLoader.log.warning(err);
-			throw new InvalidPluginException(err);
-		}
-		catch (InstantiationException e) {
-			String err = SafeResourceLoader.getString(
-				"PLUGIN_CANT_INSTANTIATE_MAIN", manager.getResourceBundle())
-				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginClassLoader.log.warning(err);
-			throw new InvalidPluginException(err);
-		}
-		catch (IllegalAccessException e) {
-			String err = SafeResourceLoader.getString(
-				"PLUGIN_MAIN_ILLEGAL_ACCESS", manager.getResourceBundle())
-				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginClassLoader.log.warning(err);
-			throw new InvalidPluginException(err);
-		}
 	}
 
 	/**
 	 * Unregisters all it's classes from the plugin manager class cache, and
-	 * cleans up references.
+	 * cleans up references. Also closes the files.
 	 */
 	void dispose() {
 		this.getClasses().forEach(this.manager::removeClass);
 		this.classes.clear();
+		try {
+			this.close();
+		}
+		catch (IOException e) {
+			String name;
+			URL[] urls = this.getURLs();
+			if (urls == null || urls.length == 0) {
+				name = "?";
+			}
+			else {
+				name = urls[0].getFile();
+			}
+			String err = SafeResourceLoader
+				.getString("PLUGIN_JAR_CLOSE_ERROR",
+					this.manager.getResourceBundle())
+				.replaceFirst(PluginManager.REGEX_PLUGIN, name);
+			PluginClassLoader.log.warning(err);
+		}
 	}
 
 	@Override
