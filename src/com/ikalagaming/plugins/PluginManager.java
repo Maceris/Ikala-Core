@@ -756,11 +756,11 @@ public class PluginManager {
 	 * Loads a plugin by name from a folder.
 	 *
 	 * @param path the path to the folder containing the file
-	 * @param name the filename to load from, without a file extension
+	 * @param fileName the filename to load from, without a file extension
 	 * @return true on success, false if it failed
 	 */
 	@Synchronized("pluginLock")
-	public boolean loadPlugin(String path, String name) {
+	public boolean loadPlugin(String path, String fileName) {
 		Optional<File> folderMaybe = this.plGetFolder(path);
 		if (!folderMaybe.isPresent()) {
 			return false;
@@ -769,7 +769,7 @@ public class PluginManager {
 
 		ArrayList<File> jars = this.plGetAllJars(pluginFolder);
 
-		Optional<File> jarMaybe = this.plPickJarByName(jars, name);
+		Optional<File> jarMaybe = this.plPickJarByName(jars, fileName);
 		if (!jarMaybe.isPresent()) {
 			return false;
 		}
