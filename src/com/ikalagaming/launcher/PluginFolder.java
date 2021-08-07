@@ -19,14 +19,80 @@ import java.util.Optional;
 public class PluginFolder {
 
 	/**
+	 * The type of resources we can have for a plugin.
+	 *
+	 * @author Ches Burks
+	 *
+	 */
+	public enum ResourceType {
+		/**
+		 * Configuration files.
+		 */
+		CONFIG,
+		/**
+		 * Raw resources like images, audio, etc.
+		 */
+		DATA,
+		/**
+		 * Scripts related to the plugin.
+		 */
+		SCRIPTS;
+	}
+
+	private static final String RUNTIME_DIR = System.getProperty("user.dir");
+
+	/**
 	 * Create the plugin folder for the given plugin.
 	 *
 	 * @param pluginName The plugin we want a data folder for.
 	 */
 	public static void createFolder(@NonNull final String pluginName) {
 		FileUtils.createFolder(
-			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
+			PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,
 			pluginName);
+	}
+
+	/**
+	 * If the plugin folder does not exist for a plugin, create it.
+	 *
+	 * @param pluginName The plugin to look for.
+	 */
+	private static void
+		createPluginFolderIfMissing(@NonNull final String pluginName) {
+		if (!PluginFolder.folderExists(pluginName)) {
+			PluginFolder.createFolder(pluginName);
+		}
+	}
+
+	/**
+	 * Creates a resource folder for the specified type of resource. Will create
+	 * the main folder for the plugin if it does not exist.
+	 *
+	 * @param pluginName The name of the plugin we are creating for.
+	 * @param type The type of resource we want a folder for.
+	 */
+	public static void createResourceFolder(@NonNull final String pluginName,
+		@NonNull ResourceType type) {
+		PluginFolder.createPluginFolderIfMissing(pluginName);
+		// should start with File.separator
+		String folderName = "";
+
+		switch (type) {
+			case CONFIG:
+				folderName = Constants.CONFIG_PATH;
+				break;
+			case DATA:
+				folderName = Constants.DATA_PATH;
+				break;
+			case SCRIPTS:
+				folderName = Constants.SCRIPTS_PATH;
+				break;
+			default:
+				break;
+		}
+		FileUtils.createFolder(
+			PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,
+			pluginName + folderName);
 	}
 
 	/**
@@ -84,7 +150,7 @@ public class PluginFolder {
 	 * @return The path to the folder for that plugin.
 	 */
 	private static String getFolderForPlugin(@NonNull final String pluginName) {
-		return System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH
+		return PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH
 			+ pluginName;
 	}
 
@@ -117,6 +183,42 @@ public class PluginFolder {
 	}
 
 	/**
+	 * Returns a File that points to the requested resource. This file very well
+	 * might not exist, but should not be a null File object. This could be used
+	 * as a File reference to create a resource, or to read from disk if the
+	 * resource already exists.
+	 *
+	 * @param pluginName The name of the plugin we are looking for resources
+	 *            for.
+	 * @param type The type of resource to fetch.
+	 * @param path The path from the resource directory to the resource. For
+	 *            example, {@code image.png} or {@code audio/world/rain.wav}.
+	 * @return The file object for the resource if it existed.
+	 * @see File#exists()
+	 */
+	public static File getResource(@NonNull final String pluginName,
+		@NonNull ResourceType type, @NonNull final String path) {
+		String folderName = File.separator;
+
+		switch (type) {
+			case CONFIG:
+				folderName = Constants.CONFIG_PATH;
+				break;
+			case DATA:
+				folderName = Constants.DATA_PATH;
+				break;
+			case SCRIPTS:
+				folderName = Constants.SCRIPTS_PATH;
+				break;
+			default:
+				break;
+		}
+
+		return new File(PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,
+			pluginName + folderName + path);
+	}
+
+	/**
 	 * Stores the last version used in a text file for later reference.
 	 *
 	 * @param pluginName The plugin we are recording a version for.
@@ -125,9 +227,7 @@ public class PluginFolder {
 	 */
 	public static boolean setLastVersionUsed(@NonNull final String pluginName,
 		@NonNull final String version) {
-		if (!PluginFolder.folderExists(pluginName)) {
-			PluginFolder.createFolder(pluginName);
-		}
+		PluginFolder.createPluginFolderIfMissing(pluginName);
 		String pathToVersionFile = PluginFolder.getFolderForPlugin(pluginName)
 			+ File.separator + Constants.PLUGIN_VERSION_FILE;
 		File versionFile = new File(pathToVersionFile);

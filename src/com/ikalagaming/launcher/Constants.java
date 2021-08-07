@@ -8,7 +8,7 @@ import java.io.File;
  * @author Ches Burks
  *
  */
-public class Constants {
+class Constants {
 
 	/**
 	 * The path to the configuration folder for each plugin. This should be set
