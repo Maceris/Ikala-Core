@@ -8,7 +8,7 @@ import java.io.File;
  * @author Ches Burks
  *
  */
-public class Constants {
+class Constants {
 
 	/**
 	 * The path to the configuration folder for each plugin. This should be set
@@ -45,6 +45,11 @@ public class Constants {
 	 */
 	public static final String SCRIPTS_PATH =
 		File.separator + "scripts" + File.separator;
+
+	/**
+	 * The name of the file that records the last loaded version of a plugin.
+	 */
+	static final String PLUGIN_VERSION_FILE = "last-version.txt";
 
 	/**
 	 * Private constructor so this class is not initialized.
