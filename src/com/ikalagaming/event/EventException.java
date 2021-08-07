@@ -7,13 +7,13 @@ public class EventException extends Exception {
 
 	private static final long serialVersionUID = 5399364798206259554L;
 
-	private final Throwable theCause;
+	private final Throwable cause;
 
 	/**
 	 * Constructs a new {@link EventException} with no cause.
 	 */
 	public EventException() {
-		this.theCause = null;
+		this.cause = null;
 	}
 
 	/**
@@ -24,7 +24,7 @@ public class EventException extends Exception {
 	 */
 	public EventException(String message) {
 		super(message);
-		this.theCause = null;
+		this.cause = null;
 	}
 
 	/**
@@ -33,7 +33,7 @@ public class EventException extends Exception {
 	 * @param throwable The throwable that was thrown
 	 */
 	public EventException(Throwable throwable) {
-		this.theCause = throwable;
+		this.cause = throwable;
 	}
 
 	/**
@@ -45,7 +45,7 @@ public class EventException extends Exception {
 	 */
 	public EventException(Throwable cause, String message) {
 		super(message);
-		this.theCause = cause;
+		this.cause = cause;
 	}
 
 	/**
@@ -55,6 +55,6 @@ public class EventException extends Exception {
 	 */
 	@Override
 	public synchronized Throwable getCause() {
-		return this.theCause;
+		return this.cause;
 	}
 }
