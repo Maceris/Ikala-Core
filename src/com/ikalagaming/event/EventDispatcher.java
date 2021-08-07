@@ -21,7 +21,7 @@ class EventDispatcher extends Thread {
 	 * The number of milliseconds to wait before timing out and checking if
 	 * there are more items again.
 	 */
-	private static final long WAIT_TIMEOUT = 10000;
+	private static final long WAIT_TIMEOUT = 1000;
 
 	private ArrayDeque<Event> queue;
 
