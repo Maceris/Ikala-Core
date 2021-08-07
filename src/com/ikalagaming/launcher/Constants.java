@@ -47,6 +47,11 @@ public class Constants {
 		File.separator + "scripts" + File.separator;
 
 	/**
+	 * The name of the file that records the last loaded version of a plugin.
+	 */
+	static final String PLUGIN_VERSION_FILE = "last-version.txt";
+
+	/**
 	 * Private constructor so this class is not initialized.
 	 */
 	private Constants() {}

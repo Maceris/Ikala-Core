@@ -1,0 +1,160 @@
+package com.ikalagaming.launcher;
+
+import com.ikalagaming.util.FileUtils;
+
+import lombok.NonNull;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Optional;
+
+/**
+ * Contains utilities for dealing with data folders for Plugins.
+ *
+ * @author Ches Burks
+ *
+ */
+public class PluginFolder {
+
+	/**
+	 * Create the plugin folder for the given plugin.
+	 *
+	 * @param pluginName The plugin we want a data folder for.
+	 */
+	public static void createFolder(@NonNull final String pluginName) {
+		FileUtils.createFolder(
+			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
+			pluginName);
+	}
+
+	/**
+	 * Deletes the folder for a plugin if it exists, including everything in the
+	 * folder.
+	 *
+	 * @param pluginName The plugin to delete data for.
+	 */
+	public static void deleteFolder(@NonNull final String pluginName) {
+		Optional<File> file =
+			FileUtils.getFile(PluginFolder.getFolderForPlugin(pluginName));
+		file.ifPresent(PluginFolder::deleteRecursively);
+	}
+
+	/**
+	 * Delete a directory and all files and sub-directories.
+	 *
+	 * @param toDelete The folder to delete.
+	 * @return True on success, false on a failure.
+	 */
+	private static boolean deleteRecursively(File toDelete) {
+		if (!toDelete.exists()) {
+			return false;
+		}
+		File[] contents = toDelete.listFiles();
+		if (contents != null) {
+			for (File file : contents) {
+				PluginFolder.deleteRecursively(file);
+			}
+		}
+		try {
+			Files.delete(toDelete.toPath());
+		}
+		catch (IOException e) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Checks if there is already a data folder for the given plugin.
+	 *
+	 * @param pluginName The name of the plugin.
+	 * @return True if the folder exists, false if it does not.
+	 */
+	public static boolean folderExists(@NonNull final String pluginName) {
+		return FileUtils
+			.fileExists(PluginFolder.getFolderForPlugin(pluginName));
+	}
+
+	/**
+	 * Calculate the path to the plugin folder based on the name.
+	 *
+	 * @param pluginName The name of the plugin.
+	 * @return The path to the folder for that plugin.
+	 */
+	private static String getFolderForPlugin(@NonNull final String pluginName) {
+		return System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH
+			+ pluginName;
+	}
+
+	/**
+	 * Returns the last version that was used for the given plugin, which will
+	 * be 0.0.0 if we can't find a last version.
+	 *
+	 * @param pluginName The name of the plugin to look for.
+	 * @return The last version that was recorded.
+	 */
+	public static String getLastVersionUsed(@NonNull final String pluginName) {
+		String version = "0.0.0";
+		if (!PluginFolder.folderExists(pluginName)) {
+			return version;
+		}
+
+		Optional<File> file =
+			FileUtils.getFile(PluginFolder.getFolderForPlugin(pluginName)
+				+ File.separator + Constants.PLUGIN_VERSION_FILE);
+		if (!file.isPresent() || !file.get().exists()) {
+			return version;
+		}
+
+		try {
+			return new String(Files.readAllBytes(file.get().toPath()));
+		}
+		catch (IOException e) {
+			return version;
+		}
+	}
+
+	/**
+	 * Stores the last version used in a text file for later reference.
+	 *
+	 * @param pluginName The plugin we are recording a version for.
+	 * @param version The version we are using.
+	 * @return True if we have stored the version, false if there was a problem.
+	 */
+	public static boolean setLastVersionUsed(@NonNull final String pluginName,
+		@NonNull final String version) {
+		if (!PluginFolder.folderExists(pluginName)) {
+			PluginFolder.createFolder(pluginName);
+		}
+		String pathToVersionFile = PluginFolder.getFolderForPlugin(pluginName)
+			+ File.separator + Constants.PLUGIN_VERSION_FILE;
+		File versionFile = new File(pathToVersionFile);
+		if (!versionFile.exists()) {
+			try {
+				boolean created = versionFile.createNewFile();
+				if (!created) {
+					return false;
+				}
+			}
+			catch (IOException e) {
+				return false;
+			}
+		}
+
+		try (FileWriter writer = new FileWriter(versionFile)) {
+			writer.write(version);
+		}
+		catch (IOException e) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Private constructor so this class is not initialized.
+	 */
+	private PluginFolder() {}
+
+}
