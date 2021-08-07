@@ -1,26 +1,36 @@
 package com.ikalagaming.event;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 /**
  * A listener that handles events. Based off lahwran's fevents.
  */
+@AllArgsConstructor
 class EventListener {
-	private final Listener theListener;
-	private final EventExecutor theExecutor;
-	private final Order thePriority;
-
 	/**
-	 * Constructs a new {@link EventListener}.
-	 *
-	 * @param listener The listener to call
-	 * @param executor The executor for the events
-	 * @param priority The priority of the listener
+	 * The class that contains event handlers.
+	 * 
+	 * @param listener The listener to be notified of events.
+	 * @return The listener to be called.
 	 */
-	public EventListener(final Listener listener, final EventExecutor executor,
-		final Order priority) {
-		this.theListener = listener;
-		this.theExecutor = executor;
-		this.thePriority = priority;
-	}
+	@Getter
+	private final Listener listener;
+	/**
+	 * The callback to execute for this listener.
+	 * 
+	 * @param executor The executor for events.
+	 */
+	private final EventExecutor executor;
+	/**
+	 * The order that this listener will be called relative to others.
+	 * 
+	 * @param order The order relative to other listeners.
+	 * @return The order of this listener.
+	 * @see Order
+	 */
+	@Getter
+	private final Order order;
 
 	/**
 	 * Calls the event executor.
@@ -29,25 +39,6 @@ class EventListener {
 	 * @throws EventException If an exception occurs during execution
 	 */
 	public void callEvent(final Event event) throws EventException {
-		this.theExecutor.execute(this.theListener, event);
+		this.executor.execute(this.listener, event);
 	}
-
-	/**
-	 * Returns the {@link Listener listener}.
-	 *
-	 * @return The listener
-	 */
-	public Listener getListener() {
-		return this.theListener;
-	}
-
-	/**
-	 * Returns the priority for this listener
-	 *
-	 * @return The registered Priority
-	 */
-	public Order getPriority() {
-		return this.thePriority;
-	}
-
 }

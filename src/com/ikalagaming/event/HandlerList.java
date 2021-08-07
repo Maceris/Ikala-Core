@@ -69,14 +69,14 @@ class HandlerList {
 	 */
 	@Synchronized
 	public void register(EventListener listener) {
-		if (this.handlerSlots.get(listener.getPriority()).contains(listener)) {
+		if (this.handlerSlots.get(listener.getOrder()).contains(listener)) {
 			throw new IllegalStateException(
 				SafeResourceLoader.getString("LISTENER_ALREADY_REGISTERED",
 					EventManager.getResourceBundle()).replaceFirst(
-						"\\$PRIORITY", listener.getPriority().toString()));
+						"\\$PRIORITY", listener.getOrder().toString()));
 		}
 		this.bakedList = null;
-		this.handlerSlots.get(listener.getPriority()).add(listener);
+		this.handlerSlots.get(listener.getOrder()).add(listener);
 	}
 
 	/**
@@ -97,7 +97,7 @@ class HandlerList {
 	 */
 	@Synchronized
 	public void unregister(EventListener listener) {
-		if (this.handlerSlots.get(listener.getPriority()).remove(listener)) {
+		if (this.handlerSlots.get(listener.getOrder()).remove(listener)) {
 			this.bakedList = null;
 		}
 	}
