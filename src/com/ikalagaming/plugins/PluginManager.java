@@ -1555,7 +1555,6 @@ public class PluginManager {
 			this.clearCommands();
 			this.commands = null;
 		}
-		EventManager.destoryInstance();
 	}
 
 	/**

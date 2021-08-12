@@ -235,7 +235,6 @@ public class EventManager {
 	 * onUnload method.
 	 */
 	public void shutdown() {
-		// TODO make sure this is called
 		synchronized (this.handlerMap) {
 			this.handlerMap.values().forEach(HandlerList::unregisterAll);
 			this.handlerMap.clear();
