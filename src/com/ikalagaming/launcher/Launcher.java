@@ -37,7 +37,9 @@ public class Launcher {
 	 * @param args Arguments to the program from command line.
 	 */
 	public static void main(String[] args) {
-		Launcher.processArguments(args);
+		if (!Launcher.processArguments(args)) {
+			return;
+		}
 		Launcher.initialize();
 	}
 
@@ -57,7 +59,14 @@ public class Launcher {
 			"\t-c, --country <country>\t\tSets the country to use for localization (please also provide language)");
 	}
 
-	private static void processArguments(final String[] args) {
+	/**
+	 * Process all the arguments, setting things up as appropriate.
+	 *
+	 * @param args The command line arguments.
+	 * @return True if we should continue with the program, false if there was a
+	 *         problem and the program should exit.
+	 */
+	private static boolean processArguments(final String[] args) {
 		String language = null;
 		String country = null;
 
@@ -65,7 +74,11 @@ public class Launcher {
 			final String arg = args[i];
 			if (!Launcher.isFlag(arg)) {
 				Launcher.printHelp();
-				return;
+				return false;
+			}
+			if ("-h".equalsIgnoreCase(arg) || "--help".equalsIgnoreCase(arg)) {
+				Launcher.printHelp();
+				return false;
 			}
 			if ("-l".equalsIgnoreCase(arg)
 				|| "--language".equalsIgnoreCase(arg)) {
@@ -73,7 +86,7 @@ public class Launcher {
 					System.out.println("Please enter a language.");
 					System.out.println();
 					Launcher.printHelp();
-					return;
+					return false;
 				}
 				language = args[i + 1];
 				// skip the next argument, we consumed it
@@ -86,7 +99,7 @@ public class Launcher {
 					System.out.println("Please enter a country.");
 					System.out.println();
 					Launcher.printHelp();
-					return;
+					return false;
 				}
 				country = args[i + 1];
 				// skip the next argument, we consumed it
@@ -94,9 +107,10 @@ public class Launcher {
 				continue;
 			}
 		}
-		if (null != language) {
-			Launcher.setLocale(language, country);
+		if ((null != language) && !Launcher.setLocale(language, country)) {
+			return false;
 		}
+		return true;
 	}
 
 	/**
