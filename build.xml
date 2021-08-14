@@ -103,8 +103,11 @@
 
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}.jar" basedir="${build.dir}">
 			<zipgroupfileset dir="${jars.bundled.dir}" includes="*.jar" />
-			<zipfileset dir="${licenses.dir}" includes="*" prefix="licenses"/>
-		</jar> 
+			<zipfileset dir="${licenses.dir}" includes="*" prefix="licenses" />
+			<manifest>
+				<attribute name="Main-Class" value="com.ikalagaming.launcher.Launcher" />
+			</manifest>
+		</jar>
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.delomboked.dir}" />
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}" />
 	</target>
