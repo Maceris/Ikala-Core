@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - ArrayOperations util
+- Permissions package (moved to a plugin)
 
 
 ## [0.2.0] - 2021-08-02
