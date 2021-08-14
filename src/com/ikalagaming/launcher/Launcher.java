@@ -73,6 +73,7 @@ public class Launcher {
 		for (int i = 0; i < args.length; ++i) {
 			final String arg = args[i];
 			if (!Launcher.isFlag(arg)) {
+				System.out.println("Unrecognized argument '" + arg + "'");
 				Launcher.printHelp();
 				return false;
 			}
@@ -106,6 +107,10 @@ public class Launcher {
 				++i;
 				continue;
 			}
+			// default case
+			System.out.println("Unrecognized flag '" + arg + "'.");
+			Launcher.printHelp();
+			return false;
 		}
 		if ((null != language) && !Launcher.setLocale(language, country)) {
 			return false;
