@@ -157,7 +157,7 @@ public class PluginInfo {
 	private void extractRequiredFields(Map<?, ?> map)
 		throws InvalidDescriptionException {
 		try {
-			this.name = map.get("name").toString().toLowerCase();
+			this.name = map.get("name").toString();
 			if (!this.name.matches(PluginInfo.NAME_REGEX)) {
 				throw new InvalidDescriptionException(
 					"name '" + this.name + "' contains invalid characters.");
