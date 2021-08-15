@@ -115,4 +115,41 @@ public class TestPluginManager {
 			String.format("Plugin '%s' should have been loaded.", pluginName);
 		Assert.assertTrue(message, manager.isLoaded(pluginName));
 	}
+
+	/**
+	 * Tests the lifecycle of loading, enabling, disabling, and unloading a
+	 * plugin.
+	 */
+	@Test
+	public void testLifecycle() {
+		PluginManager manager = PluginManager.getInstance();
+		final String pluginName = "TestStandalone";
+
+		Assert.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+
+		String loadedMessage =
+			String.format("Plugin '%s' should be loaded.", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+
+		Assert.assertTrue(manager.enable(pluginName));
+
+		String enabledMessage =
+			String.format("Plugin '%s' should be enabled", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+		Assert.assertTrue(enabledMessage, manager.isEnabled(pluginName));
+
+		Assert.assertTrue(manager.disable(pluginName));
+
+		String disabledMessage =
+			String.format("Plugin '%s' should not be enabled", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+
+		String unloadedMessage =
+			String.format("Plugin '%s' should not be loaded.", pluginName);
+		Assert.assertTrue(manager.unloadPlugin(pluginName));
+		Assert.assertFalse(unloadedMessage, manager.isLoaded(pluginName));
+		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+
+	}
 }
