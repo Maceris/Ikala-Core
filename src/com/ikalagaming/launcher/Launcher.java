@@ -57,6 +57,7 @@ public class Launcher {
 		}
 		Launcher.setupMainFolders();
 		Launcher.initialize();
+		PluginManager.getInstance().setCommandLine(true);
 		PluginManager.getInstance().loadAllPlugins(
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
 		Launcher.setupPluginFolders();

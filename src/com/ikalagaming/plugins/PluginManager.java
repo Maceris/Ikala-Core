@@ -16,6 +16,7 @@ import com.github.zafarkhaja.semver.Version;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.Synchronized;
 
 import java.io.File;
@@ -159,6 +160,21 @@ public class PluginManager {
 	private ArrayList<PluginCommand> commands;
 
 	/**
+	 * If the jar is run from command line. If true we do things like storing
+	 * version numbers for plugins on the file system, if false it keeps things
+	 * clean as we are probably running tests or doing things from another entry
+	 * point.
+	 * 
+	 * @param commandLine If we are running from command line or not.
+	 * @return true if the framework was started from command line, false
+	 *         otherwise.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	@Setter
+	private boolean commandLine;
+
+	/**
 	 * If plugins should be enabled by the plugin manager when they are loaded.
 	 * If this is false then plugins must be enabled manually after they are
 	 * loaded.
@@ -200,6 +216,7 @@ public class PluginManager {
 	 */
 	public PluginManager(@NonNull EventManager evtManager) {
 		this.enableOnLoad = true;
+		this.commandLine = false;
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
@@ -1396,12 +1413,14 @@ public class PluginManager {
 		PluginDetails details = this.pluginDetails.get(pluginName);
 		Plugin plugin = details.getPlugin();
 
-		String lastVersion = PluginFolder.getLastVersionUsed(pluginName);
-		String newVersion = details.getInfo().getVersion();
+		if (this.isCommandLine()) {
+			String lastVersion = PluginFolder.getLastVersionUsed(pluginName);
+			String newVersion = details.getInfo().getVersion();
 
-		if (PluginManager.isNewerVersion(newVersion, lastVersion)) {
-			plugin.onUpgrade(lastVersion);
-			PluginFolder.setLastVersionUsed(pluginName, newVersion);
+			if (PluginManager.isNewerVersion(newVersion, lastVersion)) {
+				plugin.onUpgrade(lastVersion);
+				PluginFolder.setLastVersionUsed(pluginName, newVersion);
+			}
 		}
 
 		if (!plugin.onLoad()) {
