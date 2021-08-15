@@ -3,6 +3,7 @@ package com.ikalagaming.plugins;
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.launcher.Constants;
+import com.ikalagaming.launcher.PluginFolder;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.events.PluginDisabled;
@@ -1394,6 +1395,14 @@ public class PluginManager {
 
 		PluginDetails details = this.pluginDetails.get(pluginName);
 		Plugin plugin = details.getPlugin();
+
+		String lastVersion = PluginFolder.getLastVersionUsed(pluginName);
+		String newVersion = details.getInfo().getVersion();
+
+		if (PluginManager.isNewerVersion(newVersion, lastVersion)) {
+			plugin.onUpgrade(lastVersion);
+			PluginFolder.setLastVersionUsed(pluginName, newVersion);
+		}
 
 		if (!plugin.onLoad()) {
 			this.logAlert("PLUGIN_LOAD_FAIL", pluginName);

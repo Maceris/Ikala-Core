@@ -75,4 +75,13 @@ public abstract class Plugin {
 		return true;
 	}
 
+	/**
+	 * Called when a plugin has loaded with a version that is newer than
+	 * previously seen. This is the hook to do any activities for setting up or
+	 * converting to a new version.
+	 *
+	 * @param lastVersion The last known version that was loaded.
+	 */
+	public void onUpgrade(String lastVersion) {}
+
 }
