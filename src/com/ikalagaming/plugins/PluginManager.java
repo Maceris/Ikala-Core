@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
@@ -197,7 +198,7 @@ public class PluginManager {
 	 * @param evtManager The event manager to use for the plugin system
 	 */
 	public PluginManager(@NonNull EventManager evtManager) {
-		this.enableOnLoad = false;
+		this.enableOnLoad = true;
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
@@ -420,7 +421,8 @@ public class PluginManager {
 	 * DISABLING}. The plugin state is changed to {@link PluginState#DISABLED
 	 * DISABLED} after completion. If {@link Plugin#onDisable()} returns false
 	 * (failed), the plugin state is set to {@link PluginState#CORRUPTED
-	 * CORRUPTED}.
+	 * CORRUPTED}. Any plugin that depends on the provided plugin will also be
+	 * disabled.
 	 *
 	 * @param target the name of the plugin to disable
 	 *
@@ -440,13 +442,77 @@ public class PluginManager {
 			logAlert("ALERT_PLUGIN_ALREADY_DISABLED", target);
 			return false;
 		}
+
+		ArrayDeque<String> needsDisable = new ArrayDeque<>();
+		ArrayDeque<String> processingQueue = new ArrayDeque<>();
+		processingQueue.add(target);
+
+		/*
+		 * Add all plugins to a queue in order as if doing a Breadth-First
+		 * Search.
+		 */
+		while (!processingQueue.isEmpty()) {
+			String next = processingQueue.poll();
+			List<String> dependents = pluginDetails.entrySet().stream()
+				.filter(entry -> entry.getValue().getInfo().getDependencies()
+					.contains(next))
+				.filter(entry -> PluginState.ENABLED
+					.equals(entry.getValue().getState()))
+				.map(Entry::getKey).collect(Collectors.toList());
+
+			for (String dependent : dependents) {
+				if (processingQueue.contains(dependent)
+					|| needsDisable.contains(dependent)) {
+					continue;
+				}
+				processingQueue.add(dependent);
+			}
+			if (!needsDisable.contains(next)) {
+				needsDisable.add(next);
+			}
+		}
+
+		boolean success = true;
+		/*
+		 * We unload from deepest dependency first, starting with the last thing
+		 * added to the list and working our way back to the original plugin.
+		 */
+		while (!needsDisable.isEmpty()) {
+			/*
+			 * Keep the unload operation first so we don't short circuit and
+			 * skip unloading if something fails.
+			 */
+			success = disableSingle(needsDisable.pop()) && success;
+		}
+
+		return success;
+	}
+
+	/**
+	 * Disable a single plugin.
+	 *
+	 * @param target The plugin to disable.
+	 * @return True on success, false on failure.
+	 */
+	private boolean disableSingle(final String target) {
+		if (!this.isLoaded(target)) {
+			String tmp = SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
+				.replaceFirst(PluginManager.REGEX_PLUGIN, target);
+			PluginManager.log.warning(tmp);
+			return false;
+		}
+		if (!this.isEnabled(target)) {
+			this.logAlert("ALERT_PLUGIN_ALREADY_DISABLED", target);
+			return false;
+		}
 		this.setPluginState(target, PluginState.DISABLING);
 
-		logAlert("ALERT_DISABLING", target);
+		this.logAlert("ALERT_DISABLING", target);
 
 		PluginDetails details = this.pluginDetails.get(target);
 		if (null == details) {
-			logAlert("PLUGIN_DETAILS_MISSING", target);
+			this.logAlert("PLUGIN_DETAILS_MISSING", target);
 			return false;
 		}
 
@@ -454,14 +520,13 @@ public class PluginManager {
 		if (success) {
 			this.setPluginState(target, PluginState.DISABLED);
 			new PluginDisabled(target).fire();
-			logAlert("ALERT_DISABLED", target);
+			this.logAlert("ALERT_DISABLED", target);
 		}
 		else {
 			this.setPluginState(target, PluginState.CORRUPTED);
-			logStateCorrupted(target);
-			logAlert("PLUGIN_DISABLE_FAIL", target);
+			this.logStateCorrupted(target);
+			this.logAlert("PLUGIN_DISABLE_FAIL", target);
 		}
-
 		return success;
 	}
 
@@ -1649,8 +1714,9 @@ public class PluginManager {
 	/**
 	 * Attempts to unload the plugin from memory. If no plugin exists with the
 	 * given name ({@link #isLoaded(String)}), returns false and does nothing.
+	 * Any plugins that depend on the specified plugin are also unloaded.
 	 *
-	 * @param toUnload The type of plugin to unload
+	 * @param toUnload The name of the plugin to unload
 	 * @return true if the plugin was unloaded properly
 	 */
 	@Synchronized("pluginLock")
@@ -1664,15 +1730,66 @@ public class PluginManager {
 			return false;
 		}
 
-		logAlert("ALERT_UNLOADING", toUnload);
+		ArrayDeque<String> needsUnload = new ArrayDeque<>();
+		ArrayDeque<String> processingQueue = new ArrayDeque<>();
+		processingQueue.add(toUnload);
+
+		/*
+		 * Add all plugins to a queue in order as if doing a Breadth-First
+		 * Search.
+		 */
+		while (!processingQueue.isEmpty()) {
+			String next = processingQueue.poll();
+			List<String> dependents = pluginDetails.entrySet().stream()
+				.filter(entry -> entry.getValue().getInfo().getDependencies()
+					.contains(next))
+				.map(Entry::getKey).collect(Collectors.toList());
+
+			for (String dependent : dependents) {
+				if (processingQueue.contains(dependent)
+					|| needsUnload.contains(dependent)) {
+					continue;
+				}
+				processingQueue.add(dependent);
+			}
+			if (!needsUnload.contains(next)) {
+				needsUnload.add(next);
+			}
+		}
+
+		boolean success = true;
+		/*
+		 * We unload from deepest dependency first, starting with the last thing
+		 * added to the list and working our way back to the original plugin.
+		 */
+		while (!needsUnload.isEmpty()) {
+			/*
+			 * Keep the unload operation first so we don't short circuit and
+			 * skip unloading if something fails.
+			 */
+			success = unloadSingle(needsUnload.pop()) && success;
+		}
+
+		return success;
+	}
+
+	/**
+	 * The logic for unloading a single plugin.
+	 *
+	 * @param toUnload The name of the plugin to unload.
+	 * @return true if the plugin was unloaded properly.
+	 * @see #unloadPlugin(String)
+	 */
+	private boolean unloadSingle(@NonNull final String toUnload) {
+		this.logAlert("ALERT_UNLOADING", toUnload);
 
 		PluginDetails details = this.pluginDetails.get(toUnload);
 
 		if (null == details) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
-				.replaceFirst(REGEX_PLUGIN, toUnload);
-			log.warning(notLoaded);
+				.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
+			PluginManager.log.warning(notLoaded);
 			return false;
 		}
 
@@ -1681,8 +1798,8 @@ public class PluginManager {
 		if (null == plugin) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
-				.replaceFirst(REGEX_PLUGIN, toUnload);
-			log.warning(notLoaded);
+				.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
+			PluginManager.log.warning(notLoaded);
 			details.dispose();
 			this.pluginDetails.remove(toUnload);
 			return false;
@@ -1697,8 +1814,8 @@ public class PluginManager {
 		if (!plugin.onUnload()) {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_UNLOAD_FAIL", this.resourceBundle)
-				.replaceFirst(REGEX_PLUGIN, toUnload);
-			log.warning(notLoaded);
+				.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
+			PluginManager.log.warning(notLoaded);
 			this.setPluginState(toUnload, PluginState.CORRUPTED);
 			return false;
 		}
@@ -1710,13 +1827,13 @@ public class PluginManager {
 		}
 		String unreg = SafeResourceLoader
 			.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle)
-			.replaceFirst(REGEX_PLUGIN, PluginManager.PLUGIN_NAME);
-		log.finer(unreg);
+			.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
+		PluginManager.log.finer(unreg);
 
 		details = this.pluginDetails.remove(toUnload);
 		details.dispose();
 
-		logAlert("ALERT_UNLOADED", toUnload);
+		this.logAlert("ALERT_UNLOADED", toUnload);
 		return true;
 	}
 
