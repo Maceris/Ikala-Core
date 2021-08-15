@@ -163,6 +163,7 @@ public class PluginManager {
 	private boolean enableOnLoad;
 
 	private MiscLoggingListener logListener;
+	private PluginCommandListener commandListener;
 
 	/**
 	 * Stores all the classes loaded by plugins. Keys are the unique class
@@ -202,6 +203,7 @@ public class PluginManager {
 			"com.ikalagaming.plugins.resources.PluginManager",
 			Localization.getLocale());
 		this.logListener = new MiscLoggingListener();
+		this.commandListener = new PluginCommandListener();
 
 		this.commands = new ArrayList<>();
 
@@ -209,6 +211,8 @@ public class PluginManager {
 
 		this.registerCommands();
 		EventManager.getInstance().registerEventListeners(this.logListener);
+		EventManager.getInstance().registerEventListeners(this.commandListener);
+
 	}
 
 	private void alertMissingArgs() {
@@ -1006,7 +1010,7 @@ public class PluginManager {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_FILES_NULL", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_FOLDER,
-					folder.getAbsolutePath());
+					folder.getAbsolutePath().replace(File.separatorChar, '/'));
 			PluginManager.log.warning(msg);
 			return jars;
 		}
@@ -1014,7 +1018,7 @@ public class PluginManager {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_FOLDER_EMPTY", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_FOLDER,
-					folder.getAbsolutePath());
+					folder.getAbsolutePath().replace(File.separatorChar, '/'));
 			PluginManager.log.warning(msg);
 			return jars;
 		}
@@ -1071,24 +1075,24 @@ public class PluginManager {
 			if (!pluginFolder.exists()) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
-					.replaceFirst(PluginManager.REGEX_FOLDER,
-						pluginFolder.getAbsolutePath());
+					.replaceFirst(PluginManager.REGEX_FOLDER, pluginFolder
+						.getAbsolutePath().replace(File.separatorChar, '/'));
 				PluginManager.log.warning(msg);
 				return Optional.empty();
 			}
 			if (!pluginFolder.isDirectory()) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FOLDER_NOT_FOLDER", this.resourceBundle)
-					.replaceFirst(PluginManager.REGEX_FOLDER,
-						pluginFolder.getAbsolutePath());
+					.replaceFirst(PluginManager.REGEX_FOLDER, pluginFolder
+						.getAbsolutePath().replace(File.separatorChar, '/'));
 				PluginManager.log.warning(msg);
 				return Optional.empty();
 			}
 			if (!pluginFolder.canRead()) {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FOLDER_UNREADABLE", this.resourceBundle)
-					.replaceFirst(PluginManager.REGEX_FOLDER,
-						pluginFolder.getAbsolutePath());
+					.replaceFirst(PluginManager.REGEX_FOLDER, pluginFolder
+						.getAbsolutePath().replace(File.separatorChar, '/'));
 				PluginManager.log.warning(msg);
 				return Optional.empty();
 			}
@@ -1553,6 +1557,8 @@ public class PluginManager {
 
 	private void shutdown() {
 		EventManager.getInstance().unregisterEventListeners(this.logListener);
+		EventManager.getInstance()
+			.unregisterEventListeners(this.commandListener);
 
 		synchronized (this.pluginLock) {
 			List<String> toUnload =
