@@ -56,6 +56,8 @@ public class Launcher {
 		Launcher.setupMainFolders();
 		Launcher.initialize();
 
+		System.out.println("Type 'stop' to exit the program.");
+
 		Scanner cmdLine = new Scanner(System.in);
 		while (cmdLine.hasNextLine()) {
 			String line = cmdLine.nextLine();
@@ -84,11 +86,11 @@ public class Launcher {
 		System.out.println("Usage:");
 		System.out.println("\tjava -jar Ikala-Core.jar [OPTIONS...]");
 		System.out.println();
-		System.out.println("Type 'stop' to exit the program.");
 
 		System.out.println("Examples:");
 		System.out.println("\tjava -jar Ikala-Core.jar --help");
 		System.out.println("\tjava -jar Ikala-Core.jar -l fr -c CA");
+		System.out.println();
 
 		System.out.println("Options:");
 		System.out.println("\t-h --help \t\t\tShows the help text");
