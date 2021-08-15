@@ -733,8 +733,7 @@ public class PluginManager {
 	 * @param folder The folder that contains all the jar files we want to load.
 	 */
 	@Synchronized("pluginLock")
-	public void loadAllPlugins(String folder) {
-
+	public void loadAllPlugins(@NonNull String folder) {
 		File pluginFolder = null;
 		Optional<File> folderMaybe = this.plGetFolder(folder);
 		if (!folderMaybe.isPresent()) {
@@ -755,12 +754,12 @@ public class PluginManager {
 	/**
 	 * Loads a plugin by name from a folder.
 	 *
-	 * @param path the path to the folder containing the file
-	 * @param fileName the filename to load from, without a file extension
+	 * @param path The path to the folder containing the file.
+	 * @param fileName The filename to load from, without a file extension.
 	 * @return true on success, false if it failed
 	 */
 	@Synchronized("pluginLock")
-	public boolean loadPlugin(String path, String fileName) {
+	public boolean loadPlugin(@NonNull String path, @NonNull String fileName) {
 		Optional<File> folderMaybe = this.plGetFolder(path);
 		if (!folderMaybe.isPresent()) {
 			return false;
@@ -777,6 +776,45 @@ public class PluginManager {
 
 		plLoadPlugins(Collections.singletonList(jarFile));
 		return true;
+	}
+
+	/**
+	 * Load a list of plugins from a folder.
+	 *
+	 * @param path The path to the folder containing the file.
+	 * @param pluginNames The names of the plugins we want to load.
+	 */
+	@Synchronized("pluginLock")
+	public void loadPlugins(@NonNull String path,
+		@NonNull List<String> pluginNames) {
+		Optional<File> folderMaybe = this.plGetFolder(path);
+		if (!folderMaybe.isPresent()) {
+			return;
+		}
+		if (pluginNames.isEmpty()) {
+			return;
+		}
+		File pluginFolder = folderMaybe.get();
+
+		ArrayList<File> jars = this.plGetAllJars(pluginFolder);
+
+		Map<File, PluginInfo> jarInfoMap = new HashMap<>();
+		for (File jarFile : jars) {
+			Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
+			if (!info.isPresent()) {
+				/*
+				 * We don't have a valid plugin, the error was already logged
+				 * when extracting plugin info
+				 */
+				continue;
+			}
+			jarInfoMap.put(jarFile, info.get());
+		}
+
+		jarInfoMap.entrySet().removeIf(
+			entry -> !pluginNames.contains(entry.getValue().getName()));
+		jars.removeIf(file -> !jarInfoMap.keySet().contains(file));
+		plLoadPlugins(jars);
 	}
 
 	/**

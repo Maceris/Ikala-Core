@@ -8,6 +8,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Tests for the Plugin Manager.
@@ -79,6 +81,23 @@ public class TestPluginManager {
 				String.format("Plugin '%s' should not have been loaded.", name);
 			Assert.assertFalse(message, manager.isLoaded(name));
 		}
+	}
 
+	/**
+	 * Tests the ability to load a set of plugins by name.
+	 */
+	@Test
+	public void testLoadingPluginSubset() {
+		PluginManager manager = PluginManager.getInstance();
+		List<String> toLoad = Arrays.asList("TestComplexChainA",
+			"TestComplexChainB", "TestComplexChainC", "TestComplexChainD");
+
+		manager.loadPlugins(this.TEST_JAR_FOLDER, toLoad);
+
+		for (String name : toLoad) {
+			String message =
+				String.format("Plugin '%s' should have been loaded.", name);
+			Assert.assertTrue(message, manager.isLoaded(name));
+		}
 	}
 }
