@@ -195,7 +195,7 @@ public class PluginManager {
 	 *
 	 * @param evtManager The event manager to use for the plugin system
 	 */
-	public PluginManager(EventManager evtManager) {
+	public PluginManager(@NonNull EventManager evtManager) {
 		this.enableOnLoad = false;
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
@@ -399,7 +399,7 @@ public class PluginManager {
 	 * @return True if the string exists.
 	 */
 	@Synchronized("commandLock")
-	public boolean containsCommand(final String s) {
+	public boolean containsCommand(@NonNull final String s) {
 		int i;
 		boolean res = false;
 
@@ -427,7 +427,14 @@ public class PluginManager {
 	 *         was a problem
 	 */
 	@Synchronized("pluginLock")
-	public boolean disable(final String target) {
+	public boolean disable(@NonNull final String target) {
+		if (!this.isLoaded(target)) {
+			String tmp = SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
+				.replaceFirst(REGEX_PLUGIN, target);
+			log.warning(tmp);
+			return false;
+		}
 		this.setPluginState(target, PluginState.DISABLING);
 
 		logAlert("ALERT_DISABLING", target);
@@ -467,7 +474,14 @@ public class PluginManager {
 	 *         problem
 	 */
 	@Synchronized("pluginLock")
-	public boolean enable(final String target) {
+	public boolean enable(@NonNull final String target) {
+		if (!this.isLoaded(target)) {
+			String tmp = SafeResourceLoader
+				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
+				.replaceFirst(REGEX_PLUGIN, target);
+			log.warning(tmp);
+			return false;
+		}
 		this.setPluginState(target, PluginState.ENABLING);
 
 		logAlert("ALERT_ENABLING", target);
@@ -502,7 +516,7 @@ public class PluginManager {
 	 * @return an optional containing the plugin info, or an empty optional on
 	 *         failure.
 	 */
-	public Optional<PluginInfo> extractPluginInfo(final File jar) {
+	public Optional<PluginInfo> extractPluginInfo(@NonNull final File jar) {
 		ZipEntry config;
 
 		final String fileName = jar.getName();
@@ -556,7 +570,7 @@ public class PluginManager {
 	 * @param state The state to look for.
 	 * @return The names of plugins with that given state.
 	 */
-	private List<String> findPluginsByState(PluginState state) {
+	private List<String> findPluginsByState(@NonNull PluginState state) {
 		return this.pluginDetails.keySet().stream()
 			.filter(name -> state == this.pluginDetails.get(name).getState())
 			.collect(Collectors.toList());
@@ -570,7 +584,7 @@ public class PluginManager {
 	 * @param name The name of the class to look for.
 	 * @return The class by the given name, or null if not found.
 	 */
-	Class<?> getClassByName(final String name) {
+	Class<?> getClassByName(@NonNull final String name) {
 		Class<?> cachedClass = this.pluginClassCache.get(name);
 
 		if (cachedClass != null) {
@@ -653,7 +667,7 @@ public class PluginManager {
 	 * @return The info for the specified plugin.
 	 */
 	@Synchronized("pluginLock")
-	public Optional<PluginInfo> getInfo(String target) {
+	public Optional<PluginInfo> getInfo(@NonNull String target) {
 		PluginDetails details = this.pluginDetails.get(target);
 		if (details == null) {
 			return Optional.empty();
@@ -674,16 +688,15 @@ public class PluginManager {
 	}
 
 	/**
-	 * If a plugin of the given type exists ({@link #isLoaded(String)}), then
-	 * the plugin that is of that type is returned. Otherwise, an empty optional
-	 * is returned.
+	 * If a plugin of the given name exists ({@link #isLoaded(String)}), then
+	 * that plugin is returned. Otherwise, an empty optional is returned.
 	 *
-	 * @param type The plugin type
-	 * @return The Plugin with the given type
+	 * @param name The name of the plugin.
+	 * @return The Plugin with the given name
 	 */
 	@Synchronized("pluginLock")
-	public Optional<Plugin> getPlugin(final String type) {
-		PluginDetails details = this.pluginDetails.get(type);
+	public Optional<Plugin> getPlugin(@NonNull final String name) {
+		PluginDetails details = this.pluginDetails.get(name);
 		if (details == null) {
 			return Optional.empty();
 		}
@@ -1464,8 +1477,8 @@ public class PluginManager {
 	 *
 	 */
 	@Synchronized("commandLock")
-	public boolean registerCommand(final String command,
-		Consumer<String[]> callback, String owner) {
+	public boolean registerCommand(@NonNull final String command,
+		@NonNull Consumer<String[]> callback, @NonNull String owner) {
 		if (this.containsCommand(command)) {
 			String msg = SafeResourceLoader
 				.getString("COMMAND_ALREADY_REGISTERED",
@@ -1527,21 +1540,15 @@ public class PluginManager {
 	 * @return true if the plugin reloaded successfully, false otherwise
 	 */
 	@Synchronized("pluginLock")
-	public boolean reload(String target) {
-		Optional<PluginInfo> p = getInfo(target);
-
-		if (!p.isPresent()) {
-			logAlert("PLUGIN_INFO_MISSING", target);
-			return false;
-		}
-		PluginInfo pInfo = p.get();
+	public boolean reload(@NonNull String target) {
 		if (!this.isLoaded(target)) {
 			String tmp = SafeResourceLoader
 				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst(REGEX_PLUGIN, pInfo.getName());
+				.replaceFirst(REGEX_PLUGIN, target);
 			log.warning(tmp);
 			return false;
 		}
+
 		if (this.isEnabled(target) && !this.disable(target)) {
 			// disable failed
 			this.setPluginState(target, PluginState.CORRUPTED);
@@ -1633,10 +1640,7 @@ public class PluginManager {
 	 * @return true if the plugin was unloaded properly
 	 */
 	@Synchronized("pluginLock")
-	public boolean unloadPlugin(final String toUnload) {
-
-		logAlert("ALERT_UNLOADING", toUnload);
-
+	public boolean unloadPlugin(@NonNull final String toUnload) {
 		if (!this.isLoaded(toUnload)) {
 			logAlert("PLUGIN_NOT_LOADED", toUnload);
 			PluginDetails removedDetails = this.pluginDetails.remove(toUnload);
@@ -1645,6 +1649,8 @@ public class PluginManager {
 			}
 			return false;
 		}
+
+		logAlert("ALERT_UNLOADING", toUnload);
 
 		PluginDetails details = this.pluginDetails.get(toUnload);
 
@@ -1706,7 +1712,7 @@ public class PluginManager {
 	 * @return true if the command was removed
 	 */
 	@Synchronized("commandLock")
-	public boolean unregisterCommand(final String command) {
+	public boolean unregisterCommand(@NonNull final String command) {
 		boolean found = false;
 
 		if (this.containsCommand(command)) {
