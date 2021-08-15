@@ -32,8 +32,6 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 
@@ -755,11 +753,12 @@ public class PluginManager {
 	 * Loads a plugin by name from a folder.
 	 *
 	 * @param path The path to the folder containing the file.
-	 * @param fileName The filename to load from, without a file extension.
+	 * @param pluginName The name of the plugin to load.
 	 * @return true on success, false if it failed
 	 */
 	@Synchronized("pluginLock")
-	public boolean loadPlugin(@NonNull String path, @NonNull String fileName) {
+	public boolean loadPlugin(@NonNull String path,
+		@NonNull String pluginName) {
 		Optional<File> folderMaybe = this.plGetFolder(path);
 		if (!folderMaybe.isPresent()) {
 			return false;
@@ -768,13 +767,26 @@ public class PluginManager {
 
 		ArrayList<File> jars = this.plGetAllJars(pluginFolder);
 
-		Optional<File> jarMaybe = this.plPickJarByName(jars, fileName);
-		if (!jarMaybe.isPresent()) {
+		File jar = null;
+		for (File jarFile : jars) {
+			Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
+			if (!info.isPresent()) {
+				/*
+				 * We don't have a valid plugin, the error was already logged
+				 * when extracting plugin info
+				 */
+				continue;
+			}
+			if (pluginName.equals(info.get().getName())) {
+				jar = jarFile;
+				break;
+			}
+		}
+		if (null == jar) {
 			return false;
 		}
-		File jarFile = jarMaybe.get();
 
-		plLoadPlugins(Collections.singletonList(jarFile));
+		plLoadPlugins(Collections.singletonList(jar));
 		return true;
 	}
 
@@ -1281,46 +1293,6 @@ public class PluginManager {
 			// fine since we avoided cycles when setting up children earlier
 			queue.addAll(currentNode.getChildren());
 		}
-	}
-
-	/**
-	 * Returns an optional that contains the jar file with the specified name,
-	 * or an empty optional if none was found in the list of files. The file
-	 * name is without an extension so "example.jar" should be passed as
-	 * "example", and "test-1.0.2.jar" should be "test-1.0.2".
-	 *
-	 * @param files The list of files to look through, must all be valid
-	 *            readable files.
-	 * @param name the name of the jar, without a jar extension.
-	 * @return an optional containing the matching jar, or an empty optional if
-	 *         it was not found
-	 */
-	private Optional<File> plPickJarByName(final List<File> files,
-		final String name) {
-		Pattern fileNamePattern = Pattern.compile(name + "\\.jar\\z");
-		Matcher fileNameMatcher = fileNamePattern.matcher("");
-
-		for (File file : files) {
-			try {
-				if (fileNameMatcher.reset(file.getName()).matches()) {
-					return Optional.of(file);
-				}
-			}
-			catch (SecurityException secExcep) {
-				String msg = SafeResourceLoader
-					.getString("PLUGIN_FILE_SECURITY_ERR", this.resourceBundle)
-					.replaceFirst(PluginManager.REGEX_FILE, file.getName());
-				PluginManager.log.fine(msg);
-				// Maybe one or more files can't be read
-			}
-		}
-
-		// It hasn't returned by now which means it couldn't find a match
-		String msg = SafeResourceLoader
-			.getString("PLUGIN_NOT_FOUND", this.resourceBundle)
-			.replaceFirst(PluginManager.REGEX_PLUGIN, name);
-		PluginManager.log.warning(msg);
-		return Optional.empty();
 	}
 
 	/**
