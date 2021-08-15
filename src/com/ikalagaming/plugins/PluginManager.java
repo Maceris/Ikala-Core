@@ -331,7 +331,7 @@ public class PluginManager {
 			}
 			sb.append(" : ");
 			sb.append(cmd.getOwner());
-			PluginManager.log.info(sb.toString());
+			System.out.println(sb.toString());
 		}
 	}
 
@@ -357,7 +357,7 @@ public class PluginManager {
 			sb.append(" (");
 			sb.append(this.getPluginState(name));
 			sb.append(")");
-			PluginManager.log.info(sb.toString());
+			System.out.println(sb.toString());
 		}
 	}
 
