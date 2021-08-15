@@ -4,9 +4,16 @@ import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.plugins.events.PluginCommandSent;
+import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.CustomLog;
+
+import java.io.File;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.Scanner;
 
 /**
  * Contains functionality for controling the lifecycle of the framework, and the
@@ -15,7 +22,10 @@ import java.util.Locale;
  * @author Ches Burks
  *
  */
+@CustomLog(topic = "Launcher")
 public class Launcher {
+
+	private static ResourceBundle bundle;
 
 	/**
 	 * Set up the main systems.
@@ -25,6 +35,9 @@ public class Launcher {
 		EventManager.getInstance();
 		Logging.create();
 		PluginManager.getInstance();
+		Launcher.bundle = ResourceBundle.getBundle(
+			"com.ikalagaming.launcher.resources.Launcher",
+			Localization.getLocale());
 	}
 
 	private static boolean isFlag(final String argument) {
@@ -40,12 +53,38 @@ public class Launcher {
 		if (!Launcher.processArguments(args)) {
 			return;
 		}
+		Launcher.setupMainFolders();
 		Launcher.initialize();
+
+		Scanner cmdLine = new Scanner(System.in);
+		while (cmdLine.hasNextLine()) {
+			String line = cmdLine.nextLine();
+
+			if ("stop".equalsIgnoreCase(line.trim())) {
+				break;
+			}
+
+			PluginCommandSent event;
+			String[] parts = line.split("\\s+");
+			if (1 == parts.length) {
+				event = new PluginCommandSent(parts[0]);
+			}
+			else {
+				String[] cmdArgs = new String[parts.length - 1];
+				System.arraycopy(parts, 1, cmdArgs, 0, cmdArgs.length);
+				event = new PluginCommandSent(parts[0], cmdArgs);
+			}
+			event.fire();
+		}
+		cmdLine.close();
+		Launcher.shutdown();
 	}
 
 	private static void printHelp() {
 		System.out.println("Usage:");
 		System.out.println("\tjava -jar Ikala-Core.jar [OPTIONS...]");
+		System.out.println();
+		System.out.println("Type 'stop' to exit the program.");
 
 		System.out.println("Examples:");
 		System.out.println("\tjava -jar Ikala-Core.jar --help");
@@ -112,10 +151,12 @@ public class Launcher {
 			Launcher.printHelp();
 			return false;
 		}
-		if ((null != language) && !Launcher.setLocale(language, country)) {
-			return false;
+		if (null == language) {
+			language = "en";
+			country = "US";
 		}
-		return true;
+
+		return Launcher.setLocale(language, country);
 	}
 
 	/**
@@ -175,12 +216,30 @@ public class Launcher {
 	}
 
 	/**
+	 * Sets up the folders used by the system if they don't exist.
+	 */
+	private static void setupMainFolders() {
+		File pluginFolder = new File(
+			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
+		try {
+			if (!pluginFolder.exists()) {
+				pluginFolder.mkdirs();
+			}
+		}
+		catch (SecurityException e) {
+			Launcher.log.warning(SafeResourceLoader
+				.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
+		}
+	}
+
+	/**
 	 * Shut down all the main systems, unloads everything.
 	 */
 	public static void shutdown() {
 		PluginManager.destoryInstance();
 		Logging.destory();
 		EventManager.destoryInstance();
+		Launcher.bundle = null;
 	}
 
 	/**

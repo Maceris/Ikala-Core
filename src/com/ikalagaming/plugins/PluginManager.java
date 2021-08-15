@@ -306,6 +306,35 @@ public class PluginManager {
 		this.enable(args[0]);
 	}
 
+	/**
+	 * The callback for printing out all possible commands.
+	 *
+	 * @param args Ignored.
+	 */
+	void cbHelp(@SuppressWarnings("unused") String[] args) {
+		PluginManager.log.info(
+			SafeResourceLoader.getString("HELP_TEXT", this.resourceBundle));
+
+		int longestCmdLength = 0;
+		for (PluginCommand cmd : this.commands) {
+			int length = cmd.getCommand().length();
+			if (length > longestCmdLength) {
+				longestCmdLength = length;
+			}
+		}
+		for (PluginCommand cmd : this.commands) {
+			StringBuilder sb = new StringBuilder();
+			final int padding = longestCmdLength - cmd.getCommand().length();
+			sb.append(cmd.getCommand());
+			for (int i = 0; i < padding; ++i) {
+				sb.append(' ');
+			}
+			sb.append(" : ");
+			sb.append(cmd.getOwner());
+			PluginManager.log.info(sb.toString());
+		}
+	}
+
 	private void cbLoad(String[] args) {
 		if (args.length < 1) {
 			this.alertMissingArgs();
@@ -314,6 +343,22 @@ public class PluginManager {
 		this.loadPlugin(
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
 			args[0]);
+	}
+
+	private void cbPrintPlugins(@SuppressWarnings("unused") String[] args) {
+		Map<String, Plugin> loadedPlugins = this.getLoadedPlugins();
+
+		ArrayList<String> names = new ArrayList<>(loadedPlugins.keySet());
+		Collections.sort(names);
+
+		for (String name : names) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(name);
+			sb.append(" (");
+			sb.append(this.getPluginState(name));
+			sb.append(")");
+			PluginManager.log.info(sb.toString());
+		}
 	}
 
 	private void cbReload(String[] args) {
@@ -1464,6 +1509,13 @@ public class PluginManager {
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_RELOAD", this.resourceBundle),
 			this::cbReload, PluginManager.PLUGIN_NAME);
+		this.registerCommand(
+			SafeResourceLoader.getString("COMMAND_LIST_PLUGINS",
+				this.resourceBundle),
+			this::cbPrintPlugins, PluginManager.PLUGIN_NAME);
+		this.registerCommand(
+			SafeResourceLoader.getString("COMMAND_HELP", this.resourceBundle),
+			this::cbHelp, PluginManager.PLUGIN_NAME);
 	}
 
 	/**

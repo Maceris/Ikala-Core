@@ -23,6 +23,10 @@ class PluginCommandListener implements Listener {
 	public void onPluginCommand(PluginCommandSent event) {
 		List<PluginCommand> commands =
 			PluginManager.getInstance().getCommands();
+		if (commands.stream()
+			.noneMatch(cmd -> event.getCommand().equals(cmd.getCommand()))) {
+			PluginManager.getInstance().cbHelp(null);
+		}
 
 		commands.stream()
 			.filter(cmd -> event.getCommand().equals(cmd.getCommand()))
