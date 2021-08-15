@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin folder utilities
 - Licenses bundled into builds
 - Command line entry point with help text
+- Plugin management from command line
 
 ### Removed
 - ArrayOperations util
