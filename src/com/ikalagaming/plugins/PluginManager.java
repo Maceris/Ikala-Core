@@ -435,6 +435,10 @@ public class PluginManager {
 			log.warning(tmp);
 			return false;
 		}
+		if (!this.isEnabled(target)) {
+			logAlert("ALERT_PLUGIN_ALREADY_DISABLED", target);
+			return false;
+		}
 		this.setPluginState(target, PluginState.DISABLING);
 
 		logAlert("ALERT_DISABLING", target);
@@ -482,6 +486,12 @@ public class PluginManager {
 			log.warning(tmp);
 			return false;
 		}
+
+		if (this.isEnabled(target)) {
+			logAlert("ALERT_PLUGIN_ALREADY_ENABLED", target);
+			return false;
+		}
+		
 		this.setPluginState(target, PluginState.ENABLING);
 
 		logAlert("ALERT_ENABLING", target);
