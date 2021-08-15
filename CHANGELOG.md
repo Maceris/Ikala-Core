@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command line entry point with help text
 - Plugin management from command line
 
+### Changed
+- Disabling and unloading plugins recursively
+
 ### Removed
 - ArrayOperations util
 - Permissions package (moved to a plugin)
