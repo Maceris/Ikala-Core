@@ -100,4 +100,19 @@ public class TestPluginManager {
 			Assert.assertTrue(message, manager.isLoaded(name));
 		}
 	}
+
+	/**
+	 * Tests that loading a single plugin works.
+	 */
+	@Test
+	public void testLoadPlugin() {
+		PluginManager manager = PluginManager.getInstance();
+		final String pluginName = "TestStandalone";
+
+		manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName);
+
+		String message =
+			String.format("Plugin '%s' should have been loaded.", pluginName);
+		Assert.assertTrue(message, manager.isLoaded(pluginName));
+	}
 }
