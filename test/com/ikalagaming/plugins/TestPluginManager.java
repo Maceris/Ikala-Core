@@ -2,9 +2,9 @@ package com.ikalagaming.plugins;
 
 import com.ikalagaming.launcher.Launcher;
 
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -20,18 +20,18 @@ import java.util.List;
 public class TestPluginManager {
 
 	/**
-	 * Tear down after the tests, shutting down the framework.
+	 * Tear down after each test, shutting down the framework.
 	 */
-	@AfterClass
-	public static void afterClass() {
+	@After
+	public void afterTest() {
 		Launcher.shutdown();
 	}
 
 	/**
-	 * Set up before the tests, initializing the framework.
+	 * Set up before each test, initializing the framework.
 	 */
-	@BeforeClass
-	public static void beforeClass() {
+	@Before
+	public void beforeTest() {
 		Launcher.initialize();
 	}
 
@@ -124,6 +124,8 @@ public class TestPluginManager {
 	public void testLifecycle() {
 		PluginManager manager = PluginManager.getInstance();
 		final String pluginName = "TestStandalone";
+
+		manager.setEnableOnLoad(false);
 
 		Assert.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
 
