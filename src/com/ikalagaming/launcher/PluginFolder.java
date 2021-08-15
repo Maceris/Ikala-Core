@@ -42,26 +42,18 @@ public class PluginFolder {
 	private static final String RUNTIME_DIR = System.getProperty("user.dir");
 
 	/**
-	 * Create the plugin folder for the given plugin.
+	 * Create the plugin folder for the given plugin if it does not already
+	 * exist.
 	 *
 	 * @param pluginName The plugin we want a data folder for.
 	 */
 	public static void createFolder(@NonNull final String pluginName) {
+		if (PluginFolder.folderExists(pluginName)) {
+			return;
+		}
 		FileUtils.createFolder(
 			PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,
 			pluginName);
-	}
-
-	/**
-	 * If the plugin folder does not exist for a plugin, create it.
-	 *
-	 * @param pluginName The plugin to look for.
-	 */
-	private static void
-		createPluginFolderIfMissing(@NonNull final String pluginName) {
-		if (!PluginFolder.folderExists(pluginName)) {
-			PluginFolder.createFolder(pluginName);
-		}
 	}
 
 	/**
@@ -73,7 +65,7 @@ public class PluginFolder {
 	 */
 	public static void createResourceFolder(@NonNull final String pluginName,
 		@NonNull ResourceType type) {
-		PluginFolder.createPluginFolderIfMissing(pluginName);
+		PluginFolder.createFolder(pluginName);
 		// should start with File.separator
 		String folderName = "";
 
@@ -90,6 +82,7 @@ public class PluginFolder {
 			default:
 				break;
 		}
+
 		FileUtils.createFolder(
 			PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,
 			pluginName + folderName);
@@ -227,7 +220,7 @@ public class PluginFolder {
 	 */
 	public static boolean setLastVersionUsed(@NonNull final String pluginName,
 		@NonNull final String version) {
-		PluginFolder.createPluginFolderIfMissing(pluginName);
+		PluginFolder.createFolder(pluginName);
 		String pathToVersionFile = PluginFolder.getFolderForPlugin(pluginName)
 			+ File.separator + Constants.PLUGIN_VERSION_FILE;
 		File versionFile = new File(pathToVersionFile);

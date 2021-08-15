@@ -3,6 +3,7 @@ package com.ikalagaming.launcher;
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.logging.Logging;
+import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
@@ -12,6 +13,7 @@ import lombok.CustomLog;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 
@@ -55,7 +57,18 @@ public class Launcher {
 		}
 		Launcher.setupMainFolders();
 		Launcher.initialize();
+		PluginManager.getInstance().loadAllPlugins(
+			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
+		Launcher.setupPluginFolders();
+		Launcher.readInputUntilStopped();
+		Launcher.shutdown();
+	}
 
+	/**
+	 * Notify the command line how to stop the program, keep reading in input
+	 * lines as package management commands until stop command is sent.
+	 */
+	private static void readInputUntilStopped() {
 		final String stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
 			Launcher.bundle, "stop");
 		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
@@ -84,7 +97,21 @@ public class Launcher {
 			event.fire();
 		}
 		cmdLine.close();
-		Launcher.shutdown();
+	}
+
+	/**
+	 * Set up the resource folders for all plugins.
+	 */
+	private static void setupPluginFolders() {
+		Map<String, Plugin> plugins =
+			PluginManager.getInstance().getLoadedPlugins();
+		for (String plugin : plugins.keySet()) {
+			PluginFolder.createFolder(plugin);
+			for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType
+				.values()) {
+				PluginFolder.createResourceFolder(plugin, resourceType);
+			}
+		}
 	}
 
 	private static void printHelp() {
