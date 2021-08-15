@@ -56,7 +56,12 @@ public class Launcher {
 		Launcher.setupMainFolders();
 		Launcher.initialize();
 
-		System.out.println("Type 'stop' to exit the program.");
+		final String stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
+			Launcher.bundle, "stop");
+		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
+			Launcher.bundle, "Type '%s' to exit the program\n");
+
+		System.out.printf(stopMessage, stopCommand);
 
 		Scanner cmdLine = new Scanner(System.in);
 		while (cmdLine.hasNextLine()) {
