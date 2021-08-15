@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -340,9 +341,9 @@ public class PluginManager {
 			this.alertMissingArgs();
 			return;
 		}
-		this.loadPlugin(
+		this.loadPlugins(
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
-			args[0]);
+			Arrays.asList(args));
 	}
 
 	private void cbPrintPlugins(@SuppressWarnings("unused") String[] args) {
@@ -491,7 +492,7 @@ public class PluginManager {
 			logAlert("ALERT_PLUGIN_ALREADY_ENABLED", target);
 			return false;
 		}
-		
+
 		this.setPluginState(target, PluginState.ENABLING);
 
 		logAlert("ALERT_ENABLING", target);
@@ -582,7 +583,8 @@ public class PluginManager {
 	 */
 	private List<String> findPluginsByState(@NonNull PluginState state) {
 		return this.pluginDetails.keySet().stream()
-			.filter(name -> state == this.pluginDetails.get(name).getState())
+			.filter(
+				name -> state.equals(this.pluginDetails.get(name).getState()))
 			.collect(Collectors.toList());
 	}
 
@@ -1005,6 +1007,9 @@ public class PluginManager {
 		for (Map.Entry<String, PluginDetails> entry : this.pluginDetails
 			.entrySet()) {
 			PluginDetails details = entry.getValue();
+			if (!PluginState.DISCOVERED.equals(details.getState())) {
+				continue;
+			}
 			PluginState state = this.calculatePluginState(details.getInfo());
 			details.setState(state);
 		}
@@ -1270,7 +1275,6 @@ public class PluginManager {
 			this.pluginDetails.put(info.getName(), details);
 			this.logAlert("ALERT_DISCOVERED", info.getName());
 		}
-
 		this.plDependencyResolutionStage();
 		this.plLoadSatisfiedDependencies();
 	}
@@ -1704,7 +1708,8 @@ public class PluginManager {
 		for (Listener l : plugin.getListeners()) {
 			EventManager.getInstance().unregisterEventListeners(l);
 		}
-		String unreg = SafeResourceLoader.getString("", this.resourceBundle)
+		String unreg = SafeResourceLoader
+			.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle)
 			.replaceFirst(REGEX_PLUGIN, PluginManager.PLUGIN_NAME);
 		log.finer(unreg);
 
