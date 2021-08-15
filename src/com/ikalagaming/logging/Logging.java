@@ -84,7 +84,7 @@ public class Logging {
 			Logging.initialized = false;
 			Logging.thresholdLock.lock();
 			try {
-				Logging.threshold = null;
+				Logging.threshold = Logging.DEFAULT_THRESHOLD;
 			}
 			finally {
 				Logging.thresholdLock.unlock();
