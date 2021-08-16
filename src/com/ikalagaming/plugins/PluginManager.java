@@ -164,7 +164,7 @@ public class PluginManager {
 	 * version numbers for plugins on the file system, if false it keeps things
 	 * clean as we are probably running tests or doing things from another entry
 	 * point.
-	 * 
+	 *
 	 * @param commandLine If we are running from command line or not.
 	 * @return true if the framework was started from command line, false
 	 *         otherwise.
@@ -331,7 +331,7 @@ public class PluginManager {
 	 *
 	 * @param args Ignored.
 	 */
-	void cbHelp(@SuppressWarnings("unused") String[] args) {
+	void cbHelp(String[] args) {
 		PluginManager.log.info(
 			SafeResourceLoader.getString("HELP_TEXT", this.resourceBundle));
 
@@ -351,7 +351,11 @@ public class PluginManager {
 			}
 			sb.append(" : ");
 			sb.append(cmd.getOwner());
-			System.out.println(sb.toString());
+			/*
+			 * This should show on the command line, as logs might be redirected
+			 * to console and we want command line interaction.
+			 */
+			System.out.println(sb.toString());// NOSONAR
 		}
 	}
 
@@ -377,7 +381,11 @@ public class PluginManager {
 			sb.append(" (");
 			sb.append(this.getPluginState(name));
 			sb.append(")");
-			System.out.println(sb.toString());
+			/*
+			 * This should show on the command line, as logs might be redirected
+			 * to console and we want command line interaction.
+			 */
+			System.out.println(sb.toString());// NOSONAR
 		}
 	}
 
@@ -450,10 +458,7 @@ public class PluginManager {
 	@Synchronized("pluginLock")
 	public boolean disable(@NonNull final String target) {
 		if (!this.isLoaded(target)) {
-			String tmp = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst(REGEX_PLUGIN, target);
-			log.warning(tmp);
+			logNotLoaded(target);
 			return false;
 		}
 		if (!this.isEnabled(target)) {
@@ -514,10 +519,7 @@ public class PluginManager {
 	 */
 	private boolean disableSingle(final String target) {
 		if (!this.isLoaded(target)) {
-			String tmp = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst(PluginManager.REGEX_PLUGIN, target);
-			PluginManager.log.warning(tmp);
+			this.logNotLoaded(target);
 			return false;
 		}
 		if (!this.isEnabled(target)) {
@@ -564,10 +566,7 @@ public class PluginManager {
 	@Synchronized("pluginLock")
 	public boolean enable(@NonNull final String target) {
 		if (!this.isLoaded(target)) {
-			String tmp = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst(REGEX_PLUGIN, target);
-			log.warning(tmp);
+			logNotLoaded(target);
 			return false;
 		}
 
@@ -1007,6 +1006,19 @@ public class PluginManager {
 				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName)
 				.replaceFirst("\\$VERSION", version);
 		PluginManager.log.fine(message);
+	}
+
+	/**
+	 * Log the fact that a plugin was not loaded, despite trying to take actions
+	 * on it as if it were loaded.
+	 *
+	 * @param plugin The plugin to log the alert about.
+	 */
+	private void logNotLoaded(String plugin) {
+		String tmp = SafeResourceLoader
+			.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
+			.replaceFirst(PluginManager.REGEX_PLUGIN, plugin);
+		PluginManager.log.warning(tmp);
 	}
 
 	/**
@@ -1649,10 +1661,7 @@ public class PluginManager {
 	@Synchronized("pluginLock")
 	public boolean reload(@NonNull String target) {
 		if (!this.isLoaded(target)) {
-			String tmp = SafeResourceLoader
-				.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
-				.replaceFirst(REGEX_PLUGIN, target);
-			log.warning(tmp);
+			logNotLoaded(target);
 			return false;
 		}
 
