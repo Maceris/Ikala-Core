@@ -152,6 +152,54 @@ public class TestPluginManager {
 		Assert.assertTrue(manager.unloadPlugin(pluginName));
 		Assert.assertFalse(unloadedMessage, manager.isLoaded(pluginName));
 		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+	}
+
+	/**
+	 * Test the semantic version comparison.
+	 */
+	@Test
+	public void testVersionComparison() {
+		// lower versions
+		int compareResult = PluginManager.compareVersions("1.0.0-rc.1+build.1",
+			"1.3.7+build.2.b8f12d7");
+		boolean newer = PluginManager.isNewerVersion("1.0.0-rc.1+build.1",
+			"1.3.7+build.2.b8f12d7");
+		Assert.assertTrue(compareResult < 0);
+		Assert.assertFalse(newer);
+
+		compareResult = PluginManager.compareVersions("2.3.4-rc.1", "2.3.4");
+		newer = PluginManager.isNewerVersion("2.3.4-rc.1", "2.3.4");
+		Assert.assertTrue(compareResult < 0);
+		Assert.assertFalse(newer);
+
+		// equal versions
+		compareResult = PluginManager.compareVersions("3.0.0", "3.0.0");
+		newer = PluginManager.isNewerVersion("3.0.0", "3.0.0");
+		Assert.assertEquals(0, compareResult);
+		Assert.assertFalse(newer);
+		compareResult =
+			PluginManager.compareVersions("1.0.0-beta", "1.0.0-beta");
+		newer = PluginManager.isNewerVersion("1.0.0-beta", "1.0.0-beta");
+		Assert.assertEquals(0, compareResult);
+		Assert.assertFalse(newer);
+		compareResult = PluginManager.compareVersions("1.0.0-rc.1+build.1",
+			"1.0.0-rc.1+build.2");
+		newer = PluginManager.isNewerVersion("1.0.0-rc.1+build.1",
+			"1.0.0-rc.1+build.2");
+		Assert.assertEquals(0, compareResult);
+		Assert.assertFalse(newer);
+
+		// greater versions
+		compareResult = PluginManager.compareVersions("3.0.0", "2.5.3");
+		newer = PluginManager.isNewerVersion("3.0.0", "2.5.3");
+		Assert.assertTrue(compareResult > 0);
+		Assert.assertTrue(newer);
+		compareResult = PluginManager.compareVersions("1.3.7+build.2.b8f12d7",
+			"1.0.0-rc.1+build.1");
+		newer = PluginManager.isNewerVersion("1.3.7+build.2.b8f12d7",
+			"1.0.0-rc.1+build.1");
+		Assert.assertTrue(compareResult > 0);
+		Assert.assertTrue(newer);
 
 	}
 }
