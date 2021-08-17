@@ -421,26 +421,6 @@ public class PluginManager {
 	}
 
 	/**
-	 * Returns true if the array contains the given string.
-	 *
-	 * @param s The string to look for.
-	 * @return True if the string exists.
-	 */
-	@Synchronized("commandLock")
-	public boolean containsCommand(@NonNull final String s) {
-		int i;
-		boolean res = false;
-
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				res = true;
-				break;
-			}
-		}
-		return res;
-	}
-
-	/**
 	 * Deactivates the plugin and halts all of its operations. The plugin is
 	 * still loaded in memory but not active. Calls {@link Plugin#onDisable()}.
 	 * This changes the plugins state to {@link PluginState#DISABLING
@@ -814,6 +794,18 @@ public class PluginManager {
 			return PluginState.NOT_LOADED;
 		}
 		return this.pluginDetails.get(target).getState();
+	}
+
+	/**
+	 * Checks if a plugin command has already been registered.
+	 *
+	 * @param command The command to check for.
+	 * @return True if the command has been registered.
+	 */
+	@Synchronized("commandLock")
+	public boolean isCommandRegistered(@NonNull final String command) {
+		return this.commands.stream()
+			.anyMatch(cmd -> command.equalsIgnoreCase(cmd.getCommand()));
 	}
 
 	/**
@@ -1598,7 +1590,7 @@ public class PluginManager {
 	@Synchronized("commandLock")
 	public boolean registerCommand(@NonNull final String command,
 		@NonNull Consumer<String[]> callback, @NonNull String owner) {
-		if (this.containsCommand(command)) {
+		if (this.isCommandRegistered(command)) {
 			String msg = SafeResourceLoader
 				.getString("COMMAND_ALREADY_REGISTERED",
 					this.getResourceBundle())
@@ -1884,9 +1876,9 @@ public class PluginManager {
 	public boolean unregisterCommand(@NonNull final String command) {
 		boolean found = false;
 
-		if (this.containsCommand(command)) {
+		if (this.isCommandRegistered(command)) {
 
-			while (this.containsCommand(command)) {
+			while (this.isCommandRegistered(command)) {
 				// just in case there are multiple
 				int index = this.getIndexOfCommand(command);
 				this.commands.remove(index);
