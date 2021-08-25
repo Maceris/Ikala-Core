@@ -1,7 +1,10 @@
 package com.ikalagaming.plugins;
 
+import com.ikalagaming.event.EventAssert;
 import com.ikalagaming.launcher.Launcher;
+import com.ikalagaming.plugins.events.PluginCommandSent;
 
+import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,6 +13,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for the Plugin Manager.
@@ -20,20 +24,10 @@ import java.util.List;
 public class TestPluginManager {
 
 	/**
-	 * Tear down after each test, shutting down the framework.
+	 * Tracks the callback method being hit.
 	 */
-	@After
-	public void afterTest() {
-		Launcher.shutdown();
-	}
-
-	/**
-	 * Set up before each test, initializing the framework.
-	 */
-	@Before
-	public void beforeTest() {
-		Launcher.initialize();
-	}
+	private boolean callbackExecuted = false;
+	private Object callbackSync = new Object();
 
 	/**
 	 * The resources folder where the test jars are located.
@@ -60,6 +54,110 @@ public class TestPluginManager {
 		"TestErrorInvalidVersion", "TestErrorMainClassType",
 		"TestErrorNoMainClass", "TestErrorNoMainClassFile", "TestErrorNoName",
 		"TestErrorNoVersion", "TestErrorNoYml"};
+
+	/**
+	 * Tear down after each test, shutting down the framework.
+	 */
+	@After
+	public void afterTest() {
+		Launcher.shutdown();
+	}
+
+	/**
+	 * Set up before each test, initializing the framework.
+	 */
+	@Before
+	public void beforeTest() {
+		Launcher.initialize();
+	}
+
+	/**
+	 * A method that records itself being called.
+	 *
+	 * @param args Ignored.
+	 */
+	public void commandCallback(String args[]) {
+		synchronized (this.callbackSync) {
+			this.callbackExecuted = true;
+		}
+	}
+
+	/**
+	 * Used to check if {@link #commandCallback(String[])} was executed.
+	 *
+	 * @return True if the callback was run, false if not.
+	 */
+	private boolean isCallbackExecuted() {
+		synchronized (this.callbackSync) {
+			return this.callbackExecuted;
+		}
+	}
+
+	/**
+	 * Test that command registration works.
+	 */
+	@Test
+	public void testCommandRegistration() {
+		PluginManager manager = PluginManager.getInstance();
+		final String COMMAND = "TestCommand";
+
+		manager.registerCommand(COMMAND, this::commandCallback, "UnitTests");
+		new PluginCommandSent(COMMAND).fire();
+
+		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
+			.until(this::isCallbackExecuted);
+		manager.unregisterCommand(COMMAND);
+		synchronized (this.callbackSync) {
+			this.callbackExecuted = false;
+		}
+
+		EventAssert.listenFor(PluginCommandSent.class);
+		new PluginCommandSent(COMMAND).fire();
+
+		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
+			.until(() -> EventAssert.wasFired(PluginCommandSent.class));
+
+		Assert.assertFalse(this.callbackExecuted);
+
+	}
+
+	/**
+	 * Tests the lifecycle of loading, enabling, disabling, and unloading a
+	 * plugin.
+	 */
+	@Test
+	public void testLifecycle() {
+		PluginManager manager = PluginManager.getInstance();
+		final String pluginName = "TestStandalone";
+
+		manager.setEnableOnLoad(false);
+
+		Assert.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+
+		String loadedMessage =
+			String.format("Plugin '%s' should be loaded.", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+
+		Assert.assertTrue(manager.enable(pluginName));
+
+		String enabledMessage =
+			String.format("Plugin '%s' should be enabled", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+		Assert.assertTrue(enabledMessage, manager.isEnabled(pluginName));
+
+		Assert.assertTrue(manager.disable(pluginName));
+
+		String disabledMessage =
+			String.format("Plugin '%s' should not be enabled", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+
+		String unloadedMessage =
+			String.format("Plugin '%s' should not be loaded.", pluginName);
+		Assert.assertTrue(manager.unloadPlugin(pluginName));
+		Assert.assertFalse(unloadedMessage, manager.isLoaded(pluginName));
+		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+	}
 
 	/**
 	 * The basic suite that tries to load all the test plugins and sees if the
@@ -117,44 +215,6 @@ public class TestPluginManager {
 	}
 
 	/**
-	 * Tests the lifecycle of loading, enabling, disabling, and unloading a
-	 * plugin.
-	 */
-	@Test
-	public void testLifecycle() {
-		PluginManager manager = PluginManager.getInstance();
-		final String pluginName = "TestStandalone";
-
-		manager.setEnableOnLoad(false);
-
-		Assert.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
-
-		String loadedMessage =
-			String.format("Plugin '%s' should be loaded.", pluginName);
-		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
-
-		Assert.assertTrue(manager.enable(pluginName));
-
-		String enabledMessage =
-			String.format("Plugin '%s' should be enabled", pluginName);
-		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
-		Assert.assertTrue(enabledMessage, manager.isEnabled(pluginName));
-
-		Assert.assertTrue(manager.disable(pluginName));
-
-		String disabledMessage =
-			String.format("Plugin '%s' should not be enabled", pluginName);
-		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
-		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
-
-		String unloadedMessage =
-			String.format("Plugin '%s' should not be loaded.", pluginName);
-		Assert.assertTrue(manager.unloadPlugin(pluginName));
-		Assert.assertFalse(unloadedMessage, manager.isLoaded(pluginName));
-		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
-	}
-
-	/**
 	 * Test the semantic version comparison.
 	 */
 	@Test
@@ -200,6 +260,5 @@ public class TestPluginManager {
 			"1.0.0-rc.1+build.1");
 		Assert.assertTrue(compareResult > 0);
 		Assert.assertTrue(newer);
-
 	}
 }
