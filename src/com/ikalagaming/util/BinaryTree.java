@@ -303,7 +303,6 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @throws DuplicateEntry if the entry already exists in the tree
 	 *
 	 */
-	@SuppressWarnings("all")
 	protected BinaryTreeNode<T> insert(BinaryTreeNode<T> theRoot, T ins)
 		throws DuplicateEntry {
 		if (this.treeRoot == null) {
@@ -312,9 +311,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		}
 
 		if (theRoot == null || theRoot.key == null) {
-			BinaryTreeNode<T> newRoot =
-				new BinaryTreeNode<>(ins, null, null, null);
-			return newRoot;
+			return new BinaryTreeNode<>(ins, null, null, null);
 		}
 
 		// insert node, looking for it recursively
@@ -350,41 +347,41 @@ public class BinaryTree<T extends Comparable<T>> {
 		// left.left
 		if (theRoot.left != null && theRoot.left.key != null) {
 			if (balance > 1 && ins.compareTo(theRoot.left.key) < 1) {
-				theRoot = this.rightRotate(theRoot);
-				if (theRoot.parent == null) {
-					this.treeRoot = theRoot;
+				BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
+				if (newRoot.parent == null) {
+					this.treeRoot = newRoot;
 				}
-				return theRoot;
+				return newRoot;
 			}
 			// double right, because its larger on the left and inserting on
 			// left.right
 			if (balance > 1 && ins.compareTo(theRoot.left.key) > 1) {
 				theRoot.left = this.leftRotate(theRoot.left);
-				theRoot = this.rightRotate(theRoot);
-				if (theRoot.parent == null) {
-					this.treeRoot = theRoot;
+				BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
+				if (newRoot.parent == null) {
+					this.treeRoot = newRoot;
 				}
-				return theRoot;
+				return newRoot;
 			}
 		}
 		// single left, because its larger on the right and its inserting on
 		// right.right
 		if (theRoot.right != null && theRoot.right.key != null) {
 			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
-				theRoot = this.leftRotate(theRoot);
-				if (theRoot.parent == null) {
-					this.treeRoot = theRoot;
+				BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
+				if (newRoot.parent == null) {
+					this.treeRoot = newRoot;
 				}
-				return theRoot;
+				return newRoot;
 			}
 			// double left
 			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
 				theRoot.right = this.rightRotate(theRoot.right);
-				theRoot = this.leftRotate(theRoot);
-				if (theRoot.parent == null) {
-					this.treeRoot = theRoot;
+				BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
+				if (newRoot.parent == null) {
+					this.treeRoot = newRoot;
 				}
-				return theRoot;
+				return newRoot;
 			}
 		}
 
@@ -470,7 +467,6 @@ public class BinaryTree<T extends Comparable<T>> {
 	 * @param lowest the lowest node in the tree that might be unbalance or was
 	 *            changed
 	 */
-	@SuppressWarnings("all")
 	protected void rebalance(BinaryTreeNode<T> lowest) {
 		if (lowest == null) {
 			return;
@@ -478,15 +474,16 @@ public class BinaryTree<T extends Comparable<T>> {
 		int balance = this.getBalance(lowest);
 		// single right, because its larger on the left and inserting on
 		// left.left
+		BinaryTreeNode<T> newLowest = lowest;
 		if (balance > 1) {
 			// left is too big
-			lowest = this.rightRotate(lowest);
+			newLowest = this.rightRotate(lowest);
 		}
 		else if (balance < -1) {
 			// right is too big
-			lowest = this.leftRotate(lowest);
+			newLowest = this.leftRotate(lowest);
 		}
-		this.rebalance(lowest.parent);
+		this.rebalance(newLowest.parent);
 	}
 
 	/**
@@ -495,7 +492,6 @@ public class BinaryTree<T extends Comparable<T>> {
 	 *
 	 * @param toRemove the node to remove
 	 */
-	@SuppressWarnings("all")
 	protected void remove(BinaryTreeNode<T> toRemove) {
 		if (toRemove == null) {
 			return;// just ignore it
@@ -503,7 +499,7 @@ public class BinaryTree<T extends Comparable<T>> {
 
 		// If and only if only one child is not null. (a logical exclusive or)
 		// Basically, there is a child but only one child.
-		if (!(toRemove.left != null) != !(toRemove.right != null)) {
+		if ((toRemove.left == null) != (toRemove.right == null)) {
 			// set this nodes child's parent pointer to this nodes parent
 			// if its null then those are the new root.
 			BinaryTreeNode<T> child;
@@ -671,7 +667,6 @@ public class BinaryTree<T extends Comparable<T>> {
 		}
 		// ensure the element to remove is gone
 		toRemove.delete();
-		toRemove = null;
 	}
 
 	/**
