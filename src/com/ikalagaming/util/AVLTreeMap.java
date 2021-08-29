@@ -130,6 +130,8 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 
 	/**
 	 * The base of the tree. This is null if the tree is empty.
+	 * 
+	 * @return The root node of the tree.
 	 */
 	@Getter(value = AccessLevel.PACKAGE)
 	private BinaryTreeNode<K, V> treeRoot;
