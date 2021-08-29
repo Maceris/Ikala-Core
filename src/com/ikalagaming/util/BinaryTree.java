@@ -346,7 +346,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		// single right, because its larger on the left and inserting on
 		// left.left
 		if (theRoot.left != null && theRoot.left.key != null) {
-			if (balance > 1 && ins.compareTo(theRoot.left.key) < 1) {
+			if (balance > 1 && ins.compareTo(theRoot.left.key) < 0) {
 				BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
 				if (newRoot.parent == null) {
 					this.treeRoot = newRoot;
@@ -355,7 +355,7 @@ public class BinaryTree<T extends Comparable<T>> {
 			}
 			// double right, because its larger on the left and inserting on
 			// left.right
-			if (balance > 1 && ins.compareTo(theRoot.left.key) > 1) {
+			if (balance > 1 && ins.compareTo(theRoot.left.key) > 0) {
 				theRoot.left = this.leftRotate(theRoot.left);
 				BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
 				if (newRoot.parent == null) {
@@ -367,7 +367,7 @@ public class BinaryTree<T extends Comparable<T>> {
 		// single left, because its larger on the right and its inserting on
 		// right.right
 		if (theRoot.right != null && theRoot.right.key != null) {
-			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
+			if (balance < -1 && ins.compareTo(theRoot.right.key) > 0) {
 				BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
 				if (newRoot.parent == null) {
 					this.treeRoot = newRoot;
@@ -375,7 +375,7 @@ public class BinaryTree<T extends Comparable<T>> {
 				return newRoot;
 			}
 			// double left
-			if (balance < -1 && ins.compareTo(theRoot.right.key) > 1) {
+			if (balance < -1 && ins.compareTo(theRoot.right.key) > 0) {
 				theRoot.right = this.rightRotate(theRoot.right);
 				BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
 				if (newRoot.parent == null) {
