@@ -175,10 +175,20 @@ public class PluginManager {
 	private boolean commandLine;
 
 	/**
-	 * If plugins should be enabled by the plugin manager when they are loaded.
-	 * If this is false then plugins must be enabled manually after they are
+	 * The flag for automatically enabling plugins when they are loaded. If they
+	 * are not enabled on load, they must be enabled manually after being
 	 * loaded.
+	 * <p>
+	 * This allows some customization of how the plugin system works.
+	 *
+	 * @param enableOnLoad true if the plugins should be automatically enabled
+	 *            after loading, false if they should be manually enabled
+	 * @return true if the plugins enable after loading, false if they must be
+	 *         manually enabled
 	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	@Setter
 	private boolean enableOnLoad;
 
 	private MiscLoggingListener logListener;
@@ -694,19 +704,6 @@ public class PluginManager {
 			cmds.add(pc);
 		}
 		return cmds;
-	}
-
-	/**
-	 * Returns true if this plugin manager automatically enables plugins when
-	 * they are loaded. If they are not enabled on load, they must be enabled
-	 * manually after being loaded.
-	 *
-	 * @return true if the plugins enable after loading, false if they must be
-	 *         manually enabled
-	 * @see #setEnableOnLoad(boolean)
-	 */
-	public boolean getEnableOnLoad() {
-		return this.enableOnLoad;
 	}
 
 	/**
@@ -1688,20 +1685,6 @@ public class PluginManager {
 	 */
 	void setClass(@NonNull final String name, @NonNull final Class<?> clazz) {
 		this.pluginClassCache.computeIfAbsent(name, ignored -> clazz);
-	}
-
-	/**
-	 * Sets the flag for automatically enabling plugins when they are loaded. If
-	 * they are not enabled on load, they must be enabled manually after being
-	 * loaded.
-	 * <p>
-	 * This allows some customization of how the plugin system works.
-	 *
-	 * @param newValue true if the plugins should be automatically enabled after
-	 *            loading, false if they should be manually enabled
-	 */
-	public void setEnableOnLoad(final boolean newValue) {
-		this.enableOnLoad = newValue;
 	}
 
 	@Synchronized("pluginLock")
