@@ -95,7 +95,7 @@ public class TestPluginManager {
 	}
 
 	/**
-	 * Test that command registration works.
+	 * Test that command registration and unregistration works.
 	 */
 	@Test
 	public void testCommandRegistration() {
@@ -103,6 +103,8 @@ public class TestPluginManager {
 		final String COMMAND = "TestCommand";
 
 		manager.registerCommand(COMMAND, this::commandCallback, "UnitTests");
+		Assert.assertTrue(manager.isCommandRegistered(COMMAND));
+
 		new PluginCommandSent(COMMAND).fire();
 
 		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
@@ -131,6 +133,7 @@ public class TestPluginManager {
 		final String pluginName = "TestStandalone";
 
 		manager.setEnableOnLoad(false);
+		Assert.assertFalse(manager.isEnableOnLoad());
 
 		Assert.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
 
