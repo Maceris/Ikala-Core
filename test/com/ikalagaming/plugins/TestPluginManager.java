@@ -3,6 +3,7 @@ package com.ikalagaming.plugins;
 import com.ikalagaming.event.EventAssert;
 import com.ikalagaming.launcher.Launcher;
 import com.ikalagaming.plugins.events.PluginCommandSent;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -118,7 +119,6 @@ public class TestPluginManager {
 			.until(() -> EventAssert.wasFired(PluginCommandSent.class));
 
 		Assert.assertFalse(this.callbackExecuted);
-
 	}
 
 	/**
@@ -155,6 +155,65 @@ public class TestPluginManager {
 		String unloadedMessage =
 			String.format("Plugin '%s' should not be loaded.", pluginName);
 		Assert.assertTrue(manager.unloadPlugin(pluginName));
+		Assert.assertFalse(unloadedMessage, manager.isLoaded(pluginName));
+		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+	}
+
+	/**
+	 * Tests the lifecycle of enabling, disabling, and unloading a plugin using
+	 * the plugin commands. Load and reload are skipped as it expects a standard
+	 * location that unit tests don't support.
+	 */
+	@Test
+	public void testLifecycleCommands() {
+		PluginManager manager = PluginManager.getInstance();
+		final String pluginName = "TestStandalone";
+
+		manager.setEnableOnLoad(false);
+
+		String enable = SafeResourceLoader.getString("COMMAND_ENABLE",
+			manager.getResourceBundle());
+		String disable = SafeResourceLoader.getString("COMMAND_DISABLE",
+			manager.getResourceBundle());
+		String unload = SafeResourceLoader.getString("COMMAND_UNLOAD",
+			manager.getResourceBundle());
+
+		final String[] args = {pluginName};
+		Assert.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+
+		EventAssert.listenFor(PluginCommandSent.class);
+
+		String loadedMessage =
+			String.format("Plugin '%s' should be loaded.", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+
+		EventAssert.resetFireCount(PluginCommandSent.class);
+		new PluginCommandSent(enable, args).fire();
+		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
+			.until(() -> EventAssert.wasFired(PluginCommandSent.class));
+
+		String enabledMessage =
+			String.format("Plugin '%s' should be enabled", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+		Assert.assertTrue(enabledMessage, manager.isEnabled(pluginName));
+
+		EventAssert.resetFireCount(PluginCommandSent.class);
+		new PluginCommandSent(disable, args).fire();
+		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
+			.until(() -> EventAssert.wasFired(PluginCommandSent.class));
+
+		String disabledMessage =
+			String.format("Plugin '%s' should not be enabled", pluginName);
+		Assert.assertTrue(loadedMessage, manager.isLoaded(pluginName));
+		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
+
+		EventAssert.resetFireCount(PluginCommandSent.class);
+		new PluginCommandSent(unload, args).fire();
+		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
+			.until(() -> EventAssert.wasFired(PluginCommandSent.class));
+
+		String unloadedMessage =
+			String.format("Plugin '%s' should not be loaded.", pluginName);
 		Assert.assertFalse(unloadedMessage, manager.isLoaded(pluginName));
 		Assert.assertFalse(disabledMessage, manager.isEnabled(pluginName));
 	}
