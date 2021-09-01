@@ -158,6 +158,29 @@ public class EventAssert {
 	 */
 	public static <T extends Event> boolean wasFired(Class<T> eventClass,
 		long waitTimeout) {
+		return EventAssert.wasFired(eventClass, waitTimeout, 10);
+	}
+
+	/**
+	 * Checks if the given event class has been fired since we started listening
+	 * for it, or since the last time we reset the count. Causes the thread that
+	 * calls this to sleep, and check every second until the event was fired or
+	 * we reach the given wait timeout. If the timeout is less than a second,
+	 * then that's how long it will wait.
+	 *
+	 * @param <T> The type of event we are looking for.
+	 * @param eventClass The event class we want to check.
+	 * @param waitTimeout The longest time we will wait for the event to have
+	 *            been fired, in milliseconds.
+	 * @param pollTime How many milliseconds to wait between checking if the
+	 *            event has been fired. If less than 1, will be treated as 1.
+	 * @return True if the event was fired since we started listening or reset,
+	 *         False if we are not tracking it or it was not fired.
+	 * @see #wasFired(Class)
+	 * @see #resetFireCount(Class)
+	 */
+	public static <T extends Event> boolean wasFired(Class<T> eventClass,
+		long waitTimeout, long pollTime) {
 		if (!EventAssert.monitors.containsKey(eventClass)) {
 			return false;
 		}
@@ -165,11 +188,13 @@ public class EventAssert {
 			return EventAssert.wasFired(eventClass);
 		}
 
+		final long poll = pollTime < 1 ? 1 : pollTime;
+
 		if (EventAssert.wasFired(eventClass)) {
 			return true;
 		}
 
-		long nextWait = waitTimeout > 1000 ? 1000 : waitTimeout;
+		long nextWait = waitTimeout > poll ? poll : waitTimeout;
 		long totalWait = 0;
 
 		while (totalWait < waitTimeout) {
@@ -183,7 +208,7 @@ public class EventAssert {
 				return true;
 			}
 			totalWait += nextWait;
-			nextWait = waitTimeout > 1000 ? 1000 : waitTimeout;
+			nextWait = waitTimeout > poll ? poll : waitTimeout;
 		}
 		return EventAssert.wasFired(eventClass);
 	}
