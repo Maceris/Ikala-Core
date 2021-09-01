@@ -105,7 +105,7 @@ public class EventAssert {
 	}
 
 	/**
-	 * Stop listening for all events.
+	 * Stop listening for all events and clean up resources.
 	 *
 	 */
 	public static void stopListeningForEverything() {
