@@ -145,7 +145,7 @@ public class EventAssert {
 	 * for it, or since the last time we reset the count. Causes the thread that
 	 * calls this to sleep, and check every second until the event was fired or
 	 * we reach the given wait timeout. If the timeout is less than a second,
-	 * then that's how long it will wait.
+	 * then that's how long it will wait. Defaults to a 10 ms poll time.
 	 *
 	 * @param <T> The type of event we are looking for.
 	 * @param eventClass The event class we want to check.
@@ -155,6 +155,7 @@ public class EventAssert {
 	 *         False if we are not tracking it or it was not fired.
 	 * @see #wasFired(Class)
 	 * @see #resetFireCount(Class)
+	 * @see #wasFired(Class, long, long)
 	 */
 	public static <T extends Event> boolean wasFired(Class<T> eventClass,
 		long waitTimeout) {
@@ -178,6 +179,7 @@ public class EventAssert {
 	 *         False if we are not tracking it or it was not fired.
 	 * @see #wasFired(Class)
 	 * @see #resetFireCount(Class)
+	 * @see #wasFired(Class, long)
 	 */
 	public static <T extends Event> boolean wasFired(Class<T> eventClass,
 		long waitTimeout, long pollTime) {
