@@ -5,6 +5,8 @@ import com.ikalagaming.localization.Localization;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.NonNull;
+
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.concurrent.locks.ReentrantLock;
@@ -152,7 +154,8 @@ public class Logging {
 	 * @param details What to log
 	 * @see #create()
 	 */
-	static void log(String origin, LogLevel level, String details) {
+	static void log(@NonNull String origin, @NonNull LogLevel level,
+		@NonNull String details) {
 		Logging.thresholdLock.lock();
 		try {
 			if (level.intValue() < Logging.threshold.intValue()) {
@@ -167,6 +170,11 @@ public class Logging {
 		}
 		finally {
 			Logging.thresholdLock.unlock();
+		}
+
+		// skip special values
+		if (LogLevel.ALL.equals(level) || LogLevel.OFF.equals(level)) {
+			return;
 		}
 
 		Logging.initLock.lock();
