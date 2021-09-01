@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Tests for the Plugin Manager.
@@ -92,6 +93,30 @@ public class TestPluginManager {
 		synchronized (this.callbackSync) {
 			return this.callbackExecuted;
 		}
+	}
+
+	/**
+	 * Clears all plugin commands and checks that they're gone.
+	 */
+	@Test
+	public void testCommandClearing() {
+		PluginManager manager = PluginManager.getInstance();
+
+		List<String> commands = Arrays
+			.asList("COMMAND_ENABLE", "COMMAND_DISABLE", "COMMAND_DISABLE",
+				"COMMAND_LOAD", "COMMAND_UNLOAD", "COMMAND_RELOAD",
+				"COMMAND_LIST_PLUGINS", "COMMAND_HELP")
+			.stream().map(cmd -> SafeResourceLoader.getString(cmd,
+				manager.getResourceBundle()))
+			.collect(Collectors.toList());
+
+		Assert.assertTrue(commands.stream().map(manager::isCommandRegistered)
+			.allMatch(value -> true == value));
+
+		manager.clearCommands();
+
+		Assert.assertTrue(commands.stream().map(manager::isCommandRegistered)
+			.allMatch(value -> false == value));
 	}
 
 	/**
