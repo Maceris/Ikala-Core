@@ -2,6 +2,8 @@ package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.EventAssert;
 import com.ikalagaming.launcher.Launcher;
+import com.ikalagaming.logging.LogLevel;
+import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -71,6 +73,7 @@ public class TestPluginManager {
 	@Before
 	public void beforeTest() {
 		Launcher.initialize();
+		Logging.setLogLevel(LogLevel.WARNING);
 	}
 
 	/**
