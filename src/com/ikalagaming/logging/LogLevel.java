@@ -17,8 +17,9 @@ import java.util.logging.Level;
 public enum LogLevel {
 	/**
 	 * OFF is a special level that can be used to turn off logging. This should
-	 * not be used as a value when constructing a message for logging. This
-	 * level is initialized to <CODE>1000</CODE>.
+	 * not be used as a value when constructing a message for logging, and the
+	 * log will be ignored if tried. This level is initialized to
+	 * <CODE>1000</CODE>.
 	 */
 	OFF("OFF", 1000),
 	/**
@@ -88,8 +89,8 @@ public enum LogLevel {
 	FINEST("FINEST", 10),
 	/**
 	 * ALL indicates that all messages should be logged. This should not be used
-	 * as a value when constructing a message for logging. This level is
-	 * initialized to <CODE>-10</CODE>.
+	 * as a value when constructing a message for logging, and the log will be
+	 * ignored if tried. This level is initialized to <CODE>-10</CODE>.
 	 */
 	ALL("ALL", -10);
 
