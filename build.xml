@@ -26,6 +26,7 @@
 	<target name="init">
 		<!-- Create the build directory structure used by compile -->
 		<mkdir dir="${build.dir}" />
+		<mkdir dir="${doc.dir}" />
 		<mkdir dir="${build.testdir}" />
 		<mkdir dir="${src.delomboked.dir}" />
 	</target>
@@ -89,6 +90,11 @@
 	</target>
 
 	<target name="javadoc" depends="delombok" description="generate javadoc">
+		<unzip dest="${doc.dir}">
+		    <fileset dir="${jars.info.dir}">
+		        <include name="*-javadoc.jar"/>
+		    </fileset>
+		</unzip>
 		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="${javaVersion}" sourcepath="${src.delomboked.dir}" splitindex="true" use="true" version="true">
 			<classpath>
 				<fileset dir="${jars.plugins.dir}" includes="*.jar" />
@@ -101,7 +107,7 @@
 		<!-- Create the distribution directory -->
 		<mkdir dir="${dist.dir}" />
 
-		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}.jar" basedir="${build.dir}">
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}.jar" basedir="${build.dir}" duplicate="preserve">
 			<zipgroupfileset dir="${jars.bundled.dir}" includes="*.jar" />
 			<zipfileset dir="${licenses.dir}" includes="*" prefix="licenses" />
 			<manifest>
