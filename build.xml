@@ -115,9 +115,7 @@
 			</manifest>
 		</jar>
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.delomboked.dir}" />
-		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}">
-			<zipgroupfileset dir="${jars.info.dir}" includes="*-javadoc.jar" />
-		</jar>
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}"/>
 	</target>
 
 	<target name="clean" description="clean up">
