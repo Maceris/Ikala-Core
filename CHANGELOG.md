@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - gson bundled in for use in plugins
 
+### Changed
+- Bundle library javadocs into javadoc output jar
+
 ## [0.3.0] - 2021-08-31
 ### Added
 - Plugin folder utilities
