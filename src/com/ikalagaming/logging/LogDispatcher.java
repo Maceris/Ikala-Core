@@ -1,8 +1,5 @@
 package com.ikalagaming.logging;
 
-import com.ikalagaming.event.EventManager;
-import com.ikalagaming.logging.events.Log;
-
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
 
@@ -23,7 +20,6 @@ class LogDispatcher extends Thread {
 	private ArrayDeque<String> queue;
 	private boolean running;
 	private boolean hasLogs;
-	private EventManager manager;
 
 	/**
 	 * Used to handle synchronization and waiting for events
@@ -33,13 +29,9 @@ class LogDispatcher extends Thread {
 	/**
 	 * Creates and starts the thread. It will begin attempting to dispatch
 	 * events immediately if there are any available.
-	 *
-	 * @param eventManager the event manager to use in dispatching events
-	 *
 	 */
-	public LogDispatcher(EventManager eventManager) {
+	public LogDispatcher() {
 		this.setName("LogDispatcher");
-		this.manager = eventManager;
 		this.queue = new ArrayDeque<>();
 		this.hasLogs = false;
 		this.running = true;
@@ -52,9 +44,10 @@ class LogDispatcher extends Thread {
 				this.hasLogs = false;
 				return;
 			}
-			// log it to the system output stream
-			Log log = new Log(this.queue.remove());
-			this.manager.fireEvent(log);
+			/**
+			 * This is the logger implementation for now.
+			 */
+			System.out.println(this.queue.remove());// NOSONAR
 		}
 		catch (NoSuchElementException noElement) {
 			// the queue is empty

@@ -1,7 +1,6 @@
 package com.ikalagaming.event;
 
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.logging.events.Log;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -152,16 +151,10 @@ public class EventManager {
 			throw illegalState;
 		}
 		catch (Exception e) {
-			if (event instanceof Log) {
-				e.printStackTrace();
-			}
-			else {
-				String err = SafeResourceLoader.getString("EVT_QUEUE_FULL",
-					"com.ikalagaming.event.strings")
-					+ "in EventManager.fireEvent(Event)";
-				EventManager.log.warning(err);
-			}
-
+			String err = SafeResourceLoader.getString("EVT_QUEUE_FULL",
+				"com.ikalagaming.event.strings")
+				+ "in EventManager.fireEvent(Event)";
+			EventManager.log.warning(err);
 		}
 	}
 

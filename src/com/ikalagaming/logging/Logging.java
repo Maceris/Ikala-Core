@@ -1,6 +1,5 @@
 package com.ikalagaming.logging;
 
-import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
@@ -27,7 +26,6 @@ public class Logging {
 	private static LogLevel threshold = Logging.DEFAULT_THRESHOLD;
 	private static ResourceBundle resourceBundle;
 	private static LogDispatcher dispatcher;
-	private static EventManager eventManager;
 
 	private static boolean initialized = false;
 
@@ -46,7 +44,6 @@ public class Logging {
 			if (Logging.initialized) {
 				return;
 			}
-			Logging.eventManager = EventManager.getInstance();
 			try {
 				Logging.resourceBundle = ResourceBundle.getBundle(
 					"com.ikalagaming.logging.resources.LoggingPlugin",
@@ -56,7 +53,7 @@ public class Logging {
 				Logging.log(PluginManager.PLUGIN_NAME, LogLevel.SEVERE,
 					"locale not found in LoggingPlugin.onLoad()");
 			}
-			Logging.dispatcher = new LogDispatcher(Logging.eventManager);
+			Logging.dispatcher = new LogDispatcher();
 			Logging.dispatcher.start();
 
 			Logging.initialized = true;
@@ -82,7 +79,6 @@ public class Logging {
 			Logging.dispatcher.terminate();
 			Logging.dispatcher = null;
 			Logging.resourceBundle = null;
-			Logging.eventManager = null;
 			Logging.initialized = false;
 			Logging.thresholdLock.lock();
 			try {

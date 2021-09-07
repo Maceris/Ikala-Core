@@ -191,7 +191,6 @@ public class PluginManager {
 	@Setter
 	private boolean enableOnLoad;
 
-	private MiscLoggingListener logListener;
 	private PluginCommandListener commandListener;
 
 	/**
@@ -232,7 +231,6 @@ public class PluginManager {
 		this.resourceBundle = ResourceBundle.getBundle(
 			"com.ikalagaming.plugins.resources.PluginManager",
 			Localization.getLocale());
-		this.logListener = new MiscLoggingListener();
 		this.commandListener = new PluginCommandListener();
 
 		this.commands = new ArrayList<>();
@@ -240,7 +238,6 @@ public class PluginManager {
 		Logging.create();
 
 		this.registerCommands();
-		EventManager.getInstance().registerEventListeners(this.logListener);
 		EventManager.getInstance().registerEventListeners(this.commandListener);
 
 	}
@@ -1706,7 +1703,6 @@ public class PluginManager {
 	}
 
 	private void shutdown() {
-		EventManager.getInstance().unregisterEventListeners(this.logListener);
 		EventManager.getInstance()
 			.unregisterEventListeners(this.commandListener);
 
