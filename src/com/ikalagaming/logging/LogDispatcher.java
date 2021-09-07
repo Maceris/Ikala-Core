@@ -1,7 +1,7 @@
 package com.ikalagaming.logging;
 
-import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Holds an internal queue and dispatches the events in order when possible.
@@ -17,7 +17,7 @@ class LogDispatcher extends Thread {
 	 */
 	private static final long WAIT_TIMEOUT = 10000;
 
-	private ArrayDeque<String> queue;
+	private ConcurrentLinkedDeque<String> queue;
 	private boolean running;
 	private boolean hasLogs;
 
@@ -32,7 +32,7 @@ class LogDispatcher extends Thread {
 	 */
 	public LogDispatcher() {
 		this.setName("LogDispatcher");
-		this.queue = new ArrayDeque<>();
+		this.queue = new ConcurrentLinkedDeque<>();
 		this.hasLogs = false;
 		this.running = true;
 		this.syncObject = new Object();
