@@ -18,7 +18,11 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/Ikala-Core/lib/info/luaj-doc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/bundled/lombok-1.18.20.jar"/>
+	<classpathentry kind="lib" path="lib/bundled/lombok-1.18.20.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/Ikala-Core/lib/info/lombok-1.18.16-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="lib/testing/junit-platform-console-standalone-1.8.0-M1.jar" sourcepath="lib/info/junit-platform-console-standalone-1.8.0-M1-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:platform:/resource/Ikala-Core/lib/info/junit-platform-console-standalone-1.8.0-M1-javadoc.jar!/"/>
