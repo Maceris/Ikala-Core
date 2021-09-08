@@ -33,8 +33,7 @@ public class Logging {
 	private static ReentrantLock thresholdLock = new ReentrantLock();
 
 	/**
-	 * Sets up a static logger using the default event manager if one does not
-	 * exist already.
+	 * Sets up a static logger.
 	 *
 	 * @see Logging#destory()
 	 */

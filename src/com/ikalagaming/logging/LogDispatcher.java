@@ -25,6 +25,9 @@ class LogDispatcher extends Thread {
 
 	private DateTimeFormatter formatter;
 
+	private LogAppender[] appenders =
+		{new ConsoleAppender(), new FileAppender()};
+
 	/**
 	 * Used to handle synchronization and waiting for events
 	 */
@@ -49,11 +52,10 @@ class LogDispatcher extends Thread {
 				this.hasLogs = false;
 				return;
 			}
-			/**
-			 * This is the logger implementation for now.
-			 */
-			System.out.print(LocalDateTime.now().format(formatter));// NOSONAR
-			System.out.println(this.queue.remove());// NOSONAR
+			for (LogAppender append : this.appenders) {
+				append.append(LocalDateTime.now().format(this.formatter)
+					+ this.queue.remove());
+			}
 		}
 		catch (NoSuchElementException noElement) {
 			// the queue is empty
@@ -120,6 +122,9 @@ class LogDispatcher extends Thread {
 			}
 		}
 		this.queue.clear();
+		for (LogAppender append : this.appenders) {
+			append.stop();
+		}
 	}
 
 	/**
