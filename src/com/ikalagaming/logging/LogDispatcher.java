@@ -1,5 +1,7 @@
 package com.ikalagaming.logging;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -21,6 +23,8 @@ class LogDispatcher extends Thread {
 	private boolean running;
 	private boolean hasLogs;
 
+	private DateTimeFormatter formatter;
+
 	/**
 	 * Used to handle synchronization and waiting for events
 	 */
@@ -36,6 +40,7 @@ class LogDispatcher extends Thread {
 		this.hasLogs = false;
 		this.running = true;
 		this.syncObject = new Object();
+		this.formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ");
 	}
 
 	private void handleEvent() {
@@ -47,6 +52,7 @@ class LogDispatcher extends Thread {
 			/**
 			 * This is the logger implementation for now.
 			 */
+			System.out.print(LocalDateTime.now().format(formatter));// NOSONAR
 			System.out.println(this.queue.remove());// NOSONAR
 		}
 		catch (NoSuchElementException noElement) {
