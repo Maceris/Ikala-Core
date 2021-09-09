@@ -21,10 +21,10 @@
 		</RollingFile>
 	</Appenders>
 	<Loggers>
-		<logger name="org.hibernate" level="WARN">
+		<logger name="org.hibernate" level="WARN" additivity="false">
 			<AppenderRef ref="Console" />
 		</logger>
-		<logger name="com.ikalagaming" level="INFO">
+		<logger name="com.ikalagaming" level="INFO" additivity="false">
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="RollingFile" />
 		</logger>
