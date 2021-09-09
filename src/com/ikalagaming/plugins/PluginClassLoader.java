@@ -2,8 +2,8 @@ package com.ikalagaming.plugins;
 
 import com.ikalagaming.util.SafeResourceLoader;
 
-import lombok.CustomLog;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,7 @@ import java.util.Set;
  * @author Ches Burks
  *
  */
-@CustomLog(topic = PluginManager.PLUGIN_NAME)
+@Slf4j
 public class PluginClassLoader extends URLClassLoader {
 
 	/**
@@ -65,11 +65,9 @@ public class PluginClassLoader extends URLClassLoader {
 			else {
 				name = urls[0].getFile();
 			}
-			String err = SafeResourceLoader
-				.getString("PLUGIN_JAR_CLOSE_ERROR",
-					this.manager.getResourceBundle())
-				.replaceFirst(PluginManager.REGEX_PLUGIN, name);
-			PluginClassLoader.log.warning(err);
+			String err = SafeResourceLoader.getString("PLUGIN_JAR_CLOSE_ERROR",
+				this.manager.getResourceBundle());
+			PluginClassLoader.log.warn(err, name);
 		}
 	}
 
