@@ -2,7 +2,6 @@ package com.ikalagaming.launcher;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
@@ -33,13 +32,19 @@ public class Launcher {
 	 * Set up the main systems.
 	 */
 	public static void initialize() {
-		// creates all the static instances
-		EventManager.getInstance();
-		Logging.create();
-		PluginManager.getInstance();
 		Launcher.bundle = ResourceBundle.getBundle(
 			"com.ikalagaming.launcher.resources.Launcher",
 			Localization.getLocale());
+		Launcher.log
+			.info("=====================================================");
+		Launcher.log.info(
+			SafeResourceLoader.getString("STARTING_MESSAGE", Launcher.bundle));
+		Launcher.log
+			.info("=====================================================");
+		// creates all the static instances
+		EventManager.getInstance();
+		PluginManager.getInstance();
+
 	}
 
 	private static boolean isFlag(final String argument) {
@@ -63,56 +68,6 @@ public class Launcher {
 		Launcher.setupPluginFolders();
 		Launcher.readInputUntilStopped();
 		Launcher.shutdown();
-	}
-
-	/**
-	 * Notify the command line how to stop the program, keep reading in input
-	 * lines as package management commands until stop command is sent.
-	 */
-	private static void readInputUntilStopped() {
-		final String stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
-			Launcher.bundle, "stop");
-		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
-			Launcher.bundle, "Type '%s' to exit the program\n");
-
-		System.out.printf(stopMessage, stopCommand);
-
-		Scanner cmdLine = new Scanner(System.in);
-		while (cmdLine.hasNextLine()) {
-			String line = cmdLine.nextLine();
-
-			if ("stop".equalsIgnoreCase(line.trim())) {
-				break;
-			}
-
-			PluginCommandSent event;
-			String[] parts = line.split("\\s+");
-			if (1 == parts.length) {
-				event = new PluginCommandSent(parts[0]);
-			}
-			else {
-				String[] cmdArgs = new String[parts.length - 1];
-				System.arraycopy(parts, 1, cmdArgs, 0, cmdArgs.length);
-				event = new PluginCommandSent(parts[0], cmdArgs);
-			}
-			event.fire();
-		}
-		cmdLine.close();
-	}
-
-	/**
-	 * Set up the resource folders for all plugins.
-	 */
-	private static void setupPluginFolders() {
-		Map<String, Plugin> plugins =
-			PluginManager.getInstance().getLoadedPlugins();
-		for (String plugin : plugins.keySet()) {
-			PluginFolder.createFolder(plugin);
-			for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType
-				.values()) {
-				PluginFolder.createResourceFolder(plugin, resourceType);
-			}
-		}
 	}
 
 	private static void printHelp() {
@@ -195,6 +150,41 @@ public class Launcher {
 	}
 
 	/**
+	 * Notify the command line how to stop the program, keep reading in input
+	 * lines as package management commands until stop command is sent.
+	 */
+	private static void readInputUntilStopped() {
+		final String stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
+			Launcher.bundle, "stop");
+		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
+			Launcher.bundle, "Type '%s' to exit the program\n");
+
+		System.out.printf(stopMessage, stopCommand);
+
+		Scanner cmdLine = new Scanner(System.in);
+		while (cmdLine.hasNextLine()) {
+			String line = cmdLine.nextLine();
+
+			if ("stop".equalsIgnoreCase(line.trim())) {
+				break;
+			}
+
+			PluginCommandSent event;
+			String[] parts = line.split("\\s+");
+			if (1 == parts.length) {
+				event = new PluginCommandSent(parts[0]);
+			}
+			else {
+				String[] cmdArgs = new String[parts.length - 1];
+				System.arraycopy(parts, 1, cmdArgs, 0, cmdArgs.length);
+				event = new PluginCommandSent(parts[0], cmdArgs);
+			}
+			event.fire();
+		}
+		cmdLine.close();
+	}
+
+	/**
 	 * Sets the language/country. If language is null, or either language or
 	 * country are not valid ISO values, this will fail. Returns the status of
 	 * whether or not it should have worked.
@@ -268,11 +258,25 @@ public class Launcher {
 	}
 
 	/**
+	 * Set up the resource folders for all plugins.
+	 */
+	private static void setupPluginFolders() {
+		Map<String, Plugin> plugins =
+			PluginManager.getInstance().getLoadedPlugins();
+		for (String plugin : plugins.keySet()) {
+			PluginFolder.createFolder(plugin);
+			for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType
+				.values()) {
+				PluginFolder.createResourceFolder(plugin, resourceType);
+			}
+		}
+	}
+
+	/**
 	 * Shut down all the main systems, unloads everything.
 	 */
 	public static void shutdown() {
 		PluginManager.destoryInstance();
-		Logging.destory();
 		EventManager.destoryInstance();
 		Launcher.bundle = null;
 	}
