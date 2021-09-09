@@ -60,6 +60,7 @@
 				<include name="**/*.properties" />
 			</fileset>
 		</copy>
+		<copy file="${src.dir}/log4j2-test.xml" todir="${build.dir}"/>
 	</target>
 
 	<target name="compileTest" depends="compile" description="compile the JUnit tests">
@@ -91,9 +92,9 @@
 
 	<target name="javadoc" depends="delombok" description="generate javadoc">
 		<unzip dest="${doc.dir}">
-		    <fileset dir="${jars.info.dir}">
-		        <include name="*-javadoc.jar"/>
-		    </fileset>
+			<fileset dir="${jars.info.dir}">
+				<include name="*-javadoc.jar" />
+			</fileset>
 		</unzip>
 		<javadoc access="package" author="true" destdir="${doc.dir}" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="${packages}" source="${javaVersion}" sourcepath="${src.delomboked.dir}" splitindex="true" use="true" version="true">
 			<classpath>
@@ -115,7 +116,7 @@
 			</manifest>
 		</jar>
 		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-sources.jar" basedir="${src.delomboked.dir}" />
-		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}"/>
+		<jar jarfile="${dist.dir}/${plugin.name}-${plugin.version}-javadoc.jar" basedir="${doc.dir}" />
 	</target>
 
 	<target name="clean" description="clean up">
