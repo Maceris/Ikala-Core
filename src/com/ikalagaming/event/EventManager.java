@@ -237,7 +237,7 @@ public class EventManager {
 			this.dispatcher.join();
 		}
 		catch (InterruptedException e) {
-			e.printStackTrace();
+			EventManager.log.warn("Interrupted while shutting down", e);
 			// Re-interrupt as per SonarLint java:S2142
 			Thread.currentThread().interrupt();
 		}

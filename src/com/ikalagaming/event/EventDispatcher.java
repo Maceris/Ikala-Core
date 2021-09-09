@@ -4,8 +4,8 @@ import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Holds an EventQueue and dispatches the events in order when possible.
@@ -22,7 +22,7 @@ class EventDispatcher extends Thread {
 	 */
 	private static final long WAIT_TIMEOUT = 1000;
 
-	private ArrayDeque<Event> queue;
+	private ConcurrentLinkedDeque<Event> queue;
 
 	private EventManager eventManager;
 
@@ -42,7 +42,7 @@ class EventDispatcher extends Thread {
 	 */
 	public EventDispatcher(EventManager manager) {
 		this.setName("EventDispatcher");
-		this.queue = new ArrayDeque<>();
+		this.queue = new ConcurrentLinkedDeque<>();
 		this.eventManager = manager;
 		this.hasEvents = false;
 		this.running = true;
@@ -69,8 +69,7 @@ class EventDispatcher extends Thread {
 			catch (EventException e) {
 				String error = SafeResourceLoader.getString("DISPATCH_ERROR",
 					EventManager.getResourceBundle());
-				EventDispatcher.log.warn(error);
-				e.printStackTrace();
+				EventDispatcher.log.warn(error, e);
 			}
 		}
 	}
@@ -96,7 +95,9 @@ class EventDispatcher extends Thread {
 			throw illegalState;
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			String error = SafeResourceLoader.getString("DISPATCH_ERROR",
+				EventManager.getResourceBundle());
+			EventDispatcher.log.warn(error, e);
 			return;// don't wake up thread
 		}
 		this.wakeUp();
