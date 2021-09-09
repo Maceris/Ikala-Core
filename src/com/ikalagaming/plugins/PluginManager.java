@@ -5,7 +5,6 @@ import com.ikalagaming.event.Listener;
 import com.ikalagaming.launcher.Constants;
 import com.ikalagaming.launcher.PluginFolder;
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.logging.Logging;
 import com.ikalagaming.plugins.events.PluginDisabled;
 import com.ikalagaming.plugins.events.PluginEnabled;
 import com.ikalagaming.plugins.events.PluginLoaded;
@@ -214,8 +213,6 @@ public class PluginManager {
 		this.commandListener = new PluginCommandListener();
 
 		this.commands = new ArrayList<>();
-
-		Logging.create();
 
 		this.registerCommands();
 		EventManager.getInstance().registerEventListeners(this.commandListener);
