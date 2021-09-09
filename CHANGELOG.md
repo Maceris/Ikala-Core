@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Bundle library javadocs into javadoc output jar
 - Stop sending logs through the event system
+- Swap logger to slf5j backed by log4j2
 
 ## [0.3.0] - 2021-08-31
 ### Added

@@ -13,11 +13,11 @@ import com.ikalagaming.plugins.events.PluginUnloaded;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import com.github.zafarkhaja.semver.Version;
-import lombok.CustomLog;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,7 @@ import java.util.zip.ZipEntry;
  * @author Ches Burks
  *
  */
-@CustomLog(topic = PluginManager.PLUGIN_NAME)
+@Slf4j
 public class PluginManager {
 
 	private static PluginManager instance;
@@ -245,7 +245,7 @@ public class PluginManager {
 	private void alertMissingArgs() {
 		String tmp = SafeResourceLoader.getString("COMMAND_ARG_MISSING",
 			this.getResourceBundle());
-		PluginManager.log.warning(tmp);
+		PluginManager.log.warn(tmp);
 	}
 
 	/**
@@ -612,7 +612,7 @@ public class PluginManager {
 					.getString("PLUGIN_CONFIG_MISSING", this.resourceBundle)
 					.replaceFirst(PluginManager.REGEX_FILE,
 						PluginManager.PLUGIN_CONFIG_FILENAME);
-				PluginManager.log.warning(msg);
+				PluginManager.log.warn(msg);
 				return Optional.empty();
 			}
 
@@ -624,22 +624,22 @@ public class PluginManager {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_CONFIG_READ_ERROR", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, fileName);
-			PluginManager.log.warning(msg);
+			PluginManager.log.warn(msg);
 			return Optional.empty();
 		}
 		catch (InvalidDescriptionException e1) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_INVALID_DESCRIPTION", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, fileName);
-			PluginManager.log.warning(msg);
-			PluginManager.log.warning(e1.getMessage());
+			PluginManager.log.warn(msg);
+			PluginManager.log.warn(e1.getMessage());
 			return Optional.empty();
 		}
 		catch (Exception e) {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_JAR_ERROR", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, fileName);
-			PluginManager.log.warning(msg);
+			PluginManager.log.warn(msg);
 			return Optional.empty();
 		}
 	}
@@ -880,7 +880,7 @@ public class PluginManager {
 			String warning = SafeResourceLoader
 				.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
 				.replaceFirst(REGEX_FOLDER, "folder");
-			log.warning(warning);
+			log.warn(warning);
 			return;
 		}
 		pluginFolder = folderMaybe.get();
@@ -991,7 +991,7 @@ public class PluginManager {
 			SafeResourceLoader.getString(whichAlert, this.getResourceBundle())
 				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName)
 				.replaceFirst("\\$VERSION", version);
-		PluginManager.log.fine(message);
+		PluginManager.log.info(message);
 	}
 
 	/**
@@ -1004,7 +1004,7 @@ public class PluginManager {
 		String tmp = SafeResourceLoader
 			.getString("PLUGIN_NOT_LOADED", this.getResourceBundle())
 			.replaceFirst(PluginManager.REGEX_PLUGIN, plugin);
-		PluginManager.log.warning(tmp);
+		PluginManager.log.warn(tmp);
 	}
 
 	/**
@@ -1016,7 +1016,7 @@ public class PluginManager {
 		String msgCorrupted = SafeResourceLoader
 			.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle)
 			.replaceFirst("\\$PLUIGN", plugin);
-		PluginManager.log.warning(msgCorrupted);
+		PluginManager.log.warn(msgCorrupted);
 	}
 
 	/**
@@ -1165,7 +1165,7 @@ public class PluginManager {
 				.getString("PLUGIN_FILES_NULL", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_FOLDER,
 					folder.getAbsolutePath().replace(File.separatorChar, '/'));
-			PluginManager.log.warning(msg);
+			PluginManager.log.warn(msg);
 			return jars;
 		}
 		if (files.length == 0) {
@@ -1173,7 +1173,7 @@ public class PluginManager {
 				.getString("PLUGIN_FOLDER_EMPTY", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_FOLDER,
 					folder.getAbsolutePath().replace(File.separatorChar, '/'));
-			PluginManager.log.warning(msg);
+			PluginManager.log.warn(msg);
 			return jars;
 		}
 
@@ -1196,7 +1196,7 @@ public class PluginManager {
 				String msg = SafeResourceLoader
 					.getString("PLUGIN_FILE_SECURITY_ERR", this.resourceBundle)
 					.replaceFirst(PluginManager.REGEX_FILE, file.getName());
-				PluginManager.log.fine(msg);
+				PluginManager.log.debug(msg);
 				// Maybe one or more files can't be read
 				continue;
 			}
@@ -1222,7 +1222,7 @@ public class PluginManager {
 		catch (NullPointerException nullExcept) {
 			String msg = SafeResourceLoader.getString("PLUGIN_PATH_NULL",
 				this.resourceBundle);
-			PluginManager.log.warning(msg);
+			PluginManager.log.warn(msg);
 			return Optional.empty();
 		}
 		try {
@@ -1231,7 +1231,7 @@ public class PluginManager {
 					.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle)
 					.replaceFirst(PluginManager.REGEX_FOLDER, pluginFolder
 						.getAbsolutePath().replace(File.separatorChar, '/'));
-				PluginManager.log.warning(msg);
+				PluginManager.log.warn(msg);
 				return Optional.empty();
 			}
 			if (!pluginFolder.isDirectory()) {
@@ -1239,7 +1239,7 @@ public class PluginManager {
 					.getString("PLUGIN_FOLDER_NOT_FOLDER", this.resourceBundle)
 					.replaceFirst(PluginManager.REGEX_FOLDER, pluginFolder
 						.getAbsolutePath().replace(File.separatorChar, '/'));
-				PluginManager.log.warning(msg);
+				PluginManager.log.warn(msg);
 				return Optional.empty();
 			}
 			if (!pluginFolder.canRead()) {
@@ -1247,7 +1247,7 @@ public class PluginManager {
 					.getString("PLUGIN_FOLDER_UNREADABLE", this.resourceBundle)
 					.replaceFirst(PluginManager.REGEX_FOLDER, pluginFolder
 						.getAbsolutePath().replace(File.separatorChar, '/'));
-				PluginManager.log.warning(msg);
+				PluginManager.log.warn(msg);
 				return Optional.empty();
 			}
 		}
@@ -1255,7 +1255,7 @@ public class PluginManager {
 			String msg = SafeResourceLoader
 				.getString("PLUGIN_FOLDER_ACCESS_DENIED", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_FOLDER, path);
-			PluginManager.log.warning(msg);
+			PluginManager.log.warn(msg);
 			return Optional.empty();
 		}
 		return Optional.of(pluginFolder);
@@ -1282,7 +1282,7 @@ public class PluginManager {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginManager.log.warning(err);
+			PluginManager.log.warn(err);
 			throw new InvalidPluginException(err);
 		}
 
@@ -1295,21 +1295,21 @@ public class PluginManager {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_MAIN_NOT_A_PLUGIN", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginManager.log.warning(err);
+			PluginManager.log.warn(err);
 			throw new InvalidPluginException(err);
 		}
 		catch (InstantiationException e) {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_CANT_INSTANTIATE_MAIN", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginManager.log.warning(err);
+			PluginManager.log.warn(err);
 			throw new InvalidPluginException(err);
 		}
 		catch (IllegalAccessException e) {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, pluginInfo.getName());
-			PluginManager.log.warning(err);
+			PluginManager.log.warn(err);
 			throw new InvalidPluginException(err);
 		}
 	}
@@ -1431,7 +1431,7 @@ public class PluginManager {
 		String msg = SafeResourceLoader
 			.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle)
 			.replaceFirst(PluginManager.REGEX_PLUGIN, pluginName);
-		PluginManager.log.finer(msg);
+		PluginManager.log.debug(msg);
 		this.setPluginState(pluginName, PluginState.DISABLED);
 
 		this.logAlert("ALERT_LOADED", pluginName);
@@ -1589,7 +1589,7 @@ public class PluginManager {
 				.getString("COMMAND_ALREADY_REGISTERED",
 					this.getResourceBundle())
 				.replaceFirst(REGEX_COMMAND, command);
-			log.warning(msg);
+			log.warn(msg);
 			return false;
 		}
 
@@ -1599,7 +1599,7 @@ public class PluginManager {
 		String msg = SafeResourceLoader
 			.getString("REGISTERED_COMMAND", this.getResourceBundle())
 			.replaceFirst(REGEX_COMMAND, command);
-		log.finest(msg);
+		log.debug(msg);
 
 		java.util.Collections.sort(this.commands);
 
@@ -1797,7 +1797,7 @@ public class PluginManager {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
-			PluginManager.log.warning(notLoaded);
+			PluginManager.log.warn(notLoaded);
 			return false;
 		}
 
@@ -1807,7 +1807,7 @@ public class PluginManager {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
-			PluginManager.log.warning(notLoaded);
+			PluginManager.log.warn(notLoaded);
 			details.dispose();
 			this.pluginDetails.remove(toUnload);
 			return false;
@@ -1823,7 +1823,7 @@ public class PluginManager {
 			String notLoaded = SafeResourceLoader
 				.getString("PLUGIN_UNLOAD_FAIL", this.resourceBundle)
 				.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
-			PluginManager.log.warning(notLoaded);
+			PluginManager.log.warn(notLoaded);
 			this.setPluginState(toUnload, PluginState.CORRUPTED);
 			return false;
 		}
@@ -1836,7 +1836,7 @@ public class PluginManager {
 		String unreg = SafeResourceLoader
 			.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle)
 			.replaceFirst(PluginManager.REGEX_PLUGIN, toUnload);
-		PluginManager.log.finer(unreg);
+		PluginManager.log.debug(unreg);
 
 		details = this.pluginDetails.remove(toUnload);
 		details.dispose();
@@ -1865,7 +1865,7 @@ public class PluginManager {
 			String msg = SafeResourceLoader.getString("UNREGISTERED_COMMAND",
 				this.getResourceBundle());
 			msg = msg.replaceFirst(REGEX_COMMAND, command);
-			log.finest(msg);
+			log.debug(msg);
 			found = true;
 		}
 		return found;
