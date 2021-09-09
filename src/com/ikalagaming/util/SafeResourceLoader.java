@@ -1,9 +1,8 @@
 package com.ikalagaming.util;
 
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.plugins.PluginManager;
 
-import lombok.CustomLog;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +17,7 @@ import java.util.ResourceBundle;
  * @author Ches Burks
  *
  */
-@CustomLog(topic = PluginManager.PLUGIN_NAME)
+@Slf4j
 public class SafeResourceLoader {
 
 	/**
@@ -159,12 +158,12 @@ public class SafeResourceLoader {
 	}
 
 	private static void logClassCastException(String name, String bundle) {
-		SafeResourceLoader.log.warning("The " + name + " key from the " + bundle
+		SafeResourceLoader.log.warn("The " + name + " key from the " + bundle
 			+ " bundle is not a string ");
 	}
 
 	private static void logMissingResource(String name, String bundle) {
-		SafeResourceLoader.log.warning(
+		SafeResourceLoader.log.warn(
 			"Missing the " + name + " key from the " + bundle + " bundle");
 	}
 

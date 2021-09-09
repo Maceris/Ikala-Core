@@ -1,9 +1,8 @@
 package com.ikalagaming.event;
 
-import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
-import lombok.CustomLog;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayDeque;
 import java.util.NoSuchElementException;
@@ -14,7 +13,7 @@ import java.util.NoSuchElementException;
  * @author Ches Burks
  *
  */
-@CustomLog(topic = PluginManager.PLUGIN_NAME)
+@Slf4j
 class EventDispatcher extends Thread {
 
 	/**
@@ -55,7 +54,7 @@ class EventDispatcher extends Thread {
 			return;
 		}
 		if (this.eventManager == null) {
-			EventDispatcher.log.severe("There is no event manager!");
+			EventDispatcher.log.error("There is no event manager!");
 			return;
 		}
 		HandlerList handlers = this.eventManager.getHandlers(event);
@@ -70,7 +69,7 @@ class EventDispatcher extends Thread {
 			catch (EventException e) {
 				String error = SafeResourceLoader.getString("DISPATCH_ERROR",
 					EventManager.getResourceBundle());
-				EventDispatcher.log.warning(error);
+				EventDispatcher.log.warn(error);
 				e.printStackTrace();
 			}
 		}
@@ -119,7 +118,7 @@ class EventDispatcher extends Thread {
 			this.hasEvents = false;
 			String error = SafeResourceLoader.getString("EVT_QUEUE_EMPTY",
 				EventManager.getResourceBundle());
-			EventDispatcher.log.warning(error);
+			EventDispatcher.log.warn(error);
 			return;
 		}
 		this.dispatch(event);
@@ -143,7 +142,7 @@ class EventDispatcher extends Thread {
 						String error =
 							SafeResourceLoader.getString("THREAD_INTERRUPTED",
 								EventManager.getResourceBundle());
-						EventDispatcher.log.warning(error);
+						EventDispatcher.log.warn(error);
 						// Re-interrupt as per SonarLint java:S2142
 						Thread.currentThread().interrupt();
 					}

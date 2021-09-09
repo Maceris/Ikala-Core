@@ -8,7 +8,7 @@ import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
 
-import lombok.CustomLog;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.Arrays;
@@ -24,7 +24,7 @@ import java.util.Scanner;
  * @author Ches Burks
  *
  */
-@CustomLog(topic = "Launcher")
+@Slf4j
 public class Launcher {
 
 	private static ResourceBundle bundle;
@@ -262,7 +262,7 @@ public class Launcher {
 			}
 		}
 		catch (SecurityException e) {
-			Launcher.log.warning(SafeResourceLoader
+			Launcher.log.warn(SafeResourceLoader
 				.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
 		}
 	}
