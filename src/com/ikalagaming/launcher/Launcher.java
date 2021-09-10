@@ -41,6 +41,11 @@ public class Launcher {
 	 */
 	public static final int STATUS_OK = 0;
 
+	/**
+	 * The status for a generic error.
+	 */
+	public static final int STATUS_ERROR = -1;
+
 	private static Scanner commandLine;
 
 	private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
@@ -130,13 +135,17 @@ public class Launcher {
 				break;
 			}
 			synchronized (Launcher.mainThreadStages) {
-				for (LoopStage stage : Launcher.mainThreadStages) {
 
+				for (LoopStage stage : Launcher.mainThreadStages) {
 					int status = stage.execute();
-					if (STATUS_OK != status) {
-						String message = SafeResourceLoader
-							.getString("STAGE_CODE_NOT_OK", Launcher.bundle);
-						Launcher.log.warn(message, stage.getId(), status);
+					switch (status) {
+						case STATUS_OK:
+							break;
+						case STATUS_ERROR:
+						default:
+							String message = SafeResourceLoader.getString(
+								"STAGE_CODE_NOT_OK", Launcher.bundle);
+							Launcher.log.warn(message, stage.getId(), status);
 					}
 				}
 			}
@@ -225,16 +234,14 @@ public class Launcher {
 
 	/**
 	 * Reading in input line as package management commands.
-	 *
-	 * @return The status.
 	 */
-	private static int readInput() {
-		if (Launcher.commandLine.hasNextLine()) {
+	private static void readInput() {
+		while (Launcher.commandLine.hasNextLine()) {
 			String line = Launcher.commandLine.nextLine();
 
 			if (Launcher.stopCommand.equalsIgnoreCase(line.trim())) {
 				Launcher.shouldShutdown.set(true);
-				return -1;
+				return;
 			}
 
 			PluginCommandSent event;
@@ -249,7 +256,6 @@ public class Launcher {
 			}
 			event.fire();
 		}
-		return STATUS_OK;
 	}
 
 	/**
