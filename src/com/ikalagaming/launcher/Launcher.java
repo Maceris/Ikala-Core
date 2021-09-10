@@ -46,6 +46,11 @@ public class Launcher {
 	 */
 	public static final int STATUS_ERROR = -1;
 
+	/**
+	 * Allows a stage to indicate that it wants to be removed from the list.
+	 */
+	public static final int STATUS_REMOVE_STAGE = 1;
+
 	private static Scanner commandLine;
 
 	private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
@@ -130,16 +135,20 @@ public class Launcher {
 	 * Run all stages until told to stop.
 	 */
 	private static void mainLoop() {
+		List<UUID> toRemove = new ArrayList<>();
 		while (true) {
 			if (Launcher.shouldShutdown.get()) {
 				break;
 			}
 			synchronized (Launcher.mainThreadStages) {
-
+				toRemove.clear();
 				for (LoopStage stage : Launcher.mainThreadStages) {
 					int status = stage.execute();
 					switch (status) {
 						case STATUS_OK:
+							break;
+						case STATUS_REMOVE_STAGE:
+							toRemove.add(stage.getId());
 							break;
 						case STATUS_ERROR:
 						default:
@@ -148,6 +157,7 @@ public class Launcher {
 							Launcher.log.warn(message, stage.getId(), status);
 					}
 				}
+				toRemove.forEach(Launcher::removeMainThreadStage);
 			}
 		}
 
