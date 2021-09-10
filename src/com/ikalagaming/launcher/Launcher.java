@@ -10,6 +10,8 @@ import com.ikalagaming.util.SafeResourceLoader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +20,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.IntSupplier;
 
 /**
  * Contains functionality for controling the lifecycle of the framework, and the
@@ -32,12 +33,7 @@ public class Launcher {
 
 	private static ResourceBundle bundle;
 
-	private static List<IntSupplier> mainThreadStages;
-
-	/**
-	 * The status for a main thread stage indicating everything is fine.
-	 */
-	public static final int STATUS_OK = 0;
+	private static List<Method> mainThreadStages;
 
 	private static Scanner commandLine;
 
@@ -52,33 +48,19 @@ public class Launcher {
 	 * Add a stage to the main thread loop. The main loop will go through and
 	 * run each stage in order on the main thread. This returns a status value
 	 * indicating whether or not everything is fine.
-	 * 
-	 * @param stage The method to execute each loop.
+	 *
+	 * @param stage The method to execute each loop. Should be accessible and
+	 *            take no arguments.
+	 * @return True if we registered the method, false if there was a problem.
 	 */
-	public static void addMainThreadStage(IntSupplier stage) {
+	public static boolean addMainThreadStage(Method stage) {
+		if (!stage.isAccessible() || stage.getParameterCount() > 0) {
+			return false;
+		}
 		synchronized (Launcher.mainThreadStages) {
 			Launcher.mainThreadStages.add(stage);
 		}
-
-	}
-
-	/**
-	 * Run all stages until told to stop.
-	 */
-	private static void mainLoop() {
-		while (true) {
-			if (shouldShutdown.get()) {
-				break;
-			}
-			synchronized (Launcher.mainThreadStages) {
-				for (IntSupplier stage : Launcher.mainThreadStages) {
-					int status = stage.getAsInt();
-					if (STATUS_OK != status) {
-						// TODO log issue
-					}
-				}
-			}
-		}
+		return true;
 	}
 
 	/**
@@ -120,16 +102,40 @@ public class Launcher {
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
 		Launcher.setupPluginFolders();
 
-		stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
+		Launcher.stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
 			Launcher.bundle, "stop");
 		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
 			Launcher.bundle, "Type '%s' to exit the program\n");
-		System.out.printf(stopMessage, stopCommand);
-		commandLine = new Scanner(System.in);
+		System.out.printf(stopMessage, Launcher.stopCommand);
+		Launcher.commandLine = new Scanner(System.in);
 		new Thread(Launcher::readInput, "CmdInput").start();
-		mainLoop();
-		commandLine.close();
+		Launcher.mainLoop();
+		Launcher.commandLine.close();
 		Launcher.shutdown();
+	}
+
+	/**
+	 * Run all stages until told to stop.
+	 */
+	private static void mainLoop() {
+		while (true) {
+			if (Launcher.shouldShutdown.get()) {
+				break;
+			}
+			synchronized (Launcher.mainThreadStages) {
+				for (Method stage : Launcher.mainThreadStages) {
+					try {
+						stage.invoke(stage);
+					}
+					catch (IllegalAccessException | IllegalArgumentException
+						| InvocationTargetException e) {
+						String message = SafeResourceLoader
+							.getString("ERROR_CALLBACK", Launcher.bundle);
+						Launcher.log.warn(message, e);
+					}
+				}
+			}
+		}
 	}
 
 	private static void printHelp() {
@@ -213,17 +219,16 @@ public class Launcher {
 
 	/**
 	 * Reading in input line as package management commands.
-	 * 
+	 *
 	 * @return The status.
 	 */
-	private static int readInput() {
-		while (commandLine.hasNextLine()) {
-			String line = commandLine.nextLine();
+	private static void readInput() {
+		while (Launcher.commandLine.hasNextLine()) {
+			String line = Launcher.commandLine.nextLine();
 
-			if (stopCommand.equalsIgnoreCase(line.trim())) {
-				shouldShutdown.set(true);
-				;
-				return -1;
+			if (Launcher.stopCommand.equalsIgnoreCase(line.trim())) {
+				Launcher.shouldShutdown.set(true);
+				return;
 			}
 
 			PluginCommandSent event;
@@ -238,8 +243,17 @@ public class Launcher {
 			}
 			event.fire();
 		}
-		return STATUS_OK;
+	}
 
+	/**
+	 * Remove a method from the main thread loop.
+	 *
+	 * @param stage The method to remove.
+	 */
+	public static void removeMainThreadStage(Method stage) {
+		synchronized (Launcher.mainThreadStages) {
+			Launcher.mainThreadStages.remove(stage);
+		}
 	}
 
 	/**
