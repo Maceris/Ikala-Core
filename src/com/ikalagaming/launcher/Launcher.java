@@ -46,11 +46,6 @@ public class Launcher {
 	 */
 	public static final int STATUS_ERROR = -1;
 
-	/**
-	 * Allows a stage to indicate that it wants to be removed from the list.
-	 */
-	public static final int STATUS_REMOVE_STAGE = 1;
-
 	private static Scanner commandLine;
 
 	private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
@@ -146,9 +141,6 @@ public class Launcher {
 					int status = stage.execute();
 					switch (status) {
 						case STATUS_OK:
-							break;
-						case STATUS_REMOVE_STAGE:
-							toRemove.add(stage.getId());
 							break;
 						case STATUS_ERROR:
 						default:
