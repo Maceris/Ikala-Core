@@ -1,10 +1,14 @@
 package com.ikalagaming.util;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  *
@@ -13,6 +17,7 @@ import java.util.Optional;
  * @author Ches Burks
  *
  */
+@Slf4j
 public class FileUtils {
 
 	/**
@@ -79,13 +84,7 @@ public class FileUtils {
 		}
 		File f = new File(path);
 		try {
-			if (!f.exists()) {
-				return false;
-			}
-			if (!f.canRead()) {
-				return false;
-			}
-			if (!f.canWrite()) {
+			if (!f.exists() || !f.canRead() || !f.canWrite()) {
 				return false;
 			}
 			/*
@@ -132,6 +131,32 @@ public class FileUtils {
 	 */
 	public static Optional<File> getFile(@NonNull String path) {
 		return Optional.of(new File(path));
+	}
+
+	/**
+	 * Reads in all the text in a file, concatenates it into a string, and
+	 * returns that. This is very likely to take a relatively long time as we
+	 * are reading from disk, be careful calling it.
+	 *
+	 * @param file The file to read from.
+	 * @return The contents of the file as a UTF8 string, or empty string if
+	 *         it's not a valid file.
+	 */
+	public static String readAsString(@NonNull File file) {
+		if (!file.exists() || !file.canRead() || !file.isFile()) {
+			return "";
+		}
+		StringBuilder contentBuilder = new StringBuilder();
+
+		try (Stream<String> stream =
+			Files.lines(file.toPath(), StandardCharsets.UTF_8)) {
+			stream.forEach(line -> contentBuilder.append(line).append("\n"));
+		}
+		catch (IOException e) {
+			FileUtils.log.warn("Exception occurred reading file", e);
+		}
+
+		return contentBuilder.toString();
 	}
 
 	/**
