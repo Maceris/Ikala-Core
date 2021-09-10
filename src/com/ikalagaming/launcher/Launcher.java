@@ -7,11 +7,10 @@ import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +18,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntSupplier;
 
 /**
  * Contains functionality for controling the lifecycle of the framework, and the
@@ -33,7 +34,12 @@ public class Launcher {
 
 	private static ResourceBundle bundle;
 
-	private static List<Method> mainThreadStages;
+	private static List<LoopStage> mainThreadStages;
+
+	/**
+	 * The status for a main thread stage indicating everything is fine.
+	 */
+	public static final int STATUS_OK = 0;
 
 	private static Scanner commandLine;
 
@@ -49,18 +55,19 @@ public class Launcher {
 	 * run each stage in order on the main thread. This returns a status value
 	 * indicating whether or not everything is fine.
 	 *
-	 * @param stage The method to execute each loop. Should be accessible and
-	 *            take no arguments.
-	 * @return True if we registered the method, false if there was a problem.
+	 * @param stage The method to execute each loop. Should return a status
+	 *            value.
+	 * @return The ID of the newly recorded stage. Required if you want to
+	 *         remove that stage again.
 	 */
-	public static boolean addMainThreadStage(Method stage) {
-		if (!stage.isAccessible() || stage.getParameterCount() > 0) {
-			return false;
-		}
+	public static UUID addMainThreadStage(@NonNull IntSupplier stage) {
+		LoopStage newStage = new LoopStage(stage);
 		synchronized (Launcher.mainThreadStages) {
-			Launcher.mainThreadStages.add(stage);
+			Launcher.mainThreadStages.add(newStage);
 		}
-		return true;
+		log.debug(SafeResourceLoader.getString("STAGE_ADDED", Launcher.bundle),
+			newStage.getId());
+		return newStage.getId();
 	}
 
 	/**
@@ -123,19 +130,18 @@ public class Launcher {
 				break;
 			}
 			synchronized (Launcher.mainThreadStages) {
-				for (Method stage : Launcher.mainThreadStages) {
-					try {
-						stage.invoke(stage);
-					}
-					catch (IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException e) {
+				for (LoopStage stage : Launcher.mainThreadStages) {
+
+					int status = stage.execute();
+					if (STATUS_OK != status) {
 						String message = SafeResourceLoader
-							.getString("ERROR_CALLBACK", Launcher.bundle);
-						Launcher.log.warn(message, e);
+							.getString("STAGE_CODE_NOT_OK", Launcher.bundle);
+						Launcher.log.warn(message, stage.getId(), status);
 					}
 				}
 			}
 		}
+
 	}
 
 	private static void printHelp() {
@@ -222,13 +228,13 @@ public class Launcher {
 	 *
 	 * @return The status.
 	 */
-	private static void readInput() {
-		while (Launcher.commandLine.hasNextLine()) {
+	private static int readInput() {
+		if (Launcher.commandLine.hasNextLine()) {
 			String line = Launcher.commandLine.nextLine();
 
 			if (Launcher.stopCommand.equalsIgnoreCase(line.trim())) {
 				Launcher.shouldShutdown.set(true);
-				return;
+				return -1;
 			}
 
 			PluginCommandSent event;
@@ -243,17 +249,22 @@ public class Launcher {
 			}
 			event.fire();
 		}
+		return STATUS_OK;
 	}
 
 	/**
 	 * Remove a method from the main thread loop.
 	 *
-	 * @param stage The method to remove.
+	 * @param stageID The ID of the stage to remove.
 	 */
-	public static void removeMainThreadStage(Method stage) {
+	public static void removeMainThreadStage(UUID stageID) {
 		synchronized (Launcher.mainThreadStages) {
-			Launcher.mainThreadStages.remove(stage);
+			Launcher.mainThreadStages
+				.removeIf(stage -> stage.getId().equals(stageID));
 		}
+		log.debug(
+			SafeResourceLoader.getString("STAGE_REMOVED", Launcher.bundle),
+			stageID);
 	}
 
 	/**
