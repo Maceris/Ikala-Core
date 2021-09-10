@@ -10,11 +10,15 @@ import com.ikalagaming.util.SafeResourceLoader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntSupplier;
 
 /**
  * Contains functionality for controling the lifecycle of the framework, and the
@@ -28,10 +32,60 @@ public class Launcher {
 
 	private static ResourceBundle bundle;
 
+	private static List<IntSupplier> mainThreadStages;
+
+	/**
+	 * The status for a main thread stage indicating everything is fine.
+	 */
+	public static final int STATUS_OK = 0;
+
+	private static Scanner commandLine;
+
+	private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
+
+	/**
+	 * Used to exit the program.
+	 */
+	private static String stopCommand;
+
+	/**
+	 * Add a stage to the main thread loop. The main loop will go through and
+	 * run each stage in order on the main thread. This returns a status value
+	 * indicating whether or not everything is fine.
+	 * 
+	 * @param stage The method to execute each loop.
+	 */
+	public static void addMainThreadStage(IntSupplier stage) {
+		synchronized (Launcher.mainThreadStages) {
+			Launcher.mainThreadStages.add(stage);
+		}
+
+	}
+
+	/**
+	 * Run all stages until told to stop.
+	 */
+	private static void mainLoop() {
+		while (true) {
+			if (shouldShutdown.get()) {
+				break;
+			}
+			synchronized (Launcher.mainThreadStages) {
+				for (IntSupplier stage : Launcher.mainThreadStages) {
+					int status = stage.getAsInt();
+					if (STATUS_OK != status) {
+						// TODO log issue
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Set up the main systems.
 	 */
 	public static void initialize() {
+		Launcher.mainThreadStages = new ArrayList<>();
 		Launcher.bundle = ResourceBundle.getBundle(
 			"com.ikalagaming.launcher.resources.Launcher",
 			Localization.getLocale());
@@ -44,7 +98,6 @@ public class Launcher {
 		// creates all the static instances
 		EventManager.getInstance();
 		PluginManager.getInstance();
-
 	}
 
 	private static boolean isFlag(final String argument) {
@@ -66,7 +119,16 @@ public class Launcher {
 		PluginManager.getInstance().loadAllPlugins(
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
 		Launcher.setupPluginFolders();
-		Launcher.readInputUntilStopped();
+
+		stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
+			Launcher.bundle, "stop");
+		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
+			Launcher.bundle, "Type '%s' to exit the program\n");
+		System.out.printf(stopMessage, stopCommand);
+		commandLine = new Scanner(System.in);
+		new Thread(Launcher::readInput, "CmdInput").start();
+		mainLoop();
+		commandLine.close();
 		Launcher.shutdown();
 	}
 
@@ -150,23 +212,18 @@ public class Launcher {
 	}
 
 	/**
-	 * Notify the command line how to stop the program, keep reading in input
-	 * lines as package management commands until stop command is sent.
+	 * Reading in input line as package management commands.
+	 * 
+	 * @return The status.
 	 */
-	private static void readInputUntilStopped() {
-		final String stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
-			Launcher.bundle, "stop");
-		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
-			Launcher.bundle, "Type '%s' to exit the program\n");
+	private static int readInput() {
+		while (commandLine.hasNextLine()) {
+			String line = commandLine.nextLine();
 
-		System.out.printf(stopMessage, stopCommand);
-
-		Scanner cmdLine = new Scanner(System.in);
-		while (cmdLine.hasNextLine()) {
-			String line = cmdLine.nextLine();
-
-			if ("stop".equalsIgnoreCase(line.trim())) {
-				break;
+			if (stopCommand.equalsIgnoreCase(line.trim())) {
+				shouldShutdown.set(true);
+				;
+				return -1;
 			}
 
 			PluginCommandSent event;
@@ -181,7 +238,8 @@ public class Launcher {
 			}
 			event.fire();
 		}
-		cmdLine.close();
+		return STATUS_OK;
+
 	}
 
 	/**
