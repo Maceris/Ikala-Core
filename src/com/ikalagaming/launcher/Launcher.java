@@ -46,6 +46,11 @@ public class Launcher {
 	 */
 	public static final int STATUS_ERROR = -1;
 
+	/**
+	 * The status for when a stage wants to remove itself.
+	 */
+	public static final int STATUS_REQUEST_REMOVAL = -2;
+
 	private static Scanner commandLine;
 
 	private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
@@ -142,6 +147,9 @@ public class Launcher {
 					switch (status) {
 						case STATUS_OK:
 							break;
+						case STATUS_REQUEST_REMOVAL:
+							toRemove.add(stage.getId());
+							// fall through on purpose
 						case STATUS_ERROR:
 						default:
 							String message = SafeResourceLoader.getString(
