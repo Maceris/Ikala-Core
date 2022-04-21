@@ -86,7 +86,7 @@ public class Launcher {
 	public static void initialize() {
 		Launcher.mainThreadStages = new ArrayList<>();
 		Launcher.bundle = ResourceBundle.getBundle(
-			"com.ikalagaming.launcher.resources.Launcher",
+			"com.ikalagaming.launcher.Launcher",
 			Localization.getLocale());
 		Launcher.log
 			.info("=====================================================");

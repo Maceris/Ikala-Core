@@ -34,10 +34,10 @@ public class TestPluginManager {
 	/**
 	 * The resources folder where the test jars are located.
 	 */
-	private final String TEST_JAR_FOLDER =
-		System.getProperty("user.dir") + File.separatorChar + "test"
-			+ File.separatorChar + "com" + File.separatorChar + "ikalagaming"
-			+ File.separatorChar + "plugins" + File.separatorChar + "resources";
+	private final String TEST_JAR_FOLDER = System.getProperty("user.dir")
+		+ File.separatorChar + "build" + File.separatorChar + "resources"
+		+ File.separatorChar + "test" + File.separatorChar + "com"
+		+ File.separatorChar + "ikalagaming" + File.separatorChar + "plugins";
 
 	/**
 	 * The names of plugins that should be loaded successfully.

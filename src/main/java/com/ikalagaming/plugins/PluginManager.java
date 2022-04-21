@@ -208,7 +208,7 @@ public class PluginManager {
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
-			"com.ikalagaming.plugins.resources.PluginManager",
+			"com.ikalagaming.plugins.PluginManager",
 			Localization.getLocale());
 		this.commandListener = new PluginCommandListener();
 

@@ -29,7 +29,7 @@ public class EventManager {
 	@SuppressWarnings("javadoc")
 	@Getter
 	private static ResourceBundle resourceBundle = ResourceBundle.getBundle(
-		"com.ikalagaming.event.resources.Events", Localization.getLocale());
+		"com.ikalagaming.event.Events", Localization.getLocale());
 
 	/**
 	 * Shuts down the static instance if it exists, and then nullifies the
