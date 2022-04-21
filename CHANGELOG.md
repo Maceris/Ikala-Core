@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ability to add stages to run as part of the core loop
 - Utility for reading in a file as a string
 
+### Changed
+- Updated build system to gradle
+
 ## [0.4.0] - 2021-09-08
 ### Added
 - gson bundled in for use in plugins
