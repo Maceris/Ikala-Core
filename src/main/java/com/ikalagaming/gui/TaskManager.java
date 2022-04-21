@@ -28,6 +28,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
@@ -131,7 +132,7 @@ public class TaskManager extends JFrame {
 	public TaskManager(PluginManager pluginMgr) {
 		this.pluginManager = pluginMgr;
 		this.setTitle("Task Manager");
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		this.setBounds(100, 100, 450, 465);
 
 		JMenuBar menuBar = new JMenuBar();

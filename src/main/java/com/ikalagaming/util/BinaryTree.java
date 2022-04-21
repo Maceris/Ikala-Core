@@ -192,6 +192,11 @@ public class BinaryTree<T extends Comparable<T>> {
 	protected int size;
 
 	/**
+	 * Create a new empty binary tree.
+	 */
+	public BinaryTree() {}
+
+	/**
 	 * Removes all objects from the tree.
 	 */
 	public void clear() {

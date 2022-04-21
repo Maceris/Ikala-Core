@@ -19,8 +19,16 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  */
 public class NameRegistry {
-	private HashMap<String, IntegerTree> registeredNames = new HashMap<>();
-	private ReentrantLock mapLock = new ReentrantLock();
+	private HashMap<String, IntegerTree> registeredNames;
+	private ReentrantLock mapLock;
+
+	/**
+	 * Create a new, empty, name registry.
+	 */
+	public NameRegistry() {
+		this.registeredNames = new HashMap<>();
+		this.mapLock = new ReentrantLock();
+	}
 
 	/**
 	 * Removes all names and mappings from the registry.
@@ -218,7 +226,7 @@ public class NameRegistry {
 	 * Unregisters a name from the registry. The name should follow the format
 	 * that matches what is created by {@link NameRegistry#registerName(String)}
 	 * . For reference that is a string that is formed as follows:
-	 * <tt>Base name (String)+'-'+ID (Integer)</tt>. If the name is not
+	 * <code>Base name (String)+'-'+ID (Integer)</code>. If the name is not
 	 * registered, or has an invalid format for any reason, returns false.
 	 * Returns true if the name was unregistered correctly.
 	 *

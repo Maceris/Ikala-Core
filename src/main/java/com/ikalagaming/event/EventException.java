@@ -7,6 +7,9 @@ public class EventException extends Exception {
 
 	private static final long serialVersionUID = 5399364798206259554L;
 
+	/**
+	 * The cause of the exception.
+	 */
 	private final Throwable cause;
 
 	/**

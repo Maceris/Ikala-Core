@@ -9,6 +9,10 @@ package com.ikalagaming.util;
  *
  */
 public class IntegerTree extends BinaryTree<Integer> {
+	/**
+	 * Create a new empty integer tree.
+	 */
+	public IntegerTree() {}
 
 	/**
 	 * Returns the smallest integer not stored in the tree.

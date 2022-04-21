@@ -22,6 +22,13 @@ public abstract class Plugin {
 	private Set<Listener> emptyListenerSet = new HashSet<>();
 
 	/**
+	 * You should not be creating plugins using the constructor.
+	 *
+	 * @see PluginManager#getPlugin(String)
+	 */
+	public Plugin() {}
+
+	/**
 	 * Returns a list of listeners for this plugin. These listeners will be used
 	 * with the event system.
 	 *

@@ -27,7 +27,7 @@ public class SystemProperties {
 	 * contained in this directory. For example, the game 'TextGame's folder
 	 * would look like <code>getHomeDir() + "/TextGame/"</code> on a Windows
 	 * computer.
-	 * <table summary="The associated directory">
+	 * <table>
 	 * <tr>
 	 * <th>Operating System</th>
 	 * <th>Directory</th>

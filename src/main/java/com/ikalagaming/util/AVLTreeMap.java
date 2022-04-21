@@ -130,7 +130,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 
 	/**
 	 * The base of the tree. This is null if the tree is empty.
-	 * 
+	 *
 	 * @return The root node of the tree.
 	 */
 	@Getter(value = AccessLevel.PACKAGE)
@@ -144,6 +144,11 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 	@SuppressWarnings("javadoc")
 	@Getter
 	private int size;
+
+	/**
+	 * Create a new AVLTreeMap.
+	 */
+	public AVLTreeMap() {}
 
 	/**
 	 * Removes all objects from the tree.

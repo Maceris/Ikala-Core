@@ -7,6 +7,12 @@ package com.ikalagaming.event;
 public abstract class Event {
 
 	/**
+	 * You should be instantiating a subclass of event, and not the Event class
+	 * itself.
+	 */
+	public Event() {}
+
+	/**
 	 * Fires this event using the static instance of the {@link EventManager}.
 	 *
 	 * For example: <code>new CustomEvent("That was easy").fire();</code>

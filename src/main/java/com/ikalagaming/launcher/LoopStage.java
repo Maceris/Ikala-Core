@@ -16,6 +16,11 @@ import java.util.function.IntSupplier;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class LoopStage {
 	private IntSupplier method;
+	/**
+	 * The unique ID of the stage, so we can differentiate them.
+	 *
+	 * @return The unique ID of this loop stage.
+	 */
 	@Getter
 	@EqualsAndHashCode.Include
 	private UUID id;
