@@ -1,0 +1,102 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+    id 'io.franzbecker.gradle-lombok' version '5.0.0'
+}
+
+import io.franzbecker.gradle.lombok.task.DelombokTask
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
+    withJavadocJar()
+}
+
+archivesBaseName = "${pluginName}"
+version = "${pluginVersion}"
+
+repositories {
+    mavenCentral()
+}
+
+eclipse {
+    classpath {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+dependencies {
+	implementation "com.google.code.gson:gson:${gsonVersion}"
+	implementation "com.github.zafarkhaja:java-semver:${jsemverVersion}"
+	implementation "org.apache.logging.log4j:log4j-api:${log4jAPIVersion}"
+	implementation "org.apache.logging.log4j:log4j-core:${log4jCoreVersion}"
+	implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jSlf4jVersion}"
+	implementation "org.luaj:luaj-jse:${luaJVersion}"
+	implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+	implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
+	
+	// Testing
+	testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
+	testCompileOnly "org.hamcrest:hamcrest:${hamcrestVersion}"
+	testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+	
+	// lombok
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+	testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+	testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+}
+
+tasks.register('delombok', DelombokTask) {
+	description 'Delomboks the source code'
+    ext.outputDir = file("${delombokedSourceDir}")
+    outputs.dir(outputDir)
+    sourceSets.main.java.srcDirs.each { 
+        inputs.dir(it)
+        args(it, "-d", outputDir)
+    }
+    doFirst {
+        outputDir.deleteDir()
+    }
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+	testLogging {
+		exceptionFormat 'full'
+		events 'passed', 'skipped', 'failed'
+		showStandardStreams true
+	}
+}
+
+tasks.named('javadoc') {
+	dependsOn delombok
+	source = delombok.outputDir
+	failOnError = false
+}
+
+tasks.named('clean') {
+	delete delombokedSourceDir
+	// tests generate this
+	delete 'logs'
+}
+
+tasks.named('jar') {
+    manifest {
+        attributes 'Main-Class': 'com.ikalagaming.launcher.Launcher'
+    }
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
