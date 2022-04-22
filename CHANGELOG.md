@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated build system to gradle
 
+### Removed
+- Task manager
+
 ## [0.4.0] - 2021-09-08
 ### Added
 - gson bundled in for use in plugins
