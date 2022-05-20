@@ -15,7 +15,7 @@ import java.util.function.IntSupplier;
  */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class LoopStage {
-	private IntSupplier method;
+	private final IntSupplier method;
 	/**
 	 * The unique ID of the stage, so we can differentiate them.
 	 *
@@ -23,7 +23,7 @@ public class LoopStage {
 	 */
 	@Getter
 	@EqualsAndHashCode.Include
-	private UUID id;
+	private final UUID id;
 
 	/**
 	 * Create a new loop stage given the method to execute.
