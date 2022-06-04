@@ -170,5 +170,8 @@ public class SafeResourceLoader {
 	/**
 	 * Private constructor so that this class is not instantiated.
 	 */
-	private SafeResourceLoader() {}
+	private SafeResourceLoader() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
+	}
 }

@@ -56,5 +56,8 @@ public class StringOperations {
 	/**
 	 * Private constructor so that this plugin is not initialized.
 	 */
-	private StringOperations() {}
+	private StringOperations() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
+	}
 }

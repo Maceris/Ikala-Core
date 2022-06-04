@@ -162,5 +162,8 @@ public class FileUtils {
 	/**
 	 * Private constructor so this class is not instantiated.
 	 */
-	private FileUtils() {}
+	private FileUtils() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
+	}
 }

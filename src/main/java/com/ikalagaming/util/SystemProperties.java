@@ -175,6 +175,9 @@ public class SystemProperties {
 	/**
 	 * Private constructor so that this class is not instantiated.
 	 */
-	private SystemProperties() {}
+	private SystemProperties() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
+	}
 
 }
