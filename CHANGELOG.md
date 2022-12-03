@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated build system to gradle
+- Change the main threads classloader to be able to read from plugin jars
 
 ### Removed
 - Task manager
