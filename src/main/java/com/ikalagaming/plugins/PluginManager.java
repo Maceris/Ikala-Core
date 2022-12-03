@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -179,6 +180,11 @@ public class PluginManager {
 	private final Map<String, Class<?>> pluginClassCache;
 
 	/**
+	 * The class loader that replaces the threads class loader.
+	 */
+	private SharedClassLoader sharedClassLoader;
+
+	/**
 	 * Maps strings to info about plugins loaded in memory
 	 */
 	private Map<String, PluginDetails> pluginDetails;
@@ -208,8 +214,7 @@ public class PluginManager {
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
-			"com.ikalagaming.plugins.PluginManager",
-			Localization.getLocale());
+			"com.ikalagaming.plugins.PluginManager", Localization.getLocale());
 		this.commandListener = new PluginCommandListener();
 
 		this.commands = new ArrayList<>();
@@ -1000,6 +1005,10 @@ public class PluginManager {
 	 */
 	private void plCreateClassloaders(Map<File, PluginInfo> jarInfoMap,
 		List<File> skipped, Map<File, PluginClassLoader> loaders) {
+		this.sharedClassLoader =
+			new SharedClassLoader(this, this.getClass().getClassLoader());
+		Thread.currentThread().setContextClassLoader(sharedClassLoader);
+
 		for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
 			PluginInfo info = entry.getValue();
 
@@ -1024,8 +1033,8 @@ public class PluginManager {
 
 			PluginClassLoader loader = null;
 			try {
-				loader = new PluginClassLoader(this,
-					this.getClass().getClassLoader(), entry.getKey());
+				loader = new PluginClassLoader(this, sharedClassLoader,
+					entry.getKey());
 			}
 			catch (MalformedURLException e) {
 				this.logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
@@ -1143,7 +1152,8 @@ public class PluginManager {
 
 		for (File file : files) {
 			try {
-				if (!file.exists() || !file.canRead() || file.isDirectory() || !file.getName().endsWith(".jar")) {
+				if (!file.exists() || !file.canRead() || file.isDirectory()
+					|| !file.getName().endsWith(".jar")) {
 					continue;
 				}
 			}
@@ -1235,7 +1245,7 @@ public class PluginManager {
 		Class<? extends Plugin> pluginClass;
 		try {
 			pluginClass = clazz.asSubclass(Plugin.class);
-			return pluginClass.newInstance();
+			return pluginClass.getDeclaredConstructor().newInstance();
 		}
 		catch (ClassCastException ex) {
 			String err = SafeResourceLoader
@@ -1252,6 +1262,30 @@ public class PluginManager {
 		catch (IllegalAccessException e) {
 			String err = SafeResourceLoader
 				.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", this.resourceBundle);
+			PluginManager.log.warn(err, pluginInfo.getName());
+			throw new InvalidPluginException(err);
+		}
+		catch (IllegalArgumentException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_ILLEGAL_ARGUMENT", this.resourceBundle);
+			PluginManager.log.warn(err, pluginInfo.getName());
+			throw new InvalidPluginException(err);
+		}
+		catch (InvocationTargetException e) {
+			String err = SafeResourceLoader.getString(
+				"PLUGIN_MAIN_INVOCATION_TARGET", this.resourceBundle);
+			PluginManager.log.warn(err, pluginInfo.getName());
+			throw new InvalidPluginException(err);
+		}
+		catch (NoSuchMethodException e) {
+			String err = SafeResourceLoader
+				.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle);
+			PluginManager.log.warn(err, pluginInfo.getName());
+			throw new InvalidPluginException(err);
+		}
+		catch (SecurityException e) {
+			String err = SafeResourceLoader.getString("PLUGIN_MAIN_SECURITY",
+				this.resourceBundle);
 			PluginManager.log.warn(err, pluginInfo.getName());
 			throw new InvalidPluginException(err);
 		}
