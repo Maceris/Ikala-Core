@@ -1,5 +1,11 @@
 package com.ikalagaming.scripting;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
@@ -10,6 +16,7 @@ import javax.script.ScriptEngineManager;
  * @author Ches Burks
  *
  */
+@Slf4j
 public class Engine {
 
 	/**
@@ -19,6 +26,9 @@ public class Engine {
 
 	private static ScriptEngineManager engineManager = null;
 	private static ScriptEngine luaEngine = null;
+
+	private static List<Class<?>> registeredClasses =
+		Collections.synchronizedList(new ArrayList<>());
 
 	private static ScriptEngineManager getEngineManager() {
 		if (Engine.engineManager == null) {
@@ -37,8 +47,43 @@ public class Engine {
 			Engine.luaEngine = Engine.getEngineManager()
 				.getEngineByName(Engine.LUA_ENGINE_NAME);
 		}
-
 		return Engine.luaEngine;
+	}
+
+	/**
+	 * Register a class with the script engine, making all of its methods
+	 * available for use. If we registered the class <code>
+	 * public class Example{ public static void test() {...} }
+	 * </code> we could call it in lua like {@code Example:test()}. <br>
+	 * If the class is already registered, this will not do anything.
+	 *
+	 * @param clazz The class we are registering.
+	 */
+	public static void registerClass(Class<?> clazz) {
+		if (Engine.registeredClasses.contains(clazz)) {
+			return;
+		}
+		Engine.registeredClasses.add(clazz);
+		ScriptEngine engine = Engine.getLuaEngine();
+		engine.put(clazz.getSimpleName(), clazz);
+		Engine.log.debug("Registered class {} for scripting",
+			clazz.getSimpleName());
+	}
+
+	/**
+	 * Unregister a class from the script engine. <br>
+	 * If the class is not registered, this will not do anything.
+	 *
+	 * @param clazz The class we are unregistering.
+	 */
+	public static void unregisterClass(Class<?> clazz) {
+		if (!Engine.registeredClasses.contains(clazz)) {
+			return;
+		}
+		ScriptEngine engine = Engine.getLuaEngine();
+		engine.put(clazz.getSimpleName(), null);
+		Engine.log.debug("Unregistered class {} for scripting",
+			clazz.getSimpleName());
 	}
 
 	/**
