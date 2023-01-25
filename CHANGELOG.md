@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Ability to add stages to run as part of the core loop
 - Utility for reading in a file as a string
+- Cancelable events
 
 ### Changed
 - Updated build system to gradle
 - Change the main threads classloader to be able to read from plugin jars
+- Allow registering of classes with the scripting engine to expose methods
 
 ### Removed
 - Task manager
