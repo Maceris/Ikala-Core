@@ -181,7 +181,10 @@ public class PluginManager {
 
 	/**
 	 * The class loader that replaces the threads class loader.
+	 * 
+	 * @return The common class loader for plugins.
 	 */
+	@Getter
 	private SharedClassLoader sharedClassLoader;
 
 	/**
@@ -1008,6 +1011,7 @@ public class PluginManager {
 		this.sharedClassLoader =
 			new SharedClassLoader(this, this.getClass().getClassLoader());
 		Thread.currentThread().setContextClassLoader(sharedClassLoader);
+		EventManager.getInstance().setThreadClassloader(sharedClassLoader);
 
 		for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
 			PluginInfo info = entry.getValue();

@@ -28,8 +28,8 @@ public class EventManager {
 	 */
 	@SuppressWarnings("javadoc")
 	@Getter
-	private static ResourceBundle resourceBundle = ResourceBundle.getBundle(
-		"com.ikalagaming.event.Events", Localization.getLocale());
+	private static ResourceBundle resourceBundle = ResourceBundle
+		.getBundle("com.ikalagaming.event.Events", Localization.getLocale());
 
 	/**
 	 * Shuts down the static instance if it exists, and then nullifies the
@@ -220,6 +220,15 @@ public class EventManager {
 		listMap = this.createRegisteredListeners(listener);
 		listMap.entrySet().forEach(
 			e -> this.getEventListeners(e.getKey()).registerAll(e.getValue()));
+	}
+
+	/**
+	 * Set the event dispatcher's class loader.
+	 *
+	 * @param loader The new loader to use.
+	 */
+	public void setThreadClassloader(ClassLoader loader) {
+		this.dispatcher.setContextClassLoader(loader);
 	}
 
 	/**
