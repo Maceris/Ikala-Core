@@ -4,6 +4,7 @@ import com.ikalagaming.event.EventManager;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.plugins.events.AllPluginsEnabled;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -86,8 +87,7 @@ public class Launcher {
 	public static void initialize() {
 		Launcher.mainThreadStages = new ArrayList<>();
 		Launcher.bundle = ResourceBundle.getBundle(
-			"com.ikalagaming.launcher.Launcher",
-			Localization.getLocale());
+			"com.ikalagaming.launcher.Launcher", Localization.getLocale());
 		Launcher.log
 			.info("=====================================================");
 		Launcher.log.info(
@@ -117,6 +117,7 @@ public class Launcher {
 		PluginManager.getInstance().setCommandLine(true);
 		PluginManager.getInstance().loadAllPlugins(
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
+		new AllPluginsEnabled().fire();
 		Launcher.setupPluginFolders();
 
 		Launcher.stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
