@@ -1,6 +1,10 @@
 package com.ikalagaming.launcher;
 
+import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.EventManager;
+import com.ikalagaming.event.Listener;
+import com.ikalagaming.event.Order;
+import com.ikalagaming.launcher.events.Shutdown;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
@@ -11,14 +15,16 @@ import com.ikalagaming.util.SafeResourceLoader;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntSupplier;
@@ -32,6 +38,28 @@ import java.util.function.IntSupplier;
  */
 @Slf4j
 public class Launcher {
+
+	/**
+	 * Handles shutting down.
+	 *
+	 * @author Ches Burks
+	 *
+	 */
+	private static class LauncherListener implements Listener {
+		/**
+		 * Handle the shutdown event by flipping the shutdown flag. At this
+		 * point any event handling behavior is undefined, as anything that
+		 * cares about a shutdown should have been sent the event by now.
+		 *
+		 * @param event The event.
+		 */
+		@EventHandler(order = Order.MONITOR)
+		public void onShutdown(Shutdown event) {
+			log.info(
+				SafeResourceLoader.getString("SHUTTING_DOWN", Launcher.bundle));
+			Launcher.shouldShutdown.set(true);
+		}
+	}
 
 	private static ResourceBundle bundle;
 
@@ -51,8 +79,6 @@ public class Launcher {
 	 * The status for when a stage wants to remove itself.
 	 */
 	public static final int STATUS_REQUEST_REMOVAL = -2;
-
-	private static Scanner commandLine;
 
 	private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
 
@@ -76,7 +102,8 @@ public class Launcher {
 		synchronized (Launcher.mainThreadStages) {
 			Launcher.mainThreadStages.add(newStage);
 		}
-		log.debug(SafeResourceLoader.getString("STAGE_ADDED", Launcher.bundle),
+		Launcher.log.debug(
+			SafeResourceLoader.getString("STAGE_ADDED", Launcher.bundle),
 			newStage.getId());
 		return newStage.getId();
 	}
@@ -97,6 +124,8 @@ public class Launcher {
 		// creates all the static instances
 		EventManager.getInstance();
 		PluginManager.getInstance();
+		EventManager.getInstance()
+			.registerEventListeners(new LauncherListener());
 	}
 
 	private static boolean isFlag(final String argument) {
@@ -125,10 +154,11 @@ public class Launcher {
 		String stopMessage = SafeResourceLoader.getString("STOP_MESSAGE",
 			Launcher.bundle, "Type '%s' to exit the program\n");
 		System.out.printf(stopMessage, Launcher.stopCommand);
-		Launcher.commandLine = new Scanner(System.in);
-		new Thread(Launcher::readInput, "CmdInput").start();
+		Thread inputThread = new Thread(Launcher::readInput, "CmdInput");
+		inputThread.start();
+
 		Launcher.mainLoop();
-		Launcher.commandLine.close();
+		inputThread.interrupt();
 		Launcher.shutdown();
 	}
 
@@ -161,7 +191,11 @@ public class Launcher {
 				toRemove.forEach(Launcher::removeMainThreadStage);
 			}
 		}
-
+		synchronized (Launcher.mainThreadStages) {
+			Launcher.mainThreadStages
+				.forEach(stage -> toRemove.add(stage.getId()));
+			toRemove.forEach(Launcher::removeMainThreadStage);
+		}
 	}
 
 	private static void printHelp() {
@@ -247,16 +281,21 @@ public class Launcher {
 	 * Reading in input line as package management commands.
 	 */
 	private static void readInput() {
-		while (Launcher.commandLine.hasNextLine()) {
-			String line = Launcher.commandLine.nextLine();
-
-			if (Launcher.stopCommand.equalsIgnoreCase(line.trim())) {
-				Launcher.shouldShutdown.set(true);
+		BufferedReader br =
+			new BufferedReader(new InputStreamReader(System.in));
+		String input;
+		do {
+			try {
+				while (!br.ready()) {
+					Thread.sleep(200);
+				}
+				input = br.readLine();
+			}
+			catch (InterruptedException | IOException e) {
 				return;
 			}
-
 			PluginCommandSent event;
-			String[] parts = line.split("\\s+");
+			String[] parts = input.split("\\s+");
 			if (1 == parts.length) {
 				event = new PluginCommandSent(parts[0]);
 			}
@@ -267,6 +306,9 @@ public class Launcher {
 			}
 			event.fire();
 		}
+		while (!Launcher.stopCommand.equalsIgnoreCase(input.trim()));
+		Launcher.shouldShutdown.set(true);
+
 	}
 
 	/**
@@ -279,7 +321,7 @@ public class Launcher {
 			Launcher.mainThreadStages
 				.removeIf(stage -> stage.getId().equals(stageID));
 		}
-		log.debug(
+		Launcher.log.debug(
 			SafeResourceLoader.getString("STAGE_REMOVED", Launcher.bundle),
 			stageID);
 	}
@@ -375,7 +417,7 @@ public class Launcher {
 	/**
 	 * Shut down all the main systems, unloads everything.
 	 */
-	public static void shutdown() {
+	private static void shutdown() {
 		PluginManager.destoryInstance();
 		EventManager.destoryInstance();
 		Launcher.bundle = null;
