@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ability to add stages to run as part of the core loop
 - Utility for reading in a file as a string
 - Cancelable events
+- Custom scripting language
 
 ### Changed
 - Updated build system to gradle
