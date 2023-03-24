@@ -44,6 +44,7 @@ dependencies {
 	implementation "org.luaj:luaj-jse:${luaJVersion}"
 	implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 	implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
+	implementation "org.antlr:antlr4-runtime:${antlrVersion}"
 	
 	// Testing
 	testImplementation "org.awaitility:awaitility:${awaitilityVersion}"

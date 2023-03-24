@@ -1,7 +1,7 @@
 package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.EventAssert;
-import com.ikalagaming.launcher.Launcher;
+import com.ikalagaming.event.EventManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -62,7 +62,8 @@ public class TestPluginManager {
 	 */
 	@AfterEach
 	public void afterTest() {
-		Launcher.shutdown();
+		PluginManager.destoryInstance();
+		EventManager.destoryInstance();
 	}
 
 	/**
@@ -70,7 +71,8 @@ public class TestPluginManager {
 	 */
 	@BeforeEach
 	public void beforeTest() {
-		Launcher.initialize();
+		EventManager.getInstance();
+		PluginManager.getInstance();
 	}
 
 	/**
