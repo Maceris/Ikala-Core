@@ -48,7 +48,11 @@ public class Type {
 		/**
 		 * A node that is treated as a string.
 		 */
-		STRING;
+		STRING,
+		/**
+		 * A type that we can't determine until runtime.
+		 */
+		UNKNOWN;
 	}
 
 	/**
@@ -67,6 +71,7 @@ public class Type {
 			case STRING:
 				break;
 			case IDENTIFIER:
+			case UNKNOWN:
 			case VOID:
 			default:
 				throw new IllegalArgumentException(
@@ -123,6 +128,15 @@ public class Type {
 	}
 
 	/**
+	 * Create an unknown type, that we can't determine until runtime.
+	 *
+	 * @return The newly created type.
+	 */
+	public static Type unknownType() {
+		return new Type(Base.UNKNOWN, "", 0);
+	}
+
+	/**
 	 * Create a Void type.
 	 *
 	 * @return The newly created type.
@@ -170,6 +184,21 @@ public class Type {
 			throw new IllegalArgumentException("Dimensions must be positive.");
 		}
 		this.dimensions = dimensions;
+	}
+
+	/**
+	 * Check if this type has any of the supplied bases.
+	 *
+	 * @param bases The bases to check for.
+	 * @return True if any match, false if none do.
+	 */
+	public boolean anyOf(Base... bases) {
+		for (Base b : bases) {
+			if (this.base.equals(b)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
