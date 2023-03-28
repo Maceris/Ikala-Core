@@ -37,6 +37,22 @@ public abstract class Node {
 		this.children.add(child);
 	}
 
+	/**
+	 * Process the types for the tree.
+	 */
+	public void processTreeTypes() {
+		if (this.children.size() > 0) {
+			this.children.forEach(Node::processType);
+		}
+		this.processType();
+	}
+
+	/**
+	 * Process the types for the node, updating them if we can determine what
+	 * they are based on it's children.
+	 */
+	protected void processType() {}
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
@@ -54,5 +70,32 @@ public abstract class Node {
 			result.append(" } ");
 		}
 		return result.toString();
+	}
+
+	/**
+	 * Perform node-specific validation. Things like basic type checking, or
+	 * semantic analysis.
+	 *
+	 * @return True if the node is valid given it's contents and children, false
+	 *         if is not valid.
+	 */
+	protected boolean validate() {
+		// Default
+		return true;
+	}
+
+	/**
+	 * Validates the tree.
+	 *
+	 * @return True if the tree is valid, false if anything was not.
+	 */
+	public boolean validateTree() {
+		boolean valid = true;
+		if (this.children.size() > 0) {
+			valid = this.children.stream().map(Node::validateTree).collect(
+				Collectors.reducing(Boolean.TRUE, Boolean::logicalAnd));
+		}
+		// Don't short circuit
+		return valid & this.validate();
 	}
 }
