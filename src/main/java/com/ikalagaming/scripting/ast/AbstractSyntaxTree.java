@@ -916,6 +916,7 @@ public class AbstractSyntaxTree {
 		if (node.argumentList() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.argumentList()));
 		}
+		result.setType(Type.unknownType());
 		return result;
 	}
 
@@ -938,6 +939,7 @@ public class AbstractSyntaxTree {
 		if (node.argumentList() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.argumentList()));
 		}
+		result.setType(Type.unknownType());
 		return result;
 	}
 
@@ -1182,6 +1184,7 @@ public class AbstractSyntaxTree {
 					}
 					else if (array_lhs.methodInvocation_extension() != null) {
 						Call newNodeLHS = new Call();
+						newNodeLHS.setType(Type.unknownType());
 						newNodeLHS.addChild(leftNode);
 
 						newNodeLHS.addChild(
@@ -1211,6 +1214,7 @@ public class AbstractSyntaxTree {
 				}
 				if (extension.methodInvocation_extension() != null) {
 					Call newNode = new Call();
+					newNode.setType(Type.unknownType());
 					newNode.addChild(leftNode);
 
 					newNode.addChild(AbstractSyntaxTree.identifierNode(
