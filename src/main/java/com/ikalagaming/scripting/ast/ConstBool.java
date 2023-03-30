@@ -13,4 +13,9 @@ import lombok.Setter;
 @Setter
 public class ConstBool extends Node {
 	private boolean value;
+
+	@Override
+	public String toString() {
+		return Boolean.toString(value);
+	}
 }

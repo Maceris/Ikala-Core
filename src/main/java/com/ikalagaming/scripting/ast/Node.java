@@ -1,5 +1,7 @@
 package com.ikalagaming.scripting.ast;
 
+import com.ikalagaming.scripting.VariableTypeMap;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,12 +23,12 @@ public abstract class Node {
 	/**
 	 * The children of this node.
 	 */
-	List<Node> children = new ArrayList<>();
+	protected List<Node> children = new ArrayList<>();
 
 	/**
 	 * The type of the node.
 	 */
-	Type type;
+	protected Type type;
 
 	/**
 	 * Add a child to the list of children.
@@ -38,30 +40,50 @@ public abstract class Node {
 	}
 
 	/**
-	 * Process the types for the tree.
+	 * Process the types for the tree. Intended for use only on the root node.
 	 */
-	public void processTreeTypes() {
+	public final void processTreeTypes() {
+		processTreeTypes(new VariableTypeMap());
+	}
+
+	/**
+	 * Process the types for the tree. Intended for use only on the root node.
+	 * 
+	 * @param variables The variables that are valid for this node.
+	 */
+	private final void processTreeTypes(VariableTypeMap variables) {
 		if (this.children.size() > 0) {
-			this.children.forEach(Node::processType);
+			for (Node child : this.children) {
+				if (child instanceof Block || child instanceof ForLoop) {
+					child.processTreeTypes(variables.clone());
+				}
+				else {
+					child.processTreeTypes(variables);
+				}
+			}
 		}
-		this.processType();
+		this.processType(variables);
 	}
 
 	/**
 	 * Process the types for the node, updating them if we can determine what
 	 * they are based on it's children.
+	 * 
+	 * @param variables The variables that are valid for this node.
 	 */
-	protected void processType() {}
+	protected void processType(VariableTypeMap variables) {}
 
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
-		result.append(this.getClass().getSimpleName());
 		if (this.type != null) {
-			result.append("(");
 			result.append(this.type.toString());
-			result.append(")");
+			result.append(" ");
 		}
+		else {
+			result.append("____ ");
+		}
+		result.append(this.getClass().getSimpleName());
 		if (this.children.size() > 0) {
 			result.append(" { ");
 			result.append(this.children.stream()
@@ -85,11 +107,11 @@ public abstract class Node {
 	}
 
 	/**
-	 * Validates the tree.
+	 * Validates the tree. Intended for use only on the root node.
 	 *
 	 * @return True if the tree is valid, false if anything was not.
 	 */
-	public boolean validateTree() {
+	public final boolean validateTree() {
 		boolean valid = true;
 		if (this.children.size() > 0) {
 			valid = this.children.stream().map(Node::validateTree).collect(

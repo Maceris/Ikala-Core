@@ -13,4 +13,9 @@ import lombok.Setter;
 @Setter
 public class Identifier extends Node {
 	private String name;
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }

@@ -13,4 +13,9 @@ import lombok.Setter;
 @Setter
 public class ConstString extends Node {
 	private String value;
+
+	@Override
+	public String toString() {
+		return value;
+	}
 }

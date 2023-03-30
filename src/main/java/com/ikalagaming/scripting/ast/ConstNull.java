@@ -2,7 +2,7 @@ package com.ikalagaming.scripting.ast;
 
 /**
  * A null literal value, with a void type.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -12,5 +12,10 @@ public class ConstNull extends Node {
 	 */
 	public ConstNull() {
 		this.setType(Type.voidType());
+	}
+
+	@Override
+	public String toString() {
+		return "null";
 	}
 }

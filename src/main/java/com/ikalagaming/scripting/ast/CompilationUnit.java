@@ -6,6 +6,4 @@ package com.ikalagaming.scripting.ast;
  * @author Ches Burks
  *
  */
-public class CompilationUnit extends Node {
-
-}
+public class CompilationUnit extends Node {}

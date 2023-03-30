@@ -13,4 +13,9 @@ import lombok.Setter;
 @Setter
 public class ConstChar extends Node {
 	private char value;
+
+	@Override
+	public String toString() {
+		return "'" + value + "'";
+	}
 }

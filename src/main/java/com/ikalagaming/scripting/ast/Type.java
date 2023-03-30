@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -11,6 +12,7 @@ import lombok.NonNull;
  *
  */
 @Getter
+@EqualsAndHashCode
 public class Type {
 
 	/**

@@ -236,6 +236,7 @@ public class AbstractSyntaxTree {
 
 	private static Node process(ArgumentListContext node) {
 		ArgumentList result = new ArgumentList();
+		result.setType(Type.voidType());
 		node.expression().stream().map(AbstractSyntaxTree::process)
 			.forEach(result::addChild);
 		return result;
@@ -321,6 +322,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(BasicForStatementContext node) {
 		ForLoop result = new ForLoop();
+		result.setType(Type.voidType());
 		if (node.forInit() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.forInit()));
 			result.setInitializer(true);
@@ -348,6 +350,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(BasicForStatementNoShortIfContext node) {
 		ForLoop result = new ForLoop();
+		result.setType(Type.voidType());
 		if (node.forInit() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.forInit()));
 			result.setInitializer(true);
@@ -375,6 +378,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(BlockContext node) {
 		Block result = new Block();
+		result.setType(Type.voidType());
 		if (node.blockStatements() != null) {
 			node.blockStatements().blockStatement().stream()
 				.map(AbstractSyntaxTree::process).forEach(result::addChild);
@@ -410,6 +414,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(BreakStatementContext node) {
 		Break result = new Break();
+		result.setType(Type.voidType());
 		if (node.Identifier() != null) {
 			result
 				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
@@ -453,6 +458,7 @@ public class AbstractSyntaxTree {
 	 */
 	public static CompilationUnit process(CompilationUnitContext parserOutput) {
 		CompilationUnit root = new CompilationUnit();
+		root.setType(Type.voidType());
 
 		if (parserOutput.blockStatement() != null) {
 			final int count = parserOutput.blockStatement().size();
@@ -535,6 +541,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(ContinueStatementContext node) {
 		Continue result = new Continue();
+		result.setType(Type.voidType());
 		if (node.Identifier() != null) {
 			result
 				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
@@ -550,6 +557,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(DoStatementContext node) {
 		DoWhile result = new DoWhile();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.statement()));
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		return result;
@@ -563,6 +571,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(EnhancedForStatementContext node) {
 		EnhancedForLoop result = new EnhancedForLoop();
+		result.setType(Type.voidType());
 
 		TypeNode type = new TypeNode();
 		type.setType(AbstractSyntaxTree.getType(node.type()));
@@ -593,6 +602,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(EnhancedForStatementNoShortIfContext node) {
 		EnhancedForLoop result = new EnhancedForLoop();
+		result.setType(Type.voidType());
 
 		TypeNode type = new TypeNode();
 		type.setType(AbstractSyntaxTree.getType(node.type()));
@@ -741,6 +751,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(GotoStatementContext node) {
 		Goto result = new Goto();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
 		return result;
 	}
@@ -753,6 +764,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(IfThenElseStatementContext node) {
 		If result = new If();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
 		result.addChild(AbstractSyntaxTree.process(node.statement()));
@@ -767,6 +779,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(IfThenElseStatementNoShortIfContext node) {
 		If result = new If();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf(0)));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf(1)));
@@ -781,6 +794,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(IfThenStatementContext node) {
 		If result = new If();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statement()));
 		return result;
@@ -879,12 +893,14 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(LocalVariableDeclarationContext node) {
 		VarDeclarationList result = new VarDeclarationList();
+		result.setType(Type.voidType());
 
 		TypeNode type = new TypeNode();
 		type.setType(AbstractSyntaxTree.getType(node.type()));
 		if (node.FINAL() != null) {
 			type.setFinal(true);
 		}
+		result.addChild(type);
 
 		for (VariableDeclaratorContext var : node.variableDeclaratorList()
 			.variableDeclarator()) {
@@ -1361,6 +1377,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(StatementExpressionListContext node) {
 		StatementList result = new StatementList();
+		result.setType(Type.voidType());
 		node.statementExpression().stream().map(AbstractSyntaxTree::process)
 			.forEach(result::addChild);
 		return result;
@@ -1443,6 +1460,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(SwitchBlockContext node) {
 		Block result = new Block();
+		result.setType(Type.voidType());
 		if (node.switchBlockStatementGroup() != null) {
 			node.switchBlockStatementGroup().stream()
 				.map(AbstractSyntaxTree::process).forEach(result::addChild);
@@ -1462,6 +1480,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(SwitchBlockStatementGroupContext node) {
 		SwitchBlockGroup result = new SwitchBlockGroup();
+		result.setType(Type.voidType());
 		node.switchLabel().stream().map(AbstractSyntaxTree::process)
 			.forEach(result::addChild);
 		node.blockStatements().blockStatement().stream()
@@ -1477,6 +1496,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(SwitchLabelContext node) {
 		SwitchLabel result = new SwitchLabel();
+		result.setType(Type.voidType());
 		if (node.expression() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.expression()));
 		}
@@ -1494,6 +1514,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(SwitchStatementContext node) {
 		SwitchStatement result = new SwitchStatement();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.switchBlock()));
 		return result;
@@ -1584,6 +1605,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(WhileStatementContext node) {
 		While result = new While();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statement()));
 		return result;
@@ -1597,6 +1619,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(WhileStatementNoShortIfContext node) {
 		While result = new While();
+		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
 		return result;
