@@ -1,24 +1,3667 @@
 package com.ikalagaming.scripting;
 
+import org.antlr.v4.runtime.FailedPredicateException;
+import org.antlr.v4.runtime.NoViableAltException;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.RuntimeMetaData;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.Vocabulary;
+import org.antlr.v4.runtime.VocabularyImpl;
 // Generated from IkalaScriptParser.g4 by ANTLR 4.12.0
-import org.antlr.v4.runtime.atn.*;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.ParserATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.tree.ParseTreeListener;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class IkalaScriptParser extends Parser {
+	@SuppressWarnings("CheckReturnValue")
+	public static class AdditiveExpressionContext extends ParserRuleContext {
+		public AdditiveExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode ADD() {
+			return this.getToken(IkalaScriptParser.ADD, 0);
+		}
+
+		public AdditiveExpressionContext additiveExpression() {
+			return this.getRuleContext(AdditiveExpressionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterAdditiveExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitAdditiveExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_additiveExpression;
+		}
+
+		public MultiplicativeExpressionContext multiplicativeExpression() {
+			return this.getRuleContext(MultiplicativeExpressionContext.class,
+				0);
+		}
+
+		public TerminalNode SUB() {
+			return this.getToken(IkalaScriptParser.SUB, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArgumentListContext extends ParserRuleContext {
+		public ArgumentListContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<TerminalNode> COMMA() {
+			return this.getTokens(IkalaScriptParser.COMMA);
+		}
+
+		public TerminalNode COMMA(int i) {
+			return this.getToken(IkalaScriptParser.COMMA, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterArgumentList(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitArgumentList(this);
+			}
+		}
+
+		public List<ExpressionContext> expression() {
+			return this.getRuleContexts(ExpressionContext.class);
+		}
+
+		public ExpressionContext expression(int i) {
+			return this.getRuleContext(ExpressionContext.class, i);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_argumentList;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArrayAccess_extensionContext extends ParserRuleContext {
+		public ArrayAccess_extensionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterArrayAccess_extension(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitArrayAccess_extension(this);
+			}
+		}
+
+		public List<ExpressionContext> expression() {
+			return this.getRuleContexts(ExpressionContext.class);
+		}
+
+		public ExpressionContext expression(int i) {
+			return this.getRuleContext(ExpressionContext.class, i);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_arrayAccess_extension;
+		}
+
+		public List<TerminalNode> LBRACK() {
+			return this.getTokens(IkalaScriptParser.LBRACK);
+		}
+
+		public TerminalNode LBRACK(int i) {
+			return this.getToken(IkalaScriptParser.LBRACK, i);
+		}
+
+		public Primary_extension_accessContext primary_extension_access() {
+			return this.getRuleContext(Primary_extension_accessContext.class,
+				0);
+		}
+
+		public List<TerminalNode> RBRACK() {
+			return this.getTokens(IkalaScriptParser.RBRACK);
+		}
+
+		public TerminalNode RBRACK(int i) {
+			return this.getToken(IkalaScriptParser.RBRACK, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArrayAccess_LHS_GeneralContext
+		extends ParserRuleContext {
+		public ArrayAccess_LHS_GeneralContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterArrayAccess_LHS_General(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitArrayAccess_LHS_General(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		public FieldAccessContext fieldAccess() {
+			return this.getRuleContext(FieldAccessContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_arrayAccess_LHS_General;
+		}
+
+		public LiteralContext literal() {
+			return this.getRuleContext(LiteralContext.class, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public MethodInvocationContext methodInvocation() {
+			return this.getRuleContext(MethodInvocationContext.class, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArrayAccess_LHSContext extends ParserRuleContext {
+		public ArrayAccess_LHSContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterArrayAccess_LHS(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitArrayAccess_LHS(this);
+			}
+		}
+
+		public List<ExpressionContext> expression() {
+			return this.getRuleContexts(ExpressionContext.class);
+		}
+
+		public ExpressionContext expression(int i) {
+			return this.getRuleContext(ExpressionContext.class, i);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_arrayAccess_LHS;
+		}
+
+		public List<TerminalNode> LBRACK() {
+			return this.getTokens(IkalaScriptParser.LBRACK);
+		}
+
+		public TerminalNode LBRACK(int i) {
+			return this.getToken(IkalaScriptParser.LBRACK, i);
+		}
+
+		public Primary_LHS_accessContext primary_LHS_access() {
+			return this.getRuleContext(Primary_LHS_accessContext.class, 0);
+		}
+
+		public List<TerminalNode> RBRACK() {
+			return this.getTokens(IkalaScriptParser.RBRACK);
+		}
+
+		public TerminalNode RBRACK(int i) {
+			return this.getToken(IkalaScriptParser.RBRACK, i);
+		}
+
+		public TypeNameContext typeName() {
+			return this.getRuleContext(TypeNameContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArrayAccessContext extends ParserRuleContext {
+		public ArrayAccessContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArrayAccess_LHS_GeneralContext arrayAccess_LHS_General() {
+			return this.getRuleContext(ArrayAccess_LHS_GeneralContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterArrayAccess(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitArrayAccess(this);
+			}
+		}
+
+		public List<ExpressionContext> expression() {
+			return this.getRuleContexts(ExpressionContext.class);
+		}
+
+		public ExpressionContext expression(int i) {
+			return this.getRuleContext(ExpressionContext.class, i);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_arrayAccess;
+		}
+
+		public List<TerminalNode> LBRACK() {
+			return this.getTokens(IkalaScriptParser.LBRACK);
+		}
+
+		public TerminalNode LBRACK(int i) {
+			return this.getToken(IkalaScriptParser.LBRACK, i);
+		}
+
+		public List<TerminalNode> RBRACK() {
+			return this.getTokens(IkalaScriptParser.RBRACK);
+		}
+
+		public TerminalNode RBRACK(int i) {
+			return this.getToken(IkalaScriptParser.RBRACK, i);
+		}
+
+		public TypeNameContext typeName() {
+			return this.getRuleContext(TypeNameContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArrayTypeContext extends ParserRuleContext {
+		public ArrayTypeContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ClassOrInterfaceTypeContext classOrInterfaceType() {
+			return this.getRuleContext(ClassOrInterfaceTypeContext.class, 0);
+		}
+
+		public DimsContext dims() {
+			return this.getRuleContext(DimsContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterArrayType(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitArrayType(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_arrayType;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+
+		public PrimitiveTypeContext primitiveType() {
+			return this.getRuleContext(PrimitiveTypeContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class AssignmentContext extends ParserRuleContext {
+		public AssignmentContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public AssignmentOperatorContext assignmentOperator() {
+			return this.getRuleContext(AssignmentOperatorContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterAssignment(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitAssignment(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_assignment;
+		}
+
+		public LeftHandSideContext leftHandSide() {
+			return this.getRuleContext(LeftHandSideContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class AssignmentOperatorContext extends ParserRuleContext {
+		public AssignmentOperatorContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode ADD_ASSIGN() {
+			return this.getToken(IkalaScriptParser.ADD_ASSIGN, 0);
+		}
+
+		public TerminalNode ASSIGN() {
+			return this.getToken(IkalaScriptParser.ASSIGN, 0);
+		}
+
+		public TerminalNode DIV_ASSIGN() {
+			return this.getToken(IkalaScriptParser.DIV_ASSIGN, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterAssignmentOperator(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitAssignmentOperator(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_assignmentOperator;
+		}
+
+		public TerminalNode MOD_ASSIGN() {
+			return this.getToken(IkalaScriptParser.MOD_ASSIGN, 0);
+		}
+
+		public TerminalNode MUL_ASSIGN() {
+			return this.getToken(IkalaScriptParser.MUL_ASSIGN, 0);
+		}
+
+		public TerminalNode SUB_ASSIGN() {
+			return this.getToken(IkalaScriptParser.SUB_ASSIGN, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class BasicForStatementContext extends ParserRuleContext {
+		public BasicForStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterBasicForStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitBasicForStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		public TerminalNode FOR() {
+			return this.getToken(IkalaScriptParser.FOR, 0);
+		}
+
+		public ForInitContext forInit() {
+			return this.getRuleContext(ForInitContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_basicForStatement;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public List<TerminalNode> SEMICOLON() {
+			return this.getTokens(IkalaScriptParser.SEMICOLON);
+		}
+
+		public TerminalNode SEMICOLON(int i) {
+			return this.getToken(IkalaScriptParser.SEMICOLON, i);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+
+		public StatementExpressionListContext statementExpressionList() {
+			return this.getRuleContext(StatementExpressionListContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class BasicForStatementNoShortIfContext
+		extends ParserRuleContext {
+		public BasicForStatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterBasicForStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitBasicForStatementNoShortIf(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		public TerminalNode FOR() {
+			return this.getToken(IkalaScriptParser.FOR, 0);
+		}
+
+		public ForInitContext forInit() {
+			return this.getRuleContext(ForInitContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_basicForStatementNoShortIf;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public List<TerminalNode> SEMICOLON() {
+			return this.getTokens(IkalaScriptParser.SEMICOLON);
+		}
+
+		public TerminalNode SEMICOLON(int i) {
+			return this.getToken(IkalaScriptParser.SEMICOLON, i);
+		}
+
+		public StatementExpressionListContext statementExpressionList() {
+			return this.getRuleContext(StatementExpressionListContext.class, 0);
+		}
+
+		public StatementNoShortIfContext statementNoShortIf() {
+			return this.getRuleContext(StatementNoShortIfContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class BlockContext extends ParserRuleContext {
+		public BlockContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public BlockStatementsContext blockStatements() {
+			return this.getRuleContext(BlockStatementsContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterBlock(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitBlock(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_block;
+		}
+
+		public TerminalNode LBRACE() {
+			return this.getToken(IkalaScriptParser.LBRACE, 0);
+		}
+
+		public TerminalNode RBRACE() {
+			return this.getToken(IkalaScriptParser.RBRACE, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class BlockStatementContext extends ParserRuleContext {
+		public BlockStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterBlockStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitBlockStatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_blockStatement;
+		}
+
+		public LocalVariableDeclarationContext localVariableDeclaration() {
+			return this.getRuleContext(LocalVariableDeclarationContext.class,
+				0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class BlockStatementsContext extends ParserRuleContext {
+		public BlockStatementsContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<BlockStatementContext> blockStatement() {
+			return this.getRuleContexts(BlockStatementContext.class);
+		}
+
+		public BlockStatementContext blockStatement(int i) {
+			return this.getRuleContext(BlockStatementContext.class, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterBlockStatements(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitBlockStatements(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_blockStatements;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class BreakStatementContext extends ParserRuleContext {
+		public BreakStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode BREAK() {
+			return this.getToken(IkalaScriptParser.BREAK, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterBreakStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitBreakStatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_breakStatement;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class CastExpressionContext extends ParserRuleContext {
+		public CastExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterCastExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitCastExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_castExpression;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public PrimitiveTypeContext primitiveType() {
+			return this.getRuleContext(PrimitiveTypeContext.class, 0);
+		}
+
+		public ReferenceTypeContext referenceType() {
+			return this.getRuleContext(ReferenceTypeContext.class, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public UnaryExpressionContext unaryExpression() {
+			return this.getRuleContext(UnaryExpressionContext.class, 0);
+		}
+
+		public UnaryExpressionNotPlusMinusContext
+			unaryExpressionNotPlusMinus() {
+			return this.getRuleContext(UnaryExpressionNotPlusMinusContext.class,
+				0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ClassOrInterfaceTypeContext extends ParserRuleContext {
+		public ClassOrInterfaceTypeContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<TerminalNode> DOT() {
+			return this.getTokens(IkalaScriptParser.DOT);
+		}
+
+		public TerminalNode DOT(int i) {
+			return this.getToken(IkalaScriptParser.DOT, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterClassOrInterfaceType(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitClassOrInterfaceType(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_classOrInterfaceType;
+		}
+
+		public List<TerminalNode> Identifier() {
+			return this.getTokens(IkalaScriptParser.Identifier);
+		}
+
+		public TerminalNode Identifier(int i) {
+			return this.getToken(IkalaScriptParser.Identifier, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class CompilationUnitContext extends ParserRuleContext {
+		public CompilationUnitContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<BlockStatementContext> blockStatement() {
+			return this.getRuleContexts(BlockStatementContext.class);
+		}
+
+		public BlockStatementContext blockStatement(int i) {
+			return this.getRuleContext(BlockStatementContext.class, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterCompilationUnit(this);
+			}
+		}
+
+		public TerminalNode EOF() {
+			return this.getToken(Recognizer.EOF, 0);
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitCompilationUnit(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_compilationUnit;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ConditionalAndExpressionContext
+		extends ParserRuleContext {
+		public ConditionalAndExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode AND() {
+			return this.getToken(IkalaScriptParser.AND, 0);
+		}
+
+		public ConditionalAndExpressionContext conditionalAndExpression() {
+			return this.getRuleContext(ConditionalAndExpressionContext.class,
+				0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterConditionalAndExpression(this);
+			}
+		}
+
+		public EqualityExpressionContext equalityExpression() {
+			return this.getRuleContext(EqualityExpressionContext.class, 0);
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitConditionalAndExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_conditionalAndExpression;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ConditionalExpressionContext extends ParserRuleContext {
+		public ConditionalExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode COLON() {
+			return this.getToken(IkalaScriptParser.COLON, 0);
+		}
+
+		public ConditionalExpressionContext conditionalExpression() {
+			return this.getRuleContext(ConditionalExpressionContext.class, 0);
+		}
+
+		public ConditionalOrExpressionContext conditionalOrExpression() {
+			return this.getRuleContext(ConditionalOrExpressionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterConditionalExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitConditionalExpression(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_conditionalExpression;
+		}
+
+		public TerminalNode QUESTION() {
+			return this.getToken(IkalaScriptParser.QUESTION, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ConditionalOrExpressionContext
+		extends ParserRuleContext {
+		public ConditionalOrExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ConditionalAndExpressionContext conditionalAndExpression() {
+			return this.getRuleContext(ConditionalAndExpressionContext.class,
+				0);
+		}
+
+		public ConditionalOrExpressionContext conditionalOrExpression() {
+			return this.getRuleContext(ConditionalOrExpressionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterConditionalOrExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitConditionalOrExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_conditionalOrExpression;
+		}
+
+		public TerminalNode OR() {
+			return this.getToken(IkalaScriptParser.OR, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ContinueStatementContext extends ParserRuleContext {
+		public ContinueStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode CONTINUE() {
+			return this.getToken(IkalaScriptParser.CONTINUE, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterContinueStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitContinueStatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_continueStatement;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class DimsContext extends ParserRuleContext {
+		public DimsContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterDims(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitDims(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_dims;
+		}
+
+		public List<TerminalNode> LBRACK() {
+			return this.getTokens(IkalaScriptParser.LBRACK);
+		}
+
+		public TerminalNode LBRACK(int i) {
+			return this.getToken(IkalaScriptParser.LBRACK, i);
+		}
+
+		public List<TerminalNode> RBRACK() {
+			return this.getTokens(IkalaScriptParser.RBRACK);
+		}
+
+		public TerminalNode RBRACK(int i) {
+			return this.getToken(IkalaScriptParser.RBRACK, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class DoStatementContext extends ParserRuleContext {
+		public DoStatementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode DO() {
+			return this.getToken(IkalaScriptParser.DO, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterDoStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitDoStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_doStatement;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+
+		public TerminalNode WHILE() {
+			return this.getToken(IkalaScriptParser.WHILE, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class EnhancedForStatementContext extends ParserRuleContext {
+		public EnhancedForStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode COLON() {
+			return this.getToken(IkalaScriptParser.COLON, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterEnhancedForStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitEnhancedForStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		public TerminalNode FINAL() {
+			return this.getToken(IkalaScriptParser.FINAL, 0);
+		}
+
+		public TerminalNode FOR() {
+			return this.getToken(IkalaScriptParser.FOR, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_enhancedForStatement;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+
+		public TypeContext type() {
+			return this.getRuleContext(TypeContext.class, 0);
+		}
+
+		public VariableDeclaratorIdContext variableDeclaratorId() {
+			return this.getRuleContext(VariableDeclaratorIdContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class EnhancedForStatementNoShortIfContext
+		extends ParserRuleContext {
+		public EnhancedForStatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode COLON() {
+			return this.getToken(IkalaScriptParser.COLON, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterEnhancedForStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitEnhancedForStatementNoShortIf(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		public TerminalNode FINAL() {
+			return this.getToken(IkalaScriptParser.FINAL, 0);
+		}
+
+		public TerminalNode FOR() {
+			return this.getToken(IkalaScriptParser.FOR, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_enhancedForStatementNoShortIf;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementNoShortIfContext statementNoShortIf() {
+			return this.getRuleContext(StatementNoShortIfContext.class, 0);
+		}
+
+		public TypeContext type() {
+			return this.getRuleContext(TypeContext.class, 0);
+		}
+
+		public VariableDeclaratorIdContext variableDeclaratorId() {
+			return this.getRuleContext(VariableDeclaratorIdContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class EqualityExpressionContext extends ParserRuleContext {
+		public EqualityExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterEqualityExpression(this);
+			}
+		}
+
+		public TerminalNode EQUAL() {
+			return this.getToken(IkalaScriptParser.EQUAL, 0);
+		}
+
+		public EqualityExpressionContext equalityExpression() {
+			return this.getRuleContext(EqualityExpressionContext.class, 0);
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitEqualityExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_equalityExpression;
+		}
+
+		public TerminalNode NOTEQUAL() {
+			return this.getToken(IkalaScriptParser.NOTEQUAL, 0);
+		}
+
+		public RelationalExpressionContext relationalExpression() {
+			return this.getRuleContext(RelationalExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ExpressionContext extends ParserRuleContext {
+		public ExpressionContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public AssignmentContext assignment() {
+			return this.getRuleContext(AssignmentContext.class, 0);
+		}
+
+		public ConditionalExpressionContext conditionalExpression() {
+			return this.getRuleContext(ConditionalExpressionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_expression;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class FieldAccess_extensionContext extends ParserRuleContext {
+		public FieldAccess_extensionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode DOT() {
+			return this.getToken(IkalaScriptParser.DOT, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterFieldAccess_extension(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitFieldAccess_extension(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_fieldAccess_extension;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class FieldAccessContext extends ParserRuleContext {
+		public FieldAccessContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode DOT() {
+			return this.getToken(IkalaScriptParser.DOT, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterFieldAccess(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitFieldAccess(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_fieldAccess;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+
+		public PrimaryContext primary() {
+			return this.getRuleContext(PrimaryContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ForInitContext extends ParserRuleContext {
+		public ForInitContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterForInit(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitForInit(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_forInit;
+		}
+
+		public LocalVariableDeclarationContext localVariableDeclaration() {
+			return this.getRuleContext(LocalVariableDeclarationContext.class,
+				0);
+		}
+
+		public StatementExpressionListContext statementExpressionList() {
+			return this.getRuleContext(StatementExpressionListContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ForStatementContext extends ParserRuleContext {
+		public ForStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public BasicForStatementContext basicForStatement() {
+			return this.getRuleContext(BasicForStatementContext.class, 0);
+		}
+
+		public EnhancedForStatementContext enhancedForStatement() {
+			return this.getRuleContext(EnhancedForStatementContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterForStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitForStatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_forStatement;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ForStatementNoShortIfContext extends ParserRuleContext {
+		public ForStatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public BasicForStatementNoShortIfContext basicForStatementNoShortIf() {
+			return this.getRuleContext(BasicForStatementNoShortIfContext.class,
+				0);
+		}
+
+		public EnhancedForStatementNoShortIfContext
+			enhancedForStatementNoShortIf() {
+			return this
+				.getRuleContext(EnhancedForStatementNoShortIfContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterForStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitForStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_forStatementNoShortIf;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class GotoStatementContext extends ParserRuleContext {
+		public GotoStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterGotoStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitGotoStatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_gotoStatement;
+		}
+
+		public TerminalNode GOTO() {
+			return this.getToken(IkalaScriptParser.GOTO, 0);
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class IfThenElseStatementContext extends ParserRuleContext {
+		public IfThenElseStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode ELSE() {
+			return this.getToken(IkalaScriptParser.ELSE, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterIfThenElseStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitIfThenElseStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_ifThenElseStatement;
+		}
+
+		public TerminalNode IF() {
+			return this.getToken(IkalaScriptParser.IF, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+
+		public StatementNoShortIfContext statementNoShortIf() {
+			return this.getRuleContext(StatementNoShortIfContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class IfThenElseStatementNoShortIfContext
+		extends ParserRuleContext {
+		public IfThenElseStatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode ELSE() {
+			return this.getToken(IkalaScriptParser.ELSE, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterIfThenElseStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitIfThenElseStatementNoShortIf(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_ifThenElseStatementNoShortIf;
+		}
+
+		public TerminalNode IF() {
+			return this.getToken(IkalaScriptParser.IF, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public List<StatementNoShortIfContext> statementNoShortIf() {
+			return this.getRuleContexts(StatementNoShortIfContext.class);
+		}
+
+		public StatementNoShortIfContext statementNoShortIf(int i) {
+			return this.getRuleContext(StatementNoShortIfContext.class, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class IfThenStatementContext extends ParserRuleContext {
+		public IfThenStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterIfThenStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitIfThenStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_ifThenStatement;
+		}
+
+		public TerminalNode IF() {
+			return this.getToken(IkalaScriptParser.IF, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class LabeledStatementContext extends ParserRuleContext {
+		public LabeledStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode COLON() {
+			return this.getToken(IkalaScriptParser.COLON, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterLabeledStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitLabeledStatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_labeledStatement;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class LabeledStatementNoShortIfContext
+		extends ParserRuleContext {
+		public LabeledStatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode COLON() {
+			return this.getToken(IkalaScriptParser.COLON, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterLabeledStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitLabeledStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_labeledStatementNoShortIf;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+
+		public StatementNoShortIfContext statementNoShortIf() {
+			return this.getRuleContext(StatementNoShortIfContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class LeftHandSideContext extends ParserRuleContext {
+		public LeftHandSideContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArrayAccessContext arrayAccess() {
+			return this.getRuleContext(ArrayAccessContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterLeftHandSide(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitLeftHandSide(this);
+			}
+		}
+
+		public FieldAccessContext fieldAccess() {
+			return this.getRuleContext(FieldAccessContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_leftHandSide;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class LiteralContext extends ParserRuleContext {
+		public LiteralContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode BooleanLiteral() {
+			return this.getToken(IkalaScriptParser.BooleanLiteral, 0);
+		}
+
+		public TerminalNode CharacterLiteral() {
+			return this.getToken(IkalaScriptParser.CharacterLiteral, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterLiteral(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitLiteral(this);
+			}
+		}
+
+		public TerminalNode FloatingPointLiteral() {
+			return this.getToken(IkalaScriptParser.FloatingPointLiteral, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_literal;
+		}
+
+		public TerminalNode IntegerLiteral() {
+			return this.getToken(IkalaScriptParser.IntegerLiteral, 0);
+		}
+
+		public TerminalNode NullLiteral() {
+			return this.getToken(IkalaScriptParser.NullLiteral, 0);
+		}
+
+		public TerminalNode StringLiteral() {
+			return this.getToken(IkalaScriptParser.StringLiteral, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class LocalVariableDeclarationContext
+		extends ParserRuleContext {
+		public LocalVariableDeclarationContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterLocalVariableDeclaration(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitLocalVariableDeclaration(this);
+			}
+		}
+
+		public TerminalNode FINAL() {
+			return this.getToken(IkalaScriptParser.FINAL, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_localVariableDeclaration;
+		}
+
+		public TypeContext type() {
+			return this.getRuleContext(TypeContext.class, 0);
+		}
+
+		public VariableDeclaratorListContext variableDeclaratorList() {
+			return this.getRuleContext(VariableDeclaratorListContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class MethodInvocation_extensionContext
+		extends ParserRuleContext {
+		public MethodInvocation_extensionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArgumentListContext argumentList() {
+			return this.getRuleContext(ArgumentListContext.class, 0);
+		}
+
+		public TerminalNode DOT() {
+			return this.getToken(IkalaScriptParser.DOT, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterMethodInvocation_extension(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitMethodInvocation_extension(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_methodInvocation_extension;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class MethodInvocation_LHSContext extends ParserRuleContext {
+		public MethodInvocation_LHSContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArgumentListContext argumentList() {
+			return this.getRuleContext(ArgumentListContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterMethodInvocation_LHS(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitMethodInvocation_LHS(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_methodInvocation_LHS;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public TypeNameContext typeName() {
+			return this.getRuleContext(TypeNameContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class MethodInvocationContext extends ParserRuleContext {
+		public MethodInvocationContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArgumentListContext argumentList() {
+			return this.getRuleContext(ArgumentListContext.class, 0);
+		}
+
+		public TerminalNode DOT() {
+			return this.getToken(IkalaScriptParser.DOT, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterMethodInvocation(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitMethodInvocation(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_methodInvocation;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public PrimaryContext primary() {
+			return this.getRuleContext(PrimaryContext.class, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public TypeNameContext typeName() {
+			return this.getRuleContext(TypeNameContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class MultiplicativeExpressionContext
+		extends ParserRuleContext {
+		public MultiplicativeExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode DIV() {
+			return this.getToken(IkalaScriptParser.DIV, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterMultiplicativeExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitMultiplicativeExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_multiplicativeExpression;
+		}
+
+		public TerminalNode MOD() {
+			return this.getToken(IkalaScriptParser.MOD, 0);
+		}
+
+		public TerminalNode MUL() {
+			return this.getToken(IkalaScriptParser.MUL, 0);
+		}
+
+		public MultiplicativeExpressionContext multiplicativeExpression() {
+			return this.getRuleContext(MultiplicativeExpressionContext.class,
+				0);
+		}
+
+		public UnaryExpressionContext unaryExpression() {
+			return this.getRuleContext(UnaryExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class NumericTypeContext extends ParserRuleContext {
+		public NumericTypeContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode CHAR() {
+			return this.getToken(IkalaScriptParser.CHAR, 0);
+		}
+
+		public TerminalNode DOUBLE() {
+			return this.getToken(IkalaScriptParser.DOUBLE, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterNumericType(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitNumericType(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_numericType;
+		}
+
+		public TerminalNode INT() {
+			return this.getToken(IkalaScriptParser.INT, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PostDecrementExpressionContext
+		extends ParserRuleContext {
+		public PostDecrementExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode DEC() {
+			return this.getToken(IkalaScriptParser.DEC, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPostDecrementExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPostDecrementExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_postDecrementExpression;
+		}
+
+		public PostfixExpressionContext postfixExpression() {
+			return this.getRuleContext(PostfixExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PostfixExpressionContext extends ParserRuleContext {
+		public PostfixExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<TerminalNode> DEC() {
+			return this.getTokens(IkalaScriptParser.DEC);
+		}
+
+		public TerminalNode DEC(int i) {
+			return this.getToken(IkalaScriptParser.DEC, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPostfixExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPostfixExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_postfixExpression;
+		}
+
+		public List<TerminalNode> INC() {
+			return this.getTokens(IkalaScriptParser.INC);
+		}
+
+		public TerminalNode INC(int i) {
+			return this.getToken(IkalaScriptParser.INC, i);
+		}
+
+		public PrimaryContext primary() {
+			return this.getRuleContext(PrimaryContext.class, 0);
+		}
+
+		public TypeNameContext typeName() {
+			return this.getRuleContext(TypeNameContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PostIncrementExpressionContext
+		extends ParserRuleContext {
+		public PostIncrementExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPostIncrementExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPostIncrementExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_postIncrementExpression;
+		}
+
+		public TerminalNode INC() {
+			return this.getToken(IkalaScriptParser.INC, 0);
+		}
+
+		public PostfixExpressionContext postfixExpression() {
+			return this.getRuleContext(PostfixExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PreDecrementExpressionContext
+		extends ParserRuleContext {
+		public PreDecrementExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode DEC() {
+			return this.getToken(IkalaScriptParser.DEC, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPreDecrementExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPreDecrementExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_preDecrementExpression;
+		}
+
+		public UnaryExpressionContext unaryExpression() {
+			return this.getRuleContext(UnaryExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PreIncrementExpressionContext
+		extends ParserRuleContext {
+		public PreIncrementExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPreIncrementExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPreIncrementExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_preIncrementExpression;
+		}
+
+		public TerminalNode INC() {
+			return this.getToken(IkalaScriptParser.INC, 0);
+		}
+
+		public UnaryExpressionContext unaryExpression() {
+			return this.getRuleContext(UnaryExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class Primary_extension_accessContext
+		extends ParserRuleContext {
+		public Primary_extension_accessContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPrimary_extension_access(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPrimary_extension_access(this);
+			}
+		}
+
+		public FieldAccess_extensionContext fieldAccess_extension() {
+			return this.getRuleContext(FieldAccess_extensionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_primary_extension_access;
+		}
+
+		public MethodInvocation_extensionContext methodInvocation_extension() {
+			return this.getRuleContext(MethodInvocation_extensionContext.class,
+				0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class Primary_extensionContext extends ParserRuleContext {
+		public Primary_extensionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArrayAccess_extensionContext arrayAccess_extension() {
+			return this.getRuleContext(ArrayAccess_extensionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPrimary_extension(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPrimary_extension(this);
+			}
+		}
+
+		public FieldAccess_extensionContext fieldAccess_extension() {
+			return this.getRuleContext(FieldAccess_extensionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_primary_extension;
+		}
+
+		public MethodInvocation_extensionContext methodInvocation_extension() {
+			return this.getRuleContext(MethodInvocation_extensionContext.class,
+				0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class Primary_LHS_accessContext extends ParserRuleContext {
+		public Primary_LHS_accessContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterPrimary_LHS_access(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitPrimary_LHS_access(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_primary_LHS_access;
+		}
+
+		public LiteralContext literal() {
+			return this.getRuleContext(LiteralContext.class, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public MethodInvocation_LHSContext methodInvocation_LHS() {
+			return this.getRuleContext(MethodInvocation_LHSContext.class, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class Primary_LHSContext extends ParserRuleContext {
+		public Primary_LHSContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArrayAccess_LHSContext arrayAccess_LHS() {
+			return this.getRuleContext(ArrayAccess_LHSContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterPrimary_LHS(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitPrimary_LHS(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_primary_LHS;
+		}
+
+		public LiteralContext literal() {
+			return this.getRuleContext(LiteralContext.class, 0);
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public MethodInvocation_LHSContext methodInvocation_LHS() {
+			return this.getRuleContext(MethodInvocation_LHSContext.class, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PrimaryContext extends ParserRuleContext {
+		public PrimaryContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterPrimary(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitPrimary(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_primary;
+		}
+
+		public List<Primary_extensionContext> primary_extension() {
+			return this.getRuleContexts(Primary_extensionContext.class);
+		}
+
+		public Primary_extensionContext primary_extension(int i) {
+			return this.getRuleContext(Primary_extensionContext.class, i);
+		}
+
+		public Primary_LHSContext primary_LHS() {
+			return this.getRuleContext(Primary_LHSContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class PrimitiveTypeContext extends ParserRuleContext {
+		public PrimitiveTypeContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode BOOLEAN() {
+			return this.getToken(IkalaScriptParser.BOOLEAN, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterPrimitiveType(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitPrimitiveType(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_primitiveType;
+		}
+
+		public NumericTypeContext numericType() {
+			return this.getRuleContext(NumericTypeContext.class, 0);
+		}
+
+		public TerminalNode STRING() {
+			return this.getToken(IkalaScriptParser.STRING, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ReferenceTypeContext extends ParserRuleContext {
+		public ReferenceTypeContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public ArrayTypeContext arrayType() {
+			return this.getRuleContext(ArrayTypeContext.class, 0);
+		}
+
+		public ClassOrInterfaceTypeContext classOrInterfaceType() {
+			return this.getRuleContext(ClassOrInterfaceTypeContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterReferenceType(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitReferenceType(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_referenceType;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class RelationalExpressionContext extends ParserRuleContext {
+		public RelationalExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public AdditiveExpressionContext additiveExpression() {
+			return this.getRuleContext(AdditiveExpressionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterRelationalExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitRelationalExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_relationalExpression;
+		}
+
+		public TerminalNode GT() {
+			return this.getToken(IkalaScriptParser.GT, 0);
+		}
+
+		public TerminalNode GTE() {
+			return this.getToken(IkalaScriptParser.GTE, 0);
+		}
+
+		public TerminalNode LT() {
+			return this.getToken(IkalaScriptParser.LT, 0);
+		}
+
+		public TerminalNode LTE() {
+			return this.getToken(IkalaScriptParser.LTE, 0);
+		}
+
+		public RelationalExpressionContext relationalExpression() {
+			return this.getRuleContext(RelationalExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ReturnStatementContext extends ParserRuleContext {
+		public ReturnStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterReturnStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitReturnStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_returnStatement;
+		}
+
+		public TerminalNode RETURN() {
+			return this.getToken(IkalaScriptParser.RETURN, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class StatementContext extends ParserRuleContext {
+		public StatementContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitStatement(this);
+			}
+		}
+
+		public ForStatementContext forStatement() {
+			return this.getRuleContext(ForStatementContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_statement;
+		}
+
+		public IfThenElseStatementContext ifThenElseStatement() {
+			return this.getRuleContext(IfThenElseStatementContext.class, 0);
+		}
+
+		public IfThenStatementContext ifThenStatement() {
+			return this.getRuleContext(IfThenStatementContext.class, 0);
+		}
+
+		public LabeledStatementContext labeledStatement() {
+			return this.getRuleContext(LabeledStatementContext.class, 0);
+		}
+
+		public StatementWithoutTrailingSubstatementContext
+			statementWithoutTrailingSubstatement() {
+			return this.getRuleContext(
+				StatementWithoutTrailingSubstatementContext.class, 0);
+		}
+
+		public WhileStatementContext whileStatement() {
+			return this.getRuleContext(WhileStatementContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class StatementExpressionContext extends ParserRuleContext {
+		public StatementExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public AssignmentContext assignment() {
+			return this.getRuleContext(AssignmentContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterStatementExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitStatementExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_statementExpression;
+		}
+
+		public MethodInvocationContext methodInvocation() {
+			return this.getRuleContext(MethodInvocationContext.class, 0);
+		}
+
+		public PostDecrementExpressionContext postDecrementExpression() {
+			return this.getRuleContext(PostDecrementExpressionContext.class, 0);
+		}
+
+		public PostIncrementExpressionContext postIncrementExpression() {
+			return this.getRuleContext(PostIncrementExpressionContext.class, 0);
+		}
+
+		public PreDecrementExpressionContext preDecrementExpression() {
+			return this.getRuleContext(PreDecrementExpressionContext.class, 0);
+		}
+
+		public PreIncrementExpressionContext preIncrementExpression() {
+			return this.getRuleContext(PreIncrementExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class StatementExpressionListContext
+		extends ParserRuleContext {
+		public StatementExpressionListContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<TerminalNode> COMMA() {
+			return this.getTokens(IkalaScriptParser.COMMA);
+		}
+
+		public TerminalNode COMMA(int i) {
+			return this.getToken(IkalaScriptParser.COMMA, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterStatementExpressionList(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitStatementExpressionList(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_statementExpressionList;
+		}
+
+		public List<StatementExpressionContext> statementExpression() {
+			return this.getRuleContexts(StatementExpressionContext.class);
+		}
+
+		public StatementExpressionContext statementExpression(int i) {
+			return this.getRuleContext(StatementExpressionContext.class, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class StatementNoShortIfContext extends ParserRuleContext {
+		public StatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitStatementNoShortIf(this);
+			}
+		}
+
+		public ForStatementNoShortIfContext forStatementNoShortIf() {
+			return this.getRuleContext(ForStatementNoShortIfContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_statementNoShortIf;
+		}
+
+		public IfThenElseStatementNoShortIfContext
+			ifThenElseStatementNoShortIf() {
+			return this
+				.getRuleContext(IfThenElseStatementNoShortIfContext.class, 0);
+		}
+
+		public LabeledStatementNoShortIfContext labeledStatementNoShortIf() {
+			return this.getRuleContext(LabeledStatementNoShortIfContext.class,
+				0);
+		}
+
+		public StatementWithoutTrailingSubstatementContext
+			statementWithoutTrailingSubstatement() {
+			return this.getRuleContext(
+				StatementWithoutTrailingSubstatementContext.class, 0);
+		}
+
+		public WhileStatementNoShortIfContext whileStatementNoShortIf() {
+			return this.getRuleContext(WhileStatementNoShortIfContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class StatementWithoutTrailingSubstatementContext
+		extends ParserRuleContext {
+		public StatementWithoutTrailingSubstatementContext(
+			ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public BlockContext block() {
+			return this.getRuleContext(BlockContext.class, 0);
+		}
+
+		public BreakStatementContext breakStatement() {
+			return this.getRuleContext(BreakStatementContext.class, 0);
+		}
+
+		public ContinueStatementContext continueStatement() {
+			return this.getRuleContext(ContinueStatementContext.class, 0);
+		}
+
+		public DoStatementContext doStatement() {
+			return this.getRuleContext(DoStatementContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterStatementWithoutTrailingSubstatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitStatementWithoutTrailingSubstatement(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_statementWithoutTrailingSubstatement;
+		}
+
+		public GotoStatementContext gotoStatement() {
+			return this.getRuleContext(GotoStatementContext.class, 0);
+		}
+
+		public ReturnStatementContext returnStatement() {
+			return this.getRuleContext(ReturnStatementContext.class, 0);
+		}
+
+		public StatementExpressionContext statementExpression() {
+			return this.getRuleContext(StatementExpressionContext.class, 0);
+		}
+
+		public SwitchStatementContext switchStatement() {
+			return this.getRuleContext(SwitchStatementContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class SwitchBlockContext extends ParserRuleContext {
+		public SwitchBlockContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterSwitchBlock(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitSwitchBlock(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_switchBlock;
+		}
+
+		public TerminalNode LBRACE() {
+			return this.getToken(IkalaScriptParser.LBRACE, 0);
+		}
+
+		public TerminalNode RBRACE() {
+			return this.getToken(IkalaScriptParser.RBRACE, 0);
+		}
+
+		public List<SwitchBlockStatementGroupContext>
+			switchBlockStatementGroup() {
+			return this.getRuleContexts(SwitchBlockStatementGroupContext.class);
+		}
+
+		public SwitchBlockStatementGroupContext
+			switchBlockStatementGroup(int i) {
+			return this.getRuleContext(SwitchBlockStatementGroupContext.class,
+				i);
+		}
+
+		public List<SwitchLabelContext> switchLabel() {
+			return this.getRuleContexts(SwitchLabelContext.class);
+		}
+
+		public SwitchLabelContext switchLabel(int i) {
+			return this.getRuleContext(SwitchLabelContext.class, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class SwitchBlockStatementGroupContext
+		extends ParserRuleContext {
+		public SwitchBlockStatementGroupContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public BlockStatementsContext blockStatements() {
+			return this.getRuleContext(BlockStatementsContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterSwitchBlockStatementGroup(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitSwitchBlockStatementGroup(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_switchBlockStatementGroup;
+		}
+
+		public List<SwitchLabelContext> switchLabel() {
+			return this.getRuleContexts(SwitchLabelContext.class);
+		}
+
+		public SwitchLabelContext switchLabel(int i) {
+			return this.getRuleContext(SwitchLabelContext.class, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class SwitchLabelContext extends ParserRuleContext {
+		public SwitchLabelContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode CASE() {
+			return this.getToken(IkalaScriptParser.CASE, 0);
+		}
+
+		public TerminalNode COLON() {
+			return this.getToken(IkalaScriptParser.COLON, 0);
+		}
+
+		public TerminalNode DEFAULT() {
+			return this.getToken(IkalaScriptParser.DEFAULT, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterSwitchLabel(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitSwitchLabel(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_switchLabel;
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class SwitchStatementContext extends ParserRuleContext {
+		public SwitchStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterSwitchStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitSwitchStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_switchStatement;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public TerminalNode SWITCH() {
+			return this.getToken(IkalaScriptParser.SWITCH, 0);
+		}
+
+		public SwitchBlockContext switchBlock() {
+			return this.getRuleContext(SwitchBlockContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class TypeContext extends ParserRuleContext {
+		public TypeContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterType(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitType(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_type;
+		}
+
+		public PrimitiveTypeContext primitiveType() {
+			return this.getRuleContext(PrimitiveTypeContext.class, 0);
+		}
+
+		public ReferenceTypeContext referenceType() {
+			return this.getRuleContext(ReferenceTypeContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class TypeNameContext extends ParserRuleContext {
+		public TypeNameContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<TerminalNode> DOT() {
+			return this.getTokens(IkalaScriptParser.DOT);
+		}
+
+		public TerminalNode DOT(int i) {
+			return this.getToken(IkalaScriptParser.DOT, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).enterTypeName(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitTypeName(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_typeName;
+		}
+
+		public List<TerminalNode> Identifier() {
+			return this.getTokens(IkalaScriptParser.Identifier);
+		}
+
+		public TerminalNode Identifier(int i) {
+			return this.getToken(IkalaScriptParser.Identifier, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class UnaryExpressionContext extends ParserRuleContext {
+		public UnaryExpressionContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode ADD() {
+			return this.getToken(IkalaScriptParser.ADD, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterUnaryExpression(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitUnaryExpression(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_unaryExpression;
+		}
+
+		public PreDecrementExpressionContext preDecrementExpression() {
+			return this.getRuleContext(PreDecrementExpressionContext.class, 0);
+		}
+
+		public PreIncrementExpressionContext preIncrementExpression() {
+			return this.getRuleContext(PreIncrementExpressionContext.class, 0);
+		}
+
+		public TerminalNode SUB() {
+			return this.getToken(IkalaScriptParser.SUB, 0);
+		}
+
+		public UnaryExpressionContext unaryExpression() {
+			return this.getRuleContext(UnaryExpressionContext.class, 0);
+		}
+
+		public UnaryExpressionNotPlusMinusContext
+			unaryExpressionNotPlusMinus() {
+			return this.getRuleContext(UnaryExpressionNotPlusMinusContext.class,
+				0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class UnaryExpressionNotPlusMinusContext
+		extends ParserRuleContext {
+		public UnaryExpressionNotPlusMinusContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public CastExpressionContext castExpression() {
+			return this.getRuleContext(CastExpressionContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterUnaryExpressionNotPlusMinus(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitUnaryExpressionNotPlusMinus(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_unaryExpressionNotPlusMinus;
+		}
+
+		public TerminalNode NOT() {
+			return this.getToken(IkalaScriptParser.NOT, 0);
+		}
+
+		public PostfixExpressionContext postfixExpression() {
+			return this.getRuleContext(PostfixExpressionContext.class, 0);
+		}
+
+		public UnaryExpressionContext unaryExpression() {
+			return this.getRuleContext(UnaryExpressionContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class VariableDeclaratorContext extends ParserRuleContext {
+		public VariableDeclaratorContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public TerminalNode ASSIGN() {
+			return this.getToken(IkalaScriptParser.ASSIGN, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterVariableDeclarator(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitVariableDeclarator(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_variableDeclarator;
+		}
+
+		public VariableDeclaratorIdContext variableDeclaratorId() {
+			return this.getRuleContext(VariableDeclaratorIdContext.class, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class VariableDeclaratorIdContext extends ParserRuleContext {
+		public VariableDeclaratorIdContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public DimsContext dims() {
+			return this.getRuleContext(DimsContext.class, 0);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterVariableDeclaratorId(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitVariableDeclaratorId(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_variableDeclaratorId;
+		}
+
+		public TerminalNode Identifier() {
+			return this.getToken(IkalaScriptParser.Identifier, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class VariableDeclaratorListContext
+		extends ParserRuleContext {
+		public VariableDeclaratorListContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		public List<TerminalNode> COMMA() {
+			return this.getTokens(IkalaScriptParser.COMMA);
+		}
+
+		public TerminalNode COMMA(int i) {
+			return this.getToken(IkalaScriptParser.COMMA, i);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterVariableDeclaratorList(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitVariableDeclaratorList(this);
+			}
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_variableDeclaratorList;
+		}
+
+		public List<VariableDeclaratorContext> variableDeclarator() {
+			return this.getRuleContexts(VariableDeclaratorContext.class);
+		}
+
+		public VariableDeclaratorContext variableDeclarator(int i) {
+			return this.getRuleContext(VariableDeclaratorContext.class, i);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class WhileStatementContext extends ParserRuleContext {
+		public WhileStatementContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterWhileStatement(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener).exitWhileStatement(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_whileStatement;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementContext statement() {
+			return this.getRuleContext(StatementContext.class, 0);
+		}
+
+		public TerminalNode WHILE() {
+			return this.getToken(IkalaScriptParser.WHILE, 0);
+		}
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class WhileStatementNoShortIfContext
+		extends ParserRuleContext {
+		public WhileStatementNoShortIfContext(ParserRuleContext parent,
+			int invokingState) {
+			super(parent, invokingState);
+		}
+
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.enterWhileStatementNoShortIf(this);
+			}
+		}
+
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if (listener instanceof IkalaScriptParserListener) {
+				((IkalaScriptParserListener) listener)
+					.exitWhileStatementNoShortIf(this);
+			}
+		}
+
+		public ExpressionContext expression() {
+			return this.getRuleContext(ExpressionContext.class, 0);
+		}
+
+		@Override
+		public int getRuleIndex() {
+			return IkalaScriptParser.RULE_whileStatementNoShortIf;
+		}
+
+		public TerminalNode LPAREN() {
+			return this.getToken(IkalaScriptParser.LPAREN, 0);
+		}
+
+		public TerminalNode RPAREN() {
+			return this.getToken(IkalaScriptParser.RPAREN, 0);
+		}
+
+		public StatementNoShortIfContext statementNoShortIf() {
+			return this.getRuleContext(StatementNoShortIfContext.class, 0);
+		}
+
+		public TerminalNode WHILE() {
+			return this.getToken(IkalaScriptParser.WHILE, 0);
+		}
+	}
+
 	static {
 		RuntimeMetaData.checkVersion("4.12.0", RuntimeMetaData.VERSION);
 	}
 
 	protected static final DFA[] _decisionToDFA;
+
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
+
 	public static final int BOOLEAN = 1, BREAK = 2, CASE = 3, CHAR = 4,
 		CONTINUE = 5, DEFAULT = 6, DO = 7, DOUBLE = 8, ELSE = 9, FINAL = 10,
 		FOR = 11, GOTO = 12, IF = 13, INT = 14, NEW = 15, RETURN = 16,
@@ -33,6 +3676,7 @@ public class IkalaScriptParser extends Parser {
 		ADD_ASSIGN = 57, SUB_ASSIGN = 58, MUL_ASSIGN = 59, DIV_ASSIGN = 60,
 		MOD_ASSIGN = 61, ELLIPSIS = 62, WS = 63, COMMENT = 64,
 		LINE_COMMENT = 65;
+
 	public static final int RULE_literal = 0, RULE_primitiveType = 1,
 		RULE_numericType = 2, RULE_referenceType = 3,
 		RULE_classOrInterfaceType = 4, RULE_arrayType = 5, RULE_dims = 6,
@@ -72,7195 +3716,37 @@ public class IkalaScriptParser extends Parser {
 		RULE_postfixExpression = 75, RULE_postIncrementExpression = 76,
 		RULE_postDecrementExpression = 77, RULE_castExpression = 78;
 
-	private static String[] makeRuleNames() {
-		return new String[] {"literal", "primitiveType", "numericType",
-			"referenceType", "classOrInterfaceType", "arrayType", "dims",
-			"variableDeclaratorList", "variableDeclarator",
-			"variableDeclaratorId", "type", "typeName", "compilationUnit",
-			"block", "blockStatements", "blockStatement",
-			"localVariableDeclaration", "statement", "statementNoShortIf",
-			"statementWithoutTrailingSubstatement", "labeledStatement",
-			"labeledStatementNoShortIf", "statementExpression",
-			"ifThenStatement", "ifThenElseStatement",
-			"ifThenElseStatementNoShortIf", "switchStatement", "switchBlock",
-			"switchBlockStatementGroup", "switchLabel", "whileStatement",
-			"whileStatementNoShortIf", "doStatement", "forStatement",
-			"forStatementNoShortIf", "basicForStatement",
-			"basicForStatementNoShortIf", "forInit", "statementExpressionList",
-			"enhancedForStatement", "enhancedForStatementNoShortIf",
-			"breakStatement", "continueStatement", "gotoStatement",
-			"returnStatement", "primary", "arrayAccess_LHS_General",
-			"primary_extension", "primary_extension_access", "primary_LHS",
-			"primary_LHS_access", "fieldAccess", "fieldAccess_extension",
-			"arrayAccess", "arrayAccess_extension", "arrayAccess_LHS",
-			"methodInvocation", "methodInvocation_extension",
-			"methodInvocation_LHS", "argumentList", "expression", "assignment",
-			"leftHandSide", "assignmentOperator", "conditionalExpression",
-			"conditionalOrExpression", "conditionalAndExpression",
-			"equalityExpression", "relationalExpression", "additiveExpression",
-			"multiplicativeExpression", "unaryExpression",
-			"preIncrementExpression", "preDecrementExpression",
-			"unaryExpressionNotPlusMinus", "postfixExpression",
-			"postIncrementExpression", "postDecrementExpression",
-			"castExpression"};
-	}
+	public static final String[] ruleNames = IkalaScriptParser.makeRuleNames();
 
-	public static final String[] ruleNames = makeRuleNames();
+	private static final String[] _LITERAL_NAMES =
+		IkalaScriptParser.makeLiteralNames();
 
-	private static String[] makeLiteralNames() {
-		return new String[] {null, "'boolean'", "'break'", "'case'", "'char'",
-			"'continue'", "'default'", "'do'", "'double'", "'else'", "'final'",
-			"'for'", "'goto'", "'if'", "'int'", "'new'", "'return'", "'string'",
-			"'switch'", "'this'", "'void'", "'while'", null, null, null, null,
-			null, "'null'", null, "'('", "')'", "'{'", "'}'", "'['", "']'",
-			"';'", "','", "'.'", "'='", "'>'", "'<'", "'!'", "'?'", "':'",
-			"'=='", "'<='", "'>='", "'!='", "'and'", "'or'", "'++'", "'--'",
-			"'+'", "'-'", "'*'", "'/'", "'%'", "'+='", "'-='", "'*='", "'/='",
-			"'%='", "'...'"};
-	}
+	private static final String[] _SYMBOLIC_NAMES =
+		IkalaScriptParser.makeSymbolicNames();
 
-	private static final String[] _LITERAL_NAMES = makeLiteralNames();
-
-	private static String[] makeSymbolicNames() {
-		return new String[] {null, "BOOLEAN", "BREAK", "CASE", "CHAR",
-			"CONTINUE", "DEFAULT", "DO", "DOUBLE", "ELSE", "FINAL", "FOR",
-			"GOTO", "IF", "INT", "NEW", "RETURN", "STRING", "SWITCH", "THIS",
-			"VOID", "WHILE", "IntegerLiteral", "FloatingPointLiteral",
-			"BooleanLiteral", "CharacterLiteral", "StringLiteral",
-			"NullLiteral", "Identifier", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
-			"LBRACK", "RBRACK", "SEMICOLON", "COMMA", "DOT", "ASSIGN", "GT",
-			"LT", "NOT", "QUESTION", "COLON", "EQUAL", "LTE", "GTE", "NOTEQUAL",
-			"AND", "OR", "INC", "DEC", "ADD", "SUB", "MUL", "DIV", "MOD",
-			"ADD_ASSIGN", "SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN",
-			"MOD_ASSIGN", "ELLIPSIS", "WS", "COMMENT", "LINE_COMMENT"};
-	}
-
-	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
-	public static final Vocabulary VOCABULARY =
-		new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+	public static final Vocabulary VOCABULARY = new VocabularyImpl(
+		IkalaScriptParser._LITERAL_NAMES, IkalaScriptParser._SYMBOLIC_NAMES);
 
 	/**
 	 * @deprecated Use {@link #VOCABULARY} instead.
 	 */
 	@Deprecated
 	public static final String[] tokenNames;
+
 	static {
-		tokenNames = new String[_SYMBOLIC_NAMES.length];
-		for (int i = 0; i < tokenNames.length; i++) {
-			tokenNames[i] = VOCABULARY.getLiteralName(i);
-			if (tokenNames[i] == null) {
-				tokenNames[i] = VOCABULARY.getSymbolicName(i);
+		tokenNames = new String[IkalaScriptParser._SYMBOLIC_NAMES.length];
+		for (int i = 0; i < IkalaScriptParser.tokenNames.length; i++) {
+			IkalaScriptParser.tokenNames[i] =
+				IkalaScriptParser.VOCABULARY.getLiteralName(i);
+			if (IkalaScriptParser.tokenNames[i] == null) {
+				IkalaScriptParser.tokenNames[i] =
+					IkalaScriptParser.VOCABULARY.getSymbolicName(i);
 			}
 
-			if (tokenNames[i] == null) {
-				tokenNames[i] = "<INVALID>";
+			if (IkalaScriptParser.tokenNames[i] == null) {
+				IkalaScriptParser.tokenNames[i] = "<INVALID>";
 			}
 		}
-	}
-
-	@Override
-	@Deprecated
-	public String[] getTokenNames() {
-		return tokenNames;
-	}
-
-	@Override
-
-	public Vocabulary getVocabulary() {
-		return VOCABULARY;
-	}
-
-	@Override
-	public String getGrammarFileName() {
-		return "IkalaScriptParser.g4";
-	}
-
-	@Override
-	public String[] getRuleNames() {
-		return ruleNames;
-	}
-
-	@Override
-	public String getSerializedATN() {
-		return _serializedATN;
-	}
-
-	@Override
-	public ATN getATN() {
-		return _ATN;
-	}
-
-	public IkalaScriptParser(TokenStream input) {
-		super(input);
-		_interp = new ParserATNSimulator(this, _ATN, _decisionToDFA,
-			_sharedContextCache);
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class LiteralContext extends ParserRuleContext {
-		public TerminalNode IntegerLiteral() {
-			return getToken(IkalaScriptParser.IntegerLiteral, 0);
-		}
-
-		public TerminalNode FloatingPointLiteral() {
-			return getToken(IkalaScriptParser.FloatingPointLiteral, 0);
-		}
-
-		public TerminalNode BooleanLiteral() {
-			return getToken(IkalaScriptParser.BooleanLiteral, 0);
-		}
-
-		public TerminalNode CharacterLiteral() {
-			return getToken(IkalaScriptParser.CharacterLiteral, 0);
-		}
-
-		public TerminalNode StringLiteral() {
-			return getToken(IkalaScriptParser.StringLiteral, 0);
-		}
-
-		public TerminalNode NullLiteral() {
-			return getToken(IkalaScriptParser.NullLiteral, 0);
-		}
-
-		public LiteralContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_literal;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterLiteral(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitLiteral(this);
-		}
-	}
-
-	public final LiteralContext literal() throws RecognitionException {
-		LiteralContext _localctx = new LiteralContext(_ctx, getState());
-		enterRule(_localctx, 0, RULE_literal);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(158);
-				_la = _input.LA(1);
-				if (!((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 264241152L) != 0))) {
-					_errHandler.recoverInline(this);
-				}
-				else {
-					if (_input.LA(1) == Token.EOF)
-						matchedEOF = true;
-					_errHandler.reportMatch(this);
-					consume();
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PrimitiveTypeContext extends ParserRuleContext {
-		public NumericTypeContext numericType() {
-			return getRuleContext(NumericTypeContext.class, 0);
-		}
-
-		public TerminalNode BOOLEAN() {
-			return getToken(IkalaScriptParser.BOOLEAN, 0);
-		}
-
-		public TerminalNode STRING() {
-			return getToken(IkalaScriptParser.STRING, 0);
-		}
-
-		public PrimitiveTypeContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_primitiveType;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterPrimitiveType(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitPrimitiveType(this);
-		}
-	}
-
-	public final PrimitiveTypeContext primitiveType()
-		throws RecognitionException {
-		PrimitiveTypeContext _localctx =
-			new PrimitiveTypeContext(_ctx, getState());
-		enterRule(_localctx, 2, RULE_primitiveType);
-		try {
-			setState(163);
-			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-				case CHAR:
-				case DOUBLE:
-				case INT:
-					enterOuterAlt(_localctx, 1); {
-					setState(160);
-					numericType();
-				}
-					break;
-				case BOOLEAN:
-					enterOuterAlt(_localctx, 2); {
-					setState(161);
-					match(BOOLEAN);
-				}
-					break;
-				case STRING:
-					enterOuterAlt(_localctx, 3); {
-					setState(162);
-					match(STRING);
-				}
-					break;
-				default:
-					throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class NumericTypeContext extends ParserRuleContext {
-		public TerminalNode INT() {
-			return getToken(IkalaScriptParser.INT, 0);
-		}
-
-		public TerminalNode CHAR() {
-			return getToken(IkalaScriptParser.CHAR, 0);
-		}
-
-		public TerminalNode DOUBLE() {
-			return getToken(IkalaScriptParser.DOUBLE, 0);
-		}
-
-		public NumericTypeContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_numericType;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterNumericType(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitNumericType(this);
-		}
-	}
-
-	public final NumericTypeContext numericType() throws RecognitionException {
-		NumericTypeContext _localctx = new NumericTypeContext(_ctx, getState());
-		enterRule(_localctx, 4, RULE_numericType);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(165);
-				_la = _input.LA(1);
-				if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 16656L) != 0))) {
-					_errHandler.recoverInline(this);
-				}
-				else {
-					if (_input.LA(1) == Token.EOF)
-						matchedEOF = true;
-					_errHandler.reportMatch(this);
-					consume();
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ReferenceTypeContext extends ParserRuleContext {
-		public ClassOrInterfaceTypeContext classOrInterfaceType() {
-			return getRuleContext(ClassOrInterfaceTypeContext.class, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public ArrayTypeContext arrayType() {
-			return getRuleContext(ArrayTypeContext.class, 0);
-		}
-
-		public ReferenceTypeContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_referenceType;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterReferenceType(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitReferenceType(this);
-		}
-	}
-
-	public final ReferenceTypeContext referenceType()
-		throws RecognitionException {
-		ReferenceTypeContext _localctx =
-			new ReferenceTypeContext(_ctx, getState());
-		enterRule(_localctx, 6, RULE_referenceType);
-		try {
-			setState(170);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 1, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(167);
-					classOrInterfaceType();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(168);
-					match(Identifier);
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(169);
-					arrayType();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ClassOrInterfaceTypeContext extends ParserRuleContext {
-		public List<TerminalNode> Identifier() {
-			return getTokens(IkalaScriptParser.Identifier);
-		}
-
-		public TerminalNode Identifier(int i) {
-			return getToken(IkalaScriptParser.Identifier, i);
-		}
-
-		public List<TerminalNode> DOT() {
-			return getTokens(IkalaScriptParser.DOT);
-		}
-
-		public TerminalNode DOT(int i) {
-			return getToken(IkalaScriptParser.DOT, i);
-		}
-
-		public ClassOrInterfaceTypeContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_classOrInterfaceType;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterClassOrInterfaceType(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitClassOrInterfaceType(this);
-		}
-	}
-
-	public final ClassOrInterfaceTypeContext classOrInterfaceType()
-		throws RecognitionException {
-		ClassOrInterfaceTypeContext _localctx =
-			new ClassOrInterfaceTypeContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_classOrInterfaceType);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(172);
-				match(Identifier);
-				setState(177);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la == DOT) {
-					{
-						{
-							setState(173);
-							match(DOT);
-							setState(174);
-							match(Identifier);
-						}
-					}
-					setState(179);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ArrayTypeContext extends ParserRuleContext {
-		public PrimitiveTypeContext primitiveType() {
-			return getRuleContext(PrimitiveTypeContext.class, 0);
-		}
-
-		public DimsContext dims() {
-			return getRuleContext(DimsContext.class, 0);
-		}
-
-		public ClassOrInterfaceTypeContext classOrInterfaceType() {
-			return getRuleContext(ClassOrInterfaceTypeContext.class, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public ArrayTypeContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_arrayType;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterArrayType(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitArrayType(this);
-		}
-	}
-
-	public final ArrayTypeContext arrayType() throws RecognitionException {
-		ArrayTypeContext _localctx = new ArrayTypeContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_arrayType);
-		try {
-			setState(188);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 3, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(180);
-					primitiveType();
-					setState(181);
-					dims();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(183);
-					classOrInterfaceType();
-					setState(184);
-					dims();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(186);
-					match(Identifier);
-					setState(187);
-					dims();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class DimsContext extends ParserRuleContext {
-		public List<TerminalNode> LBRACK() {
-			return getTokens(IkalaScriptParser.LBRACK);
-		}
-
-		public TerminalNode LBRACK(int i) {
-			return getToken(IkalaScriptParser.LBRACK, i);
-		}
-
-		public List<TerminalNode> RBRACK() {
-			return getTokens(IkalaScriptParser.RBRACK);
-		}
-
-		public TerminalNode RBRACK(int i) {
-			return getToken(IkalaScriptParser.RBRACK, i);
-		}
-
-		public DimsContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_dims;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterDims(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitDims(this);
-		}
-	}
-
-	public final DimsContext dims() throws RecognitionException {
-		DimsContext _localctx = new DimsContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_dims);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(190);
-				match(LBRACK);
-				setState(191);
-				match(RBRACK);
-				setState(196);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la == LBRACK) {
-					{
-						{
-							setState(192);
-							match(LBRACK);
-							setState(193);
-							match(RBRACK);
-						}
-					}
-					setState(198);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class VariableDeclaratorListContext
-		extends ParserRuleContext {
-		public List<VariableDeclaratorContext> variableDeclarator() {
-			return getRuleContexts(VariableDeclaratorContext.class);
-		}
-
-		public VariableDeclaratorContext variableDeclarator(int i) {
-			return getRuleContext(VariableDeclaratorContext.class, i);
-		}
-
-		public List<TerminalNode> COMMA() {
-			return getTokens(IkalaScriptParser.COMMA);
-		}
-
-		public TerminalNode COMMA(int i) {
-			return getToken(IkalaScriptParser.COMMA, i);
-		}
-
-		public VariableDeclaratorListContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_variableDeclaratorList;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterVariableDeclaratorList(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitVariableDeclaratorList(this);
-		}
-	}
-
-	public final VariableDeclaratorListContext variableDeclaratorList()
-		throws RecognitionException {
-		VariableDeclaratorListContext _localctx =
-			new VariableDeclaratorListContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_variableDeclaratorList);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(199);
-				variableDeclarator();
-				setState(204);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la == COMMA) {
-					{
-						{
-							setState(200);
-							match(COMMA);
-							setState(201);
-							variableDeclarator();
-						}
-					}
-					setState(206);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class VariableDeclaratorContext extends ParserRuleContext {
-		public VariableDeclaratorIdContext variableDeclaratorId() {
-			return getRuleContext(VariableDeclaratorIdContext.class, 0);
-		}
-
-		public TerminalNode ASSIGN() {
-			return getToken(IkalaScriptParser.ASSIGN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public VariableDeclaratorContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_variableDeclarator;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterVariableDeclarator(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitVariableDeclarator(this);
-		}
-	}
-
-	public final VariableDeclaratorContext variableDeclarator()
-		throws RecognitionException {
-		VariableDeclaratorContext _localctx =
-			new VariableDeclaratorContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_variableDeclarator);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(207);
-				variableDeclaratorId();
-				setState(210);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if (_la == ASSIGN) {
-					{
-						setState(208);
-						match(ASSIGN);
-						setState(209);
-						expression();
-					}
-				}
-
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class VariableDeclaratorIdContext extends ParserRuleContext {
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public DimsContext dims() {
-			return getRuleContext(DimsContext.class, 0);
-		}
-
-		public VariableDeclaratorIdContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_variableDeclaratorId;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterVariableDeclaratorId(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitVariableDeclaratorId(this);
-		}
-	}
-
-	public final VariableDeclaratorIdContext variableDeclaratorId()
-		throws RecognitionException {
-		VariableDeclaratorIdContext _localctx =
-			new VariableDeclaratorIdContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_variableDeclaratorId);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(212);
-				match(Identifier);
-				setState(214);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if (_la == LBRACK) {
-					{
-						setState(213);
-						dims();
-					}
-				}
-
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class TypeContext extends ParserRuleContext {
-		public PrimitiveTypeContext primitiveType() {
-			return getRuleContext(PrimitiveTypeContext.class, 0);
-		}
-
-		public ReferenceTypeContext referenceType() {
-			return getRuleContext(ReferenceTypeContext.class, 0);
-		}
-
-		public TypeContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_type;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterType(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitType(this);
-		}
-	}
-
-	public final TypeContext type() throws RecognitionException {
-		TypeContext _localctx = new TypeContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_type);
-		try {
-			setState(218);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 8, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(216);
-					primitiveType();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(217);
-					referenceType();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class TypeNameContext extends ParserRuleContext {
-		public List<TerminalNode> Identifier() {
-			return getTokens(IkalaScriptParser.Identifier);
-		}
-
-		public TerminalNode Identifier(int i) {
-			return getToken(IkalaScriptParser.Identifier, i);
-		}
-
-		public List<TerminalNode> DOT() {
-			return getTokens(IkalaScriptParser.DOT);
-		}
-
-		public TerminalNode DOT(int i) {
-			return getToken(IkalaScriptParser.DOT, i);
-		}
-
-		public TypeNameContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_typeName;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterTypeName(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitTypeName(this);
-		}
-	}
-
-	public final TypeNameContext typeName() throws RecognitionException {
-		TypeNameContext _localctx = new TypeNameContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_typeName);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(220);
-				match(Identifier);
-				setState(225);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 9, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						{
-							{
-								setState(221);
-								match(DOT);
-								setState(222);
-								match(Identifier);
-							}
-						}
-					}
-					setState(227);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 9, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class CompilationUnitContext extends ParserRuleContext {
-		public TerminalNode EOF() {
-			return getToken(IkalaScriptParser.EOF, 0);
-		}
-
-		public List<BlockStatementContext> blockStatement() {
-			return getRuleContexts(BlockStatementContext.class);
-		}
-
-		public BlockStatementContext blockStatement(int i) {
-			return getRuleContext(BlockStatementContext.class, i);
-		}
-
-		public CompilationUnitContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_compilationUnit;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterCompilationUnit(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitCompilationUnit(this);
-		}
-	}
-
-	public final CompilationUnitContext compilationUnit()
-		throws RecognitionException {
-		CompilationUnitContext _localctx =
-			new CompilationUnitContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_compilationUnit);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(231);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377702940147126L) != 0)) {
-					{
-						{
-							setState(228);
-							blockStatement();
-						}
-					}
-					setState(233);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				setState(234);
-				match(EOF);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class BlockContext extends ParserRuleContext {
-		public TerminalNode LBRACE() {
-			return getToken(IkalaScriptParser.LBRACE, 0);
-		}
-
-		public TerminalNode RBRACE() {
-			return getToken(IkalaScriptParser.RBRACE, 0);
-		}
-
-		public BlockStatementsContext blockStatements() {
-			return getRuleContext(BlockStatementsContext.class, 0);
-		}
-
-		public BlockContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_block;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterBlock(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitBlock(this);
-		}
-	}
-
-	public final BlockContext block() throws RecognitionException {
-		BlockContext _localctx = new BlockContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_block);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(236);
-				match(LBRACE);
-				setState(238);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377702940147126L) != 0)) {
-					{
-						setState(237);
-						blockStatements();
-					}
-				}
-
-				setState(240);
-				match(RBRACE);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class BlockStatementsContext extends ParserRuleContext {
-		public List<BlockStatementContext> blockStatement() {
-			return getRuleContexts(BlockStatementContext.class);
-		}
-
-		public BlockStatementContext blockStatement(int i) {
-			return getRuleContext(BlockStatementContext.class, i);
-		}
-
-		public BlockStatementsContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_blockStatements;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterBlockStatements(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitBlockStatements(this);
-		}
-	}
-
-	public final BlockStatementsContext blockStatements()
-		throws RecognitionException {
-		BlockStatementsContext _localctx =
-			new BlockStatementsContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_blockStatements);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(243);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				do {
-					{
-						{
-							setState(242);
-							blockStatement();
-						}
-					}
-					setState(245);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				while ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377702940147126L) != 0));
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class BlockStatementContext extends ParserRuleContext {
-		public LocalVariableDeclarationContext localVariableDeclaration() {
-			return getRuleContext(LocalVariableDeclarationContext.class, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public BlockStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_blockStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterBlockStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitBlockStatement(this);
-		}
-	}
-
-	public final BlockStatementContext blockStatement()
-		throws RecognitionException {
-		BlockStatementContext _localctx =
-			new BlockStatementContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_blockStatement);
-		try {
-			setState(249);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 13, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(247);
-					localVariableDeclaration();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(248);
-					statement();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class LocalVariableDeclarationContext
-		extends ParserRuleContext {
-		public TypeContext type() {
-			return getRuleContext(TypeContext.class, 0);
-		}
-
-		public VariableDeclaratorListContext variableDeclaratorList() {
-			return getRuleContext(VariableDeclaratorListContext.class, 0);
-		}
-
-		public TerminalNode FINAL() {
-			return getToken(IkalaScriptParser.FINAL, 0);
-		}
-
-		public LocalVariableDeclarationContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_localVariableDeclaration;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterLocalVariableDeclaration(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitLocalVariableDeclaration(this);
-		}
-	}
-
-	public final LocalVariableDeclarationContext localVariableDeclaration()
-		throws RecognitionException {
-		LocalVariableDeclarationContext _localctx =
-			new LocalVariableDeclarationContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_localVariableDeclaration);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(252);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if (_la == FINAL) {
-					{
-						setState(251);
-						match(FINAL);
-					}
-				}
-
-				setState(254);
-				type();
-				setState(255);
-				variableDeclaratorList();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class StatementContext extends ParserRuleContext {
-		public StatementWithoutTrailingSubstatementContext
-			statementWithoutTrailingSubstatement() {
-			return getRuleContext(
-				StatementWithoutTrailingSubstatementContext.class, 0);
-		}
-
-		public LabeledStatementContext labeledStatement() {
-			return getRuleContext(LabeledStatementContext.class, 0);
-		}
-
-		public IfThenStatementContext ifThenStatement() {
-			return getRuleContext(IfThenStatementContext.class, 0);
-		}
-
-		public IfThenElseStatementContext ifThenElseStatement() {
-			return getRuleContext(IfThenElseStatementContext.class, 0);
-		}
-
-		public WhileStatementContext whileStatement() {
-			return getRuleContext(WhileStatementContext.class, 0);
-		}
-
-		public ForStatementContext forStatement() {
-			return getRuleContext(ForStatementContext.class, 0);
-		}
-
-		public StatementContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_statement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitStatement(this);
-		}
-	}
-
-	public final StatementContext statement() throws RecognitionException {
-		StatementContext _localctx = new StatementContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_statement);
-		try {
-			setState(263);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 15, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(257);
-					statementWithoutTrailingSubstatement();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(258);
-					labeledStatement();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(259);
-					ifThenStatement();
-				}
-					break;
-				case 4:
-					enterOuterAlt(_localctx, 4); {
-					setState(260);
-					ifThenElseStatement();
-				}
-					break;
-				case 5:
-					enterOuterAlt(_localctx, 5); {
-					setState(261);
-					whileStatement();
-				}
-					break;
-				case 6:
-					enterOuterAlt(_localctx, 6); {
-					setState(262);
-					forStatement();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class StatementNoShortIfContext extends ParserRuleContext {
-		public StatementWithoutTrailingSubstatementContext
-			statementWithoutTrailingSubstatement() {
-			return getRuleContext(
-				StatementWithoutTrailingSubstatementContext.class, 0);
-		}
-
-		public LabeledStatementNoShortIfContext labeledStatementNoShortIf() {
-			return getRuleContext(LabeledStatementNoShortIfContext.class, 0);
-		}
-
-		public IfThenElseStatementNoShortIfContext
-			ifThenElseStatementNoShortIf() {
-			return getRuleContext(IfThenElseStatementNoShortIfContext.class, 0);
-		}
-
-		public WhileStatementNoShortIfContext whileStatementNoShortIf() {
-			return getRuleContext(WhileStatementNoShortIfContext.class, 0);
-		}
-
-		public ForStatementNoShortIfContext forStatementNoShortIf() {
-			return getRuleContext(ForStatementNoShortIfContext.class, 0);
-		}
-
-		public StatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_statementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitStatementNoShortIf(this);
-		}
-	}
-
-	public final StatementNoShortIfContext statementNoShortIf()
-		throws RecognitionException {
-		StatementNoShortIfContext _localctx =
-			new StatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_statementNoShortIf);
-		try {
-			setState(270);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 16, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(265);
-					statementWithoutTrailingSubstatement();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(266);
-					labeledStatementNoShortIf();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(267);
-					ifThenElseStatementNoShortIf();
-				}
-					break;
-				case 4:
-					enterOuterAlt(_localctx, 4); {
-					setState(268);
-					whileStatementNoShortIf();
-				}
-					break;
-				case 5:
-					enterOuterAlt(_localctx, 5); {
-					setState(269);
-					forStatementNoShortIf();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class StatementWithoutTrailingSubstatementContext
-		extends ParserRuleContext {
-		public BlockContext block() {
-			return getRuleContext(BlockContext.class, 0);
-		}
-
-		public StatementExpressionContext statementExpression() {
-			return getRuleContext(StatementExpressionContext.class, 0);
-		}
-
-		public SwitchStatementContext switchStatement() {
-			return getRuleContext(SwitchStatementContext.class, 0);
-		}
-
-		public DoStatementContext doStatement() {
-			return getRuleContext(DoStatementContext.class, 0);
-		}
-
-		public BreakStatementContext breakStatement() {
-			return getRuleContext(BreakStatementContext.class, 0);
-		}
-
-		public ContinueStatementContext continueStatement() {
-			return getRuleContext(ContinueStatementContext.class, 0);
-		}
-
-		public GotoStatementContext gotoStatement() {
-			return getRuleContext(GotoStatementContext.class, 0);
-		}
-
-		public ReturnStatementContext returnStatement() {
-			return getRuleContext(ReturnStatementContext.class, 0);
-		}
-
-		public StatementWithoutTrailingSubstatementContext(
-			ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_statementWithoutTrailingSubstatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterStatementWithoutTrailingSubstatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitStatementWithoutTrailingSubstatement(this);
-		}
-	}
-
-	public final StatementWithoutTrailingSubstatementContext
-		statementWithoutTrailingSubstatement() throws RecognitionException {
-		StatementWithoutTrailingSubstatementContext _localctx =
-			new StatementWithoutTrailingSubstatementContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_statementWithoutTrailingSubstatement);
-		try {
-			setState(280);
-			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-				case LBRACE:
-					enterOuterAlt(_localctx, 1); {
-					setState(272);
-					block();
-				}
-					break;
-				case IntegerLiteral:
-				case FloatingPointLiteral:
-				case BooleanLiteral:
-				case CharacterLiteral:
-				case StringLiteral:
-				case NullLiteral:
-				case Identifier:
-				case LPAREN:
-				case INC:
-				case DEC:
-					enterOuterAlt(_localctx, 2); {
-					setState(273);
-					statementExpression();
-				}
-					break;
-				case SWITCH:
-					enterOuterAlt(_localctx, 3); {
-					setState(274);
-					switchStatement();
-				}
-					break;
-				case DO:
-					enterOuterAlt(_localctx, 4); {
-					setState(275);
-					doStatement();
-				}
-					break;
-				case BREAK:
-					enterOuterAlt(_localctx, 5); {
-					setState(276);
-					breakStatement();
-				}
-					break;
-				case CONTINUE:
-					enterOuterAlt(_localctx, 6); {
-					setState(277);
-					continueStatement();
-				}
-					break;
-				case GOTO:
-					enterOuterAlt(_localctx, 7); {
-					setState(278);
-					gotoStatement();
-				}
-					break;
-				case RETURN:
-					enterOuterAlt(_localctx, 8); {
-					setState(279);
-					returnStatement();
-				}
-					break;
-				default:
-					throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class LabeledStatementContext extends ParserRuleContext {
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public TerminalNode COLON() {
-			return getToken(IkalaScriptParser.COLON, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public LabeledStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_labeledStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterLabeledStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitLabeledStatement(this);
-		}
-	}
-
-	public final LabeledStatementContext labeledStatement()
-		throws RecognitionException {
-		LabeledStatementContext _localctx =
-			new LabeledStatementContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_labeledStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(282);
-				match(Identifier);
-				setState(283);
-				match(COLON);
-				setState(284);
-				statement();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class LabeledStatementNoShortIfContext
-		extends ParserRuleContext {
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public TerminalNode COLON() {
-			return getToken(IkalaScriptParser.COLON, 0);
-		}
-
-		public StatementNoShortIfContext statementNoShortIf() {
-			return getRuleContext(StatementNoShortIfContext.class, 0);
-		}
-
-		public LabeledStatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_labeledStatementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterLabeledStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitLabeledStatementNoShortIf(this);
-		}
-	}
-
-	public final LabeledStatementNoShortIfContext labeledStatementNoShortIf()
-		throws RecognitionException {
-		LabeledStatementNoShortIfContext _localctx =
-			new LabeledStatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_labeledStatementNoShortIf);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(286);
-				match(Identifier);
-				setState(287);
-				match(COLON);
-				setState(288);
-				statementNoShortIf();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class StatementExpressionContext extends ParserRuleContext {
-		public AssignmentContext assignment() {
-			return getRuleContext(AssignmentContext.class, 0);
-		}
-
-		public PreIncrementExpressionContext preIncrementExpression() {
-			return getRuleContext(PreIncrementExpressionContext.class, 0);
-		}
-
-		public PreDecrementExpressionContext preDecrementExpression() {
-			return getRuleContext(PreDecrementExpressionContext.class, 0);
-		}
-
-		public PostIncrementExpressionContext postIncrementExpression() {
-			return getRuleContext(PostIncrementExpressionContext.class, 0);
-		}
-
-		public PostDecrementExpressionContext postDecrementExpression() {
-			return getRuleContext(PostDecrementExpressionContext.class, 0);
-		}
-
-		public MethodInvocationContext methodInvocation() {
-			return getRuleContext(MethodInvocationContext.class, 0);
-		}
-
-		public StatementExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_statementExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterStatementExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitStatementExpression(this);
-		}
-	}
-
-	public final StatementExpressionContext statementExpression()
-		throws RecognitionException {
-		StatementExpressionContext _localctx =
-			new StatementExpressionContext(_ctx, getState());
-		enterRule(_localctx, 44, RULE_statementExpression);
-		try {
-			setState(296);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 18, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(290);
-					assignment();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(291);
-					preIncrementExpression();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(292);
-					preDecrementExpression();
-				}
-					break;
-				case 4:
-					enterOuterAlt(_localctx, 4); {
-					setState(293);
-					postIncrementExpression();
-				}
-					break;
-				case 5:
-					enterOuterAlt(_localctx, 5); {
-					setState(294);
-					postDecrementExpression();
-				}
-					break;
-				case 6:
-					enterOuterAlt(_localctx, 6); {
-					setState(295);
-					methodInvocation();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class IfThenStatementContext extends ParserRuleContext {
-		public TerminalNode IF() {
-			return getToken(IkalaScriptParser.IF, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public IfThenStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_ifThenStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterIfThenStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitIfThenStatement(this);
-		}
-	}
-
-	public final IfThenStatementContext ifThenStatement()
-		throws RecognitionException {
-		IfThenStatementContext _localctx =
-			new IfThenStatementContext(_ctx, getState());
-		enterRule(_localctx, 46, RULE_ifThenStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(298);
-				match(IF);
-				setState(299);
-				match(LPAREN);
-				setState(300);
-				expression();
-				setState(301);
-				match(RPAREN);
-				setState(302);
-				statement();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class IfThenElseStatementContext extends ParserRuleContext {
-		public TerminalNode IF() {
-			return getToken(IkalaScriptParser.IF, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementNoShortIfContext statementNoShortIf() {
-			return getRuleContext(StatementNoShortIfContext.class, 0);
-		}
-
-		public TerminalNode ELSE() {
-			return getToken(IkalaScriptParser.ELSE, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public IfThenElseStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_ifThenElseStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterIfThenElseStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitIfThenElseStatement(this);
-		}
-	}
-
-	public final IfThenElseStatementContext ifThenElseStatement()
-		throws RecognitionException {
-		IfThenElseStatementContext _localctx =
-			new IfThenElseStatementContext(_ctx, getState());
-		enterRule(_localctx, 48, RULE_ifThenElseStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(304);
-				match(IF);
-				setState(305);
-				match(LPAREN);
-				setState(306);
-				expression();
-				setState(307);
-				match(RPAREN);
-				setState(308);
-				statementNoShortIf();
-				setState(309);
-				match(ELSE);
-				setState(310);
-				statement();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class IfThenElseStatementNoShortIfContext
-		extends ParserRuleContext {
-		public TerminalNode IF() {
-			return getToken(IkalaScriptParser.IF, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public List<StatementNoShortIfContext> statementNoShortIf() {
-			return getRuleContexts(StatementNoShortIfContext.class);
-		}
-
-		public StatementNoShortIfContext statementNoShortIf(int i) {
-			return getRuleContext(StatementNoShortIfContext.class, i);
-		}
-
-		public TerminalNode ELSE() {
-			return getToken(IkalaScriptParser.ELSE, 0);
-		}
-
-		public IfThenElseStatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_ifThenElseStatementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterIfThenElseStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitIfThenElseStatementNoShortIf(this);
-		}
-	}
-
-	public final IfThenElseStatementNoShortIfContext
-		ifThenElseStatementNoShortIf() throws RecognitionException {
-		IfThenElseStatementNoShortIfContext _localctx =
-			new IfThenElseStatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 50, RULE_ifThenElseStatementNoShortIf);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(312);
-				match(IF);
-				setState(313);
-				match(LPAREN);
-				setState(314);
-				expression();
-				setState(315);
-				match(RPAREN);
-				setState(316);
-				statementNoShortIf();
-				setState(317);
-				match(ELSE);
-				setState(318);
-				statementNoShortIf();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class SwitchStatementContext extends ParserRuleContext {
-		public TerminalNode SWITCH() {
-			return getToken(IkalaScriptParser.SWITCH, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public SwitchBlockContext switchBlock() {
-			return getRuleContext(SwitchBlockContext.class, 0);
-		}
-
-		public SwitchStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_switchStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterSwitchStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitSwitchStatement(this);
-		}
-	}
-
-	public final SwitchStatementContext switchStatement()
-		throws RecognitionException {
-		SwitchStatementContext _localctx =
-			new SwitchStatementContext(_ctx, getState());
-		enterRule(_localctx, 52, RULE_switchStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(320);
-				match(SWITCH);
-				setState(321);
-				match(LPAREN);
-				setState(322);
-				expression();
-				setState(323);
-				match(RPAREN);
-				setState(324);
-				switchBlock();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class SwitchBlockContext extends ParserRuleContext {
-		public TerminalNode LBRACE() {
-			return getToken(IkalaScriptParser.LBRACE, 0);
-		}
-
-		public TerminalNode RBRACE() {
-			return getToken(IkalaScriptParser.RBRACE, 0);
-		}
-
-		public List<SwitchBlockStatementGroupContext>
-			switchBlockStatementGroup() {
-			return getRuleContexts(SwitchBlockStatementGroupContext.class);
-		}
-
-		public SwitchBlockStatementGroupContext
-			switchBlockStatementGroup(int i) {
-			return getRuleContext(SwitchBlockStatementGroupContext.class, i);
-		}
-
-		public List<SwitchLabelContext> switchLabel() {
-			return getRuleContexts(SwitchLabelContext.class);
-		}
-
-		public SwitchLabelContext switchLabel(int i) {
-			return getRuleContext(SwitchLabelContext.class, i);
-		}
-
-		public SwitchBlockContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_switchBlock;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterSwitchBlock(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitSwitchBlock(this);
-		}
-	}
-
-	public final SwitchBlockContext switchBlock() throws RecognitionException {
-		SwitchBlockContext _localctx = new SwitchBlockContext(_ctx, getState());
-		enterRule(_localctx, 54, RULE_switchBlock);
-		int _la;
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(326);
-				match(LBRACE);
-				setState(330);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 19, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						{
-							{
-								setState(327);
-								switchBlockStatementGroup();
-							}
-						}
-					}
-					setState(332);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 19, _ctx);
-				}
-				setState(336);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la == CASE || _la == DEFAULT) {
-					{
-						{
-							setState(333);
-							switchLabel();
-						}
-					}
-					setState(338);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				setState(339);
-				match(RBRACE);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class SwitchBlockStatementGroupContext
-		extends ParserRuleContext {
-		public BlockStatementsContext blockStatements() {
-			return getRuleContext(BlockStatementsContext.class, 0);
-		}
-
-		public List<SwitchLabelContext> switchLabel() {
-			return getRuleContexts(SwitchLabelContext.class);
-		}
-
-		public SwitchLabelContext switchLabel(int i) {
-			return getRuleContext(SwitchLabelContext.class, i);
-		}
-
-		public SwitchBlockStatementGroupContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_switchBlockStatementGroup;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterSwitchBlockStatementGroup(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitSwitchBlockStatementGroup(this);
-		}
-	}
-
-	public final SwitchBlockStatementGroupContext switchBlockStatementGroup()
-		throws RecognitionException {
-		SwitchBlockStatementGroupContext _localctx =
-			new SwitchBlockStatementGroupContext(_ctx, getState());
-		enterRule(_localctx, 56, RULE_switchBlockStatementGroup);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(342);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				do {
-					{
-						{
-							setState(341);
-							switchLabel();
-						}
-					}
-					setState(344);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-				while (_la == CASE || _la == DEFAULT);
-				setState(346);
-				blockStatements();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class SwitchLabelContext extends ParserRuleContext {
-		public TerminalNode CASE() {
-			return getToken(IkalaScriptParser.CASE, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode COLON() {
-			return getToken(IkalaScriptParser.COLON, 0);
-		}
-
-		public TerminalNode DEFAULT() {
-			return getToken(IkalaScriptParser.DEFAULT, 0);
-		}
-
-		public SwitchLabelContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_switchLabel;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterSwitchLabel(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitSwitchLabel(this);
-		}
-	}
-
-	public final SwitchLabelContext switchLabel() throws RecognitionException {
-		SwitchLabelContext _localctx = new SwitchLabelContext(_ctx, getState());
-		enterRule(_localctx, 58, RULE_switchLabel);
-		try {
-			setState(354);
-			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-				case CASE:
-					enterOuterAlt(_localctx, 1); {
-					setState(348);
-					match(CASE);
-					setState(349);
-					expression();
-					setState(350);
-					match(COLON);
-				}
-					break;
-				case DEFAULT:
-					enterOuterAlt(_localctx, 2); {
-					setState(352);
-					match(DEFAULT);
-					setState(353);
-					match(COLON);
-				}
-					break;
-				default:
-					throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class WhileStatementContext extends ParserRuleContext {
-		public TerminalNode WHILE() {
-			return getToken(IkalaScriptParser.WHILE, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public WhileStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_whileStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterWhileStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitWhileStatement(this);
-		}
-	}
-
-	public final WhileStatementContext whileStatement()
-		throws RecognitionException {
-		WhileStatementContext _localctx =
-			new WhileStatementContext(_ctx, getState());
-		enterRule(_localctx, 60, RULE_whileStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(356);
-				match(WHILE);
-				setState(357);
-				match(LPAREN);
-				setState(358);
-				expression();
-				setState(359);
-				match(RPAREN);
-				setState(360);
-				statement();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class WhileStatementNoShortIfContext
-		extends ParserRuleContext {
-		public TerminalNode WHILE() {
-			return getToken(IkalaScriptParser.WHILE, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementNoShortIfContext statementNoShortIf() {
-			return getRuleContext(StatementNoShortIfContext.class, 0);
-		}
-
-		public WhileStatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_whileStatementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterWhileStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitWhileStatementNoShortIf(this);
-		}
-	}
-
-	public final WhileStatementNoShortIfContext whileStatementNoShortIf()
-		throws RecognitionException {
-		WhileStatementNoShortIfContext _localctx =
-			new WhileStatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 62, RULE_whileStatementNoShortIf);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(362);
-				match(WHILE);
-				setState(363);
-				match(LPAREN);
-				setState(364);
-				expression();
-				setState(365);
-				match(RPAREN);
-				setState(366);
-				statementNoShortIf();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class DoStatementContext extends ParserRuleContext {
-		public TerminalNode DO() {
-			return getToken(IkalaScriptParser.DO, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public TerminalNode WHILE() {
-			return getToken(IkalaScriptParser.WHILE, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public DoStatementContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_doStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterDoStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitDoStatement(this);
-		}
-	}
-
-	public final DoStatementContext doStatement() throws RecognitionException {
-		DoStatementContext _localctx = new DoStatementContext(_ctx, getState());
-		enterRule(_localctx, 64, RULE_doStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(368);
-				match(DO);
-				setState(369);
-				statement();
-				setState(370);
-				match(WHILE);
-				setState(371);
-				match(LPAREN);
-				setState(372);
-				expression();
-				setState(373);
-				match(RPAREN);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ForStatementContext extends ParserRuleContext {
-		public BasicForStatementContext basicForStatement() {
-			return getRuleContext(BasicForStatementContext.class, 0);
-		}
-
-		public EnhancedForStatementContext enhancedForStatement() {
-			return getRuleContext(EnhancedForStatementContext.class, 0);
-		}
-
-		public ForStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_forStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterForStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitForStatement(this);
-		}
-	}
-
-	public final ForStatementContext forStatement()
-		throws RecognitionException {
-		ForStatementContext _localctx =
-			new ForStatementContext(_ctx, getState());
-		enterRule(_localctx, 66, RULE_forStatement);
-		try {
-			setState(377);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 23, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(375);
-					basicForStatement();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(376);
-					enhancedForStatement();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ForStatementNoShortIfContext extends ParserRuleContext {
-		public BasicForStatementNoShortIfContext basicForStatementNoShortIf() {
-			return getRuleContext(BasicForStatementNoShortIfContext.class, 0);
-		}
-
-		public EnhancedForStatementNoShortIfContext
-			enhancedForStatementNoShortIf() {
-			return getRuleContext(EnhancedForStatementNoShortIfContext.class,
-				0);
-		}
-
-		public ForStatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_forStatementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterForStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitForStatementNoShortIf(this);
-		}
-	}
-
-	public final ForStatementNoShortIfContext forStatementNoShortIf()
-		throws RecognitionException {
-		ForStatementNoShortIfContext _localctx =
-			new ForStatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 68, RULE_forStatementNoShortIf);
-		try {
-			setState(381);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 24, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(379);
-					basicForStatementNoShortIf();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(380);
-					enhancedForStatementNoShortIf();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class BasicForStatementContext extends ParserRuleContext {
-		public TerminalNode FOR() {
-			return getToken(IkalaScriptParser.FOR, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public List<TerminalNode> SEMICOLON() {
-			return getTokens(IkalaScriptParser.SEMICOLON);
-		}
-
-		public TerminalNode SEMICOLON(int i) {
-			return getToken(IkalaScriptParser.SEMICOLON, i);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public ForInitContext forInit() {
-			return getRuleContext(ForInitContext.class, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public StatementExpressionListContext statementExpressionList() {
-			return getRuleContext(StatementExpressionListContext.class, 0);
-		}
-
-		public BasicForStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_basicForStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterBasicForStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitBasicForStatement(this);
-		}
-	}
-
-	public final BasicForStatementContext basicForStatement()
-		throws RecognitionException {
-		BasicForStatementContext _localctx =
-			new BasicForStatementContext(_ctx, getState());
-		enterRule(_localctx, 70, RULE_basicForStatement);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(383);
-				match(FOR);
-				setState(384);
-				match(LPAREN);
-				setState(386);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377700790224146L) != 0)) {
-					{
-						setState(385);
-						forInit();
-					}
-				}
-
-				setState(388);
-				match(SEMICOLON);
-				setState(390);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 16890698695442432L) != 0)) {
-					{
-						setState(389);
-						expression();
-					}
-				}
-
-				setState(392);
-				match(SEMICOLON);
-				setState(394);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377700790075392L) != 0)) {
-					{
-						setState(393);
-						statementExpressionList();
-					}
-				}
-
-				setState(396);
-				match(RPAREN);
-				setState(397);
-				statement();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class BasicForStatementNoShortIfContext
-		extends ParserRuleContext {
-		public TerminalNode FOR() {
-			return getToken(IkalaScriptParser.FOR, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public List<TerminalNode> SEMICOLON() {
-			return getTokens(IkalaScriptParser.SEMICOLON);
-		}
-
-		public TerminalNode SEMICOLON(int i) {
-			return getToken(IkalaScriptParser.SEMICOLON, i);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementNoShortIfContext statementNoShortIf() {
-			return getRuleContext(StatementNoShortIfContext.class, 0);
-		}
-
-		public ForInitContext forInit() {
-			return getRuleContext(ForInitContext.class, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public StatementExpressionListContext statementExpressionList() {
-			return getRuleContext(StatementExpressionListContext.class, 0);
-		}
-
-		public BasicForStatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_basicForStatementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterBasicForStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitBasicForStatementNoShortIf(this);
-		}
-	}
-
-	public final BasicForStatementNoShortIfContext basicForStatementNoShortIf()
-		throws RecognitionException {
-		BasicForStatementNoShortIfContext _localctx =
-			new BasicForStatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 72, RULE_basicForStatementNoShortIf);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(399);
-				match(FOR);
-				setState(400);
-				match(LPAREN);
-				setState(402);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377700790224146L) != 0)) {
-					{
-						setState(401);
-						forInit();
-					}
-				}
-
-				setState(404);
-				match(SEMICOLON);
-				setState(406);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 16890698695442432L) != 0)) {
-					{
-						setState(405);
-						expression();
-					}
-				}
-
-				setState(408);
-				match(SEMICOLON);
-				setState(410);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 3377700790075392L) != 0)) {
-					{
-						setState(409);
-						statementExpressionList();
-					}
-				}
-
-				setState(412);
-				match(RPAREN);
-				setState(413);
-				statementNoShortIf();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ForInitContext extends ParserRuleContext {
-		public StatementExpressionListContext statementExpressionList() {
-			return getRuleContext(StatementExpressionListContext.class, 0);
-		}
-
-		public LocalVariableDeclarationContext localVariableDeclaration() {
-			return getRuleContext(LocalVariableDeclarationContext.class, 0);
-		}
-
-		public ForInitContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_forInit;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterForInit(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitForInit(this);
-		}
-	}
-
-	public final ForInitContext forInit() throws RecognitionException {
-		ForInitContext _localctx = new ForInitContext(_ctx, getState());
-		enterRule(_localctx, 74, RULE_forInit);
-		try {
-			setState(417);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 31, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(415);
-					statementExpressionList();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(416);
-					localVariableDeclaration();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class StatementExpressionListContext
-		extends ParserRuleContext {
-		public List<StatementExpressionContext> statementExpression() {
-			return getRuleContexts(StatementExpressionContext.class);
-		}
-
-		public StatementExpressionContext statementExpression(int i) {
-			return getRuleContext(StatementExpressionContext.class, i);
-		}
-
-		public List<TerminalNode> COMMA() {
-			return getTokens(IkalaScriptParser.COMMA);
-		}
-
-		public TerminalNode COMMA(int i) {
-			return getToken(IkalaScriptParser.COMMA, i);
-		}
-
-		public StatementExpressionListContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_statementExpressionList;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterStatementExpressionList(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitStatementExpressionList(this);
-		}
-	}
-
-	public final StatementExpressionListContext statementExpressionList()
-		throws RecognitionException {
-		StatementExpressionListContext _localctx =
-			new StatementExpressionListContext(_ctx, getState());
-		enterRule(_localctx, 76, RULE_statementExpressionList);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(419);
-				statementExpression();
-				setState(424);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la == COMMA) {
-					{
-						{
-							setState(420);
-							match(COMMA);
-							setState(421);
-							statementExpression();
-						}
-					}
-					setState(426);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class EnhancedForStatementContext extends ParserRuleContext {
-		public TerminalNode FOR() {
-			return getToken(IkalaScriptParser.FOR, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public TypeContext type() {
-			return getRuleContext(TypeContext.class, 0);
-		}
-
-		public VariableDeclaratorIdContext variableDeclaratorId() {
-			return getRuleContext(VariableDeclaratorIdContext.class, 0);
-		}
-
-		public TerminalNode COLON() {
-			return getToken(IkalaScriptParser.COLON, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementContext statement() {
-			return getRuleContext(StatementContext.class, 0);
-		}
-
-		public TerminalNode FINAL() {
-			return getToken(IkalaScriptParser.FINAL, 0);
-		}
-
-		public EnhancedForStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_enhancedForStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterEnhancedForStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitEnhancedForStatement(this);
-		}
-	}
-
-	public final EnhancedForStatementContext enhancedForStatement()
-		throws RecognitionException {
-		EnhancedForStatementContext _localctx =
-			new EnhancedForStatementContext(_ctx, getState());
-		enterRule(_localctx, 78, RULE_enhancedForStatement);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(427);
-				match(FOR);
-				setState(428);
-				match(LPAREN);
-				setState(430);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if (_la == FINAL) {
-					{
-						setState(429);
-						match(FINAL);
-					}
-				}
-
-				setState(432);
-				type();
-				setState(433);
-				variableDeclaratorId();
-				setState(434);
-				match(COLON);
-				setState(435);
-				expression();
-				setState(436);
-				match(RPAREN);
-				setState(437);
-				statement();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class EnhancedForStatementNoShortIfContext
-		extends ParserRuleContext {
-		public TerminalNode FOR() {
-			return getToken(IkalaScriptParser.FOR, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public TypeContext type() {
-			return getRuleContext(TypeContext.class, 0);
-		}
-
-		public VariableDeclaratorIdContext variableDeclaratorId() {
-			return getRuleContext(VariableDeclaratorIdContext.class, 0);
-		}
-
-		public TerminalNode COLON() {
-			return getToken(IkalaScriptParser.COLON, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public StatementNoShortIfContext statementNoShortIf() {
-			return getRuleContext(StatementNoShortIfContext.class, 0);
-		}
-
-		public TerminalNode FINAL() {
-			return getToken(IkalaScriptParser.FINAL, 0);
-		}
-
-		public EnhancedForStatementNoShortIfContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_enhancedForStatementNoShortIf;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterEnhancedForStatementNoShortIf(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitEnhancedForStatementNoShortIf(this);
-		}
-	}
-
-	public final EnhancedForStatementNoShortIfContext
-		enhancedForStatementNoShortIf() throws RecognitionException {
-		EnhancedForStatementNoShortIfContext _localctx =
-			new EnhancedForStatementNoShortIfContext(_ctx, getState());
-		enterRule(_localctx, 80, RULE_enhancedForStatementNoShortIf);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(439);
-				match(FOR);
-				setState(440);
-				match(LPAREN);
-				setState(442);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if (_la == FINAL) {
-					{
-						setState(441);
-						match(FINAL);
-					}
-				}
-
-				setState(444);
-				type();
-				setState(445);
-				variableDeclaratorId();
-				setState(446);
-				match(COLON);
-				setState(447);
-				expression();
-				setState(448);
-				match(RPAREN);
-				setState(449);
-				statementNoShortIf();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class BreakStatementContext extends ParserRuleContext {
-		public TerminalNode BREAK() {
-			return getToken(IkalaScriptParser.BREAK, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public BreakStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_breakStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterBreakStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitBreakStatement(this);
-		}
-	}
-
-	public final BreakStatementContext breakStatement()
-		throws RecognitionException {
-		BreakStatementContext _localctx =
-			new BreakStatementContext(_ctx, getState());
-		enterRule(_localctx, 82, RULE_breakStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(451);
-				match(BREAK);
-				setState(453);
-				_errHandler.sync(this);
-				switch (getInterpreter().adaptivePredict(_input, 35, _ctx)) {
-					case 1: {
-						setState(452);
-						match(Identifier);
-					}
-						break;
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ContinueStatementContext extends ParserRuleContext {
-		public TerminalNode CONTINUE() {
-			return getToken(IkalaScriptParser.CONTINUE, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public ContinueStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_continueStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterContinueStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitContinueStatement(this);
-		}
-	}
-
-	public final ContinueStatementContext continueStatement()
-		throws RecognitionException {
-		ContinueStatementContext _localctx =
-			new ContinueStatementContext(_ctx, getState());
-		enterRule(_localctx, 84, RULE_continueStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(455);
-				match(CONTINUE);
-				setState(457);
-				_errHandler.sync(this);
-				switch (getInterpreter().adaptivePredict(_input, 36, _ctx)) {
-					case 1: {
-						setState(456);
-						match(Identifier);
-					}
-						break;
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class GotoStatementContext extends ParserRuleContext {
-		public TerminalNode GOTO() {
-			return getToken(IkalaScriptParser.GOTO, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public GotoStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_gotoStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterGotoStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitGotoStatement(this);
-		}
-	}
-
-	public final GotoStatementContext gotoStatement()
-		throws RecognitionException {
-		GotoStatementContext _localctx =
-			new GotoStatementContext(_ctx, getState());
-		enterRule(_localctx, 86, RULE_gotoStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(459);
-				match(GOTO);
-				setState(460);
-				match(Identifier);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ReturnStatementContext extends ParserRuleContext {
-		public TerminalNode RETURN() {
-			return getToken(IkalaScriptParser.RETURN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public ReturnStatementContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_returnStatement;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterReturnStatement(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitReturnStatement(this);
-		}
-	}
-
-	public final ReturnStatementContext returnStatement()
-		throws RecognitionException {
-		ReturnStatementContext _localctx =
-			new ReturnStatementContext(_ctx, getState());
-		enterRule(_localctx, 88, RULE_returnStatement);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(462);
-				match(RETURN);
-				setState(464);
-				_errHandler.sync(this);
-				switch (getInterpreter().adaptivePredict(_input, 37, _ctx)) {
-					case 1: {
-						setState(463);
-						expression();
-					}
-						break;
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PrimaryContext extends ParserRuleContext {
-		public Primary_LHSContext primary_LHS() {
-			return getRuleContext(Primary_LHSContext.class, 0);
-		}
-
-		public List<Primary_extensionContext> primary_extension() {
-			return getRuleContexts(Primary_extensionContext.class);
-		}
-
-		public Primary_extensionContext primary_extension(int i) {
-			return getRuleContext(Primary_extensionContext.class, i);
-		}
-
-		public PrimaryContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_primary;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterPrimary(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitPrimary(this);
-		}
-	}
-
-	public final PrimaryContext primary() throws RecognitionException {
-		PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
-		enterRule(_localctx, 90, RULE_primary);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(466);
-					primary_LHS();
-				}
-				setState(470);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 38, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						{
-							{
-								setState(467);
-								primary_extension();
-							}
-						}
-					}
-					setState(472);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 38, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ArrayAccess_LHS_GeneralContext
-		extends ParserRuleContext {
-		public LiteralContext literal() {
-			return getRuleContext(LiteralContext.class, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public FieldAccessContext fieldAccess() {
-			return getRuleContext(FieldAccessContext.class, 0);
-		}
-
-		public MethodInvocationContext methodInvocation() {
-			return getRuleContext(MethodInvocationContext.class, 0);
-		}
-
-		public ArrayAccess_LHS_GeneralContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_arrayAccess_LHS_General;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterArrayAccess_LHS_General(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitArrayAccess_LHS_General(this);
-		}
-	}
-
-	public final ArrayAccess_LHS_GeneralContext arrayAccess_LHS_General()
-		throws RecognitionException {
-		ArrayAccess_LHS_GeneralContext _localctx =
-			new ArrayAccess_LHS_GeneralContext(_ctx, getState());
-		enterRule(_localctx, 92, RULE_arrayAccess_LHS_General);
-		try {
-			setState(480);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 39, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(473);
-					literal();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(474);
-					match(LPAREN);
-					setState(475);
-					expression();
-					setState(476);
-					match(RPAREN);
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(478);
-					fieldAccess();
-				}
-					break;
-				case 4:
-					enterOuterAlt(_localctx, 4); {
-					setState(479);
-					methodInvocation();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class Primary_extensionContext extends ParserRuleContext {
-		public FieldAccess_extensionContext fieldAccess_extension() {
-			return getRuleContext(FieldAccess_extensionContext.class, 0);
-		}
-
-		public ArrayAccess_extensionContext arrayAccess_extension() {
-			return getRuleContext(ArrayAccess_extensionContext.class, 0);
-		}
-
-		public MethodInvocation_extensionContext methodInvocation_extension() {
-			return getRuleContext(MethodInvocation_extensionContext.class, 0);
-		}
-
-		public Primary_extensionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_primary_extension;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPrimary_extension(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPrimary_extension(this);
-		}
-	}
-
-	public final Primary_extensionContext primary_extension()
-		throws RecognitionException {
-		Primary_extensionContext _localctx =
-			new Primary_extensionContext(_ctx, getState());
-		enterRule(_localctx, 94, RULE_primary_extension);
-		try {
-			setState(485);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 40, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(482);
-					fieldAccess_extension();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(483);
-					arrayAccess_extension();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(484);
-					methodInvocation_extension();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class Primary_extension_accessContext
-		extends ParserRuleContext {
-		public FieldAccess_extensionContext fieldAccess_extension() {
-			return getRuleContext(FieldAccess_extensionContext.class, 0);
-		}
-
-		public MethodInvocation_extensionContext methodInvocation_extension() {
-			return getRuleContext(MethodInvocation_extensionContext.class, 0);
-		}
-
-		public Primary_extension_accessContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_primary_extension_access;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPrimary_extension_access(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPrimary_extension_access(this);
-		}
-	}
-
-	public final Primary_extension_accessContext primary_extension_access()
-		throws RecognitionException {
-		Primary_extension_accessContext _localctx =
-			new Primary_extension_accessContext(_ctx, getState());
-		enterRule(_localctx, 96, RULE_primary_extension_access);
-		try {
-			setState(489);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 41, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(487);
-					fieldAccess_extension();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(488);
-					methodInvocation_extension();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class Primary_LHSContext extends ParserRuleContext {
-		public LiteralContext literal() {
-			return getRuleContext(LiteralContext.class, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public ArrayAccess_LHSContext arrayAccess_LHS() {
-			return getRuleContext(ArrayAccess_LHSContext.class, 0);
-		}
-
-		public MethodInvocation_LHSContext methodInvocation_LHS() {
-			return getRuleContext(MethodInvocation_LHSContext.class, 0);
-		}
-
-		public Primary_LHSContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_primary_LHS;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterPrimary_LHS(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitPrimary_LHS(this);
-		}
-	}
-
-	public final Primary_LHSContext primary_LHS() throws RecognitionException {
-		Primary_LHSContext _localctx = new Primary_LHSContext(_ctx, getState());
-		enterRule(_localctx, 98, RULE_primary_LHS);
-		try {
-			setState(498);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 42, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(491);
-					literal();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(492);
-					match(LPAREN);
-					setState(493);
-					expression();
-					setState(494);
-					match(RPAREN);
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(496);
-					arrayAccess_LHS();
-				}
-					break;
-				case 4:
-					enterOuterAlt(_localctx, 4); {
-					setState(497);
-					methodInvocation_LHS();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class Primary_LHS_accessContext extends ParserRuleContext {
-		public LiteralContext literal() {
-			return getRuleContext(LiteralContext.class, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public MethodInvocation_LHSContext methodInvocation_LHS() {
-			return getRuleContext(MethodInvocation_LHSContext.class, 0);
-		}
-
-		public Primary_LHS_accessContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_primary_LHS_access;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPrimary_LHS_access(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPrimary_LHS_access(this);
-		}
-	}
-
-	public final Primary_LHS_accessContext primary_LHS_access()
-		throws RecognitionException {
-		Primary_LHS_accessContext _localctx =
-			new Primary_LHS_accessContext(_ctx, getState());
-		enterRule(_localctx, 100, RULE_primary_LHS_access);
-		try {
-			setState(506);
-			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-				case IntegerLiteral:
-				case FloatingPointLiteral:
-				case BooleanLiteral:
-				case CharacterLiteral:
-				case StringLiteral:
-				case NullLiteral:
-					enterOuterAlt(_localctx, 1); {
-					setState(500);
-					literal();
-				}
-					break;
-				case LPAREN:
-					enterOuterAlt(_localctx, 2); {
-					setState(501);
-					match(LPAREN);
-					setState(502);
-					expression();
-					setState(503);
-					match(RPAREN);
-				}
-					break;
-				case Identifier:
-					enterOuterAlt(_localctx, 3); {
-					setState(505);
-					methodInvocation_LHS();
-				}
-					break;
-				default:
-					throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class FieldAccessContext extends ParserRuleContext {
-		public PrimaryContext primary() {
-			return getRuleContext(PrimaryContext.class, 0);
-		}
-
-		public TerminalNode DOT() {
-			return getToken(IkalaScriptParser.DOT, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public FieldAccessContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_fieldAccess;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterFieldAccess(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitFieldAccess(this);
-		}
-	}
-
-	public final FieldAccessContext fieldAccess() throws RecognitionException {
-		FieldAccessContext _localctx = new FieldAccessContext(_ctx, getState());
-		enterRule(_localctx, 102, RULE_fieldAccess);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(508);
-				primary();
-				setState(509);
-				match(DOT);
-				setState(510);
-				match(Identifier);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class FieldAccess_extensionContext extends ParserRuleContext {
-		public TerminalNode DOT() {
-			return getToken(IkalaScriptParser.DOT, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public FieldAccess_extensionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_fieldAccess_extension;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterFieldAccess_extension(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitFieldAccess_extension(this);
-		}
-	}
-
-	public final FieldAccess_extensionContext fieldAccess_extension()
-		throws RecognitionException {
-		FieldAccess_extensionContext _localctx =
-			new FieldAccess_extensionContext(_ctx, getState());
-		enterRule(_localctx, 104, RULE_fieldAccess_extension);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(512);
-				match(DOT);
-				setState(513);
-				match(Identifier);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ArrayAccessContext extends ParserRuleContext {
-		public TypeNameContext typeName() {
-			return getRuleContext(TypeNameContext.class, 0);
-		}
-
-		public List<TerminalNode> LBRACK() {
-			return getTokens(IkalaScriptParser.LBRACK);
-		}
-
-		public TerminalNode LBRACK(int i) {
-			return getToken(IkalaScriptParser.LBRACK, i);
-		}
-
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
-		}
-
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class, i);
-		}
-
-		public List<TerminalNode> RBRACK() {
-			return getTokens(IkalaScriptParser.RBRACK);
-		}
-
-		public TerminalNode RBRACK(int i) {
-			return getToken(IkalaScriptParser.RBRACK, i);
-		}
-
-		public ArrayAccess_LHS_GeneralContext arrayAccess_LHS_General() {
-			return getRuleContext(ArrayAccess_LHS_GeneralContext.class, 0);
-		}
-
-		public ArrayAccessContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_arrayAccess;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterArrayAccess(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitArrayAccess(this);
-		}
-	}
-
-	public final ArrayAccessContext arrayAccess() throws RecognitionException {
-		ArrayAccessContext _localctx = new ArrayAccessContext(_ctx, getState());
-		enterRule(_localctx, 106, RULE_arrayAccess);
-		int _la;
-		try {
-			setState(533);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 46, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(515);
-					typeName();
-					setState(520);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-					do {
-						{
-							{
-								setState(516);
-								match(LBRACK);
-								setState(517);
-								expression();
-								setState(518);
-								match(RBRACK);
-							}
-						}
-						setState(522);
-						_errHandler.sync(this);
-						_la = _input.LA(1);
-					}
-					while (_la == LBRACK);
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(524);
-					arrayAccess_LHS_General();
-					setState(529);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-					do {
-						{
-							{
-								setState(525);
-								match(LBRACK);
-								setState(526);
-								expression();
-								setState(527);
-								match(RBRACK);
-							}
-						}
-						setState(531);
-						_errHandler.sync(this);
-						_la = _input.LA(1);
-					}
-					while (_la == LBRACK);
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ArrayAccess_extensionContext extends ParserRuleContext {
-		public Primary_extension_accessContext primary_extension_access() {
-			return getRuleContext(Primary_extension_accessContext.class, 0);
-		}
-
-		public List<TerminalNode> LBRACK() {
-			return getTokens(IkalaScriptParser.LBRACK);
-		}
-
-		public TerminalNode LBRACK(int i) {
-			return getToken(IkalaScriptParser.LBRACK, i);
-		}
-
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
-		}
-
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class, i);
-		}
-
-		public List<TerminalNode> RBRACK() {
-			return getTokens(IkalaScriptParser.RBRACK);
-		}
-
-		public TerminalNode RBRACK(int i) {
-			return getToken(IkalaScriptParser.RBRACK, i);
-		}
-
-		public ArrayAccess_extensionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_arrayAccess_extension;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterArrayAccess_extension(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitArrayAccess_extension(this);
-		}
-	}
-
-	public final ArrayAccess_extensionContext arrayAccess_extension()
-		throws RecognitionException {
-		ArrayAccess_extensionContext _localctx =
-			new ArrayAccess_extensionContext(_ctx, getState());
-		enterRule(_localctx, 108, RULE_arrayAccess_extension);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(535);
-				primary_extension_access();
-				setState(540);
-				_errHandler.sync(this);
-				_alt = 1;
-				do {
-					switch (_alt) {
-						case 1: {
-							{
-								setState(536);
-								match(LBRACK);
-								setState(537);
-								expression();
-								setState(538);
-								match(RBRACK);
-							}
-						}
-							break;
-						default:
-							throw new NoViableAltException(this);
-					}
-					setState(542);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 47, _ctx);
-				}
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ArrayAccess_LHSContext extends ParserRuleContext {
-		public TypeNameContext typeName() {
-			return getRuleContext(TypeNameContext.class, 0);
-		}
-
-		public List<TerminalNode> LBRACK() {
-			return getTokens(IkalaScriptParser.LBRACK);
-		}
-
-		public TerminalNode LBRACK(int i) {
-			return getToken(IkalaScriptParser.LBRACK, i);
-		}
-
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
-		}
-
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class, i);
-		}
-
-		public List<TerminalNode> RBRACK() {
-			return getTokens(IkalaScriptParser.RBRACK);
-		}
-
-		public TerminalNode RBRACK(int i) {
-			return getToken(IkalaScriptParser.RBRACK, i);
-		}
-
-		public Primary_LHS_accessContext primary_LHS_access() {
-			return getRuleContext(Primary_LHS_accessContext.class, 0);
-		}
-
-		public ArrayAccess_LHSContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_arrayAccess_LHS;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterArrayAccess_LHS(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitArrayAccess_LHS(this);
-		}
-	}
-
-	public final ArrayAccess_LHSContext arrayAccess_LHS()
-		throws RecognitionException {
-		ArrayAccess_LHSContext _localctx =
-			new ArrayAccess_LHSContext(_ctx, getState());
-		enterRule(_localctx, 110, RULE_arrayAccess_LHS);
-		try {
-			int _alt;
-			setState(562);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 50, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(544);
-					typeName();
-					setState(549);
-					_errHandler.sync(this);
-					_alt = 1;
-					do {
-						switch (_alt) {
-							case 1: {
-								{
-									setState(545);
-									match(LBRACK);
-									setState(546);
-									expression();
-									setState(547);
-									match(RBRACK);
-								}
-							}
-								break;
-							default:
-								throw new NoViableAltException(this);
-						}
-						setState(551);
-						_errHandler.sync(this);
-						_alt =
-							getInterpreter().adaptivePredict(_input, 48, _ctx);
-					}
-					while (_alt != 2
-						&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(553);
-					primary_LHS_access();
-					setState(558);
-					_errHandler.sync(this);
-					_alt = 1;
-					do {
-						switch (_alt) {
-							case 1: {
-								{
-									setState(554);
-									match(LBRACK);
-									setState(555);
-									expression();
-									setState(556);
-									match(RBRACK);
-								}
-							}
-								break;
-							default:
-								throw new NoViableAltException(this);
-						}
-						setState(560);
-						_errHandler.sync(this);
-						_alt =
-							getInterpreter().adaptivePredict(_input, 49, _ctx);
-					}
-					while (_alt != 2
-						&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class MethodInvocationContext extends ParserRuleContext {
-		public TypeNameContext typeName() {
-			return getRuleContext(TypeNameContext.class, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public ArgumentListContext argumentList() {
-			return getRuleContext(ArgumentListContext.class, 0);
-		}
-
-		public PrimaryContext primary() {
-			return getRuleContext(PrimaryContext.class, 0);
-		}
-
-		public TerminalNode DOT() {
-			return getToken(IkalaScriptParser.DOT, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public MethodInvocationContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_methodInvocation;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterMethodInvocation(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitMethodInvocation(this);
-		}
-	}
-
-	public final MethodInvocationContext methodInvocation()
-		throws RecognitionException {
-		MethodInvocationContext _localctx =
-			new MethodInvocationContext(_ctx, getState());
-		enterRule(_localctx, 112, RULE_methodInvocation);
-		int _la;
-		try {
-			setState(580);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 53, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(564);
-					typeName();
-					setState(565);
-					match(LPAREN);
-					setState(567);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-					if ((((_la) & ~0x3f) == 0
-						&& ((1L << _la) & 16890698695442432L) != 0)) {
-						{
-							setState(566);
-							argumentList();
-						}
-					}
-
-					setState(569);
-					match(RPAREN);
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(571);
-					primary();
-					setState(572);
-					match(DOT);
-					setState(573);
-					match(Identifier);
-					setState(574);
-					match(LPAREN);
-					setState(576);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-					if ((((_la) & ~0x3f) == 0
-						&& ((1L << _la) & 16890698695442432L) != 0)) {
-						{
-							setState(575);
-							argumentList();
-						}
-					}
-
-					setState(578);
-					match(RPAREN);
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class MethodInvocation_extensionContext
-		extends ParserRuleContext {
-		public TerminalNode DOT() {
-			return getToken(IkalaScriptParser.DOT, 0);
-		}
-
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public ArgumentListContext argumentList() {
-			return getRuleContext(ArgumentListContext.class, 0);
-		}
-
-		public MethodInvocation_extensionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_methodInvocation_extension;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterMethodInvocation_extension(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitMethodInvocation_extension(this);
-		}
-	}
-
-	public final MethodInvocation_extensionContext methodInvocation_extension()
-		throws RecognitionException {
-		MethodInvocation_extensionContext _localctx =
-			new MethodInvocation_extensionContext(_ctx, getState());
-		enterRule(_localctx, 114, RULE_methodInvocation_extension);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(582);
-				match(DOT);
-				setState(583);
-				match(Identifier);
-				setState(584);
-				match(LPAREN);
-				setState(586);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 16890698695442432L) != 0)) {
-					{
-						setState(585);
-						argumentList();
-					}
-				}
-
-				setState(588);
-				match(RPAREN);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class MethodInvocation_LHSContext extends ParserRuleContext {
-		public TypeNameContext typeName() {
-			return getRuleContext(TypeNameContext.class, 0);
-		}
-
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public ArgumentListContext argumentList() {
-			return getRuleContext(ArgumentListContext.class, 0);
-		}
-
-		public MethodInvocation_LHSContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_methodInvocation_LHS;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterMethodInvocation_LHS(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitMethodInvocation_LHS(this);
-		}
-	}
-
-	public final MethodInvocation_LHSContext methodInvocation_LHS()
-		throws RecognitionException {
-		MethodInvocation_LHSContext _localctx =
-			new MethodInvocation_LHSContext(_ctx, getState());
-		enterRule(_localctx, 116, RULE_methodInvocation_LHS);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(590);
-				typeName();
-				setState(591);
-				match(LPAREN);
-				setState(593);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 16890698695442432L) != 0)) {
-					{
-						setState(592);
-						argumentList();
-					}
-				}
-
-				setState(595);
-				match(RPAREN);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ArgumentListContext extends ParserRuleContext {
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
-		}
-
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class, i);
-		}
-
-		public List<TerminalNode> COMMA() {
-			return getTokens(IkalaScriptParser.COMMA);
-		}
-
-		public TerminalNode COMMA(int i) {
-			return getToken(IkalaScriptParser.COMMA, i);
-		}
-
-		public ArgumentListContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_argumentList;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterArgumentList(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitArgumentList(this);
-		}
-	}
-
-	public final ArgumentListContext argumentList()
-		throws RecognitionException {
-		ArgumentListContext _localctx =
-			new ArgumentListContext(_ctx, getState());
-		enterRule(_localctx, 118, RULE_argumentList);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(597);
-				expression();
-				setState(602);
-				_errHandler.sync(this);
-				_la = _input.LA(1);
-				while (_la == COMMA) {
-					{
-						{
-							setState(598);
-							match(COMMA);
-							setState(599);
-							expression();
-						}
-					}
-					setState(604);
-					_errHandler.sync(this);
-					_la = _input.LA(1);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ExpressionContext extends ParserRuleContext {
-		public ConditionalExpressionContext conditionalExpression() {
-			return getRuleContext(ConditionalExpressionContext.class, 0);
-		}
-
-		public AssignmentContext assignment() {
-			return getRuleContext(AssignmentContext.class, 0);
-		}
-
-		public ExpressionContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_expression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitExpression(this);
-		}
-	}
-
-	public final ExpressionContext expression() throws RecognitionException {
-		ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
-		enterRule(_localctx, 120, RULE_expression);
-		try {
-			setState(607);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 57, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(605);
-					conditionalExpression();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(606);
-					assignment();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class AssignmentContext extends ParserRuleContext {
-		public LeftHandSideContext leftHandSide() {
-			return getRuleContext(LeftHandSideContext.class, 0);
-		}
-
-		public AssignmentOperatorContext assignmentOperator() {
-			return getRuleContext(AssignmentOperatorContext.class, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public AssignmentContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_assignment;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterAssignment(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitAssignment(this);
-		}
-	}
-
-	public final AssignmentContext assignment() throws RecognitionException {
-		AssignmentContext _localctx = new AssignmentContext(_ctx, getState());
-		enterRule(_localctx, 122, RULE_assignment);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(609);
-				leftHandSide();
-				setState(610);
-				assignmentOperator();
-				setState(611);
-				expression();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class LeftHandSideContext extends ParserRuleContext {
-		public TerminalNode Identifier() {
-			return getToken(IkalaScriptParser.Identifier, 0);
-		}
-
-		public FieldAccessContext fieldAccess() {
-			return getRuleContext(FieldAccessContext.class, 0);
-		}
-
-		public ArrayAccessContext arrayAccess() {
-			return getRuleContext(ArrayAccessContext.class, 0);
-		}
-
-		public LeftHandSideContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_leftHandSide;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).enterLeftHandSide(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitLeftHandSide(this);
-		}
-	}
-
-	public final LeftHandSideContext leftHandSide()
-		throws RecognitionException {
-		LeftHandSideContext _localctx =
-			new LeftHandSideContext(_ctx, getState());
-		enterRule(_localctx, 124, RULE_leftHandSide);
-		try {
-			setState(616);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 58, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(613);
-					match(Identifier);
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(614);
-					fieldAccess();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(615);
-					arrayAccess();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class AssignmentOperatorContext extends ParserRuleContext {
-		public TerminalNode ASSIGN() {
-			return getToken(IkalaScriptParser.ASSIGN, 0);
-		}
-
-		public TerminalNode MUL_ASSIGN() {
-			return getToken(IkalaScriptParser.MUL_ASSIGN, 0);
-		}
-
-		public TerminalNode DIV_ASSIGN() {
-			return getToken(IkalaScriptParser.DIV_ASSIGN, 0);
-		}
-
-		public TerminalNode MOD_ASSIGN() {
-			return getToken(IkalaScriptParser.MOD_ASSIGN, 0);
-		}
-
-		public TerminalNode ADD_ASSIGN() {
-			return getToken(IkalaScriptParser.ADD_ASSIGN, 0);
-		}
-
-		public TerminalNode SUB_ASSIGN() {
-			return getToken(IkalaScriptParser.SUB_ASSIGN, 0);
-		}
-
-		public AssignmentOperatorContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_assignmentOperator;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterAssignmentOperator(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitAssignmentOperator(this);
-		}
-	}
-
-	public final AssignmentOperatorContext assignmentOperator()
-		throws RecognitionException {
-		AssignmentOperatorContext _localctx =
-			new AssignmentOperatorContext(_ctx, getState());
-		enterRule(_localctx, 126, RULE_assignmentOperator);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(618);
-				_la = _input.LA(1);
-				if (!((((_la) & ~0x3f) == 0
-					&& ((1L << _la) & 4467571105229438976L) != 0))) {
-					_errHandler.recoverInline(this);
-				}
-				else {
-					if (_input.LA(1) == Token.EOF)
-						matchedEOF = true;
-					_errHandler.reportMatch(this);
-					consume();
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ConditionalExpressionContext extends ParserRuleContext {
-		public ConditionalOrExpressionContext conditionalOrExpression() {
-			return getRuleContext(ConditionalOrExpressionContext.class, 0);
-		}
-
-		public TerminalNode QUESTION() {
-			return getToken(IkalaScriptParser.QUESTION, 0);
-		}
-
-		public ExpressionContext expression() {
-			return getRuleContext(ExpressionContext.class, 0);
-		}
-
-		public TerminalNode COLON() {
-			return getToken(IkalaScriptParser.COLON, 0);
-		}
-
-		public ConditionalExpressionContext conditionalExpression() {
-			return getRuleContext(ConditionalExpressionContext.class, 0);
-		}
-
-		public ConditionalExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_conditionalExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterConditionalExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitConditionalExpression(this);
-		}
-	}
-
-	public final ConditionalExpressionContext conditionalExpression()
-		throws RecognitionException {
-		ConditionalExpressionContext _localctx =
-			new ConditionalExpressionContext(_ctx, getState());
-		enterRule(_localctx, 128, RULE_conditionalExpression);
-		try {
-			setState(627);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 59, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(620);
-					conditionalOrExpression(0);
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(621);
-					conditionalOrExpression(0);
-					setState(622);
-					match(QUESTION);
-					setState(623);
-					expression();
-					setState(624);
-					match(COLON);
-					setState(625);
-					conditionalExpression();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ConditionalOrExpressionContext
-		extends ParserRuleContext {
-		public ConditionalAndExpressionContext conditionalAndExpression() {
-			return getRuleContext(ConditionalAndExpressionContext.class, 0);
-		}
-
-		public ConditionalOrExpressionContext conditionalOrExpression() {
-			return getRuleContext(ConditionalOrExpressionContext.class, 0);
-		}
-
-		public TerminalNode OR() {
-			return getToken(IkalaScriptParser.OR, 0);
-		}
-
-		public ConditionalOrExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_conditionalOrExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterConditionalOrExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitConditionalOrExpression(this);
-		}
-	}
-
-	public final ConditionalOrExpressionContext conditionalOrExpression()
-		throws RecognitionException {
-		return conditionalOrExpression(0);
-	}
-
-	private ConditionalOrExpressionContext conditionalOrExpression(int _p)
-		throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		ConditionalOrExpressionContext _localctx =
-			new ConditionalOrExpressionContext(_ctx, _parentState);
-		ConditionalOrExpressionContext _prevctx = _localctx;
-		int _startState = 130;
-		enterRecursionRule(_localctx, 130, RULE_conditionalOrExpression, _p);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(630);
-					conditionalAndExpression(0);
-				}
-				_ctx.stop = _input.LT(-1);
-				setState(637);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 60, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						if (_parseListeners != null)
-							triggerExitRuleEvent();
-						_prevctx = _localctx;
-						{
-							{
-								_localctx = new ConditionalOrExpressionContext(
-									_parentctx, _parentState);
-								pushNewRecursionContext(_localctx, _startState,
-									RULE_conditionalOrExpression);
-								setState(632);
-								if (!(precpred(_ctx, 1)))
-									throw new FailedPredicateException(this,
-										"precpred(_ctx, 1)");
-								setState(633);
-								match(OR);
-								setState(634);
-								conditionalAndExpression(0);
-							}
-						}
-					}
-					setState(639);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 60, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class ConditionalAndExpressionContext
-		extends ParserRuleContext {
-		public EqualityExpressionContext equalityExpression() {
-			return getRuleContext(EqualityExpressionContext.class, 0);
-		}
-
-		public ConditionalAndExpressionContext conditionalAndExpression() {
-			return getRuleContext(ConditionalAndExpressionContext.class, 0);
-		}
-
-		public TerminalNode AND() {
-			return getToken(IkalaScriptParser.AND, 0);
-		}
-
-		public ConditionalAndExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_conditionalAndExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterConditionalAndExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitConditionalAndExpression(this);
-		}
-	}
-
-	public final ConditionalAndExpressionContext conditionalAndExpression()
-		throws RecognitionException {
-		return conditionalAndExpression(0);
-	}
-
-	private ConditionalAndExpressionContext conditionalAndExpression(int _p)
-		throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		ConditionalAndExpressionContext _localctx =
-			new ConditionalAndExpressionContext(_ctx, _parentState);
-		ConditionalAndExpressionContext _prevctx = _localctx;
-		int _startState = 132;
-		enterRecursionRule(_localctx, 132, RULE_conditionalAndExpression, _p);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(641);
-					equalityExpression(0);
-				}
-				_ctx.stop = _input.LT(-1);
-				setState(648);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 61, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						if (_parseListeners != null)
-							triggerExitRuleEvent();
-						_prevctx = _localctx;
-						{
-							{
-								_localctx = new ConditionalAndExpressionContext(
-									_parentctx, _parentState);
-								pushNewRecursionContext(_localctx, _startState,
-									RULE_conditionalAndExpression);
-								setState(643);
-								if (!(precpred(_ctx, 1)))
-									throw new FailedPredicateException(this,
-										"precpred(_ctx, 1)");
-								setState(644);
-								match(AND);
-								setState(645);
-								equalityExpression(0);
-							}
-						}
-					}
-					setState(650);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 61, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class EqualityExpressionContext extends ParserRuleContext {
-		public RelationalExpressionContext relationalExpression() {
-			return getRuleContext(RelationalExpressionContext.class, 0);
-		}
-
-		public EqualityExpressionContext equalityExpression() {
-			return getRuleContext(EqualityExpressionContext.class, 0);
-		}
-
-		public TerminalNode EQUAL() {
-			return getToken(IkalaScriptParser.EQUAL, 0);
-		}
-
-		public TerminalNode NOTEQUAL() {
-			return getToken(IkalaScriptParser.NOTEQUAL, 0);
-		}
-
-		public EqualityExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_equalityExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterEqualityExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitEqualityExpression(this);
-		}
-	}
-
-	public final EqualityExpressionContext equalityExpression()
-		throws RecognitionException {
-		return equalityExpression(0);
-	}
-
-	private EqualityExpressionContext equalityExpression(int _p)
-		throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		EqualityExpressionContext _localctx =
-			new EqualityExpressionContext(_ctx, _parentState);
-		EqualityExpressionContext _prevctx = _localctx;
-		int _startState = 134;
-		enterRecursionRule(_localctx, 134, RULE_equalityExpression, _p);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(652);
-					relationalExpression(0);
-				}
-				_ctx.stop = _input.LT(-1);
-				setState(662);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 63, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						if (_parseListeners != null)
-							triggerExitRuleEvent();
-						_prevctx = _localctx;
-						{
-							setState(660);
-							_errHandler.sync(this);
-							switch (getInterpreter().adaptivePredict(_input, 62,
-								_ctx)) {
-								case 1: {
-									_localctx = new EqualityExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_equalityExpression);
-									setState(654);
-									if (!(precpred(_ctx, 2)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 2)");
-									setState(655);
-									match(EQUAL);
-									setState(656);
-									relationalExpression(0);
-								}
-									break;
-								case 2: {
-									_localctx = new EqualityExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_equalityExpression);
-									setState(657);
-									if (!(precpred(_ctx, 1)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 1)");
-									setState(658);
-									match(NOTEQUAL);
-									setState(659);
-									relationalExpression(0);
-								}
-									break;
-							}
-						}
-					}
-					setState(664);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 63, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class RelationalExpressionContext extends ParserRuleContext {
-		public AdditiveExpressionContext additiveExpression() {
-			return getRuleContext(AdditiveExpressionContext.class, 0);
-		}
-
-		public RelationalExpressionContext relationalExpression() {
-			return getRuleContext(RelationalExpressionContext.class, 0);
-		}
-
-		public TerminalNode LT() {
-			return getToken(IkalaScriptParser.LT, 0);
-		}
-
-		public TerminalNode GT() {
-			return getToken(IkalaScriptParser.GT, 0);
-		}
-
-		public TerminalNode LTE() {
-			return getToken(IkalaScriptParser.LTE, 0);
-		}
-
-		public TerminalNode GTE() {
-			return getToken(IkalaScriptParser.GTE, 0);
-		}
-
-		public RelationalExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_relationalExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterRelationalExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitRelationalExpression(this);
-		}
-	}
-
-	public final RelationalExpressionContext relationalExpression()
-		throws RecognitionException {
-		return relationalExpression(0);
-	}
-
-	private RelationalExpressionContext relationalExpression(int _p)
-		throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		RelationalExpressionContext _localctx =
-			new RelationalExpressionContext(_ctx, _parentState);
-		RelationalExpressionContext _prevctx = _localctx;
-		int _startState = 136;
-		enterRecursionRule(_localctx, 136, RULE_relationalExpression, _p);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(666);
-					additiveExpression(0);
-				}
-				_ctx.stop = _input.LT(-1);
-				setState(682);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 65, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						if (_parseListeners != null)
-							triggerExitRuleEvent();
-						_prevctx = _localctx;
-						{
-							setState(680);
-							_errHandler.sync(this);
-							switch (getInterpreter().adaptivePredict(_input, 64,
-								_ctx)) {
-								case 1: {
-									_localctx = new RelationalExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_relationalExpression);
-									setState(668);
-									if (!(precpred(_ctx, 4)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 4)");
-									setState(669);
-									match(LT);
-									setState(670);
-									additiveExpression(0);
-								}
-									break;
-								case 2: {
-									_localctx = new RelationalExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_relationalExpression);
-									setState(671);
-									if (!(precpred(_ctx, 3)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 3)");
-									setState(672);
-									match(GT);
-									setState(673);
-									additiveExpression(0);
-								}
-									break;
-								case 3: {
-									_localctx = new RelationalExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_relationalExpression);
-									setState(674);
-									if (!(precpred(_ctx, 2)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 2)");
-									setState(675);
-									match(LTE);
-									setState(676);
-									additiveExpression(0);
-								}
-									break;
-								case 4: {
-									_localctx = new RelationalExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_relationalExpression);
-									setState(677);
-									if (!(precpred(_ctx, 1)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 1)");
-									setState(678);
-									match(GTE);
-									setState(679);
-									additiveExpression(0);
-								}
-									break;
-							}
-						}
-					}
-					setState(684);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 65, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class AdditiveExpressionContext extends ParserRuleContext {
-		public MultiplicativeExpressionContext multiplicativeExpression() {
-			return getRuleContext(MultiplicativeExpressionContext.class, 0);
-		}
-
-		public AdditiveExpressionContext additiveExpression() {
-			return getRuleContext(AdditiveExpressionContext.class, 0);
-		}
-
-		public TerminalNode ADD() {
-			return getToken(IkalaScriptParser.ADD, 0);
-		}
-
-		public TerminalNode SUB() {
-			return getToken(IkalaScriptParser.SUB, 0);
-		}
-
-		public AdditiveExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_additiveExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterAdditiveExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitAdditiveExpression(this);
-		}
-	}
-
-	public final AdditiveExpressionContext additiveExpression()
-		throws RecognitionException {
-		return additiveExpression(0);
-	}
-
-	private AdditiveExpressionContext additiveExpression(int _p)
-		throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		AdditiveExpressionContext _localctx =
-			new AdditiveExpressionContext(_ctx, _parentState);
-		AdditiveExpressionContext _prevctx = _localctx;
-		int _startState = 138;
-		enterRecursionRule(_localctx, 138, RULE_additiveExpression, _p);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(686);
-					multiplicativeExpression(0);
-				}
-				_ctx.stop = _input.LT(-1);
-				setState(696);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 67, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						if (_parseListeners != null)
-							triggerExitRuleEvent();
-						_prevctx = _localctx;
-						{
-							setState(694);
-							_errHandler.sync(this);
-							switch (getInterpreter().adaptivePredict(_input, 66,
-								_ctx)) {
-								case 1: {
-									_localctx = new AdditiveExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_additiveExpression);
-									setState(688);
-									if (!(precpred(_ctx, 2)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 2)");
-									setState(689);
-									match(ADD);
-									setState(690);
-									multiplicativeExpression(0);
-								}
-									break;
-								case 2: {
-									_localctx = new AdditiveExpressionContext(
-										_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState, RULE_additiveExpression);
-									setState(691);
-									if (!(precpred(_ctx, 1)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 1)");
-									setState(692);
-									match(SUB);
-									setState(693);
-									multiplicativeExpression(0);
-								}
-									break;
-							}
-						}
-					}
-					setState(698);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 67, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class MultiplicativeExpressionContext
-		extends ParserRuleContext {
-		public UnaryExpressionContext unaryExpression() {
-			return getRuleContext(UnaryExpressionContext.class, 0);
-		}
-
-		public MultiplicativeExpressionContext multiplicativeExpression() {
-			return getRuleContext(MultiplicativeExpressionContext.class, 0);
-		}
-
-		public TerminalNode MUL() {
-			return getToken(IkalaScriptParser.MUL, 0);
-		}
-
-		public TerminalNode DIV() {
-			return getToken(IkalaScriptParser.DIV, 0);
-		}
-
-		public TerminalNode MOD() {
-			return getToken(IkalaScriptParser.MOD, 0);
-		}
-
-		public MultiplicativeExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_multiplicativeExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterMultiplicativeExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitMultiplicativeExpression(this);
-		}
-	}
-
-	public final MultiplicativeExpressionContext multiplicativeExpression()
-		throws RecognitionException {
-		return multiplicativeExpression(0);
-	}
-
-	private MultiplicativeExpressionContext multiplicativeExpression(int _p)
-		throws RecognitionException {
-		ParserRuleContext _parentctx = _ctx;
-		int _parentState = getState();
-		MultiplicativeExpressionContext _localctx =
-			new MultiplicativeExpressionContext(_ctx, _parentState);
-		MultiplicativeExpressionContext _prevctx = _localctx;
-		int _startState = 140;
-		enterRecursionRule(_localctx, 140, RULE_multiplicativeExpression, _p);
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				{
-					setState(700);
-					unaryExpression();
-				}
-				_ctx.stop = _input.LT(-1);
-				setState(713);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 69, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						if (_parseListeners != null)
-							triggerExitRuleEvent();
-						_prevctx = _localctx;
-						{
-							setState(711);
-							_errHandler.sync(this);
-							switch (getInterpreter().adaptivePredict(_input, 68,
-								_ctx)) {
-								case 1: {
-									_localctx =
-										new MultiplicativeExpressionContext(
-											_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState,
-										RULE_multiplicativeExpression);
-									setState(702);
-									if (!(precpred(_ctx, 3)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 3)");
-									setState(703);
-									match(MUL);
-									setState(704);
-									unaryExpression();
-								}
-									break;
-								case 2: {
-									_localctx =
-										new MultiplicativeExpressionContext(
-											_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState,
-										RULE_multiplicativeExpression);
-									setState(705);
-									if (!(precpred(_ctx, 2)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 2)");
-									setState(706);
-									match(DIV);
-									setState(707);
-									unaryExpression();
-								}
-									break;
-								case 3: {
-									_localctx =
-										new MultiplicativeExpressionContext(
-											_parentctx, _parentState);
-									pushNewRecursionContext(_localctx,
-										_startState,
-										RULE_multiplicativeExpression);
-									setState(708);
-									if (!(precpred(_ctx, 1)))
-										throw new FailedPredicateException(this,
-											"precpred(_ctx, 1)");
-									setState(709);
-									match(MOD);
-									setState(710);
-									unaryExpression();
-								}
-									break;
-							}
-						}
-					}
-					setState(715);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 69, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			unrollRecursionContexts(_parentctx);
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class UnaryExpressionContext extends ParserRuleContext {
-		public PreIncrementExpressionContext preIncrementExpression() {
-			return getRuleContext(PreIncrementExpressionContext.class, 0);
-		}
-
-		public PreDecrementExpressionContext preDecrementExpression() {
-			return getRuleContext(PreDecrementExpressionContext.class, 0);
-		}
-
-		public TerminalNode ADD() {
-			return getToken(IkalaScriptParser.ADD, 0);
-		}
-
-		public UnaryExpressionContext unaryExpression() {
-			return getRuleContext(UnaryExpressionContext.class, 0);
-		}
-
-		public TerminalNode SUB() {
-			return getToken(IkalaScriptParser.SUB, 0);
-		}
-
-		public UnaryExpressionNotPlusMinusContext
-			unaryExpressionNotPlusMinus() {
-			return getRuleContext(UnaryExpressionNotPlusMinusContext.class, 0);
-		}
-
-		public UnaryExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_unaryExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterUnaryExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitUnaryExpression(this);
-		}
-	}
-
-	public final UnaryExpressionContext unaryExpression()
-		throws RecognitionException {
-		UnaryExpressionContext _localctx =
-			new UnaryExpressionContext(_ctx, getState());
-		enterRule(_localctx, 142, RULE_unaryExpression);
-		try {
-			setState(723);
-			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-				case INC:
-					enterOuterAlt(_localctx, 1); {
-					setState(716);
-					preIncrementExpression();
-				}
-					break;
-				case DEC:
-					enterOuterAlt(_localctx, 2); {
-					setState(717);
-					preDecrementExpression();
-				}
-					break;
-				case ADD:
-					enterOuterAlt(_localctx, 3); {
-					setState(718);
-					match(ADD);
-					setState(719);
-					unaryExpression();
-				}
-					break;
-				case SUB:
-					enterOuterAlt(_localctx, 4); {
-					setState(720);
-					match(SUB);
-					setState(721);
-					unaryExpression();
-				}
-					break;
-				case IntegerLiteral:
-				case FloatingPointLiteral:
-				case BooleanLiteral:
-				case CharacterLiteral:
-				case StringLiteral:
-				case NullLiteral:
-				case Identifier:
-				case LPAREN:
-				case NOT:
-					enterOuterAlt(_localctx, 5); {
-					setState(722);
-					unaryExpressionNotPlusMinus();
-				}
-					break;
-				default:
-					throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PreIncrementExpressionContext
-		extends ParserRuleContext {
-		public TerminalNode INC() {
-			return getToken(IkalaScriptParser.INC, 0);
-		}
-
-		public UnaryExpressionContext unaryExpression() {
-			return getRuleContext(UnaryExpressionContext.class, 0);
-		}
-
-		public PreIncrementExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_preIncrementExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPreIncrementExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPreIncrementExpression(this);
-		}
-	}
-
-	public final PreIncrementExpressionContext preIncrementExpression()
-		throws RecognitionException {
-		PreIncrementExpressionContext _localctx =
-			new PreIncrementExpressionContext(_ctx, getState());
-		enterRule(_localctx, 144, RULE_preIncrementExpression);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(725);
-				match(INC);
-				setState(726);
-				unaryExpression();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PreDecrementExpressionContext
-		extends ParserRuleContext {
-		public TerminalNode DEC() {
-			return getToken(IkalaScriptParser.DEC, 0);
-		}
-
-		public UnaryExpressionContext unaryExpression() {
-			return getRuleContext(UnaryExpressionContext.class, 0);
-		}
-
-		public PreDecrementExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_preDecrementExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPreDecrementExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPreDecrementExpression(this);
-		}
-	}
-
-	public final PreDecrementExpressionContext preDecrementExpression()
-		throws RecognitionException {
-		PreDecrementExpressionContext _localctx =
-			new PreDecrementExpressionContext(_ctx, getState());
-		enterRule(_localctx, 146, RULE_preDecrementExpression);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(728);
-				match(DEC);
-				setState(729);
-				unaryExpression();
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class UnaryExpressionNotPlusMinusContext
-		extends ParserRuleContext {
-		public PostfixExpressionContext postfixExpression() {
-			return getRuleContext(PostfixExpressionContext.class, 0);
-		}
-
-		public TerminalNode NOT() {
-			return getToken(IkalaScriptParser.NOT, 0);
-		}
-
-		public UnaryExpressionContext unaryExpression() {
-			return getRuleContext(UnaryExpressionContext.class, 0);
-		}
-
-		public CastExpressionContext castExpression() {
-			return getRuleContext(CastExpressionContext.class, 0);
-		}
-
-		public UnaryExpressionNotPlusMinusContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_unaryExpressionNotPlusMinus;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterUnaryExpressionNotPlusMinus(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitUnaryExpressionNotPlusMinus(this);
-		}
-	}
-
-	public final UnaryExpressionNotPlusMinusContext
-		unaryExpressionNotPlusMinus() throws RecognitionException {
-		UnaryExpressionNotPlusMinusContext _localctx =
-			new UnaryExpressionNotPlusMinusContext(_ctx, getState());
-		enterRule(_localctx, 148, RULE_unaryExpressionNotPlusMinus);
-		try {
-			setState(735);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 71, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(731);
-					postfixExpression();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(732);
-					match(NOT);
-					setState(733);
-					unaryExpression();
-				}
-					break;
-				case 3:
-					enterOuterAlt(_localctx, 3); {
-					setState(734);
-					castExpression();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PostfixExpressionContext extends ParserRuleContext {
-		public PrimaryContext primary() {
-			return getRuleContext(PrimaryContext.class, 0);
-		}
-
-		public TypeNameContext typeName() {
-			return getRuleContext(TypeNameContext.class, 0);
-		}
-
-		public List<TerminalNode> INC() {
-			return getTokens(IkalaScriptParser.INC);
-		}
-
-		public TerminalNode INC(int i) {
-			return getToken(IkalaScriptParser.INC, i);
-		}
-
-		public List<TerminalNode> DEC() {
-			return getTokens(IkalaScriptParser.DEC);
-		}
-
-		public TerminalNode DEC(int i) {
-			return getToken(IkalaScriptParser.DEC, i);
-		}
-
-		public PostfixExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_postfixExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPostfixExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPostfixExpression(this);
-		}
-	}
-
-	public final PostfixExpressionContext postfixExpression()
-		throws RecognitionException {
-		PostfixExpressionContext _localctx =
-			new PostfixExpressionContext(_ctx, getState());
-		enterRule(_localctx, 150, RULE_postfixExpression);
-		int _la;
-		try {
-			int _alt;
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(739);
-				_errHandler.sync(this);
-				switch (getInterpreter().adaptivePredict(_input, 72, _ctx)) {
-					case 1: {
-						setState(737);
-						primary();
-					}
-						break;
-					case 2: {
-						setState(738);
-						typeName();
-					}
-						break;
-				}
-				setState(744);
-				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input, 73, _ctx);
-				while (_alt != 2
-					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
-					if (_alt == 1) {
-						{
-							{
-								setState(741);
-								_la = _input.LA(1);
-								if (!(_la == INC || _la == DEC)) {
-									_errHandler.recoverInline(this);
-								}
-								else {
-									if (_input.LA(1) == Token.EOF)
-										matchedEOF = true;
-									_errHandler.reportMatch(this);
-									consume();
-								}
-							}
-						}
-					}
-					setState(746);
-					_errHandler.sync(this);
-					_alt = getInterpreter().adaptivePredict(_input, 73, _ctx);
-				}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PostIncrementExpressionContext
-		extends ParserRuleContext {
-		public PostfixExpressionContext postfixExpression() {
-			return getRuleContext(PostfixExpressionContext.class, 0);
-		}
-
-		public TerminalNode INC() {
-			return getToken(IkalaScriptParser.INC, 0);
-		}
-
-		public PostIncrementExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_postIncrementExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPostIncrementExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPostIncrementExpression(this);
-		}
-	}
-
-	public final PostIncrementExpressionContext postIncrementExpression()
-		throws RecognitionException {
-		PostIncrementExpressionContext _localctx =
-			new PostIncrementExpressionContext(_ctx, getState());
-		enterRule(_localctx, 152, RULE_postIncrementExpression);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(747);
-				postfixExpression();
-				setState(748);
-				match(INC);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class PostDecrementExpressionContext
-		extends ParserRuleContext {
-		public PostfixExpressionContext postfixExpression() {
-			return getRuleContext(PostfixExpressionContext.class, 0);
-		}
-
-		public TerminalNode DEC() {
-			return getToken(IkalaScriptParser.DEC, 0);
-		}
-
-		public PostDecrementExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_postDecrementExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterPostDecrementExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.exitPostDecrementExpression(this);
-		}
-	}
-
-	public final PostDecrementExpressionContext postDecrementExpression()
-		throws RecognitionException {
-		PostDecrementExpressionContext _localctx =
-			new PostDecrementExpressionContext(_ctx, getState());
-		enterRule(_localctx, 154, RULE_postDecrementExpression);
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
-				setState(750);
-				postfixExpression();
-				setState(751);
-				match(DEC);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	@SuppressWarnings("CheckReturnValue")
-	public static class CastExpressionContext extends ParserRuleContext {
-		public TerminalNode LPAREN() {
-			return getToken(IkalaScriptParser.LPAREN, 0);
-		}
-
-		public PrimitiveTypeContext primitiveType() {
-			return getRuleContext(PrimitiveTypeContext.class, 0);
-		}
-
-		public TerminalNode RPAREN() {
-			return getToken(IkalaScriptParser.RPAREN, 0);
-		}
-
-		public UnaryExpressionContext unaryExpression() {
-			return getRuleContext(UnaryExpressionContext.class, 0);
-		}
-
-		public ReferenceTypeContext referenceType() {
-			return getRuleContext(ReferenceTypeContext.class, 0);
-		}
-
-		public UnaryExpressionNotPlusMinusContext
-			unaryExpressionNotPlusMinus() {
-			return getRuleContext(UnaryExpressionNotPlusMinusContext.class, 0);
-		}
-
-		public CastExpressionContext(ParserRuleContext parent,
-			int invokingState) {
-			super(parent, invokingState);
-		}
-
-		@Override
-		public int getRuleIndex() {
-			return RULE_castExpression;
-		}
-
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener)
-					.enterCastExpression(this);
-		}
-
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if (listener instanceof IkalaScriptParserListener)
-				((IkalaScriptParserListener) listener).exitCastExpression(this);
-		}
-	}
-
-	public final CastExpressionContext castExpression()
-		throws RecognitionException {
-		CastExpressionContext _localctx =
-			new CastExpressionContext(_ctx, getState());
-		enterRule(_localctx, 156, RULE_castExpression);
-		try {
-			setState(763);
-			_errHandler.sync(this);
-			switch (getInterpreter().adaptivePredict(_input, 74, _ctx)) {
-				case 1:
-					enterOuterAlt(_localctx, 1); {
-					setState(753);
-					match(LPAREN);
-					setState(754);
-					primitiveType();
-					setState(755);
-					match(RPAREN);
-					setState(756);
-					unaryExpression();
-				}
-					break;
-				case 2:
-					enterOuterAlt(_localctx, 2); {
-					setState(758);
-					match(LPAREN);
-					setState(759);
-					referenceType();
-					setState(760);
-					match(RPAREN);
-					setState(761);
-					unaryExpressionNotPlusMinus();
-				}
-					break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
-	}
-
-	public boolean sempred(RuleContext _localctx, int ruleIndex,
-		int predIndex) {
-		switch (ruleIndex) {
-			case 65:
-				return conditionalOrExpression_sempred(
-					(ConditionalOrExpressionContext) _localctx, predIndex);
-			case 66:
-				return conditionalAndExpression_sempred(
-					(ConditionalAndExpressionContext) _localctx, predIndex);
-			case 67:
-				return equalityExpression_sempred(
-					(EqualityExpressionContext) _localctx, predIndex);
-			case 68:
-				return relationalExpression_sempred(
-					(RelationalExpressionContext) _localctx, predIndex);
-			case 69:
-				return additiveExpression_sempred(
-					(AdditiveExpressionContext) _localctx, predIndex);
-			case 70:
-				return multiplicativeExpression_sempred(
-					(MultiplicativeExpressionContext) _localctx, predIndex);
-		}
-		return true;
-	}
-
-	private boolean conditionalOrExpression_sempred(
-		ConditionalOrExpressionContext _localctx, int predIndex) {
-		switch (predIndex) {
-			case 0:
-				return precpred(_ctx, 1);
-		}
-		return true;
-	}
-
-	private boolean conditionalAndExpression_sempred(
-		ConditionalAndExpressionContext _localctx, int predIndex) {
-		switch (predIndex) {
-			case 1:
-				return precpred(_ctx, 1);
-		}
-		return true;
-	}
-
-	private boolean equalityExpression_sempred(
-		EqualityExpressionContext _localctx, int predIndex) {
-		switch (predIndex) {
-			case 2:
-				return precpred(_ctx, 2);
-			case 3:
-				return precpred(_ctx, 1);
-		}
-		return true;
-	}
-
-	private boolean relationalExpression_sempred(
-		RelationalExpressionContext _localctx, int predIndex) {
-		switch (predIndex) {
-			case 4:
-				return precpred(_ctx, 4);
-			case 5:
-				return precpred(_ctx, 3);
-			case 6:
-				return precpred(_ctx, 2);
-			case 7:
-				return precpred(_ctx, 1);
-		}
-		return true;
-	}
-
-	private boolean additiveExpression_sempred(
-		AdditiveExpressionContext _localctx, int predIndex) {
-		switch (predIndex) {
-			case 8:
-				return precpred(_ctx, 2);
-			case 9:
-				return precpred(_ctx, 1);
-		}
-		return true;
-	}
-
-	private boolean multiplicativeExpression_sempred(
-		MultiplicativeExpressionContext _localctx, int predIndex) {
-		switch (predIndex) {
-			case 10:
-				return precpred(_ctx, 3);
-			case 11:
-				return precpred(_ctx, 2);
-			case 12:
-				return precpred(_ctx, 1);
-		}
-		return true;
 	}
 
 	public static final String _serializedATN =
@@ -7738,12 +4224,3866 @@ public class IkalaScriptParser extends Parser {
 			+ "\u0230\u0232\u0237\u0240\u0244\u024a\u0251\u025a\u025f\u0268\u0273\u027d"
 			+ "\u0288\u0294\u0296\u02a8\u02aa\u02b6\u02b8\u02c7\u02c9\u02d3\u02df\u02e3"
 			+ "\u02e8\u02fb";
-	public static final ATN _ATN =
-		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
+
+	public static final ATN _ATN = new ATNDeserializer()
+		.deserialize(IkalaScriptParser._serializedATN.toCharArray());
+
 	static {
-		_decisionToDFA = new DFA[_ATN.getNumberOfDecisions()];
-		for (int i = 0; i < _ATN.getNumberOfDecisions(); i++) {
-			_decisionToDFA[i] = new DFA(_ATN.getDecisionState(i), i);
+		_decisionToDFA = new DFA[IkalaScriptParser._ATN.getNumberOfDecisions()];
+		for (int i = 0; i < IkalaScriptParser._ATN
+			.getNumberOfDecisions(); i++) {
+			IkalaScriptParser._decisionToDFA[i] =
+				new DFA(IkalaScriptParser._ATN.getDecisionState(i), i);
 		}
+	}
+
+	private static String[] makeLiteralNames() {
+		return new String[] {null, "'boolean'", "'break'", "'case'", "'char'",
+			"'continue'", "'default'", "'do'", "'double'", "'else'", "'final'",
+			"'for'", "'goto'", "'if'", "'int'", "'new'", "'return'", "'string'",
+			"'switch'", "'this'", "'void'", "'while'", null, null, null, null,
+			null, "'null'", null, "'('", "')'", "'{'", "'}'", "'['", "']'",
+			"';'", "','", "'.'", "'='", "'>'", "'<'", "'!'", "'?'", "':'",
+			"'=='", "'<='", "'>='", "'!='", "'and'", "'or'", "'++'", "'--'",
+			"'+'", "'-'", "'*'", "'/'", "'%'", "'+='", "'-='", "'*='", "'/='",
+			"'%='", "'...'"};
+	}
+
+	private static String[] makeRuleNames() {
+		return new String[] {"literal", "primitiveType", "numericType",
+			"referenceType", "classOrInterfaceType", "arrayType", "dims",
+			"variableDeclaratorList", "variableDeclarator",
+			"variableDeclaratorId", "type", "typeName", "compilationUnit",
+			"block", "blockStatements", "blockStatement",
+			"localVariableDeclaration", "statement", "statementNoShortIf",
+			"statementWithoutTrailingSubstatement", "labeledStatement",
+			"labeledStatementNoShortIf", "statementExpression",
+			"ifThenStatement", "ifThenElseStatement",
+			"ifThenElseStatementNoShortIf", "switchStatement", "switchBlock",
+			"switchBlockStatementGroup", "switchLabel", "whileStatement",
+			"whileStatementNoShortIf", "doStatement", "forStatement",
+			"forStatementNoShortIf", "basicForStatement",
+			"basicForStatementNoShortIf", "forInit", "statementExpressionList",
+			"enhancedForStatement", "enhancedForStatementNoShortIf",
+			"breakStatement", "continueStatement", "gotoStatement",
+			"returnStatement", "primary", "arrayAccess_LHS_General",
+			"primary_extension", "primary_extension_access", "primary_LHS",
+			"primary_LHS_access", "fieldAccess", "fieldAccess_extension",
+			"arrayAccess", "arrayAccess_extension", "arrayAccess_LHS",
+			"methodInvocation", "methodInvocation_extension",
+			"methodInvocation_LHS", "argumentList", "expression", "assignment",
+			"leftHandSide", "assignmentOperator", "conditionalExpression",
+			"conditionalOrExpression", "conditionalAndExpression",
+			"equalityExpression", "relationalExpression", "additiveExpression",
+			"multiplicativeExpression", "unaryExpression",
+			"preIncrementExpression", "preDecrementExpression",
+			"unaryExpressionNotPlusMinus", "postfixExpression",
+			"postIncrementExpression", "postDecrementExpression",
+			"castExpression"};
+	}
+
+	private static String[] makeSymbolicNames() {
+		return new String[] {null, "BOOLEAN", "BREAK", "CASE", "CHAR",
+			"CONTINUE", "DEFAULT", "DO", "DOUBLE", "ELSE", "FINAL", "FOR",
+			"GOTO", "IF", "INT", "NEW", "RETURN", "STRING", "SWITCH", "THIS",
+			"VOID", "WHILE", "IntegerLiteral", "FloatingPointLiteral",
+			"BooleanLiteral", "CharacterLiteral", "StringLiteral",
+			"NullLiteral", "Identifier", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
+			"LBRACK", "RBRACK", "SEMICOLON", "COMMA", "DOT", "ASSIGN", "GT",
+			"LT", "NOT", "QUESTION", "COLON", "EQUAL", "LTE", "GTE", "NOTEQUAL",
+			"AND", "OR", "INC", "DEC", "ADD", "SUB", "MUL", "DIV", "MOD",
+			"ADD_ASSIGN", "SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN",
+			"MOD_ASSIGN", "ELLIPSIS", "WS", "COMMENT", "LINE_COMMENT"};
+	}
+
+	public IkalaScriptParser(TokenStream input) {
+		super(input);
+		this._interp = new ParserATNSimulator(this, IkalaScriptParser._ATN,
+			IkalaScriptParser._decisionToDFA,
+			IkalaScriptParser._sharedContextCache);
+	}
+
+	public final AdditiveExpressionContext additiveExpression()
+		throws RecognitionException {
+		return this.additiveExpression(0);
+	}
+
+	private AdditiveExpressionContext additiveExpression(int _p)
+		throws RecognitionException {
+		ParserRuleContext _parentctx = this._ctx;
+		int _parentState = this.getState();
+		AdditiveExpressionContext _localctx =
+			new AdditiveExpressionContext(this._ctx, _parentState);
+		AdditiveExpressionContext _prevctx = _localctx;
+		int _startState = 138;
+		this.enterRecursionRule(_localctx, 138,
+			IkalaScriptParser.RULE_additiveExpression, _p);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(686);
+					this.multiplicativeExpression(0);
+				}
+				this._ctx.stop = this._input.LT(-1);
+				this.setState(696);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 67,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						if (this._parseListeners != null) {
+							this.triggerExitRuleEvent();
+						}
+						_prevctx = _localctx;
+						{
+							this.setState(694);
+							this._errHandler.sync(this);
+							switch (this.getInterpreter()
+								.adaptivePredict(this._input, 66, this._ctx)) {
+								case 1: {
+									_localctx = new AdditiveExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_additiveExpression);
+									this.setState(688);
+									if (!(this.precpred(this._ctx, 2))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 2)");
+									}
+									this.setState(689);
+									this.match(IkalaScriptParser.ADD);
+									this.setState(690);
+									this.multiplicativeExpression(0);
+								}
+									break;
+								case 2: {
+									_localctx = new AdditiveExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_additiveExpression);
+									this.setState(691);
+									if (!(this.precpred(this._ctx, 1))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 1)");
+									}
+									this.setState(692);
+									this.match(IkalaScriptParser.SUB);
+									this.setState(693);
+									this.multiplicativeExpression(0);
+								}
+									break;
+							}
+						}
+					}
+					this.setState(698);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						67, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	private boolean additiveExpression_sempred(
+		AdditiveExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+			case 8:
+				return this.precpred(this._ctx, 2);
+			case 9:
+				return this.precpred(this._ctx, 1);
+		}
+		return true;
+	}
+
+	public final ArgumentListContext argumentList()
+		throws RecognitionException {
+		ArgumentListContext _localctx =
+			new ArgumentListContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 118, IkalaScriptParser.RULE_argumentList);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(597);
+				this.expression();
+				this.setState(602);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la == IkalaScriptParser.COMMA) {
+					{
+						{
+							this.setState(598);
+							this.match(IkalaScriptParser.COMMA);
+							this.setState(599);
+							this.expression();
+						}
+					}
+					this.setState(604);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ArrayAccessContext arrayAccess() throws RecognitionException {
+		ArrayAccessContext _localctx =
+			new ArrayAccessContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 106, IkalaScriptParser.RULE_arrayAccess);
+		int _la;
+		try {
+			this.setState(533);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 46,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(515);
+					this.typeName();
+					this.setState(520);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+					do {
+						{
+							{
+								this.setState(516);
+								this.match(IkalaScriptParser.LBRACK);
+								this.setState(517);
+								this.expression();
+								this.setState(518);
+								this.match(IkalaScriptParser.RBRACK);
+							}
+						}
+						this.setState(522);
+						this._errHandler.sync(this);
+						_la = this._input.LA(1);
+					}
+					while (_la == IkalaScriptParser.LBRACK);
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(524);
+					this.arrayAccess_LHS_General();
+					this.setState(529);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+					do {
+						{
+							{
+								this.setState(525);
+								this.match(IkalaScriptParser.LBRACK);
+								this.setState(526);
+								this.expression();
+								this.setState(527);
+								this.match(IkalaScriptParser.RBRACK);
+							}
+						}
+						this.setState(531);
+						this._errHandler.sync(this);
+						_la = this._input.LA(1);
+					}
+					while (_la == IkalaScriptParser.LBRACK);
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ArrayAccess_extensionContext arrayAccess_extension()
+		throws RecognitionException {
+		ArrayAccess_extensionContext _localctx =
+			new ArrayAccess_extensionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 108,
+			IkalaScriptParser.RULE_arrayAccess_extension);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(535);
+				this.primary_extension_access();
+				this.setState(540);
+				this._errHandler.sync(this);
+				_alt = 1;
+				do {
+					switch (_alt) {
+						case 1: {
+							{
+								this.setState(536);
+								this.match(IkalaScriptParser.LBRACK);
+								this.setState(537);
+								this.expression();
+								this.setState(538);
+								this.match(IkalaScriptParser.RBRACK);
+							}
+						}
+							break;
+						default:
+							throw new NoViableAltException(this);
+					}
+					this.setState(542);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						47, this._ctx);
+				}
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ArrayAccess_LHSContext arrayAccess_LHS()
+		throws RecognitionException {
+		ArrayAccess_LHSContext _localctx =
+			new ArrayAccess_LHSContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 110, IkalaScriptParser.RULE_arrayAccess_LHS);
+		try {
+			int _alt;
+			this.setState(562);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 50,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(544);
+					this.typeName();
+					this.setState(549);
+					this._errHandler.sync(this);
+					_alt = 1;
+					do {
+						switch (_alt) {
+							case 1: {
+								{
+									this.setState(545);
+									this.match(IkalaScriptParser.LBRACK);
+									this.setState(546);
+									this.expression();
+									this.setState(547);
+									this.match(IkalaScriptParser.RBRACK);
+								}
+							}
+								break;
+							default:
+								throw new NoViableAltException(this);
+						}
+						this.setState(551);
+						this._errHandler.sync(this);
+						_alt = this.getInterpreter()
+							.adaptivePredict(this._input, 48, this._ctx);
+					}
+					while (_alt != 2
+						&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(553);
+					this.primary_LHS_access();
+					this.setState(558);
+					this._errHandler.sync(this);
+					_alt = 1;
+					do {
+						switch (_alt) {
+							case 1: {
+								{
+									this.setState(554);
+									this.match(IkalaScriptParser.LBRACK);
+									this.setState(555);
+									this.expression();
+									this.setState(556);
+									this.match(IkalaScriptParser.RBRACK);
+								}
+							}
+								break;
+							default:
+								throw new NoViableAltException(this);
+						}
+						this.setState(560);
+						this._errHandler.sync(this);
+						_alt = this.getInterpreter()
+							.adaptivePredict(this._input, 49, this._ctx);
+					}
+					while (_alt != 2
+						&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ArrayAccess_LHS_GeneralContext arrayAccess_LHS_General()
+		throws RecognitionException {
+		ArrayAccess_LHS_GeneralContext _localctx =
+			new ArrayAccess_LHS_GeneralContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 92,
+			IkalaScriptParser.RULE_arrayAccess_LHS_General);
+		try {
+			this.setState(480);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 39,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(473);
+					this.literal();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(474);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(475);
+					this.expression();
+					this.setState(476);
+					this.match(IkalaScriptParser.RPAREN);
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(478);
+					this.fieldAccess();
+				}
+					break;
+				case 4:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(479);
+					this.methodInvocation();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ArrayTypeContext arrayType() throws RecognitionException {
+		ArrayTypeContext _localctx =
+			new ArrayTypeContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 10, IkalaScriptParser.RULE_arrayType);
+		try {
+			this.setState(188);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 3,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(180);
+					this.primitiveType();
+					this.setState(181);
+					this.dims();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(183);
+					this.classOrInterfaceType();
+					this.setState(184);
+					this.dims();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(186);
+					this.match(IkalaScriptParser.Identifier);
+					this.setState(187);
+					this.dims();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final AssignmentContext assignment() throws RecognitionException {
+		AssignmentContext _localctx =
+			new AssignmentContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 122, IkalaScriptParser.RULE_assignment);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(609);
+				this.leftHandSide();
+				this.setState(610);
+				this.assignmentOperator();
+				this.setState(611);
+				this.expression();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final AssignmentOperatorContext assignmentOperator()
+		throws RecognitionException {
+		AssignmentOperatorContext _localctx =
+			new AssignmentOperatorContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 126,
+			IkalaScriptParser.RULE_assignmentOperator);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(618);
+				_la = this._input.LA(1);
+				if (!((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 4467571105229438976L) != 0))) {
+					this._errHandler.recoverInline(this);
+				}
+				else {
+					if (this._input.LA(1) == Token.EOF) {
+						this.matchedEOF = true;
+					}
+					this._errHandler.reportMatch(this);
+					this.consume();
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final BasicForStatementContext basicForStatement()
+		throws RecognitionException {
+		BasicForStatementContext _localctx =
+			new BasicForStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 70, IkalaScriptParser.RULE_basicForStatement);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(383);
+				this.match(IkalaScriptParser.FOR);
+				this.setState(384);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(386);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377700790224146L) != 0)) {
+					{
+						this.setState(385);
+						this.forInit();
+					}
+				}
+
+				this.setState(388);
+				this.match(IkalaScriptParser.SEMICOLON);
+				this.setState(390);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 16890698695442432L) != 0)) {
+					{
+						this.setState(389);
+						this.expression();
+					}
+				}
+
+				this.setState(392);
+				this.match(IkalaScriptParser.SEMICOLON);
+				this.setState(394);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377700790075392L) != 0)) {
+					{
+						this.setState(393);
+						this.statementExpressionList();
+					}
+				}
+
+				this.setState(396);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(397);
+				this.statement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final BasicForStatementNoShortIfContext basicForStatementNoShortIf()
+		throws RecognitionException {
+		BasicForStatementNoShortIfContext _localctx =
+			new BasicForStatementNoShortIfContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 72,
+			IkalaScriptParser.RULE_basicForStatementNoShortIf);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(399);
+				this.match(IkalaScriptParser.FOR);
+				this.setState(400);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(402);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377700790224146L) != 0)) {
+					{
+						this.setState(401);
+						this.forInit();
+					}
+				}
+
+				this.setState(404);
+				this.match(IkalaScriptParser.SEMICOLON);
+				this.setState(406);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 16890698695442432L) != 0)) {
+					{
+						this.setState(405);
+						this.expression();
+					}
+				}
+
+				this.setState(408);
+				this.match(IkalaScriptParser.SEMICOLON);
+				this.setState(410);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377700790075392L) != 0)) {
+					{
+						this.setState(409);
+						this.statementExpressionList();
+					}
+				}
+
+				this.setState(412);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(413);
+				this.statementNoShortIf();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final BlockContext block() throws RecognitionException {
+		BlockContext _localctx = new BlockContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 26, IkalaScriptParser.RULE_block);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(236);
+				this.match(IkalaScriptParser.LBRACE);
+				this.setState(238);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377702940147126L) != 0)) {
+					{
+						this.setState(237);
+						this.blockStatements();
+					}
+				}
+
+				this.setState(240);
+				this.match(IkalaScriptParser.RBRACE);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final BlockStatementContext blockStatement()
+		throws RecognitionException {
+		BlockStatementContext _localctx =
+			new BlockStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 30, IkalaScriptParser.RULE_blockStatement);
+		try {
+			this.setState(249);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 13,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(247);
+					this.localVariableDeclaration();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(248);
+					this.statement();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final BlockStatementsContext blockStatements()
+		throws RecognitionException {
+		BlockStatementsContext _localctx =
+			new BlockStatementsContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 28, IkalaScriptParser.RULE_blockStatements);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(243);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				do {
+					{
+						{
+							this.setState(242);
+							this.blockStatement();
+						}
+					}
+					this.setState(245);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				while ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377702940147126L) != 0));
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final BreakStatementContext breakStatement()
+		throws RecognitionException {
+		BreakStatementContext _localctx =
+			new BreakStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 82, IkalaScriptParser.RULE_breakStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(451);
+				this.match(IkalaScriptParser.BREAK);
+				this.setState(453);
+				this._errHandler.sync(this);
+				switch (this.getInterpreter().adaptivePredict(this._input, 35,
+					this._ctx)) {
+					case 1: {
+						this.setState(452);
+						this.match(IkalaScriptParser.Identifier);
+					}
+						break;
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final CastExpressionContext castExpression()
+		throws RecognitionException {
+		CastExpressionContext _localctx =
+			new CastExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 156, IkalaScriptParser.RULE_castExpression);
+		try {
+			this.setState(763);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 74,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(753);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(754);
+					this.primitiveType();
+					this.setState(755);
+					this.match(IkalaScriptParser.RPAREN);
+					this.setState(756);
+					this.unaryExpression();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(758);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(759);
+					this.referenceType();
+					this.setState(760);
+					this.match(IkalaScriptParser.RPAREN);
+					this.setState(761);
+					this.unaryExpressionNotPlusMinus();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ClassOrInterfaceTypeContext classOrInterfaceType()
+		throws RecognitionException {
+		ClassOrInterfaceTypeContext _localctx =
+			new ClassOrInterfaceTypeContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 8,
+			IkalaScriptParser.RULE_classOrInterfaceType);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(172);
+				this.match(IkalaScriptParser.Identifier);
+				this.setState(177);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la == IkalaScriptParser.DOT) {
+					{
+						{
+							this.setState(173);
+							this.match(IkalaScriptParser.DOT);
+							this.setState(174);
+							this.match(IkalaScriptParser.Identifier);
+						}
+					}
+					this.setState(179);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final CompilationUnitContext compilationUnit()
+		throws RecognitionException {
+		CompilationUnitContext _localctx =
+			new CompilationUnitContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 24, IkalaScriptParser.RULE_compilationUnit);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(231);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 3377702940147126L) != 0)) {
+					{
+						{
+							this.setState(228);
+							this.blockStatement();
+						}
+					}
+					this.setState(233);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.setState(234);
+				this.match(Recognizer.EOF);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ConditionalAndExpressionContext conditionalAndExpression()
+		throws RecognitionException {
+		return this.conditionalAndExpression(0);
+	}
+
+	private ConditionalAndExpressionContext conditionalAndExpression(int _p)
+		throws RecognitionException {
+		ParserRuleContext _parentctx = this._ctx;
+		int _parentState = this.getState();
+		ConditionalAndExpressionContext _localctx =
+			new ConditionalAndExpressionContext(this._ctx, _parentState);
+		ConditionalAndExpressionContext _prevctx = _localctx;
+		int _startState = 132;
+		this.enterRecursionRule(_localctx, 132,
+			IkalaScriptParser.RULE_conditionalAndExpression, _p);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(641);
+					this.equalityExpression(0);
+				}
+				this._ctx.stop = this._input.LT(-1);
+				this.setState(648);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 61,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						if (this._parseListeners != null) {
+							this.triggerExitRuleEvent();
+						}
+						_prevctx = _localctx;
+						{
+							{
+								_localctx = new ConditionalAndExpressionContext(
+									_parentctx, _parentState);
+								this.pushNewRecursionContext(_localctx,
+									_startState,
+									IkalaScriptParser.RULE_conditionalAndExpression);
+								this.setState(643);
+								if (!(this.precpred(this._ctx, 1))) {
+									throw new FailedPredicateException(this,
+										"precpred(_ctx, 1)");
+								}
+								this.setState(644);
+								this.match(IkalaScriptParser.AND);
+								this.setState(645);
+								this.equalityExpression(0);
+							}
+						}
+					}
+					this.setState(650);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						61, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	private boolean conditionalAndExpression_sempred(
+		ConditionalAndExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+			case 1:
+				return this.precpred(this._ctx, 1);
+		}
+		return true;
+	}
+
+	public final ConditionalExpressionContext conditionalExpression()
+		throws RecognitionException {
+		ConditionalExpressionContext _localctx =
+			new ConditionalExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 128,
+			IkalaScriptParser.RULE_conditionalExpression);
+		try {
+			this.setState(627);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 59,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(620);
+					this.conditionalOrExpression(0);
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(621);
+					this.conditionalOrExpression(0);
+					this.setState(622);
+					this.match(IkalaScriptParser.QUESTION);
+					this.setState(623);
+					this.expression();
+					this.setState(624);
+					this.match(IkalaScriptParser.COLON);
+					this.setState(625);
+					this.conditionalExpression();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ConditionalOrExpressionContext conditionalOrExpression()
+		throws RecognitionException {
+		return this.conditionalOrExpression(0);
+	}
+
+	private ConditionalOrExpressionContext conditionalOrExpression(int _p)
+		throws RecognitionException {
+		ParserRuleContext _parentctx = this._ctx;
+		int _parentState = this.getState();
+		ConditionalOrExpressionContext _localctx =
+			new ConditionalOrExpressionContext(this._ctx, _parentState);
+		ConditionalOrExpressionContext _prevctx = _localctx;
+		int _startState = 130;
+		this.enterRecursionRule(_localctx, 130,
+			IkalaScriptParser.RULE_conditionalOrExpression, _p);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(630);
+					this.conditionalAndExpression(0);
+				}
+				this._ctx.stop = this._input.LT(-1);
+				this.setState(637);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 60,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						if (this._parseListeners != null) {
+							this.triggerExitRuleEvent();
+						}
+						_prevctx = _localctx;
+						{
+							{
+								_localctx = new ConditionalOrExpressionContext(
+									_parentctx, _parentState);
+								this.pushNewRecursionContext(_localctx,
+									_startState,
+									IkalaScriptParser.RULE_conditionalOrExpression);
+								this.setState(632);
+								if (!(this.precpred(this._ctx, 1))) {
+									throw new FailedPredicateException(this,
+										"precpred(_ctx, 1)");
+								}
+								this.setState(633);
+								this.match(IkalaScriptParser.OR);
+								this.setState(634);
+								this.conditionalAndExpression(0);
+							}
+						}
+					}
+					this.setState(639);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						60, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	private boolean conditionalOrExpression_sempred(
+		ConditionalOrExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+			case 0:
+				return this.precpred(this._ctx, 1);
+		}
+		return true;
+	}
+
+	public final ContinueStatementContext continueStatement()
+		throws RecognitionException {
+		ContinueStatementContext _localctx =
+			new ContinueStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 84, IkalaScriptParser.RULE_continueStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(455);
+				this.match(IkalaScriptParser.CONTINUE);
+				this.setState(457);
+				this._errHandler.sync(this);
+				switch (this.getInterpreter().adaptivePredict(this._input, 36,
+					this._ctx)) {
+					case 1: {
+						this.setState(456);
+						this.match(IkalaScriptParser.Identifier);
+					}
+						break;
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final DimsContext dims() throws RecognitionException {
+		DimsContext _localctx = new DimsContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 12, IkalaScriptParser.RULE_dims);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(190);
+				this.match(IkalaScriptParser.LBRACK);
+				this.setState(191);
+				this.match(IkalaScriptParser.RBRACK);
+				this.setState(196);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la == IkalaScriptParser.LBRACK) {
+					{
+						{
+							this.setState(192);
+							this.match(IkalaScriptParser.LBRACK);
+							this.setState(193);
+							this.match(IkalaScriptParser.RBRACK);
+						}
+					}
+					this.setState(198);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final DoStatementContext doStatement() throws RecognitionException {
+		DoStatementContext _localctx =
+			new DoStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 64, IkalaScriptParser.RULE_doStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(368);
+				this.match(IkalaScriptParser.DO);
+				this.setState(369);
+				this.statement();
+				this.setState(370);
+				this.match(IkalaScriptParser.WHILE);
+				this.setState(371);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(372);
+				this.expression();
+				this.setState(373);
+				this.match(IkalaScriptParser.RPAREN);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final EnhancedForStatementContext enhancedForStatement()
+		throws RecognitionException {
+		EnhancedForStatementContext _localctx =
+			new EnhancedForStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 78,
+			IkalaScriptParser.RULE_enhancedForStatement);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(427);
+				this.match(IkalaScriptParser.FOR);
+				this.setState(428);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(430);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la == IkalaScriptParser.FINAL) {
+					{
+						this.setState(429);
+						this.match(IkalaScriptParser.FINAL);
+					}
+				}
+
+				this.setState(432);
+				this.type();
+				this.setState(433);
+				this.variableDeclaratorId();
+				this.setState(434);
+				this.match(IkalaScriptParser.COLON);
+				this.setState(435);
+				this.expression();
+				this.setState(436);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(437);
+				this.statement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final EnhancedForStatementNoShortIfContext
+		enhancedForStatementNoShortIf() throws RecognitionException {
+		EnhancedForStatementNoShortIfContext _localctx =
+			new EnhancedForStatementNoShortIfContext(this._ctx,
+				this.getState());
+		this.enterRule(_localctx, 80,
+			IkalaScriptParser.RULE_enhancedForStatementNoShortIf);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(439);
+				this.match(IkalaScriptParser.FOR);
+				this.setState(440);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(442);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la == IkalaScriptParser.FINAL) {
+					{
+						this.setState(441);
+						this.match(IkalaScriptParser.FINAL);
+					}
+				}
+
+				this.setState(444);
+				this.type();
+				this.setState(445);
+				this.variableDeclaratorId();
+				this.setState(446);
+				this.match(IkalaScriptParser.COLON);
+				this.setState(447);
+				this.expression();
+				this.setState(448);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(449);
+				this.statementNoShortIf();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final EqualityExpressionContext equalityExpression()
+		throws RecognitionException {
+		return this.equalityExpression(0);
+	}
+
+	private EqualityExpressionContext equalityExpression(int _p)
+		throws RecognitionException {
+		ParserRuleContext _parentctx = this._ctx;
+		int _parentState = this.getState();
+		EqualityExpressionContext _localctx =
+			new EqualityExpressionContext(this._ctx, _parentState);
+		EqualityExpressionContext _prevctx = _localctx;
+		int _startState = 134;
+		this.enterRecursionRule(_localctx, 134,
+			IkalaScriptParser.RULE_equalityExpression, _p);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(652);
+					this.relationalExpression(0);
+				}
+				this._ctx.stop = this._input.LT(-1);
+				this.setState(662);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 63,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						if (this._parseListeners != null) {
+							this.triggerExitRuleEvent();
+						}
+						_prevctx = _localctx;
+						{
+							this.setState(660);
+							this._errHandler.sync(this);
+							switch (this.getInterpreter()
+								.adaptivePredict(this._input, 62, this._ctx)) {
+								case 1: {
+									_localctx = new EqualityExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_equalityExpression);
+									this.setState(654);
+									if (!(this.precpred(this._ctx, 2))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 2)");
+									}
+									this.setState(655);
+									this.match(IkalaScriptParser.EQUAL);
+									this.setState(656);
+									this.relationalExpression(0);
+								}
+									break;
+								case 2: {
+									_localctx = new EqualityExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_equalityExpression);
+									this.setState(657);
+									if (!(this.precpred(this._ctx, 1))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 1)");
+									}
+									this.setState(658);
+									this.match(IkalaScriptParser.NOTEQUAL);
+									this.setState(659);
+									this.relationalExpression(0);
+								}
+									break;
+							}
+						}
+					}
+					this.setState(664);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						63, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	private boolean equalityExpression_sempred(
+		EqualityExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+			case 2:
+				return this.precpred(this._ctx, 2);
+			case 3:
+				return this.precpred(this._ctx, 1);
+		}
+		return true;
+	}
+
+	public final ExpressionContext expression() throws RecognitionException {
+		ExpressionContext _localctx =
+			new ExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 120, IkalaScriptParser.RULE_expression);
+		try {
+			this.setState(607);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 57,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(605);
+					this.conditionalExpression();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(606);
+					this.assignment();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final FieldAccessContext fieldAccess() throws RecognitionException {
+		FieldAccessContext _localctx =
+			new FieldAccessContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 102, IkalaScriptParser.RULE_fieldAccess);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(508);
+				this.primary();
+				this.setState(509);
+				this.match(IkalaScriptParser.DOT);
+				this.setState(510);
+				this.match(IkalaScriptParser.Identifier);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final FieldAccess_extensionContext fieldAccess_extension()
+		throws RecognitionException {
+		FieldAccess_extensionContext _localctx =
+			new FieldAccess_extensionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 104,
+			IkalaScriptParser.RULE_fieldAccess_extension);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(512);
+				this.match(IkalaScriptParser.DOT);
+				this.setState(513);
+				this.match(IkalaScriptParser.Identifier);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ForInitContext forInit() throws RecognitionException {
+		ForInitContext _localctx =
+			new ForInitContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 74, IkalaScriptParser.RULE_forInit);
+		try {
+			this.setState(417);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 31,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(415);
+					this.statementExpressionList();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(416);
+					this.localVariableDeclaration();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ForStatementContext forStatement()
+		throws RecognitionException {
+		ForStatementContext _localctx =
+			new ForStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 66, IkalaScriptParser.RULE_forStatement);
+		try {
+			this.setState(377);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 23,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(375);
+					this.basicForStatement();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(376);
+					this.enhancedForStatement();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ForStatementNoShortIfContext forStatementNoShortIf()
+		throws RecognitionException {
+		ForStatementNoShortIfContext _localctx =
+			new ForStatementNoShortIfContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 68,
+			IkalaScriptParser.RULE_forStatementNoShortIf);
+		try {
+			this.setState(381);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 24,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(379);
+					this.basicForStatementNoShortIf();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(380);
+					this.enhancedForStatementNoShortIf();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	@Override
+	public ATN getATN() {
+		return IkalaScriptParser._ATN;
+	}
+
+	@Override
+	public String getGrammarFileName() {
+		return "IkalaScriptParser.g4";
+	}
+
+	@Override
+	public String[] getRuleNames() {
+		return IkalaScriptParser.ruleNames;
+	}
+
+	@Override
+	public String getSerializedATN() {
+		return IkalaScriptParser._serializedATN;
+	}
+
+	@Override
+	@Deprecated
+	public String[] getTokenNames() {
+		return IkalaScriptParser.tokenNames;
+	}
+
+	@Override
+
+	public Vocabulary getVocabulary() {
+		return IkalaScriptParser.VOCABULARY;
+	}
+
+	public final GotoStatementContext gotoStatement()
+		throws RecognitionException {
+		GotoStatementContext _localctx =
+			new GotoStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 86, IkalaScriptParser.RULE_gotoStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(459);
+				this.match(IkalaScriptParser.GOTO);
+				this.setState(460);
+				this.match(IkalaScriptParser.Identifier);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final IfThenElseStatementContext ifThenElseStatement()
+		throws RecognitionException {
+		IfThenElseStatementContext _localctx =
+			new IfThenElseStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 48,
+			IkalaScriptParser.RULE_ifThenElseStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(304);
+				this.match(IkalaScriptParser.IF);
+				this.setState(305);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(306);
+				this.expression();
+				this.setState(307);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(308);
+				this.statementNoShortIf();
+				this.setState(309);
+				this.match(IkalaScriptParser.ELSE);
+				this.setState(310);
+				this.statement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final IfThenElseStatementNoShortIfContext
+		ifThenElseStatementNoShortIf() throws RecognitionException {
+		IfThenElseStatementNoShortIfContext _localctx =
+			new IfThenElseStatementNoShortIfContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 50,
+			IkalaScriptParser.RULE_ifThenElseStatementNoShortIf);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(312);
+				this.match(IkalaScriptParser.IF);
+				this.setState(313);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(314);
+				this.expression();
+				this.setState(315);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(316);
+				this.statementNoShortIf();
+				this.setState(317);
+				this.match(IkalaScriptParser.ELSE);
+				this.setState(318);
+				this.statementNoShortIf();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final IfThenStatementContext ifThenStatement()
+		throws RecognitionException {
+		IfThenStatementContext _localctx =
+			new IfThenStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 46, IkalaScriptParser.RULE_ifThenStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(298);
+				this.match(IkalaScriptParser.IF);
+				this.setState(299);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(300);
+				this.expression();
+				this.setState(301);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(302);
+				this.statement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final LabeledStatementContext labeledStatement()
+		throws RecognitionException {
+		LabeledStatementContext _localctx =
+			new LabeledStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 40, IkalaScriptParser.RULE_labeledStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(282);
+				this.match(IkalaScriptParser.Identifier);
+				this.setState(283);
+				this.match(IkalaScriptParser.COLON);
+				this.setState(284);
+				this.statement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final LabeledStatementNoShortIfContext labeledStatementNoShortIf()
+		throws RecognitionException {
+		LabeledStatementNoShortIfContext _localctx =
+			new LabeledStatementNoShortIfContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 42,
+			IkalaScriptParser.RULE_labeledStatementNoShortIf);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(286);
+				this.match(IkalaScriptParser.Identifier);
+				this.setState(287);
+				this.match(IkalaScriptParser.COLON);
+				this.setState(288);
+				this.statementNoShortIf();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final LeftHandSideContext leftHandSide()
+		throws RecognitionException {
+		LeftHandSideContext _localctx =
+			new LeftHandSideContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 124, IkalaScriptParser.RULE_leftHandSide);
+		try {
+			this.setState(616);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 58,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(613);
+					this.match(IkalaScriptParser.Identifier);
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(614);
+					this.fieldAccess();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(615);
+					this.arrayAccess();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final LiteralContext literal() throws RecognitionException {
+		LiteralContext _localctx =
+			new LiteralContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 0, IkalaScriptParser.RULE_literal);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(158);
+				_la = this._input.LA(1);
+				if (!((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 264241152L) != 0))) {
+					this._errHandler.recoverInline(this);
+				}
+				else {
+					if (this._input.LA(1) == Token.EOF) {
+						this.matchedEOF = true;
+					}
+					this._errHandler.reportMatch(this);
+					this.consume();
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final LocalVariableDeclarationContext localVariableDeclaration()
+		throws RecognitionException {
+		LocalVariableDeclarationContext _localctx =
+			new LocalVariableDeclarationContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 32,
+			IkalaScriptParser.RULE_localVariableDeclaration);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(252);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la == IkalaScriptParser.FINAL) {
+					{
+						this.setState(251);
+						this.match(IkalaScriptParser.FINAL);
+					}
+				}
+
+				this.setState(254);
+				this.type();
+				this.setState(255);
+				this.variableDeclaratorList();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final MethodInvocationContext methodInvocation()
+		throws RecognitionException {
+		MethodInvocationContext _localctx =
+			new MethodInvocationContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 112, IkalaScriptParser.RULE_methodInvocation);
+		int _la;
+		try {
+			this.setState(580);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 53,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(564);
+					this.typeName();
+					this.setState(565);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(567);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+					if ((((_la) & ~0x3f) == 0
+						&& ((1L << _la) & 16890698695442432L) != 0)) {
+						{
+							this.setState(566);
+							this.argumentList();
+						}
+					}
+
+					this.setState(569);
+					this.match(IkalaScriptParser.RPAREN);
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(571);
+					this.primary();
+					this.setState(572);
+					this.match(IkalaScriptParser.DOT);
+					this.setState(573);
+					this.match(IkalaScriptParser.Identifier);
+					this.setState(574);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(576);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+					if ((((_la) & ~0x3f) == 0
+						&& ((1L << _la) & 16890698695442432L) != 0)) {
+						{
+							this.setState(575);
+							this.argumentList();
+						}
+					}
+
+					this.setState(578);
+					this.match(IkalaScriptParser.RPAREN);
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final MethodInvocation_extensionContext methodInvocation_extension()
+		throws RecognitionException {
+		MethodInvocation_extensionContext _localctx =
+			new MethodInvocation_extensionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 114,
+			IkalaScriptParser.RULE_methodInvocation_extension);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(582);
+				this.match(IkalaScriptParser.DOT);
+				this.setState(583);
+				this.match(IkalaScriptParser.Identifier);
+				this.setState(584);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(586);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 16890698695442432L) != 0)) {
+					{
+						this.setState(585);
+						this.argumentList();
+					}
+				}
+
+				this.setState(588);
+				this.match(IkalaScriptParser.RPAREN);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final MethodInvocation_LHSContext methodInvocation_LHS()
+		throws RecognitionException {
+		MethodInvocation_LHSContext _localctx =
+			new MethodInvocation_LHSContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 116,
+			IkalaScriptParser.RULE_methodInvocation_LHS);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(590);
+				this.typeName();
+				this.setState(591);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(593);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if ((((_la) & ~0x3f) == 0
+					&& ((1L << _la) & 16890698695442432L) != 0)) {
+					{
+						this.setState(592);
+						this.argumentList();
+					}
+				}
+
+				this.setState(595);
+				this.match(IkalaScriptParser.RPAREN);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final MultiplicativeExpressionContext multiplicativeExpression()
+		throws RecognitionException {
+		return this.multiplicativeExpression(0);
+	}
+
+	private MultiplicativeExpressionContext multiplicativeExpression(int _p)
+		throws RecognitionException {
+		ParserRuleContext _parentctx = this._ctx;
+		int _parentState = this.getState();
+		MultiplicativeExpressionContext _localctx =
+			new MultiplicativeExpressionContext(this._ctx, _parentState);
+		MultiplicativeExpressionContext _prevctx = _localctx;
+		int _startState = 140;
+		this.enterRecursionRule(_localctx, 140,
+			IkalaScriptParser.RULE_multiplicativeExpression, _p);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(700);
+					this.unaryExpression();
+				}
+				this._ctx.stop = this._input.LT(-1);
+				this.setState(713);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 69,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						if (this._parseListeners != null) {
+							this.triggerExitRuleEvent();
+						}
+						_prevctx = _localctx;
+						{
+							this.setState(711);
+							this._errHandler.sync(this);
+							switch (this.getInterpreter()
+								.adaptivePredict(this._input, 68, this._ctx)) {
+								case 1: {
+									_localctx =
+										new MultiplicativeExpressionContext(
+											_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_multiplicativeExpression);
+									this.setState(702);
+									if (!(this.precpred(this._ctx, 3))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 3)");
+									}
+									this.setState(703);
+									this.match(IkalaScriptParser.MUL);
+									this.setState(704);
+									this.unaryExpression();
+								}
+									break;
+								case 2: {
+									_localctx =
+										new MultiplicativeExpressionContext(
+											_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_multiplicativeExpression);
+									this.setState(705);
+									if (!(this.precpred(this._ctx, 2))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 2)");
+									}
+									this.setState(706);
+									this.match(IkalaScriptParser.DIV);
+									this.setState(707);
+									this.unaryExpression();
+								}
+									break;
+								case 3: {
+									_localctx =
+										new MultiplicativeExpressionContext(
+											_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_multiplicativeExpression);
+									this.setState(708);
+									if (!(this.precpred(this._ctx, 1))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 1)");
+									}
+									this.setState(709);
+									this.match(IkalaScriptParser.MOD);
+									this.setState(710);
+									this.unaryExpression();
+								}
+									break;
+							}
+						}
+					}
+					this.setState(715);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						69, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	private boolean multiplicativeExpression_sempred(
+		MultiplicativeExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+			case 10:
+				return this.precpred(this._ctx, 3);
+			case 11:
+				return this.precpred(this._ctx, 2);
+			case 12:
+				return this.precpred(this._ctx, 1);
+		}
+		return true;
+	}
+
+	public final NumericTypeContext numericType() throws RecognitionException {
+		NumericTypeContext _localctx =
+			new NumericTypeContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 4, IkalaScriptParser.RULE_numericType);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(165);
+				_la = this._input.LA(1);
+				if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 16656L) != 0))) {
+					this._errHandler.recoverInline(this);
+				}
+				else {
+					if (this._input.LA(1) == Token.EOF) {
+						this.matchedEOF = true;
+					}
+					this._errHandler.reportMatch(this);
+					this.consume();
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PostDecrementExpressionContext postDecrementExpression()
+		throws RecognitionException {
+		PostDecrementExpressionContext _localctx =
+			new PostDecrementExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 154,
+			IkalaScriptParser.RULE_postDecrementExpression);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(750);
+				this.postfixExpression();
+				this.setState(751);
+				this.match(IkalaScriptParser.DEC);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PostfixExpressionContext postfixExpression()
+		throws RecognitionException {
+		PostfixExpressionContext _localctx =
+			new PostfixExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 150,
+			IkalaScriptParser.RULE_postfixExpression);
+		int _la;
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(739);
+				this._errHandler.sync(this);
+				switch (this.getInterpreter().adaptivePredict(this._input, 72,
+					this._ctx)) {
+					case 1: {
+						this.setState(737);
+						this.primary();
+					}
+						break;
+					case 2: {
+						this.setState(738);
+						this.typeName();
+					}
+						break;
+				}
+				this.setState(744);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 73,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						{
+							{
+								this.setState(741);
+								_la = this._input.LA(1);
+								if (!(_la == IkalaScriptParser.INC
+									|| _la == IkalaScriptParser.DEC)) {
+									this._errHandler.recoverInline(this);
+								}
+								else {
+									if (this._input.LA(1) == Token.EOF) {
+										this.matchedEOF = true;
+									}
+									this._errHandler.reportMatch(this);
+									this.consume();
+								}
+							}
+						}
+					}
+					this.setState(746);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						73, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PostIncrementExpressionContext postIncrementExpression()
+		throws RecognitionException {
+		PostIncrementExpressionContext _localctx =
+			new PostIncrementExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 152,
+			IkalaScriptParser.RULE_postIncrementExpression);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(747);
+				this.postfixExpression();
+				this.setState(748);
+				this.match(IkalaScriptParser.INC);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PreDecrementExpressionContext preDecrementExpression()
+		throws RecognitionException {
+		PreDecrementExpressionContext _localctx =
+			new PreDecrementExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 146,
+			IkalaScriptParser.RULE_preDecrementExpression);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(728);
+				this.match(IkalaScriptParser.DEC);
+				this.setState(729);
+				this.unaryExpression();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PreIncrementExpressionContext preIncrementExpression()
+		throws RecognitionException {
+		PreIncrementExpressionContext _localctx =
+			new PreIncrementExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 144,
+			IkalaScriptParser.RULE_preIncrementExpression);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(725);
+				this.match(IkalaScriptParser.INC);
+				this.setState(726);
+				this.unaryExpression();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PrimaryContext primary() throws RecognitionException {
+		PrimaryContext _localctx =
+			new PrimaryContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 90, IkalaScriptParser.RULE_primary);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(466);
+					this.primary_LHS();
+				}
+				this.setState(470);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 38,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						{
+							{
+								this.setState(467);
+								this.primary_extension();
+							}
+						}
+					}
+					this.setState(472);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						38, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final Primary_extensionContext primary_extension()
+		throws RecognitionException {
+		Primary_extensionContext _localctx =
+			new Primary_extensionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 94, IkalaScriptParser.RULE_primary_extension);
+		try {
+			this.setState(485);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 40,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(482);
+					this.fieldAccess_extension();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(483);
+					this.arrayAccess_extension();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(484);
+					this.methodInvocation_extension();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final Primary_extension_accessContext primary_extension_access()
+		throws RecognitionException {
+		Primary_extension_accessContext _localctx =
+			new Primary_extension_accessContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 96,
+			IkalaScriptParser.RULE_primary_extension_access);
+		try {
+			this.setState(489);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 41,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(487);
+					this.fieldAccess_extension();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(488);
+					this.methodInvocation_extension();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final Primary_LHSContext primary_LHS() throws RecognitionException {
+		Primary_LHSContext _localctx =
+			new Primary_LHSContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 98, IkalaScriptParser.RULE_primary_LHS);
+		try {
+			this.setState(498);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 42,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(491);
+					this.literal();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(492);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(493);
+					this.expression();
+					this.setState(494);
+					this.match(IkalaScriptParser.RPAREN);
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(496);
+					this.arrayAccess_LHS();
+				}
+					break;
+				case 4:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(497);
+					this.methodInvocation_LHS();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final Primary_LHS_accessContext primary_LHS_access()
+		throws RecognitionException {
+		Primary_LHS_accessContext _localctx =
+			new Primary_LHS_accessContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 100,
+			IkalaScriptParser.RULE_primary_LHS_access);
+		try {
+			this.setState(506);
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+				case IntegerLiteral:
+				case FloatingPointLiteral:
+				case BooleanLiteral:
+				case CharacterLiteral:
+				case StringLiteral:
+				case NullLiteral:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(500);
+					this.literal();
+				}
+					break;
+				case LPAREN:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(501);
+					this.match(IkalaScriptParser.LPAREN);
+					this.setState(502);
+					this.expression();
+					this.setState(503);
+					this.match(IkalaScriptParser.RPAREN);
+				}
+					break;
+				case Identifier:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(505);
+					this.methodInvocation_LHS();
+				}
+					break;
+				default:
+					throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final PrimitiveTypeContext primitiveType()
+		throws RecognitionException {
+		PrimitiveTypeContext _localctx =
+			new PrimitiveTypeContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 2, IkalaScriptParser.RULE_primitiveType);
+		try {
+			this.setState(163);
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+				case CHAR:
+				case DOUBLE:
+				case INT:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(160);
+					this.numericType();
+				}
+					break;
+				case BOOLEAN:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(161);
+					this.match(IkalaScriptParser.BOOLEAN);
+				}
+					break;
+				case STRING:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(162);
+					this.match(IkalaScriptParser.STRING);
+				}
+					break;
+				default:
+					throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final ReferenceTypeContext referenceType()
+		throws RecognitionException {
+		ReferenceTypeContext _localctx =
+			new ReferenceTypeContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 6, IkalaScriptParser.RULE_referenceType);
+		try {
+			this.setState(170);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 1,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(167);
+					this.classOrInterfaceType();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(168);
+					this.match(IkalaScriptParser.Identifier);
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(169);
+					this.arrayType();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final RelationalExpressionContext relationalExpression()
+		throws RecognitionException {
+		return this.relationalExpression(0);
+	}
+
+	private RelationalExpressionContext relationalExpression(int _p)
+		throws RecognitionException {
+		ParserRuleContext _parentctx = this._ctx;
+		int _parentState = this.getState();
+		RelationalExpressionContext _localctx =
+			new RelationalExpressionContext(this._ctx, _parentState);
+		RelationalExpressionContext _prevctx = _localctx;
+		int _startState = 136;
+		this.enterRecursionRule(_localctx, 136,
+			IkalaScriptParser.RULE_relationalExpression, _p);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				{
+					this.setState(666);
+					this.additiveExpression(0);
+				}
+				this._ctx.stop = this._input.LT(-1);
+				this.setState(682);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 65,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						if (this._parseListeners != null) {
+							this.triggerExitRuleEvent();
+						}
+						_prevctx = _localctx;
+						{
+							this.setState(680);
+							this._errHandler.sync(this);
+							switch (this.getInterpreter()
+								.adaptivePredict(this._input, 64, this._ctx)) {
+								case 1: {
+									_localctx = new RelationalExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_relationalExpression);
+									this.setState(668);
+									if (!(this.precpred(this._ctx, 4))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 4)");
+									}
+									this.setState(669);
+									this.match(IkalaScriptParser.LT);
+									this.setState(670);
+									this.additiveExpression(0);
+								}
+									break;
+								case 2: {
+									_localctx = new RelationalExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_relationalExpression);
+									this.setState(671);
+									if (!(this.precpred(this._ctx, 3))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 3)");
+									}
+									this.setState(672);
+									this.match(IkalaScriptParser.GT);
+									this.setState(673);
+									this.additiveExpression(0);
+								}
+									break;
+								case 3: {
+									_localctx = new RelationalExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_relationalExpression);
+									this.setState(674);
+									if (!(this.precpred(this._ctx, 2))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 2)");
+									}
+									this.setState(675);
+									this.match(IkalaScriptParser.LTE);
+									this.setState(676);
+									this.additiveExpression(0);
+								}
+									break;
+								case 4: {
+									_localctx = new RelationalExpressionContext(
+										_parentctx, _parentState);
+									this.pushNewRecursionContext(_localctx,
+										_startState,
+										IkalaScriptParser.RULE_relationalExpression);
+									this.setState(677);
+									if (!(this.precpred(this._ctx, 1))) {
+										throw new FailedPredicateException(this,
+											"precpred(_ctx, 1)");
+									}
+									this.setState(678);
+									this.match(IkalaScriptParser.GTE);
+									this.setState(679);
+									this.additiveExpression(0);
+								}
+									break;
+							}
+						}
+					}
+					this.setState(684);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						65, this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	private boolean relationalExpression_sempred(
+		RelationalExpressionContext _localctx, int predIndex) {
+		switch (predIndex) {
+			case 4:
+				return this.precpred(this._ctx, 4);
+			case 5:
+				return this.precpred(this._ctx, 3);
+			case 6:
+				return this.precpred(this._ctx, 2);
+			case 7:
+				return this.precpred(this._ctx, 1);
+		}
+		return true;
+	}
+
+	public final ReturnStatementContext returnStatement()
+		throws RecognitionException {
+		ReturnStatementContext _localctx =
+			new ReturnStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 88, IkalaScriptParser.RULE_returnStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(462);
+				this.match(IkalaScriptParser.RETURN);
+				this.setState(464);
+				this._errHandler.sync(this);
+				switch (this.getInterpreter().adaptivePredict(this._input, 37,
+					this._ctx)) {
+					case 1: {
+						this.setState(463);
+						this.expression();
+					}
+						break;
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	@Override
+	public boolean sempred(RuleContext _localctx, int ruleIndex,
+		int predIndex) {
+		switch (ruleIndex) {
+			case 65:
+				return this.conditionalOrExpression_sempred(
+					(ConditionalOrExpressionContext) _localctx, predIndex);
+			case 66:
+				return this.conditionalAndExpression_sempred(
+					(ConditionalAndExpressionContext) _localctx, predIndex);
+			case 67:
+				return this.equalityExpression_sempred(
+					(EqualityExpressionContext) _localctx, predIndex);
+			case 68:
+				return this.relationalExpression_sempred(
+					(RelationalExpressionContext) _localctx, predIndex);
+			case 69:
+				return this.additiveExpression_sempred(
+					(AdditiveExpressionContext) _localctx, predIndex);
+			case 70:
+				return this.multiplicativeExpression_sempred(
+					(MultiplicativeExpressionContext) _localctx, predIndex);
+		}
+		return true;
+	}
+
+	public final StatementContext statement() throws RecognitionException {
+		StatementContext _localctx =
+			new StatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 34, IkalaScriptParser.RULE_statement);
+		try {
+			this.setState(263);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 15,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(257);
+					this.statementWithoutTrailingSubstatement();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(258);
+					this.labeledStatement();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(259);
+					this.ifThenStatement();
+				}
+					break;
+				case 4:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(260);
+					this.ifThenElseStatement();
+				}
+					break;
+				case 5:
+					this.enterOuterAlt(_localctx, 5); {
+					this.setState(261);
+					this.whileStatement();
+				}
+					break;
+				case 6:
+					this.enterOuterAlt(_localctx, 6); {
+					this.setState(262);
+					this.forStatement();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final StatementExpressionContext statementExpression()
+		throws RecognitionException {
+		StatementExpressionContext _localctx =
+			new StatementExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 44,
+			IkalaScriptParser.RULE_statementExpression);
+		try {
+			this.setState(296);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 18,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(290);
+					this.assignment();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(291);
+					this.preIncrementExpression();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(292);
+					this.preDecrementExpression();
+				}
+					break;
+				case 4:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(293);
+					this.postIncrementExpression();
+				}
+					break;
+				case 5:
+					this.enterOuterAlt(_localctx, 5); {
+					this.setState(294);
+					this.postDecrementExpression();
+				}
+					break;
+				case 6:
+					this.enterOuterAlt(_localctx, 6); {
+					this.setState(295);
+					this.methodInvocation();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final StatementExpressionListContext statementExpressionList()
+		throws RecognitionException {
+		StatementExpressionListContext _localctx =
+			new StatementExpressionListContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 76,
+			IkalaScriptParser.RULE_statementExpressionList);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(419);
+				this.statementExpression();
+				this.setState(424);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la == IkalaScriptParser.COMMA) {
+					{
+						{
+							this.setState(420);
+							this.match(IkalaScriptParser.COMMA);
+							this.setState(421);
+							this.statementExpression();
+						}
+					}
+					this.setState(426);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final StatementNoShortIfContext statementNoShortIf()
+		throws RecognitionException {
+		StatementNoShortIfContext _localctx =
+			new StatementNoShortIfContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 36,
+			IkalaScriptParser.RULE_statementNoShortIf);
+		try {
+			this.setState(270);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 16,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(265);
+					this.statementWithoutTrailingSubstatement();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(266);
+					this.labeledStatementNoShortIf();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(267);
+					this.ifThenElseStatementNoShortIf();
+				}
+					break;
+				case 4:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(268);
+					this.whileStatementNoShortIf();
+				}
+					break;
+				case 5:
+					this.enterOuterAlt(_localctx, 5); {
+					this.setState(269);
+					this.forStatementNoShortIf();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final StatementWithoutTrailingSubstatementContext
+		statementWithoutTrailingSubstatement() throws RecognitionException {
+		StatementWithoutTrailingSubstatementContext _localctx =
+			new StatementWithoutTrailingSubstatementContext(this._ctx,
+				this.getState());
+		this.enterRule(_localctx, 38,
+			IkalaScriptParser.RULE_statementWithoutTrailingSubstatement);
+		try {
+			this.setState(280);
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+				case LBRACE:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(272);
+					this.block();
+				}
+					break;
+				case IntegerLiteral:
+				case FloatingPointLiteral:
+				case BooleanLiteral:
+				case CharacterLiteral:
+				case StringLiteral:
+				case NullLiteral:
+				case Identifier:
+				case LPAREN:
+				case INC:
+				case DEC:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(273);
+					this.statementExpression();
+				}
+					break;
+				case SWITCH:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(274);
+					this.switchStatement();
+				}
+					break;
+				case DO:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(275);
+					this.doStatement();
+				}
+					break;
+				case BREAK:
+					this.enterOuterAlt(_localctx, 5); {
+					this.setState(276);
+					this.breakStatement();
+				}
+					break;
+				case CONTINUE:
+					this.enterOuterAlt(_localctx, 6); {
+					this.setState(277);
+					this.continueStatement();
+				}
+					break;
+				case GOTO:
+					this.enterOuterAlt(_localctx, 7); {
+					this.setState(278);
+					this.gotoStatement();
+				}
+					break;
+				case RETURN:
+					this.enterOuterAlt(_localctx, 8); {
+					this.setState(279);
+					this.returnStatement();
+				}
+					break;
+				default:
+					throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final SwitchBlockContext switchBlock() throws RecognitionException {
+		SwitchBlockContext _localctx =
+			new SwitchBlockContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 54, IkalaScriptParser.RULE_switchBlock);
+		int _la;
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(326);
+				this.match(IkalaScriptParser.LBRACE);
+				this.setState(330);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 19,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						{
+							{
+								this.setState(327);
+								this.switchBlockStatementGroup();
+							}
+						}
+					}
+					this.setState(332);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input,
+						19, this._ctx);
+				}
+				this.setState(336);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la == IkalaScriptParser.CASE
+					|| _la == IkalaScriptParser.DEFAULT) {
+					{
+						{
+							this.setState(333);
+							this.switchLabel();
+						}
+					}
+					this.setState(338);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				this.setState(339);
+				this.match(IkalaScriptParser.RBRACE);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final SwitchBlockStatementGroupContext switchBlockStatementGroup()
+		throws RecognitionException {
+		SwitchBlockStatementGroupContext _localctx =
+			new SwitchBlockStatementGroupContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 56,
+			IkalaScriptParser.RULE_switchBlockStatementGroup);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(342);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				do {
+					{
+						{
+							this.setState(341);
+							this.switchLabel();
+						}
+					}
+					this.setState(344);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+				while (_la == IkalaScriptParser.CASE
+					|| _la == IkalaScriptParser.DEFAULT);
+				this.setState(346);
+				this.blockStatements();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final SwitchLabelContext switchLabel() throws RecognitionException {
+		SwitchLabelContext _localctx =
+			new SwitchLabelContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 58, IkalaScriptParser.RULE_switchLabel);
+		try {
+			this.setState(354);
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+				case CASE:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(348);
+					this.match(IkalaScriptParser.CASE);
+					this.setState(349);
+					this.expression();
+					this.setState(350);
+					this.match(IkalaScriptParser.COLON);
+				}
+					break;
+				case DEFAULT:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(352);
+					this.match(IkalaScriptParser.DEFAULT);
+					this.setState(353);
+					this.match(IkalaScriptParser.COLON);
+				}
+					break;
+				default:
+					throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final SwitchStatementContext switchStatement()
+		throws RecognitionException {
+		SwitchStatementContext _localctx =
+			new SwitchStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 52, IkalaScriptParser.RULE_switchStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(320);
+				this.match(IkalaScriptParser.SWITCH);
+				this.setState(321);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(322);
+				this.expression();
+				this.setState(323);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(324);
+				this.switchBlock();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final TypeContext type() throws RecognitionException {
+		TypeContext _localctx = new TypeContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 20, IkalaScriptParser.RULE_type);
+		try {
+			this.setState(218);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 8,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(216);
+					this.primitiveType();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(217);
+					this.referenceType();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final TypeNameContext typeName() throws RecognitionException {
+		TypeNameContext _localctx =
+			new TypeNameContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 22, IkalaScriptParser.RULE_typeName);
+		try {
+			int _alt;
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(220);
+				this.match(IkalaScriptParser.Identifier);
+				this.setState(225);
+				this._errHandler.sync(this);
+				_alt = this.getInterpreter().adaptivePredict(this._input, 9,
+					this._ctx);
+				while (_alt != 2
+					&& _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+					if (_alt == 1) {
+						{
+							{
+								this.setState(221);
+								this.match(IkalaScriptParser.DOT);
+								this.setState(222);
+								this.match(IkalaScriptParser.Identifier);
+							}
+						}
+					}
+					this.setState(227);
+					this._errHandler.sync(this);
+					_alt = this.getInterpreter().adaptivePredict(this._input, 9,
+						this._ctx);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final UnaryExpressionContext unaryExpression()
+		throws RecognitionException {
+		UnaryExpressionContext _localctx =
+			new UnaryExpressionContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 142, IkalaScriptParser.RULE_unaryExpression);
+		try {
+			this.setState(723);
+			this._errHandler.sync(this);
+			switch (this._input.LA(1)) {
+				case INC:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(716);
+					this.preIncrementExpression();
+				}
+					break;
+				case DEC:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(717);
+					this.preDecrementExpression();
+				}
+					break;
+				case ADD:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(718);
+					this.match(IkalaScriptParser.ADD);
+					this.setState(719);
+					this.unaryExpression();
+				}
+					break;
+				case SUB:
+					this.enterOuterAlt(_localctx, 4); {
+					this.setState(720);
+					this.match(IkalaScriptParser.SUB);
+					this.setState(721);
+					this.unaryExpression();
+				}
+					break;
+				case IntegerLiteral:
+				case FloatingPointLiteral:
+				case BooleanLiteral:
+				case CharacterLiteral:
+				case StringLiteral:
+				case NullLiteral:
+				case Identifier:
+				case LPAREN:
+				case NOT:
+					this.enterOuterAlt(_localctx, 5); {
+					this.setState(722);
+					this.unaryExpressionNotPlusMinus();
+				}
+					break;
+				default:
+					throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final UnaryExpressionNotPlusMinusContext
+		unaryExpressionNotPlusMinus() throws RecognitionException {
+		UnaryExpressionNotPlusMinusContext _localctx =
+			new UnaryExpressionNotPlusMinusContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 148,
+			IkalaScriptParser.RULE_unaryExpressionNotPlusMinus);
+		try {
+			this.setState(735);
+			this._errHandler.sync(this);
+			switch (this.getInterpreter().adaptivePredict(this._input, 71,
+				this._ctx)) {
+				case 1:
+					this.enterOuterAlt(_localctx, 1); {
+					this.setState(731);
+					this.postfixExpression();
+				}
+					break;
+				case 2:
+					this.enterOuterAlt(_localctx, 2); {
+					this.setState(732);
+					this.match(IkalaScriptParser.NOT);
+					this.setState(733);
+					this.unaryExpression();
+				}
+					break;
+				case 3:
+					this.enterOuterAlt(_localctx, 3); {
+					this.setState(734);
+					this.castExpression();
+				}
+					break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final VariableDeclaratorContext variableDeclarator()
+		throws RecognitionException {
+		VariableDeclaratorContext _localctx =
+			new VariableDeclaratorContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 16,
+			IkalaScriptParser.RULE_variableDeclarator);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(207);
+				this.variableDeclaratorId();
+				this.setState(210);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la == IkalaScriptParser.ASSIGN) {
+					{
+						this.setState(208);
+						this.match(IkalaScriptParser.ASSIGN);
+						this.setState(209);
+						this.expression();
+					}
+				}
+
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final VariableDeclaratorIdContext variableDeclaratorId()
+		throws RecognitionException {
+		VariableDeclaratorIdContext _localctx =
+			new VariableDeclaratorIdContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 18,
+			IkalaScriptParser.RULE_variableDeclaratorId);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(212);
+				this.match(IkalaScriptParser.Identifier);
+				this.setState(214);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				if (_la == IkalaScriptParser.LBRACK) {
+					{
+						this.setState(213);
+						this.dims();
+					}
+				}
+
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final VariableDeclaratorListContext variableDeclaratorList()
+		throws RecognitionException {
+		VariableDeclaratorListContext _localctx =
+			new VariableDeclaratorListContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 14,
+			IkalaScriptParser.RULE_variableDeclaratorList);
+		int _la;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(199);
+				this.variableDeclarator();
+				this.setState(204);
+				this._errHandler.sync(this);
+				_la = this._input.LA(1);
+				while (_la == IkalaScriptParser.COMMA) {
+					{
+						{
+							this.setState(200);
+							this.match(IkalaScriptParser.COMMA);
+							this.setState(201);
+							this.variableDeclarator();
+						}
+					}
+					this.setState(206);
+					this._errHandler.sync(this);
+					_la = this._input.LA(1);
+				}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final WhileStatementContext whileStatement()
+		throws RecognitionException {
+		WhileStatementContext _localctx =
+			new WhileStatementContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 60, IkalaScriptParser.RULE_whileStatement);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(356);
+				this.match(IkalaScriptParser.WHILE);
+				this.setState(357);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(358);
+				this.expression();
+				this.setState(359);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(360);
+				this.statement();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+
+	public final WhileStatementNoShortIfContext whileStatementNoShortIf()
+		throws RecognitionException {
+		WhileStatementNoShortIfContext _localctx =
+			new WhileStatementNoShortIfContext(this._ctx, this.getState());
+		this.enterRule(_localctx, 62,
+			IkalaScriptParser.RULE_whileStatementNoShortIf);
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+				this.setState(362);
+				this.match(IkalaScriptParser.WHILE);
+				this.setState(363);
+				this.match(IkalaScriptParser.LPAREN);
+				this.setState(364);
+				this.expression();
+				this.setState(365);
+				this.match(IkalaScriptParser.RPAREN);
+				this.setState(366);
+				this.statementNoShortIf();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			this._errHandler.reportError(this, re);
+			this._errHandler.recover(this, re);
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
 	}
 }

@@ -1,14 +1,16 @@
 package com.ikalagaming.scripting;
 
+import org.antlr.v4.runtime.CharStream;
 // Generated from IkalaScriptLexer.g4 by ANTLR 4.12.0
 import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.*;
+import org.antlr.v4.runtime.RuntimeMetaData;
+import org.antlr.v4.runtime.Vocabulary;
+import org.antlr.v4.runtime.VocabularyImpl;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.LexerATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class IkalaScriptLexer extends Lexer {
@@ -37,121 +39,38 @@ public class IkalaScriptLexer extends Lexer {
 
 	public static String[] modeNames = {"DEFAULT_MODE"};
 
-	private static String[] makeRuleNames() {
-		return new String[] {"BOOLEAN", "BREAK", "CASE", "CHAR", "CONTINUE",
-			"DEFAULT", "DO", "DOUBLE", "ELSE", "FINAL", "FOR", "GOTO", "IF",
-			"INT", "NEW", "RETURN", "STRING", "SWITCH", "THIS", "VOID", "WHILE",
-			"IntegerLiteral", "FloatingPointLiteral", "BooleanLiteral",
-			"CharacterLiteral", "StringLiteral", "NullLiteral", "Identifier",
-			"LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK",
-			"SEMICOLON", "COMMA", "DOT", "ASSIGN", "GT", "LT", "NOT",
-			"QUESTION", "COLON", "EQUAL", "LTE", "GTE", "NOTEQUAL", "AND", "OR",
-			"INC", "DEC", "ADD", "SUB", "MUL", "DIV", "MOD", "ADD_ASSIGN",
-			"SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN", "MOD_ASSIGN", "ELLIPSIS",
-			"WS", "COMMENT", "LINE_COMMENT"};
-	}
+	public static final String[] ruleNames = IkalaScriptLexer.makeRuleNames();
 
-	public static final String[] ruleNames = makeRuleNames();
+	private static final String[] _LITERAL_NAMES =
+		IkalaScriptLexer.makeLiteralNames();
 
-	private static String[] makeLiteralNames() {
-		return new String[] {null, "'boolean'", "'break'", "'case'", "'char'",
-			"'continue'", "'default'", "'do'", "'double'", "'else'", "'final'",
-			"'for'", "'goto'", "'if'", "'int'", "'new'", "'return'", "'string'",
-			"'switch'", "'this'", "'void'", "'while'", null, null, null, null,
-			null, "'null'", null, "'('", "')'", "'{'", "'}'", "'['", "']'",
-			"';'", "','", "'.'", "'='", "'>'", "'<'", "'!'", "'?'", "':'",
-			"'=='", "'<='", "'>='", "'!='", "'and'", "'or'", "'++'", "'--'",
-			"'+'", "'-'", "'*'", "'/'", "'%'", "'+='", "'-='", "'*='", "'/='",
-			"'%='", "'...'"};
-	}
+	private static final String[] _SYMBOLIC_NAMES =
+		IkalaScriptLexer.makeSymbolicNames();
 
-	private static final String[] _LITERAL_NAMES = makeLiteralNames();
-
-	private static String[] makeSymbolicNames() {
-		return new String[] {null, "BOOLEAN", "BREAK", "CASE", "CHAR",
-			"CONTINUE", "DEFAULT", "DO", "DOUBLE", "ELSE", "FINAL", "FOR",
-			"GOTO", "IF", "INT", "NEW", "RETURN", "STRING", "SWITCH", "THIS",
-			"VOID", "WHILE", "IntegerLiteral", "FloatingPointLiteral",
-			"BooleanLiteral", "CharacterLiteral", "StringLiteral",
-			"NullLiteral", "Identifier", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
-			"LBRACK", "RBRACK", "SEMICOLON", "COMMA", "DOT", "ASSIGN", "GT",
-			"LT", "NOT", "QUESTION", "COLON", "EQUAL", "LTE", "GTE", "NOTEQUAL",
-			"AND", "OR", "INC", "DEC", "ADD", "SUB", "MUL", "DIV", "MOD",
-			"ADD_ASSIGN", "SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN",
-			"MOD_ASSIGN", "ELLIPSIS", "WS", "COMMENT", "LINE_COMMENT"};
-	}
-
-	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
-	public static final Vocabulary VOCABULARY =
-		new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+	public static final Vocabulary VOCABULARY = new VocabularyImpl(
+		IkalaScriptLexer._LITERAL_NAMES, IkalaScriptLexer._SYMBOLIC_NAMES);
 
 	/**
 	 * @deprecated Use {@link #VOCABULARY} instead.
 	 */
 	@Deprecated
 	public static final String[] tokenNames;
+
 	static {
-		tokenNames = new String[_SYMBOLIC_NAMES.length];
-		for (int i = 0; i < tokenNames.length; i++) {
-			tokenNames[i] = VOCABULARY.getLiteralName(i);
-			if (tokenNames[i] == null) {
-				tokenNames[i] = VOCABULARY.getSymbolicName(i);
+		tokenNames = new String[IkalaScriptLexer._SYMBOLIC_NAMES.length];
+		for (int i = 0; i < IkalaScriptLexer.tokenNames.length; i++) {
+			IkalaScriptLexer.tokenNames[i] =
+				IkalaScriptLexer.VOCABULARY.getLiteralName(i);
+			if (IkalaScriptLexer.tokenNames[i] == null) {
+				IkalaScriptLexer.tokenNames[i] =
+					IkalaScriptLexer.VOCABULARY.getSymbolicName(i);
 			}
 
-			if (tokenNames[i] == null) {
-				tokenNames[i] = "<INVALID>";
+			if (IkalaScriptLexer.tokenNames[i] == null) {
+				IkalaScriptLexer.tokenNames[i] = "<INVALID>";
 			}
 		}
 	}
-
-	@Override
-	@Deprecated
-	public String[] getTokenNames() {
-		return tokenNames;
-	}
-
-	@Override
-
-	public Vocabulary getVocabulary() {
-		return VOCABULARY;
-	}
-
-	public IkalaScriptLexer(CharStream input) {
-		super(input);
-		_interp = new LexerATNSimulator(this, _ATN, _decisionToDFA,
-			_sharedContextCache);
-	}
-
-	@Override
-	public String getGrammarFileName() {
-		return "IkalaScriptLexer.g4";
-	}
-
-	@Override
-	public String[] getRuleNames() {
-		return ruleNames;
-	}
-
-	@Override
-	public String getSerializedATN() {
-		return _serializedATN;
-	}
-
-	@Override
-	public String[] getChannelNames() {
-		return channelNames;
-	}
-
-	@Override
-	public String[] getModeNames() {
-		return modeNames;
-	}
-
-	@Override
-	public ATN getATN() {
-		return _ATN;
-	}
-
 	public static final String _serializedATN =
 		"\u0004\u0000A\u01ae\u0006\uffff\uffff\u0002\u0000\u0007\u0000\u0002\u0001"
 			+ "\u0007\u0001\u0002\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004"
@@ -419,12 +338,103 @@ public class IkalaScriptLexer extends Lexer {
 			+ "\u01ad\u0006@\u0000\u0000\u01ad\u0082\u0001\u0000\u0000\u0000\r\u0000"
 			+ "\u00fd\u0102\u0108\u010d\u0112\u0114\u011f\u0129\u0137\u0191\u019b\u01a9"
 			+ "\u0001\u0006\u0000\u0000";
-	public static final ATN _ATN =
-		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
+
+	public static final ATN _ATN = new ATNDeserializer()
+		.deserialize(IkalaScriptLexer._serializedATN.toCharArray());
 	static {
-		_decisionToDFA = new DFA[_ATN.getNumberOfDecisions()];
-		for (int i = 0; i < _ATN.getNumberOfDecisions(); i++) {
-			_decisionToDFA[i] = new DFA(_ATN.getDecisionState(i), i);
+		_decisionToDFA = new DFA[IkalaScriptLexer._ATN.getNumberOfDecisions()];
+		for (int i = 0; i < IkalaScriptLexer._ATN.getNumberOfDecisions(); i++) {
+			IkalaScriptLexer._decisionToDFA[i] =
+				new DFA(IkalaScriptLexer._ATN.getDecisionState(i), i);
 		}
+	}
+
+	private static String[] makeLiteralNames() {
+		return new String[] {null, "'boolean'", "'break'", "'case'", "'char'",
+			"'continue'", "'default'", "'do'", "'double'", "'else'", "'final'",
+			"'for'", "'goto'", "'if'", "'int'", "'new'", "'return'", "'string'",
+			"'switch'", "'this'", "'void'", "'while'", null, null, null, null,
+			null, "'null'", null, "'('", "')'", "'{'", "'}'", "'['", "']'",
+			"';'", "','", "'.'", "'='", "'>'", "'<'", "'!'", "'?'", "':'",
+			"'=='", "'<='", "'>='", "'!='", "'and'", "'or'", "'++'", "'--'",
+			"'+'", "'-'", "'*'", "'/'", "'%'", "'+='", "'-='", "'*='", "'/='",
+			"'%='", "'...'"};
+	}
+
+	private static String[] makeRuleNames() {
+		return new String[] {"BOOLEAN", "BREAK", "CASE", "CHAR", "CONTINUE",
+			"DEFAULT", "DO", "DOUBLE", "ELSE", "FINAL", "FOR", "GOTO", "IF",
+			"INT", "NEW", "RETURN", "STRING", "SWITCH", "THIS", "VOID", "WHILE",
+			"IntegerLiteral", "FloatingPointLiteral", "BooleanLiteral",
+			"CharacterLiteral", "StringLiteral", "NullLiteral", "Identifier",
+			"LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK",
+			"SEMICOLON", "COMMA", "DOT", "ASSIGN", "GT", "LT", "NOT",
+			"QUESTION", "COLON", "EQUAL", "LTE", "GTE", "NOTEQUAL", "AND", "OR",
+			"INC", "DEC", "ADD", "SUB", "MUL", "DIV", "MOD", "ADD_ASSIGN",
+			"SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN", "MOD_ASSIGN", "ELLIPSIS",
+			"WS", "COMMENT", "LINE_COMMENT"};
+	}
+
+	private static String[] makeSymbolicNames() {
+		return new String[] {null, "BOOLEAN", "BREAK", "CASE", "CHAR",
+			"CONTINUE", "DEFAULT", "DO", "DOUBLE", "ELSE", "FINAL", "FOR",
+			"GOTO", "IF", "INT", "NEW", "RETURN", "STRING", "SWITCH", "THIS",
+			"VOID", "WHILE", "IntegerLiteral", "FloatingPointLiteral",
+			"BooleanLiteral", "CharacterLiteral", "StringLiteral",
+			"NullLiteral", "Identifier", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
+			"LBRACK", "RBRACK", "SEMICOLON", "COMMA", "DOT", "ASSIGN", "GT",
+			"LT", "NOT", "QUESTION", "COLON", "EQUAL", "LTE", "GTE", "NOTEQUAL",
+			"AND", "OR", "INC", "DEC", "ADD", "SUB", "MUL", "DIV", "MOD",
+			"ADD_ASSIGN", "SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN",
+			"MOD_ASSIGN", "ELLIPSIS", "WS", "COMMENT", "LINE_COMMENT"};
+	}
+
+	public IkalaScriptLexer(CharStream input) {
+		super(input);
+		this._interp = new LexerATNSimulator(this, IkalaScriptLexer._ATN,
+			IkalaScriptLexer._decisionToDFA,
+			IkalaScriptLexer._sharedContextCache);
+	}
+
+	@Override
+	public ATN getATN() {
+		return IkalaScriptLexer._ATN;
+	}
+
+	@Override
+	public String[] getChannelNames() {
+		return IkalaScriptLexer.channelNames;
+	}
+
+	@Override
+	public String getGrammarFileName() {
+		return "IkalaScriptLexer.g4";
+	}
+
+	@Override
+	public String[] getModeNames() {
+		return IkalaScriptLexer.modeNames;
+	}
+
+	@Override
+	public String[] getRuleNames() {
+		return IkalaScriptLexer.ruleNames;
+	}
+
+	@Override
+	public String getSerializedATN() {
+		return IkalaScriptLexer._serializedATN;
+	}
+
+	@Override
+	@Deprecated
+	public String[] getTokenNames() {
+		return IkalaScriptLexer.tokenNames;
+	}
+
+	@Override
+
+	public Vocabulary getVocabulary() {
+		return IkalaScriptLexer.VOCABULARY;
 	}
 }

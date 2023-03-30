@@ -2,7 +2,7 @@ package com.ikalagaming.scripting;
 
 /**
  * An exception that occurred during parsing.
- * 
+ *
  * @author Ches Burks
  *
  */
