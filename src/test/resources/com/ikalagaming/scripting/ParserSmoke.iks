@@ -1,0 +1,135 @@
+// Variable declarations
+int sampleInt
+char sampleChar
+double sampleDouble
+string sampleString
+boolean sampleBoolean
+
+
+// Initializers
+int intInitializer = 4
+char charInitializer = 'c'
+double doubleInitializer = 5.01
+string stringInitializer = "test string!"
+boolean booleanInitializer = true
+
+// Arrays
+int[] intArray
+char[][][] charArray
+
+// Integer expressions
+int integer = 1 + 3 - 1
+integer = 1 * 2 + 14/7 + -1 - +2 + 15 % 2
+
+// Double expressions
+double floatingPoint = 5.1 * 4 / 17.3 + 4.0 % 2 - 15 % 3.1
+floatingPoint = -12.3 + 0.003
+
+
+// Boolean expressions
+boolean bool = false || true
+bool = true && false || true
+bool = !true || (!true || !false)
+bool = true == false
+bool = true != false
+
+int x = 4
+
+// if/else
+if (1 > 2) {
+	x = 5
+}
+
+if (x <= 5) {
+	x -= 2
+}
+else {
+	x += 5
+}
+
+if (x == 2) {
+	x++
+}
+else if (x >= 33) {
+	x--
+}
+else {
+	--x
+}
+
+// For loops
+for (int i = 0; i < 10; ++i) {
+	x *= i
+}
+
+
+for (int i = 0; i < 10; ++i) outerFor: {
+	for (int j = 0; j < 10; ++j) {
+		break outerFor
+	}
+}
+
+
+for (;;) {
+	break
+}
+
+for (int i = 0;;) break
+for (;x < 0;) break
+for (;;x +=2) break
+for (int i = 0; ; i++, x /= 3) break
+
+// While loops
+while (x > 2) {
+	  break
+}
+
+do {
+	x++
+} while (x < 2)
+
+// Ternary
+int ternA = bool ? 5 : 2
+
+double ternB = bool ? 5.1 : 44.01
+ternB = !bool ? 4 : 9.0
+ternB = !bool ? 0.3 : 3
+
+
+// Functions
+int funcResult = getInteger()
+funcResult = getArray()[funcResult]
+int xPos = getPosition().x
+int complicatedFunc = getObject().getAnotherObject().callMethod()
+
+double[] arrayDoubles = getDoubleArray()
+double actualDouble = arrayDoubles[0]
+
+testParams1()
+testParams2("test")
+testParams3(4.1, x, ternA, "4444  asdf,")
+
+// Jumps
+goto JUMP2
+
+JUMP1:
+goto JUMP3
+
+JUMP2:
+goto JUMP1
+
+JUMP3:
+
+// Switch case
+switch (x) {
+	case 1:
+		break
+	case 2:
+	case 3:
+		goto JUMP4
+	default:
+		break
+}
+
+JUMP4:
+
