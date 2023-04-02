@@ -302,6 +302,13 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void enterIfThenStatement(IkalaScriptParser.IfThenStatementContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link IkalaScriptParser#label}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void enterLabel(IkalaScriptParser.LabelContext ctx);
+
+	/**
 	 * Enter a parse tree produced by
 	 * {@link IkalaScriptParser#labeledStatement}.
 	 *
@@ -935,6 +942,13 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitIfThenStatement(IkalaScriptParser.IfThenStatementContext ctx);
+
+	/**
+	 * Exit a parse tree produced by {@link IkalaScriptParser#label}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void exitLabel(IkalaScriptParser.LabelContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#labeledStatement}.

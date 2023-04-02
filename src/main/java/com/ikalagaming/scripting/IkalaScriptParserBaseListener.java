@@ -427,6 +427,16 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
+	public void enterLabel(IkalaScriptParser.LabelContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
 	public void
 		enterLabeledStatement(IkalaScriptParser.LabeledStatementContext ctx) {}
 
@@ -1275,6 +1285,16 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void
 		exitIfThenStatement(IkalaScriptParser.IfThenStatementContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
+	public void exitLabel(IkalaScriptParser.LabelContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
