@@ -3,6 +3,7 @@ package com.ikalagaming.scripting.ast;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A type so that we can have a rudimentary type system and interface with Java
@@ -11,6 +12,7 @@ import lombok.NonNull;
  * @author Ches Burks
  *
  */
+@Slf4j
 @Getter
 @EqualsAndHashCode
 public class Type {
@@ -54,7 +56,12 @@ public class Type {
 		/**
 		 * A type that we can't determine until runtime.
 		 */
-		UNKNOWN;
+		UNKNOWN,
+		/**
+		 * A node that is used as a label we can jump to. Mostly used to reserve
+		 * identifiers.
+		 */
+		LABEL;
 	}
 
 	/**
@@ -102,6 +109,17 @@ public class Type {
 	 */
 	public static Type identifierArray(@NonNull String value, int dimensions) {
 		return new Type(Base.IDENTIFIER, value, dimensions);
+	}
+
+	/**
+	 * Create a label type.
+	 *
+	 * @param value The actual label.
+	 *
+	 * @return The newly created type.
+	 */
+	public static Type label(@NonNull String value) {
+		return new Type(Base.LABEL, value, 0);
 	}
 
 	/**
@@ -201,6 +219,34 @@ public class Type {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Dereference once, representing the resulting type of an array access. If
+	 * you dereference more than the number of dimensions, a void type is
+	 * returned.
+	 *
+	 * @return The type with fewer dimensions.
+	 */
+	public Type dereference() {
+		return this.dereference(1);
+	}
+
+	/**
+	 * Dereference a number of times, representing the resulting type of an
+	 * array access. If you dereference more than the number of dimensions, a
+	 * void type is returned.
+	 *
+	 * @param count The number of array indices.
+	 * @return The type with fewer dimensions.
+	 */
+	public Type dereference(int count) {
+		if (count > this.dimensions) {
+			Type.log.warn("Dereferencing an array too far");
+			return Type.voidType();
+		}
+
+		return new Type(this.base, this.value, this.dimensions - count);
 	}
 
 	@Override

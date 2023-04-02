@@ -89,7 +89,7 @@ public class ExprArithmetic extends Node {
 		final Type firstType = this.children.get(0).type;
 
 		Type secondType;
-		if (this.children.size() == 2) {
+		if (this.children.size() > 1) {
 			secondType = this.children.get(1).type;
 		}
 		else {
@@ -183,10 +183,18 @@ public class ExprArithmetic extends Node {
 						this.toString());
 					return;
 				}
-				if ((firstType.anyOf(Base.INT) && secondType.anyOf(Base.INT))
+				if ((firstType.anyOf(Base.INT)
+					&& secondType.anyOf(Base.INT, Base.CHAR))
 					|| (firstType.anyOf(Base.DOUBLE)
-						&& secondType.anyOf(Base.INT, Base.DOUBLE))) {
+						&& secondType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR))
+					|| (firstType.anyOf(Base.CHAR)
+						&& secondType.anyOf(Base.CHAR))) {
 					this.setType(firstType);
+					break;
+				}
+				if (firstType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR)
+					&& secondType.anyOf(Base.DOUBLE)) {
+					this.setType(secondType);
 					break;
 				}
 				ExprArithmetic.log.warn(
@@ -215,13 +223,20 @@ public class ExprArithmetic extends Node {
 
 		final String firstChild = this.children.get(0).toString();
 
+		final String secondChild =
+			this.children.size() > 1 ? this.children.get(1).toString() : "";
+
 		switch (this.operator) {
 			case ADD:
+			case SUB:
+				if (this.children.size() == 1) {
+					result.append(this.operator.getReadable());
+					result.append(firstChild);
+					break;
+				}
 			case MOD:
 			case MUL:
-			case SUB:
 			case DIV:
-				final String secondChild = this.children.get(1).toString();
 				result.append(firstChild);
 				result.append(' ');
 				result.append(this.operator.getReadable());
@@ -268,9 +283,10 @@ public class ExprArithmetic extends Node {
 		}
 		switch (this.operator) {
 			case ADD:
+			case SUB:
+				break;
 			case DIV:
 			case MUL:
-			case SUB:
 			case MOD:
 				if (this.children.size() < 2) {
 					ExprArithmetic.log.warn("Missing second child for node {}",

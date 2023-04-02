@@ -32,6 +32,7 @@ import com.ikalagaming.scripting.IkalaScriptParser.GotoStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.IfThenElseStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.IfThenElseStatementNoShortIfContext;
 import com.ikalagaming.scripting.IkalaScriptParser.IfThenStatementContext;
+import com.ikalagaming.scripting.IkalaScriptParser.LabelContext;
 import com.ikalagaming.scripting.IkalaScriptParser.LabeledStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.LabeledStatementNoShortIfContext;
 import com.ikalagaming.scripting.IkalaScriptParser.LeftHandSideContext;
@@ -399,6 +400,9 @@ public class AbstractSyntaxTree {
 		if (node.statement() != null) {
 			return AbstractSyntaxTree.process(node.statement());
 		}
+		if (node.label() != null) {
+			return AbstractSyntaxTree.process(node.label());
+		}
 
 		AbstractSyntaxTree.log.warn("Unknown block statement {}",
 			node.getText());
@@ -682,6 +686,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(FieldAccessContext node) {
 		FieldAccess result = new FieldAccess();
+		result.setType(Type.unknownType());
 
 		result.addChild(AbstractSyntaxTree.process(node.primary()));
 		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
@@ -806,9 +811,24 @@ public class AbstractSyntaxTree {
 	 * @param node The context to parse.
 	 * @return The parsed version of the node.
 	 */
+	private static Node process(LabelContext node) {
+		Label result = new Label();
+		final String name = node.Identifier().getText();
+		result.setType(Type.label(name));
+		result.setName(name);
+		return result;
+	}
+
+	/**
+	 * Process a labeled statement.
+	 *
+	 * @param node The context to parse.
+	 * @return The parsed version of the node.
+	 */
 	private static Node process(LabeledStatementContext node) {
 		LabeledStatement result = new LabeledStatement();
-		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
+		result.setType(Type.voidType());
+		result.addChild(AbstractSyntaxTree.process(node.label()));
 		result.addChild(AbstractSyntaxTree.process(node.statement()));
 		return result;
 	}
@@ -821,7 +841,8 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(LabeledStatementNoShortIfContext node) {
 		LabeledStatement result = new LabeledStatement();
-		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
+		result.setType(Type.voidType());
+		result.addChild(AbstractSyntaxTree.process(node.label()));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
 		return result;
 	}
@@ -1158,6 +1179,7 @@ public class AbstractSyntaxTree {
 				.primary_extension()) {
 				if (extension.fieldAccess_extension() != null) {
 					FieldAccess newNode = new FieldAccess();
+					newNode.setType(Type.unknownType());
 					newNode.addChild(leftNode);
 					newNode.addChild(AbstractSyntaxTree.identifierNode(
 						extension.fieldAccess_extension().Identifier()));
@@ -1180,6 +1202,7 @@ public class AbstractSyntaxTree {
 
 					if (array_lhs.fieldAccess_extension() != null) {
 						FieldAccess newNodeLHS = new FieldAccess();
+						newNodeLHS.setType(Type.unknownType());
 						// put the current root node on the far left of the tree
 						newNodeLHS.addChild(leftNode);
 						newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(

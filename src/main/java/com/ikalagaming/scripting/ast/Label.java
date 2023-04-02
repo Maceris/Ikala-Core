@@ -1,25 +1,18 @@
 package com.ikalagaming.scripting.ast;
 
-import com.ikalagaming.scripting.VariableTypeMap;
-
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * An identifier.
- *
+ * A label in the file.
+ * 
  * @author Ches Burks
  *
  */
 @Getter
 @Setter
-public class Identifier extends Node {
+public class Label extends Node {
 	private String name;
-
-	@Override
-	protected void processType(VariableTypeMap variables) {
-		this.setType(variables.get(this.name));
-	}
 
 	@Override
 	public String toString() {

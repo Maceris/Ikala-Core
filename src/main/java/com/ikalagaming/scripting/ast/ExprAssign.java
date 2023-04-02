@@ -1,12 +1,14 @@
 package com.ikalagaming.scripting.ast;
 
+import com.ikalagaming.scripting.VariableTypeMap;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
 /**
- * An assignment expression.
+ * An assignment expression. The children are the two sides of the expression.
  *
  * @author Ches Burks
  *
@@ -67,5 +69,34 @@ public class ExprAssign extends Node {
 	}
 
 	private Operator operator;
+
+	@Override
+	protected void processType(VariableTypeMap variables) {
+		this.setType(this.children.get(0).type);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		if (this.type != null) {
+			result.append(this.type.toString());
+			result.append(" ");
+		}
+		else {
+			result.append("____ ");
+		}
+
+		result.append(this.getClass().getSimpleName());
+
+		result.append(" { ");
+		result.append(this.children.get(0).toString());
+		result.append(' ');
+		result.append(this.operator.value);
+		result.append(' ');
+		result.append(this.children.get(1).toString());
+		result.append(" } ");
+
+		return result.toString();
+	}
 
 }

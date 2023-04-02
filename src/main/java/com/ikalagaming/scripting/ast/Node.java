@@ -43,7 +43,28 @@ public abstract class Node {
 	 * Process the types for the tree. Intended for use only on the root node.
 	 */
 	public final void processTreeTypes() {
-		processTreeTypes(new VariableTypeMap());
+		VariableTypeMap variables = new VariableTypeMap();
+		populateLabels(variables);
+		processTreeTypes(variables);
+	}
+
+	/**
+	 * Find all of the labels, and add them to the type map.
+	 * 
+	 * @param variables The variables that are valid for this node.
+	 */
+	private final void populateLabels(VariableTypeMap variables) {
+		if (this.children.size() > 0) {
+			for (Node child : this.children) {
+				if (child instanceof Label) {
+					Type childType = child.getType();
+					variables.put(childType.getValue(), childType);
+				}
+				else {
+					child.populateLabels(variables);
+				}
+			}
+		}
 	}
 
 	/**
@@ -113,9 +134,8 @@ public abstract class Node {
 	 */
 	public final boolean validateTree() {
 		boolean valid = true;
-		if (this.children.size() > 0) {
-			valid = this.children.stream().map(Node::validateTree).collect(
-				Collectors.reducing(Boolean.TRUE, Boolean::logicalAnd));
+		for (Node child : this.children) {
+			valid &= child.validateTree();
 		}
 		// Don't short circuit
 		return valid & this.validate();
