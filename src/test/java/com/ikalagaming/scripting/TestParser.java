@@ -20,7 +20,7 @@ import java.io.IOException;
  * @author Ches Burks
  *
  */
-public class TestParser {
+class TestParser {
 
 	/**
 	 * The resources folder where the test scripts are located.

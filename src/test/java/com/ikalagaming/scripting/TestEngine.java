@@ -13,7 +13,7 @@ import javax.script.ScriptException;
  * @author Ches Burks
  *
  */
-public class TestEngine {
+class TestEngine {
 
 	/**
 	 * Displays the engine name and version and the language name and version.
