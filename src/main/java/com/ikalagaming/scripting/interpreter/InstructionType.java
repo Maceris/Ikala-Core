@@ -2,7 +2,7 @@ package com.ikalagaming.scripting.interpreter;
 
 /**
  * The types of instructions that we can execute.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -23,6 +23,10 @@ enum InstructionType {
 	 * Logical and.
 	 */
 	AND,
+	/**
+	 * Dereference an array.
+	 */
+	ARRAY_ACCESS,
 	/**
 	 * Call a method.
 	 */
@@ -47,6 +51,10 @@ enum InstructionType {
 	 * Divide one integer by another.
 	 */
 	DIV_INT,
+	/**
+	 * Access a field of an object.
+	 */
+	FIELD_ACCESS,
 	/**
 	 * Jump if two values are equal.
 	 */
