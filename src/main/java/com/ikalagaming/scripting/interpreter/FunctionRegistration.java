@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Extra information needed to call a method.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -21,28 +21,8 @@ import java.util.List;
 class FunctionRegistration {
 
 	/**
-	 * The name of the method.
-	 * 
-	 * @return The method name.
-	 */
-	private final String name;
-
-	/**
-	 * The types of each parameter.
-	 * 
-	 * @return The type of each parameter.
-	 */
-	private final List<Class<?>> parameterTypes;
-	/**
-	 * The type of the return value, will be Void if there is no return.
-	 * 
-	 * @return The return type.
-	 */
-	private final Class<?> returnType;
-
-	/**
 	 * Convert a method to a registration object.
-	 * 
+	 *
 	 * @param method The method to register.
 	 * @return The registration information.
 	 */
@@ -63,5 +43,25 @@ class FunctionRegistration {
 		return new FunctionRegistration(method.getName(), paramList,
 			method.getReturnType());
 	}
+
+	/**
+	 * The name of the method.
+	 *
+	 * @return The method name.
+	 */
+	private final String name;
+	/**
+	 * The types of each parameter.
+	 *
+	 * @return The type of each parameter.
+	 */
+	private final List<Class<?>> parameterTypes;
+
+	/**
+	 * The type of the return value, will be Void if there is no return.
+	 *
+	 * @return The return type.
+	 */
+	private final Class<?> returnType;
 
 }

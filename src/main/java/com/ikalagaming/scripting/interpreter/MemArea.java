@@ -2,7 +2,7 @@ package com.ikalagaming.scripting.interpreter;
 
 /**
  * The types of locations we can reference.
- * 
+ *
  * @author Ches Burks
  *
  */

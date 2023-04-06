@@ -4,7 +4,7 @@ import lombok.NonNull;
 
 /**
  * A single unit of execution.
- * 
+ *
  * @author Ches Burks
  * @param type The type of instruction.
  * @param firstLocation The first location to read. Null if we don't have any
