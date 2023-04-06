@@ -11,6 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
+/**
+ * A runtime environment for a script, equivalent to a small VM or Turing
+ * machine.
+ *
+ * @author Ches Burks
+ *
+ */
 @Slf4j
 public class ScriptRuntime {
 	/**
@@ -168,6 +175,34 @@ public class ScriptRuntime {
 	}
 
 	/**
+	 * Divide chars.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void divChar(Instruction i) {
+		this.charMath(i, (a, b) -> (char) (a / b));
+
+	}
+
+	/**
+	 * Divide doubles.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void divDouble(Instruction i) {
+		this.doubleMath(i, (a, b) -> a / b);
+	}
+
+	/**
+	 * Divide integers.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void divInt(Instruction i) {
+		this.intMath(i, (a, b) -> a / b);
+	}
+
+	/**
 	 * Deal with any kind of math operation on two doubles.
 	 *
 	 * @param i The instruction.
@@ -233,7 +268,97 @@ public class ScriptRuntime {
 		this.storeValue(result, i.targetLocation());
 	}
 
-	private void execute(Instruction i) {}
+	private void execute(Instruction i) {
+		switch (i.type()) {
+			case ADD_CHAR:
+				this.addChar(i);
+				break;
+			case ADD_DOUBLE:
+				this.addDouble(i);
+				break;
+			case ADD_INT:
+				this.addInt(i);
+				break;
+			case AND:
+				break;
+			case ARRAY_ACCESS:
+				break;
+			case CALL:
+				break;
+			case CMP:
+				break;
+			case CONCAT_STRING:
+				break;
+			case DIV_CHAR:
+				this.divChar(i);
+				break;
+			case DIV_DOUBLE:
+				this.divDouble(i);
+				break;
+			case DIV_INT:
+				this.divInt(i);
+				break;
+			case FIELD_ACCESS:
+				break;
+			case HALT:
+				halt();
+				break;
+			case JEQ:
+				break;
+			case JGE:
+				break;
+			case JGT:
+				break;
+			case JLE:
+				break;
+			case JLT:
+				break;
+			case JMP:
+				break;
+			case JNE:
+				break;
+			case MOD_CHAR:
+				this.modChar(i);
+				break;
+			case MOD_DOUBLE:
+				this.modDouble(i);
+				break;
+			case MOD_INT:
+				this.modInt(i);
+				break;
+			case MOV:
+				break;
+			case MUL_CHAR:
+				this.mulChar(i);
+				break;
+			case MUL_DOUBLE:
+				this.mulDouble(i);
+				break;
+			case MUL_INT:
+				this.mulInt(i);
+				break;
+			case NOP:
+				// No operation
+				break;
+			case NOT:
+				break;
+			case OR:
+				break;
+			case SUB_CHAR:
+				this.subChar(i);
+				break;
+			case SUB_DOUBLE:
+				this.subDouble(i);
+				break;
+			case SUB_INT:
+				this.subInt(i);
+				break;
+			default:
+				ScriptRuntime.log.warn("Unknown instruction {}",
+					i.type().toString());
+				break;
+		}
+	}
 
 	/**
 	 * Stop running the program.
@@ -333,8 +458,67 @@ public class ScriptRuntime {
 		}
 	}
 
+	/**
+	 * Modulus for chars.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void modChar(Instruction i) {
+		this.charMath(i, (a, b) -> (char) (a % b));
+
+	}
+
+	/**
+	 * Modulus for doubles.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void modDouble(Instruction i) {
+		this.doubleMath(i, (a, b) -> a % b);
+	}
+
+	/**
+	 * Modulus for integers.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void modInt(Instruction i) {
+		this.intMath(i, (a, b) -> a % b);
+	}
+
+	/**
+	 * Multiply chars.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void mulChar(Instruction i) {
+		this.charMath(i, (a, b) -> (char) (a * b));
+
+	}
+
+	/**
+	 * Multiply doubles.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void mulDouble(Instruction i) {
+		this.doubleMath(i, (a, b) -> a * b);
+	}
+
+	/**
+	 * Multiply integers.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void mulInt(Instruction i) {
+		this.intMath(i, (a, b) -> a * b);
+	}
+
+	/**
+	 * Execute one instruction.
+	 */
 	public void step() {
-		if ((this.programCounter < 0)
+		if (this.fatalError || (this.programCounter < 0)
 			|| (this.programCounter >= this.instructions.size())) {
 			// Stop executing
 			return;
@@ -379,5 +563,33 @@ public class ScriptRuntime {
 				this.halt();
 				break;
 		}
+	}
+
+	/**
+	 * Subtract chars.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void subChar(Instruction i) {
+		this.charMath(i, (a, b) -> (char) (a - b));
+
+	}
+
+	/**
+	 * Subtract doubles.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void subDouble(Instruction i) {
+		this.doubleMath(i, (a, b) -> a - b);
+	}
+
+	/**
+	 * Subtract integers.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void subInt(Instruction i) {
+		this.intMath(i, (a, b) -> a - b);
 	}
 }

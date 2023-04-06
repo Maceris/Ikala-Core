@@ -56,6 +56,10 @@ enum InstructionType {
 	 */
 	FIELD_ACCESS,
 	/**
+	 * Stop the program.
+	 */
+	HALT,
+	/**
 	 * Jump if two values are equal.
 	 */
 	JEQ,
