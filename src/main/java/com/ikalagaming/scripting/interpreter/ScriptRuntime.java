@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * A runtime environment for a script, equivalent to a small VM or Turing
@@ -41,41 +42,18 @@ public class ScriptRuntime {
 	/**
 	 * An equivalent to a register where the result of the last comparison is
 	 * stored.
+	 *
+	 * When comparing numbers: If the first number is less than the second, this
+	 * will be -1. If they are equal, it will be 0. If the first number is
+	 * greater than the second, this will be 1. If two items are not equal, this
+	 * will be nonzero.
 	 */
-	private short lastComparison;
+	private int lastComparison;
 
 	/**
 	 * If we should stop running the program.
 	 */
 	private boolean fatalError;
-
-	/**
-	 * Add chars.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void addChar(Instruction i) {
-		this.charMath(i, (a, b) -> (char) (a + b));
-
-	}
-
-	/**
-	 * Add doubles.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void addDouble(Instruction i) {
-		this.doubleMath(i, (a, b) -> a + b);
-	}
-
-	/**
-	 * Add integers.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void addInt(Instruction i) {
-		this.intMath(i, (a, b) -> a + b);
-	}
 
 	/**
 	 * Deal with any kind of math operation on two integers.
@@ -175,34 +153,6 @@ public class ScriptRuntime {
 	}
 
 	/**
-	 * Divide chars.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void divChar(Instruction i) {
-		this.charMath(i, (a, b) -> (char) (a / b));
-
-	}
-
-	/**
-	 * Divide doubles.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void divDouble(Instruction i) {
-		this.doubleMath(i, (a, b) -> a / b);
-	}
-
-	/**
-	 * Divide integers.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void divInt(Instruction i) {
-		this.intMath(i, (a, b) -> a / b);
-	}
-
-	/**
 	 * Deal with any kind of math operation on two doubles.
 	 *
 	 * @param i The instruction.
@@ -271,91 +221,133 @@ public class ScriptRuntime {
 	private void execute(Instruction i) {
 		switch (i.type()) {
 			case ADD_CHAR:
-				this.addChar(i);
+				this.charMath(i, (a, b) -> (char) (a + b));
+				this.programCounter++;
 				break;
 			case ADD_DOUBLE:
-				this.addDouble(i);
+				this.doubleMath(i, (a, b) -> a + b);
+				this.programCounter++;
 				break;
 			case ADD_INT:
-				this.addInt(i);
+				this.intMath(i, (a, b) -> a + b);
+				this.programCounter++;
 				break;
 			case AND:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case ARRAY_ACCESS:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case CALL:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case CMP:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case CONCAT_STRING:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case DIV_CHAR:
-				this.divChar(i);
+				this.charMath(i, (a, b) -> (char) (a / b));
+				this.programCounter++;
 				break;
 			case DIV_DOUBLE:
-				this.divDouble(i);
+				this.doubleMath(i, (a, b) -> a / b);
+				this.programCounter++;
 				break;
 			case DIV_INT:
-				this.divInt(i);
+				this.intMath(i, (a, b) -> a / b);
+				this.programCounter++;
 				break;
 			case FIELD_ACCESS:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case HALT:
-				halt();
+				this.halt();
 				break;
 			case JEQ:
+				this.jump(this.programCounter, comp -> comp == 0);
 				break;
 			case JGE:
+				this.jump(this.programCounter, comp -> comp >= 0);
 				break;
 			case JGT:
+				this.jump(this.programCounter, comp -> comp > 0);
 				break;
 			case JLE:
+				this.jump(this.programCounter, comp -> comp <= 0);
 				break;
 			case JLT:
+				this.jump(this.programCounter, comp -> comp < 0);
 				break;
 			case JMP:
+				this.jump(this.programCounter, comp -> true);
 				break;
 			case JNE:
+				this.jump(this.programCounter, comp -> comp != 0);
 				break;
 			case MOD_CHAR:
-				this.modChar(i);
+				this.charMath(i, (a, b) -> (char) (a % b));
+				this.programCounter++;
 				break;
 			case MOD_DOUBLE:
-				this.modDouble(i);
+				this.doubleMath(i, (a, b) -> a % b);
+				this.programCounter++;
 				break;
 			case MOD_INT:
-				this.modInt(i);
+				this.intMath(i, (a, b) -> a % b);
+				this.programCounter++;
 				break;
 			case MOV:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case MUL_CHAR:
-				this.mulChar(i);
+				this.charMath(i, (a, b) -> (char) (a * b));
+				this.programCounter++;
 				break;
 			case MUL_DOUBLE:
-				this.mulDouble(i);
+				this.doubleMath(i, (a, b) -> a * b);
+				this.programCounter++;
 				break;
 			case MUL_INT:
-				this.mulInt(i);
+				this.intMath(i, (a, b) -> a * b);
+				this.programCounter++;
 				break;
 			case NOP:
 				// No operation
+				this.programCounter++;
 				break;
 			case NOT:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case OR:
+				// TODO implement
+				this.programCounter++;
 				break;
 			case SUB_CHAR:
-				this.subChar(i);
+				this.charMath(i, (a, b) -> (char) (a - b));
+				this.programCounter++;
 				break;
 			case SUB_DOUBLE:
-				this.subDouble(i);
+				this.doubleMath(i, (a, b) -> a - b);
+				this.programCounter++;
 				break;
 			case SUB_INT:
-				this.subInt(i);
+				this.intMath(i, (a, b) -> a - b);
+				this.programCounter++;
 				break;
 			default:
 				ScriptRuntime.log.warn("Unknown instruction {}",
 					i.type().toString());
+				this.halt();
 				break;
 		}
 	}
@@ -426,6 +418,29 @@ public class ScriptRuntime {
 	}
 
 	/**
+	 * A conditional jump. We jump to the given location if the given function
+	 * returns true when passed the last comparison value. If we don't jump, we
+	 * just move to the next instruction.
+	 *
+	 * @param location The location to jump to.
+	 * @param operator The function that determines if we should jump.
+	 */
+	private void jump(int location, Function<Integer, Boolean> operator) {
+		if (location < 0 || location > this.instructions.size()) {
+			// instructions.size is for when we want to bail on the program.
+			ScriptRuntime.log.warn("Invalid jump location {}", location);
+			this.halt();
+			return;
+		}
+		if (operator.apply(this.lastComparison)) {
+			this.programCounter = location;
+		}
+		else {
+			this.programCounter++;
+		}
+	}
+
+	/**
 	 * Read the value from the memory location.
 	 *
 	 * @param from The location we are reading from.
@@ -456,62 +471,6 @@ public class ScriptRuntime {
 				this.halt();
 				return null;
 		}
-	}
-
-	/**
-	 * Modulus for chars.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void modChar(Instruction i) {
-		this.charMath(i, (a, b) -> (char) (a % b));
-
-	}
-
-	/**
-	 * Modulus for doubles.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void modDouble(Instruction i) {
-		this.doubleMath(i, (a, b) -> a % b);
-	}
-
-	/**
-	 * Modulus for integers.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void modInt(Instruction i) {
-		this.intMath(i, (a, b) -> a % b);
-	}
-
-	/**
-	 * Multiply chars.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void mulChar(Instruction i) {
-		this.charMath(i, (a, b) -> (char) (a * b));
-
-	}
-
-	/**
-	 * Multiply doubles.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void mulDouble(Instruction i) {
-		this.doubleMath(i, (a, b) -> a * b);
-	}
-
-	/**
-	 * Multiply integers.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void mulInt(Instruction i) {
-		this.intMath(i, (a, b) -> a * b);
 	}
 
 	/**
@@ -565,31 +524,4 @@ public class ScriptRuntime {
 		}
 	}
 
-	/**
-	 * Subtract chars.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void subChar(Instruction i) {
-		this.charMath(i, (a, b) -> (char) (a - b));
-
-	}
-
-	/**
-	 * Subtract doubles.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void subDouble(Instruction i) {
-		this.doubleMath(i, (a, b) -> a - b);
-	}
-
-	/**
-	 * Subtract integers.
-	 *
-	 * @param i The instruction we are executing.
-	 */
-	private void subInt(Instruction i) {
-		this.intMath(i, (a, b) -> a - b);
-	}
 }
