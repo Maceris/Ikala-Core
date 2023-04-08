@@ -3,7 +3,6 @@ package com.ikalagaming.scripting.ast;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * An arithmetic expression, acting on numeric types. This can have one or two
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Getter
 @Setter
-@Slf4j
 public class ExprArithmetic extends Node {
 	/**
 	 * The operators that can be used.
@@ -145,38 +143,5 @@ public class ExprArithmetic extends Node {
 		}
 		result.append(" } ");
 		return result.toString();
-	}
-
-	@Override
-	protected boolean validate() {
-		if (this.children.size() < 1) {
-			ExprArithmetic.log.warn("Missing first child for node {}",
-				this.toString());
-			return false;
-		}
-		switch (this.operator) {
-			case ADD:
-			case SUB:
-				break;
-			case DIV:
-			case MUL:
-			case MOD:
-				if (this.children.size() < 2) {
-					ExprArithmetic.log.warn("Missing second child for node {}",
-						this.toString());
-					return false;
-				}
-				break;
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
-			case INC_PREFIX:
-			case INC_SUFFIX:
-				break;
-			default:
-				ExprArithmetic.log.warn("Unknown operator {}",
-					this.operator.toString());
-				return false;
-		}
-		return true;
 	}
 }

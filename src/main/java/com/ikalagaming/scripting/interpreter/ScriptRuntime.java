@@ -217,6 +217,11 @@ public class ScriptRuntime {
 
 		this.storeValue(result, i.targetLocation());
 	}
+	
+	private void compare(Instruction i) {
+		//TODO complete
+		
+	}
 
 	private void execute(Instruction i) {
 		switch (i.type()) {
@@ -245,7 +250,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case CMP:
-				// TODO implement
+				this.compare(i);
 				this.programCounter++;
 				break;
 			case CONCAT_STRING:

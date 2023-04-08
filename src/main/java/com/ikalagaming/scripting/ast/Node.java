@@ -64,30 +64,4 @@ public abstract class Node {
 		}
 		return result.toString();
 	}
-
-	/**
-	 * Perform node-specific validation. Things like basic type checking, or
-	 * semantic analysis.
-	 *
-	 * @return True if the node is valid given it's contents and children, false
-	 *         if is not valid.
-	 */
-	protected boolean validate() {
-		// Default
-		return true;
-	}
-
-	/**
-	 * Validates the tree. Intended for use only on the root node.
-	 *
-	 * @return True if the tree is valid, false if anything was not.
-	 */
-	public final boolean validateTree() {
-		boolean valid = true;
-		for (Node child : this.children) {
-			valid &= child.validateTree();
-		}
-		// Don't short circuit
-		return valid & this.validate();
-	}
 }

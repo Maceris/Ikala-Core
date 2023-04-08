@@ -3,6 +3,7 @@ package com.ikalagaming.scripting;
 import com.ikalagaming.scripting.IkalaScriptParser.CompilationUnitContext;
 import com.ikalagaming.scripting.ast.AbstractSyntaxTree;
 import com.ikalagaming.scripting.ast.CompilationUnit;
+import com.ikalagaming.scripting.ast.visitors.TreeValidator;
 import com.ikalagaming.scripting.ast.visitors.TypePreprocessor;
 
 import org.antlr.v4.runtime.BufferedTokenStream;
@@ -59,7 +60,9 @@ class TestParser {
 		CompilationUnit ast = AbstractSyntaxTree.process(context);
 		TypePreprocessor processor = new TypePreprocessor();
 		processor.processTreeTypes(ast);
-		Assertions.assertTrue(ast.validateTree(), "Validation should pass");
+		TreeValidator validator = new TreeValidator();
+		Assertions
+			.assertTrue(validator.validate(ast), "Validation should pass");
 	}
 
 }

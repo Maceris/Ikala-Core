@@ -22,7 +22,7 @@ public class LabelPass implements ASTVisitor {
 	/**
 	 * Process the tree and update the type map (provided when this class was
 	 * constructed) with all the labels.
-	 * 
+	 *
 	 * @param root The root of the tree, should be a {@link CompilationUnit}
 	 *            when called externally, but we use the Node type for easy tree
 	 *            traversal.
@@ -37,6 +37,6 @@ public class LabelPass implements ASTVisitor {
 	public void visit(Label node) {
 		// Note down the name of the label as being a label.
 		Type childType = node.getType();
-		typeMap.put(childType.getValue(), childType);
+		this.typeMap.put(childType.getValue(), childType);
 	}
 }

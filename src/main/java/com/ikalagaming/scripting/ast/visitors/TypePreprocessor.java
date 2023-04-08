@@ -13,10 +13,10 @@ import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
+import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.scripting.ast.TypeName;
 import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.scripting.ast.VarDeclarationList;
-import com.ikalagaming.scripting.ast.Type.Base;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +26,7 @@ import java.util.Deque;
 /**
  * Processes the types for the tree, updating nodes if we can determine what
  * they are based on their children.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -51,28 +51,28 @@ public class TypePreprocessor implements ASTVisitor {
 			(root instanceof Block || root instanceof ForLoop);
 
 		if (newContext) {
-			variableMaps.push(variableMaps.peek().clone());
+			this.variableMaps.push(this.variableMaps.peek().clone());
 		}
 
 		if (root.getChildren().size() > 0) {
-			root.getChildren().forEach(child -> this.process(child));
+			root.getChildren().forEach(this::process);
 		}
 		root.process(this);
 
 		if (newContext) {
-			variableMaps.pop();
+			this.variableMaps.pop();
 		}
 	}
 
 	/**
 	 * Process the types for the tree. Intended for use only on the root node.
-	 * 
+	 *
 	 * @param ast The tree to process.
 	 */
 	public void processTreeTypes(CompilationUnit ast) {
 		VariableTypeMap variables = new VariableTypeMap();
 
-		variableMaps.push(variables);
+		this.variableMaps.push(variables);
 		LabelPass labels = new LabelPass(variables);
 		labels.process(ast);
 
@@ -89,7 +89,8 @@ public class TypePreprocessor implements ASTVisitor {
 	@Override
 	public void visit(ExprArithmetic node) {
 		if (node.getChildren().size() < 1) {
-			log.warn("Missing child for node {}", this.toString());
+			TypePreprocessor.log.warn("Missing child for node {}",
+				this.toString());
 			return;
 		}
 		final Type firstType = node.getChildren().get(0).getType();
@@ -106,8 +107,8 @@ public class TypePreprocessor implements ASTVisitor {
 			case DIV:
 			case MUL:
 				if (node.getChildren().size() < 2) {
-					log.warn("Missing second child for node {}",
-						this.toString());
+					TypePreprocessor.log.warn(
+						"Missing second child for node {}", this.toString());
 					return;
 				}
 			case ADD:
@@ -120,8 +121,8 @@ public class TypePreprocessor implements ASTVisitor {
 				if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)
 					|| secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER,
 						Base.VOID)) {
-					log.warn("Invalid types {} {} {}", firstType.toString(),
-						node.getOperator().getReadable(),
+					TypePreprocessor.log.warn("Invalid types {} {} {}",
+						firstType.toString(), node.getOperator().getReadable(),
 						secondType.toString());
 					return;
 				}
@@ -161,7 +162,8 @@ public class TypePreprocessor implements ASTVisitor {
 					node.setType(secondType);
 					break;
 				}
-				log.warn("Cannot automatically cast types {} and {}",
+				TypePreprocessor.log.warn(
+					"Cannot automatically cast types {} and {}",
 					firstType.toString(), secondType.toString());
 				break;
 
@@ -174,13 +176,14 @@ public class TypePreprocessor implements ASTVisitor {
 					node.setType(firstType);
 				}
 				else {
-					log.warn("Invalid type {}", firstType.toString());
+					TypePreprocessor.log.warn("Invalid type {}",
+						firstType.toString());
 				}
 				break;
 			case MOD:
 				if (node.getChildren().size() < 2) {
-					log.warn("Missing second child for node {}",
-						this.toString());
+					TypePreprocessor.log.warn(
+						"Missing second child for node {}", this.toString());
 					return;
 				}
 				if ((firstType.anyOf(Base.INT)
@@ -197,11 +200,13 @@ public class TypePreprocessor implements ASTVisitor {
 					node.setType(secondType);
 					break;
 				}
-				log.warn("Cannot automatically cast types {} and {}",
+				TypePreprocessor.log.warn(
+					"Cannot automatically cast types {} and {}",
 					firstType.toString(), secondType.toString());
 				break;
 			default:
-				log.warn("Unknown operator {}", node.getOperator().toString());
+				TypePreprocessor.log.warn("Unknown operator {}",
+					node.getOperator().toString());
 				break;
 		}
 	}
@@ -251,7 +256,8 @@ public class TypePreprocessor implements ASTVisitor {
 			}
 		}
 
-		log.warn("Non-matching types {} and {}", ifTrue, ifFalse);
+		TypePreprocessor.log.warn("Non-matching types {} and {}", ifTrue,
+			ifFalse);
 	}
 
 	@Override
@@ -262,12 +268,12 @@ public class TypePreprocessor implements ASTVisitor {
 
 	@Override
 	public void visit(Identifier node) {
-		node.setType(variableMaps.peek().get(node.getName()));
+		node.setType(this.variableMaps.peek().get(node.getName()));
 	}
 
 	@Override
 	public void visit(TypeName node) {
-		VariableTypeMap variables = variableMaps.peek();
+		VariableTypeMap variables = this.variableMaps.peek();
 		if (node.getChildren().size() == 1) {
 			Identifier id = (Identifier) node.getChildren().get(0);
 			if (variables.contains(id.getName())) {
@@ -292,7 +298,7 @@ public class TypePreprocessor implements ASTVisitor {
 			decl.setType(declaredType);
 			Identifier id = (Identifier) decl.getChildren().get(0);
 			id.setType(declaredType);
-			variableMaps.peek().put(id.getName(), declaredType);
+			this.variableMaps.peek().put(id.getName(), declaredType);
 		}
 	}
 }
