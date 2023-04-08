@@ -11,6 +11,11 @@ import com.ikalagaming.scripting.VariableTypeMap;
  */
 public class ArrayAccess extends Node {
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		Type actual = this.children.get(0).getType()
 			.dereference(this.children.size() - 1);

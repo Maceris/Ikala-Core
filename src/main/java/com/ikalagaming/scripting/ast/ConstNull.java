@@ -15,6 +15,11 @@ public class ConstNull extends Node {
 	}
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	public String toString() {
 		return "null";
 	}

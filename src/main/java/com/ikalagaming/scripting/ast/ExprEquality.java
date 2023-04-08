@@ -36,6 +36,11 @@ public class ExprEquality extends Node {
 	private Operator operator;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
 		if (this.type != null) {

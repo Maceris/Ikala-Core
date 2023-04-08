@@ -11,6 +11,11 @@ import com.ikalagaming.scripting.VariableTypeMap;
  */
 public class VarDeclarationList extends Node {
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		Type declaredType = this.children.get(0).getType();
 

@@ -6,7 +6,7 @@ import lombok.Setter;
 
 /**
  * A relational expression, comparing numeric types.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -15,12 +15,12 @@ import lombok.Setter;
 public class ExprRelation extends Node {
 	/**
 	 * The available operators.
-	 * 
+	 *
 	 * @author Ches Burks
 	 *
 	 */
 	@AllArgsConstructor
-	public static enum Operator {
+	public enum Operator {
 		/**
 		 * Less than.
 		 */
@@ -45,6 +45,11 @@ public class ExprRelation extends Node {
 	 * The operator that is being used.
 	 */
 	private Operator operator;
+
+	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
 
 	@Override
 	public String toString() {

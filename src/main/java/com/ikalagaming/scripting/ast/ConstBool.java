@@ -5,7 +5,7 @@ import lombok.Setter;
 
 /**
  * A boolean literal.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -15,7 +15,12 @@ public class ConstBool extends Node {
 	private boolean value;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	public String toString() {
-		return Boolean.toString(value);
+		return Boolean.toString(this.value);
 	}
 }

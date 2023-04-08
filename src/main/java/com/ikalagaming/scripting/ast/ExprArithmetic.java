@@ -80,6 +80,11 @@ public class ExprArithmetic extends Node {
 	private int unaryCount;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		if (this.children.size() < 1) {
 			ExprArithmetic.log.warn("Missing child for node {}",
@@ -128,14 +133,10 @@ public class ExprArithmetic extends Node {
 				}
 
 				// Same type
-				if (firstType.equals(secondType)) {
-					this.setType(firstType);
-					break;
-				}
 
 				// different types
 
-				if (firstType.anyOf(Base.STRING)
+				if (firstType.equals(secondType) || firstType.anyOf(Base.STRING)
 					|| secondType.anyOf(Base.STRING)) {
 					// String concatenation
 					this.setType(firstType);

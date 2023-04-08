@@ -17,6 +17,11 @@ public class Identifier extends Node {
 	private String name;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		this.setType(variables.get(this.name));
 	}

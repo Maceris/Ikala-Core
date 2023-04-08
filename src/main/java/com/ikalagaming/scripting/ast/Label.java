@@ -5,7 +5,7 @@ import lombok.Setter;
 
 /**
  * A label in the file.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -13,6 +13,11 @@ import lombok.Setter;
 @Setter
 public class Label extends Node {
 	private String name;
+
+	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
 
 	@Override
 	public String toString() {

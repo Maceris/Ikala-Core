@@ -71,6 +71,11 @@ public class ExprAssign extends Node {
 	private Operator operator;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		this.setType(this.children.get(0).type);
 	}

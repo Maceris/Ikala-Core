@@ -7,7 +7,7 @@ import lombok.Setter;
 /**
  * A logical expression. May have one or two children, depending on if it's a
  * unary or binary operator.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -16,12 +16,12 @@ import lombok.Setter;
 public class ExprLogic extends Node {
 	/**
 	 * The operator that is used.
-	 * 
+	 *
 	 * @author Ches Burks
 	 *
 	 */
 	@AllArgsConstructor
-	public static enum Operator {
+	public enum Operator {
 		/**
 		 * And logic.
 		 */
@@ -41,6 +41,11 @@ public class ExprLogic extends Node {
 	private Operator operator;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
 		if (this.type != null) {
@@ -54,7 +59,7 @@ public class ExprLogic extends Node {
 		result.append(this.getClass().getSimpleName());
 
 		result.append(" { ");
-		switch (operator) {
+		switch (this.operator) {
 			case AND:
 			case OR:
 				result.append(this.children.get(0).toString());

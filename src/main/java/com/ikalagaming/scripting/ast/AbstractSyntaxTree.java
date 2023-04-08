@@ -662,6 +662,18 @@ public class AbstractSyntaxTree {
 	}
 
 	/**
+	 * Process a return statement.
+	 *
+	 * @param node The context to parse.
+	 * @return The parsed version of the node.
+	 */
+	private static Node process(ExitStatementContext node) {
+		Exit result = new Exit();
+		result.setType(Type.voidType());
+		return result;
+	}
+
+	/**
 	 * Process an expression.
 	 *
 	 * @param node The context to parse.
@@ -1314,18 +1326,6 @@ public class AbstractSyntaxTree {
 			return result;
 		}
 		return AbstractSyntaxTree.process(node.additiveExpression());
-	}
-
-	/**
-	 * Process a return statement.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ExitStatementContext node) {
-		Exit result = new Exit();
-		result.setType(Type.voidType());
-		return result;
 	}
 
 	/**

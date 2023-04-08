@@ -5,7 +5,7 @@ import lombok.Setter;
 
 /**
  * A floating point literal.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -15,7 +15,12 @@ public class ConstDouble extends Node {
 	private double value;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	public String toString() {
-		return Double.toString(value);
+		return Double.toString(this.value);
 	}
 }

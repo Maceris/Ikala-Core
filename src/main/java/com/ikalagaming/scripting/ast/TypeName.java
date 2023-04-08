@@ -13,6 +13,11 @@ import lombok.Getter;
 @Getter
 public class TypeName extends Node {
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		if (this.children.size() == 1) {
 			Identifier id = (Identifier) this.children.get(0);

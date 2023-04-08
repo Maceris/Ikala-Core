@@ -40,17 +40,8 @@ public abstract class Node {
 	}
 
 	/**
-	 * Process the types for the tree. Intended for use only on the root node.
-	 */
-	public final void processTreeTypes() {
-		VariableTypeMap variables = new VariableTypeMap();
-		populateLabels(variables);
-		processTreeTypes(variables);
-	}
-
-	/**
 	 * Find all of the labels, and add them to the type map.
-	 * 
+	 *
 	 * @param variables The variables that are valid for this node.
 	 */
 	private final void populateLabels(VariableTypeMap variables) {
@@ -68,8 +59,24 @@ public abstract class Node {
 	}
 
 	/**
+	 * Allow the visitor pattern for the tree.
+	 *
+	 * @param visitor The visitor.
+	 */
+	public abstract void process(ASTVisitor visitor);
+
+	/**
 	 * Process the types for the tree. Intended for use only on the root node.
-	 * 
+	 */
+	public final void processTreeTypes() {
+		VariableTypeMap variables = new VariableTypeMap();
+		this.populateLabels(variables);
+		this.processTreeTypes(variables);
+	}
+
+	/**
+	 * Process the types for the tree. Intended for use only on the root node.
+	 *
 	 * @param variables The variables that are valid for this node.
 	 */
 	private final void processTreeTypes(VariableTypeMap variables) {
@@ -89,7 +96,7 @@ public abstract class Node {
 	/**
 	 * Process the types for the node, updating them if we can determine what
 	 * they are based on it's children.
-	 * 
+	 *
 	 * @param variables The variables that are valid for this node.
 	 */
 	protected void processType(VariableTypeMap variables) {}

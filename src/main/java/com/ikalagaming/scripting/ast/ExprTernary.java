@@ -15,6 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExprTernary extends Node {
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	protected void processType(VariableTypeMap variables) {
 		Type ifTrue = this.children.get(1).getType();
 		Type ifFalse = this.children.get(2).getType();

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 /**
  * An integer literal.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -15,7 +15,12 @@ public class ConstInt extends Node {
 	private int value;
 
 	@Override
+	public void process(ASTVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
 	public String toString() {
-		return Integer.toString(value);
+		return Integer.toString(this.value);
 	}
 }
