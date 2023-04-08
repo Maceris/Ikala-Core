@@ -23,6 +23,7 @@ import com.ikalagaming.scripting.IkalaScriptParser.DoStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EnhancedForStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EnhancedForStatementNoShortIfContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EqualityExpressionContext;
+import com.ikalagaming.scripting.IkalaScriptParser.ExitStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.FieldAccessContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ForInitContext;
@@ -55,7 +56,6 @@ import com.ikalagaming.scripting.IkalaScriptParser.Primary_extension_accessConte
 import com.ikalagaming.scripting.IkalaScriptParser.PrimitiveTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ReferenceTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.RelationalExpressionContext;
-import com.ikalagaming.scripting.IkalaScriptParser.ReturnStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.StatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.StatementExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.StatementExpressionListContext;
@@ -1322,11 +1322,9 @@ public class AbstractSyntaxTree {
 	 * @param node The context to parse.
 	 * @return The parsed version of the node.
 	 */
-	private static Node process(ReturnStatementContext node) {
-		Return result = new Return();
-		if (node.expression() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.expression()));
-		}
+	private static Node process(ExitStatementContext node) {
+		Exit result = new Exit();
+		result.setType(Type.voidType());
 		return result;
 	}
 
@@ -1465,8 +1463,8 @@ public class AbstractSyntaxTree {
 		if (node.gotoStatement() != null) {
 			return AbstractSyntaxTree.process(node.gotoStatement());
 		}
-		if (node.returnStatement() != null) {
-			return AbstractSyntaxTree.process(node.returnStatement());
+		if (node.exitStatement() != null) {
+			return AbstractSyntaxTree.process(node.exitStatement());
 		}
 
 		AbstractSyntaxTree.log.warn(

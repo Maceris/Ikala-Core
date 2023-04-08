@@ -321,6 +321,17 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
+	public void
+		enterExitStatement(IkalaScriptParser.ExitStatementContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
 	public void enterExpression(IkalaScriptParser.ExpressionContext ctx) {}
 
 	/**
@@ -676,17 +687,6 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void enterRelationalExpression(
 		IkalaScriptParser.RelationalExpressionContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void
-		enterReturnStatement(IkalaScriptParser.ReturnStatementContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -1189,6 +1189,16 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
+	public void exitExitStatement(IkalaScriptParser.ExitStatementContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
 	public void exitExpression(IkalaScriptParser.ExpressionContext ctx) {}
 
 	/**
@@ -1541,17 +1551,6 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void exitRelationalExpression(
 		IkalaScriptParser.RelationalExpressionContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void
-		exitReturnStatement(IkalaScriptParser.ReturnStatementContext ctx) {}
 
 	/**
 	 * {@inheritDoc}

@@ -224,6 +224,13 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 		IkalaScriptParser.EqualityExpressionContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link IkalaScriptParser#exitStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void enterExitStatement(IkalaScriptParser.ExitStatementContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#expression}.
 	 *
 	 * @param ctx the parse tree
@@ -496,13 +503,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 */
 	void enterRelationalExpression(
 		IkalaScriptParser.RelationalExpressionContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link IkalaScriptParser#returnStatement}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterReturnStatement(IkalaScriptParser.ReturnStatementContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#statement}.
@@ -866,6 +866,13 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 		IkalaScriptParser.EqualityExpressionContext ctx);
 
 	/**
+	 * Exit a parse tree produced by {@link IkalaScriptParser#exitStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void exitExitStatement(IkalaScriptParser.ExitStatementContext ctx);
+
+	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#expression}.
 	 *
 	 * @param ctx the parse tree
@@ -1136,13 +1143,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 */
 	void exitRelationalExpression(
 		IkalaScriptParser.RelationalExpressionContext ctx);
-
-	/**
-	 * Exit a parse tree produced by {@link IkalaScriptParser#returnStatement}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitReturnStatement(IkalaScriptParser.ReturnStatementContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#statement}.
