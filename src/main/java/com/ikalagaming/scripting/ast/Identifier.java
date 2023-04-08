@@ -1,7 +1,5 @@
 package com.ikalagaming.scripting.ast;
 
-import com.ikalagaming.scripting.VariableTypeMap;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,11 +17,6 @@ public class Identifier extends Node {
 	@Override
 	public void process(ASTVisitor visitor) {
 		visitor.visit(this);
-	}
-
-	@Override
-	protected void processType(VariableTypeMap variables) {
-		this.setType(variables.get(this.name));
 	}
 
 	@Override

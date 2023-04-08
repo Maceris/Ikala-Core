@@ -1,7 +1,5 @@
 package com.ikalagaming.scripting.ast;
 
-import com.ikalagaming.scripting.VariableTypeMap;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,66 +38,11 @@ public abstract class Node {
 	}
 
 	/**
-	 * Find all of the labels, and add them to the type map.
-	 *
-	 * @param variables The variables that are valid for this node.
-	 */
-	private final void populateLabels(VariableTypeMap variables) {
-		if (this.children.size() > 0) {
-			for (Node child : this.children) {
-				if (child instanceof Label) {
-					Type childType = child.getType();
-					variables.put(childType.getValue(), childType);
-				}
-				else {
-					child.populateLabels(variables);
-				}
-			}
-		}
-	}
-
-	/**
 	 * Allow the visitor pattern for the tree.
 	 *
 	 * @param visitor The visitor.
 	 */
 	public abstract void process(ASTVisitor visitor);
-
-	/**
-	 * Process the types for the tree. Intended for use only on the root node.
-	 */
-	public final void processTreeTypes() {
-		VariableTypeMap variables = new VariableTypeMap();
-		this.populateLabels(variables);
-		this.processTreeTypes(variables);
-	}
-
-	/**
-	 * Process the types for the tree. Intended for use only on the root node.
-	 *
-	 * @param variables The variables that are valid for this node.
-	 */
-	private final void processTreeTypes(VariableTypeMap variables) {
-		if (this.children.size() > 0) {
-			for (Node child : this.children) {
-				if (child instanceof Block || child instanceof ForLoop) {
-					child.processTreeTypes(variables.clone());
-				}
-				else {
-					child.processTreeTypes(variables);
-				}
-			}
-		}
-		this.processType(variables);
-	}
-
-	/**
-	 * Process the types for the node, updating them if we can determine what
-	 * they are based on it's children.
-	 *
-	 * @param variables The variables that are valid for this node.
-	 */
-	protected void processType(VariableTypeMap variables) {}
 
 	@Override
 	public String toString() {

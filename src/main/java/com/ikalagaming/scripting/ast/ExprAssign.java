@@ -1,7 +1,5 @@
 package com.ikalagaming.scripting.ast;
 
-import com.ikalagaming.scripting.VariableTypeMap;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -73,11 +71,6 @@ public class ExprAssign extends Node {
 	@Override
 	public void process(ASTVisitor visitor) {
 		visitor.visit(this);
-	}
-
-	@Override
-	protected void processType(VariableTypeMap variables) {
-		this.setType(this.children.get(0).type);
 	}
 
 	@Override
