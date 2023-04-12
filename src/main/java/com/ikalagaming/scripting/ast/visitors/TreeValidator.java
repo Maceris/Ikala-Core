@@ -2,8 +2,12 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.CompilationUnit;
+import com.ikalagaming.scripting.ast.ConstChar;
+import com.ikalagaming.scripting.ast.ConstDouble;
+import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.Node;
+import com.ikalagaming.scripting.ast.Type.Base;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +56,18 @@ public class TreeValidator implements ASTVisitor {
 				this.toString());
 			this.valid = false;
 		}
+		final Node firstChild = node.getChildren().get(0);
+		if (firstChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
+			log.warn("Invalid first child {}", firstChild.toString());
+			this.valid = false;
+		}
+		if (node.getChildren().size() == 2) {
+			final Node secondChild = node.getChildren().get(1);
+			if (secondChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
+				log.warn("Invalid second child {}", secondChild.toString());
+				this.valid = false;
+			}
+		}
 		switch (node.getOperator()) {
 			case ADD:
 			case SUB:
@@ -69,6 +85,14 @@ public class TreeValidator implements ASTVisitor {
 			case DEC_SUFFIX:
 			case INC_PREFIX:
 			case INC_SUFFIX:
+				if (firstChild instanceof ConstChar
+					|| firstChild instanceof ConstDouble
+					|| firstChild instanceof ConstInt) {
+					log.warn("Can't use operator {} on a {}",
+						node.getOperator().toString(),
+						firstChild.getClass().getSimpleName());
+					this.valid = false;
+				}
 				break;
 			default:
 				TreeValidator.log.warn("Unknown operator {}",
