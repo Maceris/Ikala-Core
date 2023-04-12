@@ -16,5 +16,6 @@ import lombok.NonNull;
  *            name of the variable as a string.
  *
  */
-record Instruction(@NonNull InstructionType type, MemLocation firstLocation,
-	MemLocation secondLocation, MemLocation targetLocation) {}
+public record Instruction(@NonNull InstructionType type,
+	MemLocation firstLocation, MemLocation secondLocation,
+	MemLocation targetLocation) {}
