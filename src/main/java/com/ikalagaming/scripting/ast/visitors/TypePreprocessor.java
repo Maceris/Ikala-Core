@@ -112,6 +112,20 @@ public class TypePreprocessor implements ASTVisitor {
 					return;
 				}
 			case ADD:
+				if (node.getChildren().size() > 1
+					&& firstType.anyOf(Base.STRING) && !secondType
+						.anyOf(Base.IDENTIFIER, Base.LABEL, Base.VOID)) {
+					// String concatenation
+					node.setType(firstType);
+					return;
+				}
+				if (node.getChildren().size() > 1
+					&& secondType.anyOf(Base.STRING) && !firstType
+						.anyOf(Base.IDENTIFIER, Base.LABEL, Base.VOID)) {
+					// String concatenation
+					node.setType(secondType);
+					return;
+				}
 			case SUB:
 				if (node.getChildren().size() < 2) {
 					node.setType(firstType);
@@ -135,15 +149,12 @@ public class TypePreprocessor implements ASTVisitor {
 				}
 
 				// Same type
-
-				// different types
-
-				if (firstType.equals(secondType) || firstType.anyOf(Base.STRING)
-					|| secondType.anyOf(Base.STRING)) {
-					// String concatenation
+				if (firstType.equals(secondType)) {
 					node.setType(firstType);
 					break;
 				}
+
+				// different types
 				if (firstType.anyOf(Base.DOUBLE)
 					&& secondType.anyOf(Base.CHAR, Base.INT)) {
 					node.setType(firstType);
