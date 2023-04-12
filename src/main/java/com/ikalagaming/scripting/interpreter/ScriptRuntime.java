@@ -2,10 +2,11 @@ package com.ikalagaming.scripting.interpreter;
 
 import com.ikalagaming.scripting.ast.Type;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import java.util.function.Function;
  *
  */
 @Slf4j
+@Getter
+@RequiredArgsConstructor
 public class ScriptRuntime {
 	/**
 	 * Where we are in the program.
@@ -28,7 +31,7 @@ public class ScriptRuntime {
 	/**
 	 * The actual program, a list of instructions.
 	 */
-	private List<Instruction> instructions = new ArrayList<>();
+	private final List<Instruction> instructions;
 	/**
 	 * The variables in the program, which retain type information, for my own
 	 * sanity.
@@ -217,10 +220,10 @@ public class ScriptRuntime {
 
 		this.storeValue(result, i.targetLocation());
 	}
-	
+
 	private void compare(Instruction i) {
-		//TODO complete
-		
+		// TODO complete
+
 	}
 
 	private void execute(Instruction i) {
