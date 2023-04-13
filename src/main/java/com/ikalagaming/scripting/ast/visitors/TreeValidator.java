@@ -6,6 +6,7 @@ import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
+import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type.Base;
 
@@ -53,18 +54,20 @@ public class TreeValidator implements ASTVisitor {
 	public void visit(ExprArithmetic node) {
 		if (node.getChildren().size() < 1) {
 			TreeValidator.log.warn("Missing first child for node {}",
-				this.toString());
+				node.toString());
 			this.valid = false;
 		}
 		final Node firstChild = node.getChildren().get(0);
 		if (firstChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
-			log.warn("Invalid first child {}", firstChild.toString());
+			TreeValidator.log.warn("Invalid first child {}",
+				firstChild.toString());
 			this.valid = false;
 		}
 		if (node.getChildren().size() == 2) {
 			final Node secondChild = node.getChildren().get(1);
 			if (secondChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
-				log.warn("Invalid second child {}", secondChild.toString());
+				TreeValidator.log.warn("Invalid second child {}",
+					secondChild.toString());
 				this.valid = false;
 			}
 		}
@@ -88,7 +91,7 @@ public class TreeValidator implements ASTVisitor {
 				if (firstChild instanceof ConstChar
 					|| firstChild instanceof ConstDouble
 					|| firstChild instanceof ConstInt) {
-					log.warn("Can't use operator {} on a {}",
+					TreeValidator.log.warn("Can't use operator {} on a {}",
 						node.getOperator().toString(),
 						firstChild.getClass().getSimpleName());
 					this.valid = false;
@@ -98,6 +101,15 @@ public class TreeValidator implements ASTVisitor {
 				TreeValidator.log.warn("Unknown operator {}",
 					node.getOperator().toString());
 				this.valid = false;
+		}
+	}
+
+	@Override
+	public void visit(Identifier node) {
+		if (node.getType().anyOf(Base.VOID)) {
+			TreeValidator.log.warn("Invalid use of variable {}",
+				node.getName());
+			this.valid = false;
 		}
 	}
 

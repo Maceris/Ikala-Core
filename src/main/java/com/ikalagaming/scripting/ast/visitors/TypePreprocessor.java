@@ -149,14 +149,9 @@ public class TypePreprocessor implements ASTVisitor {
 				}
 
 				// Same type
-				if (firstType.equals(secondType)) {
-					node.setType(firstType);
-					break;
-				}
-
 				// different types
-				if (firstType.anyOf(Base.DOUBLE)
-					&& secondType.anyOf(Base.CHAR, Base.INT)) {
+				if (firstType.equals(secondType) || (firstType.anyOf(Base.DOUBLE)
+					&& secondType.anyOf(Base.CHAR, Base.INT))) {
 					node.setType(firstType);
 					break;
 				}

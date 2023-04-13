@@ -6,11 +6,18 @@ import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
+import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.scripting.ast.TypeNode;
+import com.ikalagaming.scripting.ast.VarDeclaration;
+import com.ikalagaming.scripting.ast.VarDeclarationList;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Optimize some of the tree.
@@ -20,6 +27,51 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class OptimizationPass implements ASTVisitor {
+
+	private void findConstants(Node node) {
+		for (Node child : node.getChildren()) {
+			this.findConstants(child);
+		}
+
+		TypeNode type;
+		List<VarDeclaration> variables = new ArrayList<>();
+
+		if (node instanceof VarDeclarationList) {
+			VarDeclarationList declList = (VarDeclarationList) node;
+			type = (TypeNode) declList.getChildren().get(0);
+			for (int i = 1; i < declList.getChildren().size(); ++i) {
+				variables.add((VarDeclaration) declList.getChildren().get(i));
+			}
+		}
+		else if (node instanceof ForLoop) {
+			ForLoop forLoop = (ForLoop) node;
+			if (!forLoop.isInitializer()) {
+				return;
+			}
+
+			Node initializer = forLoop.getChildren().get(0);
+			if (initializer instanceof VarDeclarationList) {
+				VarDeclarationList declList = (VarDeclarationList) initializer;
+				type = (TypeNode) declList.getChildren().get(0);
+				for (int i = 1; i < declList.getChildren().size(); ++i) {
+					variables
+						.add((VarDeclaration) declList.getChildren().get(i));
+				}
+			}
+			else {
+				return;
+			}
+		}
+		else {
+			return;
+		}
+
+		if (!type.isFinal()) {
+			// we only want final types
+			return;
+		}
+		// TODO note down variables and their types
+	}
 
 	/**
 	 * Optimize the syntax tree.
@@ -57,8 +109,9 @@ public class OptimizationPass implements ASTVisitor {
 	 * Simplify an arithmetic expression, into a constant if its children are
 	 * also constants.
 	 *
-	 * @param node
-	 * @return
+	 * @param node The node we are simplifying.
+	 * @return The resulting node, which might be the same node if it's not a
+	 *         constant expression.
 	 */
 	private Node simplify(ExprArithmetic node) {
 		if (node.getChildren().size() == 1) {
@@ -69,12 +122,13 @@ public class OptimizationPass implements ASTVisitor {
 		final Node secondChild = node.getChildren().get(1);
 
 		if (firstChild.getType().anyOf(Base.UNKNOWN)
-			|| secondChild.getType().anyOf(Base.UNKNOWN) || !((firstChild instanceof ConstInt
-			|| firstChild instanceof ConstDouble
-			|| firstChild instanceof ConstChar)
-			&& (secondChild instanceof ConstInt
-				|| secondChild instanceof ConstDouble
-				|| secondChild instanceof ConstChar))) {
+			|| secondChild.getType().anyOf(Base.UNKNOWN)
+			|| !((firstChild instanceof ConstInt
+				|| firstChild instanceof ConstDouble
+				|| firstChild instanceof ConstChar)
+				&& (secondChild instanceof ConstInt
+					|| secondChild instanceof ConstDouble
+					|| secondChild instanceof ConstChar))) {
 			// Bail if it's not the case that both children are constants
 			return node;
 		}
