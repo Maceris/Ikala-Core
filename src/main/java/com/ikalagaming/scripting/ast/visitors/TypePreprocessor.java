@@ -74,7 +74,7 @@ public class TypePreprocessor implements ASTVisitor {
 
 		this.variableMaps.push(variables);
 		LabelPass labels = new LabelPass(variables);
-		labels.process(ast);
+		labels.processLabels(ast);
 
 		this.process(ast);
 	}
@@ -150,8 +150,9 @@ public class TypePreprocessor implements ASTVisitor {
 
 				// Same type
 				// different types
-				if (firstType.equals(secondType) || (firstType.anyOf(Base.DOUBLE)
-					&& secondType.anyOf(Base.CHAR, Base.INT))) {
+				if (firstType.equals(secondType)
+					|| (firstType.anyOf(Base.DOUBLE)
+						&& secondType.anyOf(Base.CHAR, Base.INT))) {
 					node.setType(firstType);
 					break;
 				}

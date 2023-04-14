@@ -27,10 +27,11 @@ public class LabelPass implements ASTVisitor {
 	 *            when called externally, but we use the Node type for easy tree
 	 *            traversal.
 	 */
-	public void process(Node root) {
+	public void processLabels(Node root) {
 		if (root.getChildren().size() > 0) {
-			root.getChildren().forEach(child -> child.process(this));
+			root.getChildren().forEach(child -> this.processLabels(child));
 		}
+		root.process(this);
 	}
 
 	@Override
