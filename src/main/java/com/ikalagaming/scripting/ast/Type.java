@@ -242,7 +242,8 @@ public class Type {
 	 */
 	public Type dereference(int count) {
 		if (count > this.dimensions) {
-			Type.log.warn("Dereferencing an array too far");
+			Type.log.warn("Dereferencing a {} by {} is invalid",
+				this.toString(), count);
 			return Type.voidType();
 		}
 
