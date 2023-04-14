@@ -5,6 +5,7 @@ import com.ikalagaming.launcher.PluginFolder.ResourceType;
 import com.ikalagaming.plugins.Plugin;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import java.util.Map;
  * @author Ches Burks
  *
  */
+@Slf4j
 public class ConfigManager {
 
 	/**
@@ -46,15 +48,20 @@ public class ConfigManager {
 	 */
 	public static void saveDefaultConfig(@NonNull Plugin owner,
 		@NonNull String configName) {
-		try (
-			InputStream in = owner.getClass().getResourceAsStream(configName)) {
+
+		try (InputStream in =
+			owner.getClass().getClassLoader().getResourceAsStream(configName)) {
 			if (in == null) {
+				log.debug("Can't find config {} in the jar for the {} plugin",
+					configName, owner.getName());
 				return;
 			}
 
 			File target = PluginFolder.getResource(owner.getName(),
 				ResourceType.CONFIG, configName);
 			if (target.exists()) {
+				log.debug("Config {} already exists for the {} plugin",
+					configName, owner.getName());
 				return;
 			}
 
@@ -62,6 +69,8 @@ public class ConfigManager {
 		}
 		catch (IOException ignored) {
 			// No default config exists
+			log.debug("Exception when adding config {} for the {} plugin",
+				configName, owner.getName());
 		}
 	}
 
@@ -71,7 +80,7 @@ public class ConfigManager {
 
 	public static PluginConfig getConfig(@NonNull String pluginName,
 		@NonNull String configName) {
-		
+
 		File configFile = PluginFolder.getResource(pluginName,
 			ResourceType.CONFIG, configName);
 		if (!configFile.exists()) {
