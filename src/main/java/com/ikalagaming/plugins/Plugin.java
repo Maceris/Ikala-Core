@@ -1,6 +1,9 @@
 package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.Listener;
+import com.ikalagaming.plugins.config.ConfigManager;
+
+import lombok.NonNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +40,13 @@ public abstract class Plugin {
 	public Set<Listener> getListeners() {
 		return this.emptyListenerSet;
 	}
+
+	/**
+	 * Returns the name of the plugin.
+	 *
+	 * @return The unique name of the plugin.
+	 */
+	public abstract String getName();
 
 	/**
 	 * This method is called when the plugin is disabled, and gives the plugin
@@ -89,6 +99,14 @@ public abstract class Plugin {
 	 *
 	 * @param lastVersion The last known version that was loaded.
 	 */
-	public void onUpgrade(String lastVersion) {}
+	public void onUpgrade(@NonNull String lastVersion) {}
+
+	/**
+	 * Save the default configuration file to disk. If there are additional
+	 * config files that need to be saved, they can be added here.
+	 */
+	public void saveDefaultConfig() {
+		ConfigManager.saveDefaultConfig(this, ConfigManager.DEFAULT_NAME);
+	}
 
 }

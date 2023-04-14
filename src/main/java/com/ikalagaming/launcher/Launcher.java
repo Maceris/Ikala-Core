@@ -55,7 +55,7 @@ public class Launcher {
 		 */
 		@EventHandler(order = Order.MONITOR)
 		public void onShutdown(Shutdown event) {
-			log.info(
+			Launcher.log.info(
 				SafeResourceLoader.getString("SHUTTING_DOWN", Launcher.bundle));
 			Launcher.shouldShutdown.set(true);
 		}
@@ -148,6 +148,7 @@ public class Launcher {
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
 		new AllPluginsEnabled().fire();
 		Launcher.setupPluginFolders();
+		Launcher.setupPluginConfigs();
 
 		Launcher.stopCommand = SafeResourceLoader.getString("STOP_COMMAND",
 			Launcher.bundle, "stop");
@@ -380,6 +381,15 @@ public class Launcher {
 		}
 		Localization.setLocale(locale);
 		return true;
+	}
+
+	/**
+	 * Set up the config files for all plugins.
+	 */
+	private static void setupPluginConfigs() {
+		Map<String, Plugin> plugins =
+			PluginManager.getInstance().getLoadedPlugins();
+		plugins.values().forEach(Plugin::saveDefaultConfig);
 	}
 
 	/**
