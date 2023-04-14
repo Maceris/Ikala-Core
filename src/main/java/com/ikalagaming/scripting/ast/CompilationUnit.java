@@ -13,7 +13,7 @@ public class CompilationUnit extends Node {
 	public void process(ASTVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();

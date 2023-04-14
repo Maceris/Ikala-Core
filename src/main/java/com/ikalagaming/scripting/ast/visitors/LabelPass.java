@@ -29,7 +29,7 @@ public class LabelPass implements ASTVisitor {
 	 */
 	public void processLabels(Node root) {
 		if (root.getChildren().size() > 0) {
-			root.getChildren().forEach(child -> this.processLabels(child));
+			root.getChildren().forEach(this::processLabels);
 		}
 		root.process(this);
 	}

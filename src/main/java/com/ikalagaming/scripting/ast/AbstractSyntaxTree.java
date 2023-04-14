@@ -983,6 +983,7 @@ public class AbstractSyntaxTree {
 		}
 		else {
 			result.addChild(AbstractSyntaxTree.process(node.primary()));
+			result.setPrimary(true);
 			result
 				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
 		}
@@ -1239,6 +1240,7 @@ public class AbstractSyntaxTree {
 						Call newNodeLHS = new Call();
 						newNodeLHS.setType(Type.unknownType());
 						newNodeLHS.addChild(leftNode);
+						newNodeLHS.setPrimary(true);
 
 						newNodeLHS.addChild(
 							AbstractSyntaxTree.identifierNode(array_lhs
@@ -1269,6 +1271,7 @@ public class AbstractSyntaxTree {
 					Call newNode = new Call();
 					newNode.setType(Type.unknownType());
 					newNode.addChild(leftNode);
+					newNode.setPrimary(true);
 
 					newNode.addChild(AbstractSyntaxTree.identifierNode(
 						extension.methodInvocation_extension().Identifier()));

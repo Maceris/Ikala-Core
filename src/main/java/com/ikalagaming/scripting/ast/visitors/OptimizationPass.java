@@ -67,8 +67,6 @@ public class OptimizationPass implements ASTVisitor {
 		}
 
 		if (!type.isFinal()) {
-			// we only want final types
-			return;
 		}
 		// TODO note down variables and their types
 	}

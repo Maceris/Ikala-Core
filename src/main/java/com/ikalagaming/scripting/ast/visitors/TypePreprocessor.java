@@ -4,6 +4,7 @@ import com.ikalagaming.scripting.VariableTypeMap;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.ArrayAccess;
 import com.ikalagaming.scripting.ast.Block;
+import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprAssign;
@@ -43,29 +44,6 @@ public class TypePreprocessor implements ASTVisitor {
 	/**
 	 * Process the types for the tree. Intended for use only on the root node.
 	 *
-	 * @param root The current root node.
-	 */
-	private void process(Node root) {
-		final boolean newContext =
-			(root instanceof Block || root instanceof ForLoop);
-
-		if (newContext) {
-			this.variableMaps.push(this.variableMaps.peek().clone());
-		}
-
-		if (root.getChildren().size() > 0) {
-			root.getChildren().forEach(this::process);
-		}
-		root.process(this);
-
-		if (newContext) {
-			this.variableMaps.pop();
-		}
-	}
-
-	/**
-	 * Process the types for the tree. Intended for use only on the root node.
-	 *
 	 * @param ast The tree to process.
 	 */
 	public void processTreeTypes(CompilationUnit ast) {
@@ -75,7 +53,43 @@ public class TypePreprocessor implements ASTVisitor {
 		LabelPass labels = new LabelPass(variables);
 		labels.processLabels(ast);
 
-		this.process(ast);
+		this.processTypes(ast);
+	}
+
+	/**
+	 * Process the types for the tree. Intended for use only on the root node.
+	 *
+	 * @param root The current root node.
+	 */
+	private void processTypes(Node root) {
+		final boolean newContext =
+			(root instanceof Block || root instanceof ForLoop);
+
+		if (newContext) {
+			this.variableMaps.push(this.variableMaps.peek().clone());
+		}
+
+		if (root.getChildren().size() > 0) {
+			for (int i = 0; i < root.getChildren().size(); ++i) {
+				Node child = root.getChildren().get(i);
+				if (root instanceof Call) {
+					Call call = (Call) root;
+					if (!call.isPrimary() && i == 0
+						|| call.isPrimary() && i == 1) {
+						// Skip the method name lookup
+						child.setType(Type.unknownType());
+						continue;
+					}
+				}
+
+				this.processTypes(child);
+			}
+		}
+		root.process(this);
+
+		if (newContext) {
+			this.variableMaps.pop();
+		}
 	}
 
 	@Override

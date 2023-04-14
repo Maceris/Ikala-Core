@@ -19,7 +19,7 @@ import java.util.Optional;
 
 /**
  * Handle transforming a script into something that can execute.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -27,7 +27,7 @@ public class IkalaScriptCompiler {
 
 	/**
 	 * Handle the parsing of a character stream.
-	 * 
+	 *
 	 * @param input The input stream.
 	 * @return The corresponding runtime.
 	 */
