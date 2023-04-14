@@ -78,4 +78,9 @@ public class VariableTypeMap {
 	public void remove(@NonNull String variable) {
 		this.map.remove(variable);
 	}
+
+	@Override
+	public String toString() {
+		return this.map.toString();
+	}
 }
