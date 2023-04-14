@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Utility for reading in a file as a string
 - Cancelable events
 - Custom scripting language
+- New methods to the Plugin class, including a breaking change of requiring a name
 
 ### Changed
 - Updated build system to gradle
