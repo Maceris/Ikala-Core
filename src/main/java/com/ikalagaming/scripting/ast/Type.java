@@ -241,6 +241,9 @@ public class Type {
 	 * @return The type with fewer dimensions.
 	 */
 	public Type dereference(int count) {
+		if (this.base.equals(Base.UNKNOWN)) {
+			return Type.unknownType();
+		}
 		if (count > this.dimensions) {
 			Type.log.warn("Dereferencing a {} by {} is invalid",
 				this.toString(), count);
