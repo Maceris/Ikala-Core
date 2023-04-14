@@ -585,13 +585,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void enterType(IkalaScriptParser.TypeContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link IkalaScriptParser#typeName}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterTypeName(IkalaScriptParser.TypeNameContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#unaryExpression}.
 	 *
 	 * @param ctx the parse tree
@@ -1223,13 +1216,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitType(IkalaScriptParser.TypeContext ctx);
-
-	/**
-	 * Exit a parse tree produced by {@link IkalaScriptParser#typeName}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitTypeName(IkalaScriptParser.TypeNameContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#unaryExpression}.

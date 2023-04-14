@@ -1,7 +1,7 @@
 package com.ikalagaming.scripting;
 
-import org.antlr.v4.runtime.CharStream;
 // Generated from IkalaScriptLexer.g4 by ANTLR 4.12.0
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.RuntimeMetaData;
 import org.antlr.v4.runtime.Vocabulary;
@@ -39,22 +39,18 @@ public class IkalaScriptLexer extends Lexer {
 	public static String[] modeNames = {"DEFAULT_MODE"};
 
 	public static final String[] ruleNames = IkalaScriptLexer.makeRuleNames();
-
 	private static final String[] _LITERAL_NAMES =
 		IkalaScriptLexer.makeLiteralNames();
 
 	private static final String[] _SYMBOLIC_NAMES =
 		IkalaScriptLexer.makeSymbolicNames();
-
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(
 		IkalaScriptLexer._LITERAL_NAMES, IkalaScriptLexer._SYMBOLIC_NAMES);
-
 	/**
 	 * @deprecated Use {@link #VOCABULARY} instead.
 	 */
 	@Deprecated
 	public static final String[] tokenNames;
-
 	static {
 		tokenNames = new String[IkalaScriptLexer._SYMBOLIC_NAMES.length];
 		for (int i = 0; i < IkalaScriptLexer.tokenNames.length; i++) {

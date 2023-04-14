@@ -261,13 +261,6 @@ public interface ASTVisitor {
 	default void visit(SwitchStatement node) {}
 
 	/**
-	 * Visit the TypeName node and perform an operation.
-	 *
-	 * @param node The node we are visiting.
-	 */
-	default void visit(TypeName node) {}
-
-	/**
 	 * Visit the TypeNode node and perform an operation.
 	 *
 	 * @param node The node we are visiting.

@@ -64,12 +64,6 @@ type
 	|	referenceType
 	;
 
-// Names
-
-typeName
-	:	Identifier (DOT Identifier)*
-	;
-
 // Scripts
 
 compilationUnit
@@ -283,7 +277,7 @@ fieldAccess_extension
 	;
 
 arrayAccess
-	:	typeName (LBRACK expression RBRACK)+
+	:	Identifier (LBRACK expression RBRACK)+
 	|	arrayAccess_LHS_General (LBRACK expression RBRACK)+
 	;
 
@@ -292,12 +286,12 @@ arrayAccess_extension
 	;
 
 arrayAccess_LHS
-	:	typeName (LBRACK expression RBRACK)+
+	:	Identifier (LBRACK expression RBRACK)+
 	|	primary_LHS_access (LBRACK expression RBRACK)+
 	;
 
 methodInvocation
-	:	typeName LPAREN argumentList? RPAREN
+	:	Identifier LPAREN argumentList? RPAREN
 	|	primary DOT Identifier LPAREN argumentList? RPAREN
 	;
 
@@ -306,7 +300,7 @@ methodInvocation_extension
 	;
 
 methodInvocation_LHS
-	:	typeName LPAREN argumentList? RPAREN
+	:	Identifier LPAREN argumentList? RPAREN
 	;
 
 argumentList
@@ -402,7 +396,7 @@ unaryExpressionNotPlusMinus
 	;
 
 postfixExpression
-	:	(primary | typeName) (INC | DEC)*
+	:	(primary | Identifier) (INC | DEC)*
 	;
 
 postIncrementExpression

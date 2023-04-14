@@ -66,7 +66,6 @@ import com.ikalagaming.scripting.IkalaScriptParser.SwitchBlockStatementGroupCont
 import com.ikalagaming.scripting.IkalaScriptParser.SwitchLabelContext;
 import com.ikalagaming.scripting.IkalaScriptParser.SwitchStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.TypeContext;
-import com.ikalagaming.scripting.IkalaScriptParser.TypeNameContext;
 import com.ikalagaming.scripting.IkalaScriptParser.UnaryExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.UnaryExpressionNotPlusMinusContext;
 import com.ikalagaming.scripting.IkalaScriptParser.VariableDeclaratorContext;
@@ -252,8 +251,9 @@ public class AbstractSyntaxTree {
 	private static Node process(ArrayAccessContext node) {
 		ArrayAccess result = new ArrayAccess();
 
-		if (node.typeName() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.typeName()));
+		if (node.Identifier() != null) {
+			result
+				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
 		}
 		else if (node.arrayAccess_LHS_General() != null) {
 			ArrayAccess_LHS_GeneralContext lhs = node.arrayAccess_LHS_General();
@@ -961,7 +961,7 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(MethodInvocation_LHSContext node) {
 		Call result = new Call();
-		result.addChild(AbstractSyntaxTree.process(node.typeName()));
+		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
 		if (node.argumentList() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.argumentList()));
 		}
@@ -977,8 +977,9 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(MethodInvocationContext node) {
 		Call result = new Call();
-		if (node.typeName() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.typeName()));
+		if (node.Identifier() != null) {
+			result
+				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
 		}
 		else {
 			result.addChild(AbstractSyntaxTree.process(node.primary()));
@@ -1063,7 +1064,7 @@ public class AbstractSyntaxTree {
 			statement = AbstractSyntaxTree.process(node.primary());
 		}
 		else {
-			statement = AbstractSyntaxTree.process(node.typeName());
+			statement = AbstractSyntaxTree.identifierNode(node.Identifier());
 		}
 
 		if (totalDelta == 0) {
@@ -1145,8 +1146,9 @@ public class AbstractSyntaxTree {
 			ArrayAccess_LHSContext array = lhs.arrayAccess_LHS();
 			leftNode = new ArrayAccess();
 
-			if (array.typeName() != null) {
-				leftNode.addChild(AbstractSyntaxTree.process(array.typeName()));
+			if (array.Identifier() != null) {
+				leftNode.addChild(
+					AbstractSyntaxTree.identifierNode(array.Identifier()));
 			}
 			else if (array.primary_LHS_access() != null) {
 				Primary_LHS_accessContext arrayLeft =
@@ -1538,21 +1540,6 @@ public class AbstractSyntaxTree {
 		result.setType(Type.voidType());
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.switchBlock()));
-		return result;
-	}
-
-	/**
-	 * Process a type name.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(TypeNameContext node) {
-		TypeName result = new TypeName();
-
-		node.Identifier().forEach(
-			id -> result.addChild(AbstractSyntaxTree.identifierNode(id)));
-
 		return result;
 	}
 

@@ -802,16 +802,6 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
-	public void enterTypeName(IkalaScriptParser.TypeNameContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void
 		enterUnaryExpression(IkalaScriptParser.UnaryExpressionContext ctx) {}
 
@@ -1657,16 +1647,6 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void exitType(IkalaScriptParser.TypeContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitTypeName(IkalaScriptParser.TypeNameContext ctx) {}
 
 	/**
 	 * {@inheritDoc}

@@ -14,7 +14,6 @@ import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
-import com.ikalagaming.scripting.ast.TypeName;
 import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.scripting.ast.VarDeclarationList;
 
@@ -276,24 +275,6 @@ public class TypePreprocessor implements ASTVisitor {
 	@Override
 	public void visit(Identifier node) {
 		node.setType(this.variableMaps.peek().get(node.getName()));
-	}
-
-	@Override
-	public void visit(TypeName node) {
-		VariableTypeMap variables = this.variableMaps.peek();
-		if (node.getChildren().size() == 1) {
-			Identifier id = (Identifier) node.getChildren().get(0);
-			if (variables.contains(id.getName())) {
-				final Type idType = variables.get(id.getName());
-				node.setType(idType);
-				id.setType(idType);
-				return;
-			}
-		}
-		for (Node child : node.getChildren()) {
-			child.setType(Type.unknownType());
-		}
-		node.setType(Type.unknownType());
 	}
 
 	@Override
