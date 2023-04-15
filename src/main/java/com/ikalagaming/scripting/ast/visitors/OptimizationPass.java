@@ -6,18 +6,11 @@ import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
-import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
-import com.ikalagaming.scripting.ast.TypeNode;
-import com.ikalagaming.scripting.ast.VarDeclaration;
-import com.ikalagaming.scripting.ast.VarDeclarationList;
 
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Optimize some of the tree.
@@ -27,49 +20,6 @@ import java.util.List;
  */
 @Slf4j
 public class OptimizationPass implements ASTVisitor {
-
-	private void findConstants(Node node) {
-		for (Node child : node.getChildren()) {
-			this.findConstants(child);
-		}
-
-		TypeNode type;
-		List<VarDeclaration> variables = new ArrayList<>();
-
-		if (node instanceof VarDeclarationList) {
-			VarDeclarationList declList = (VarDeclarationList) node;
-			type = (TypeNode) declList.getChildren().get(0);
-			for (int i = 1; i < declList.getChildren().size(); ++i) {
-				variables.add((VarDeclaration) declList.getChildren().get(i));
-			}
-		}
-		else if (node instanceof ForLoop) {
-			ForLoop forLoop = (ForLoop) node;
-			if (!forLoop.isInitializer()) {
-				return;
-			}
-
-			Node initializer = forLoop.getChildren().get(0);
-			if (initializer instanceof VarDeclarationList) {
-				VarDeclarationList declList = (VarDeclarationList) initializer;
-				type = (TypeNode) declList.getChildren().get(0);
-				for (int i = 1; i < declList.getChildren().size(); ++i) {
-					variables
-						.add((VarDeclaration) declList.getChildren().get(i));
-				}
-			}
-			else {
-				return;
-			}
-		}
-		else {
-			return;
-		}
-
-		if (!type.isFinal()) {
-		}
-		// TODO note down variables and their types
-	}
 
 	/**
 	 * Optimize the syntax tree.
