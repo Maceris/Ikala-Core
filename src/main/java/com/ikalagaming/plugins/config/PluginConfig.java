@@ -1,5 +1,8 @@
 package com.ikalagaming.plugins.config;
 
+import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.util.SafeResourceLoader;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -49,7 +52,10 @@ public class PluginConfig {
 			return (T) object;
 		}
 		catch (ClassCastException e) {
-			PluginConfig.log.warn("Invalid type {}", e.getLocalizedMessage());
+			PluginConfig.log.warn(
+				SafeResourceLoader.getString("CONFIG_INVALID_TYPE",
+					PluginManager.getInstance().getResourceBundle()),
+				e.getLocalizedMessage());
 		}
 		return null;
 	}
@@ -481,7 +487,10 @@ public class PluginConfig {
 				for (int j = 0; j <= i; ++j) {
 					invalidName.append(parts[j]);
 				}
-				PluginConfig.log.warn("Invalid key {}", invalidName.toString());
+				PluginConfig.log.warn(
+					SafeResourceLoader.getString("CONFIG_INVALID_KEY",
+						PluginManager.getInstance().getResourceBundle()),
+					invalidName.toString());
 				return defaultValue;
 			}
 			currentMap = this.cast(currentMap.get(currentPart));

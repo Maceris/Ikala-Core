@@ -4,6 +4,7 @@ import com.ikalagaming.launcher.PluginFolder;
 import com.ikalagaming.launcher.PluginFolder.ResourceType;
 import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -93,14 +94,17 @@ public class ConfigManager {
 			if (maybePlugin.isPresent()
 				&& !PluginManager.getInstance().isEnabled(pluginName)) {
 				ConfigManager.log.debug(
-					"We are still loading {}, but a missing config was requested, attempting to create the missing {} config",
+					SafeResourceLoader.getString(
+						"CONFIG_REQUESTED_BEFORE_ENABLE",
+						PluginManager.getInstance().getResourceBundle()),
 					pluginName, configName);
 				ConfigManager.saveDefaultConfig(maybePlugin.get(), configName);
 			}
 		}
 		if (!configFile.exists()) {
 			ConfigManager.log.debug(
-				"Can't find config {} for the {} plugin, using a blank default",
+				SafeResourceLoader.getString("CONFIG_MISSING_FROM_DISK",
+					PluginManager.getInstance().getResourceBundle()),
 				configName, pluginName);
 			PluginConfig cached = ConfigManager.emptyConfig(configName);
 			ConfigManager.configCache.put(cacheName, cached);
@@ -118,7 +122,8 @@ public class ConfigManager {
 		}
 		catch (FileNotFoundException e) {
 			ConfigManager.log
-				.warn("File does not exist after verifying it exists", e);
+				.warn(SafeResourceLoader.getString("CONFIG_FILE_VANISHED",
+					PluginManager.getInstance().getResourceBundle()), e);
 		}
 		PluginConfig cached = ConfigManager.emptyConfig(configName);
 		ConfigManager.configCache.put(cacheName, cached);
@@ -154,7 +159,9 @@ public class ConfigManager {
 			config = ConfigManager.configCache.get(cacheName);
 		}
 		else {
-			ConfigManager.log.warn("We don't have a {} config in memory for {}",
+			ConfigManager.log.warn(
+				SafeResourceLoader.getString("CONFIG_MISSING_FROM_MEMORY",
+					PluginManager.getInstance().getResourceBundle()),
 				configName, pluginName);
 			return;
 		}
@@ -171,7 +178,9 @@ public class ConfigManager {
 				yaml.dump(config.getContents()), StandardOpenOption.WRITE);
 		}
 		catch (IOException e) {
-			ConfigManager.log.warn("Error writing {} config for {} to disk: {}",
+			ConfigManager.log.warn(
+				SafeResourceLoader.getString("CONFIG_WRITING_FAILED",
+					PluginManager.getInstance().getResourceBundle()),
 				configName, pluginName, e.getLocalizedMessage());
 		}
 	}
@@ -190,7 +199,8 @@ public class ConfigManager {
 			owner.getClass().getClassLoader().getResourceAsStream(configName)) {
 			if (in == null) {
 				ConfigManager.log.debug(
-					"Can't find config {} in the jar for the {} plugin",
+					SafeResourceLoader.getString("CONFIG_MISSING_FROM_JAR",
+						PluginManager.getInstance().getResourceBundle()),
 					configName, owner.getName());
 				return;
 			}
@@ -199,18 +209,20 @@ public class ConfigManager {
 				ResourceType.CONFIG, configName);
 			if (target.exists()) {
 				ConfigManager.log.debug(
-					"Config {} already exists for the {} plugin", configName,
-					owner.getName());
+					SafeResourceLoader.getString("CONFIG_ALREADY_EXISTS",
+						PluginManager.getInstance().getResourceBundle()),
+					configName, owner.getName());
 				return;
 			}
 
 			Files.copy(in, target.toPath());
 		}
-		catch (IOException ignored) {
+		catch (IOException e) {
 			// No default config exists
 			ConfigManager.log.debug(
-				"Exception when adding config {} for the {} plugin", configName,
-				owner.getName());
+				SafeResourceLoader.getString("CONFIG_WRITING_FAILED",
+					PluginManager.getInstance().getResourceBundle()),
+				configName, owner.getName(), e.getLocalizedMessage());
 		}
 	}
 }
