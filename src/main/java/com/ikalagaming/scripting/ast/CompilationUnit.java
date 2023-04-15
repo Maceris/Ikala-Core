@@ -25,7 +25,7 @@ public class CompilationUnit extends Node {
 			result.append("____ ");
 		}
 		result.append(this.getClass().getSimpleName());
-		if (this.children.size() > 0) {
+		if (!this.children.isEmpty()) {
 			result.append(" {\n");
 			result.append(this.children.stream()
 				.map(node -> node == null ? "null" : node.toString())

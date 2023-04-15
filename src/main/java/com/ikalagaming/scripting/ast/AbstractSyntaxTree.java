@@ -23,7 +23,6 @@ import com.ikalagaming.scripting.IkalaScriptParser.DoStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EnhancedForStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EnhancedForStatementNoShortIfContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EqualityExpressionContext;
-import com.ikalagaming.scripting.IkalaScriptParser.ExitStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.FieldAccessContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ForInitContext;
@@ -86,7 +85,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  */
 @Slf4j
 public class AbstractSyntaxTree {
-
 	/**
 	 * Fetch the base type of a primitive type.
 	 *
@@ -584,14 +582,14 @@ public class AbstractSyntaxTree {
 		}
 		result.addChild(type);
 
-		VarDeclaration var = new VarDeclaration();
+		VarDeclaration varDecl = new VarDeclaration();
 		VariableDeclaratorIdContext id = node.variableDeclaratorId();
-		var.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
+		varDecl.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
 		if (id.dims() != null) {
-			var.setDimensions(id.dims().LBRACK().size());
+			varDecl.setDimensions(id.dims().LBRACK().size());
 		}
 
-		result.addChild(var);
+		result.addChild(varDecl);
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statement()));
 
@@ -615,14 +613,14 @@ public class AbstractSyntaxTree {
 		}
 		result.addChild(type);
 
-		VarDeclaration var = new VarDeclaration();
+		VarDeclaration varDecl = new VarDeclaration();
 		VariableDeclaratorIdContext id = node.variableDeclaratorId();
-		var.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
+		varDecl.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
 		if (id.dims() != null) {
-			var.setDimensions(id.dims().LBRACK().size());
+			varDecl.setDimensions(id.dims().LBRACK().size());
 		}
 
-		result.addChild(var);
+		result.addChild(varDecl);
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
 
@@ -659,18 +657,6 @@ public class AbstractSyntaxTree {
 			return result;
 		}
 		return AbstractSyntaxTree.process(node.relationalExpression());
-	}
-
-	/**
-	 * Process a return statement.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ExitStatementContext node) {
-		Exit result = new Exit();
-		result.setType(Type.voidType());
-		return result;
 	}
 
 	/**
@@ -935,16 +921,16 @@ public class AbstractSyntaxTree {
 		}
 		result.addChild(type);
 
-		for (VariableDeclaratorContext var : node.variableDeclaratorList()
+		for (VariableDeclaratorContext varList : node.variableDeclaratorList()
 			.variableDeclarator()) {
 			VarDeclaration decl = new VarDeclaration();
-			VariableDeclaratorIdContext id = var.variableDeclaratorId();
+			VariableDeclaratorIdContext id = varList.variableDeclaratorId();
 			decl.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
 			if (id.dims() != null) {
 				decl.setDimensions(id.dims().LBRACK().size());
 			}
-			if (var.expression() != null) {
-				ExpressionContext init = var.expression();
+			if (varList.expression() != null) {
+				ExpressionContext init = varList.expression();
 				decl.addChild(AbstractSyntaxTree.process(init));
 			}
 			result.addChild(decl);
@@ -1201,9 +1187,8 @@ public class AbstractSyntaxTree {
 
 					// We need to keep the last node we created as the root
 					leftNode = newNode;
-					continue;
 				}
-				if (extension.arrayAccess_extension() != null) {
+				else if (extension.arrayAccess_extension() != null) {
 					ArrayAccess newNode = new ArrayAccess();
 
 					if (extension.arrayAccess_extension()
@@ -1212,16 +1197,16 @@ public class AbstractSyntaxTree {
 							.map(AbstractSyntaxTree::process)
 							.forEach(newNode::addChild);
 					}
-					Primary_extension_accessContext array_lhs = extension
+					Primary_extension_accessContext arrayLHS = extension
 						.arrayAccess_extension().primary_extension_access();
 
-					if (array_lhs.fieldAccess_extension() != null) {
+					if (arrayLHS.fieldAccess_extension() != null) {
 						FieldAccess newNodeLHS = new FieldAccess();
 						newNodeLHS.setType(Type.unknownType());
 						// put the current root node on the far left of the tree
 						newNodeLHS.addChild(leftNode);
 						newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(
-							array_lhs.fieldAccess_extension().Identifier()));
+							arrayLHS.fieldAccess_extension().Identifier()));
 						/*
 						 * The root node is going to have one child, an array
 						 * access, which is indexing into a field, which belongs
@@ -1236,19 +1221,19 @@ public class AbstractSyntaxTree {
 						 */
 						leftNode = newNode;
 					}
-					else if (array_lhs.methodInvocation_extension() != null) {
+					else if (arrayLHS.methodInvocation_extension() != null) {
 						Call newNodeLHS = new Call();
 						newNodeLHS.setType(Type.unknownType());
 						newNodeLHS.addChild(leftNode);
 						newNodeLHS.setPrimary(true);
 
-						newNodeLHS.addChild(
-							AbstractSyntaxTree.identifierNode(array_lhs
+						newNodeLHS
+							.addChild(AbstractSyntaxTree.identifierNode(arrayLHS
 								.methodInvocation_extension().Identifier()));
-						if (array_lhs.methodInvocation_extension()
+						if (arrayLHS.methodInvocation_extension()
 							.argumentList() != null) {
 							newNodeLHS.addChild(AbstractSyntaxTree
-								.process(array_lhs.methodInvocation_extension()
+								.process(arrayLHS.methodInvocation_extension()
 									.argumentList()));
 						}
 						/*
@@ -1265,9 +1250,8 @@ public class AbstractSyntaxTree {
 							"Unknown primary extension access {}",
 							extension.getText());
 					}
-					continue;
 				}
-				if (extension.methodInvocation_extension() != null) {
+				else if (extension.methodInvocation_extension() != null) {
 					Call newNode = new Call();
 					newNode.setType(Type.unknownType());
 					newNode.addChild(leftNode);
@@ -1286,10 +1270,11 @@ public class AbstractSyntaxTree {
 					 * access, that is made on the current root node.
 					 */
 					leftNode = newNode;
-					continue;
 				}
-				AbstractSyntaxTree.log.warn("Unknown primary extension {}",
-					extension.getText());
+				else {
+					AbstractSyntaxTree.log.warn("Unknown primary extension {}",
+						extension.getText());
+				}
 			}
 		}
 		return leftNode;
@@ -1469,7 +1454,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.gotoStatement());
 		}
 		if (node.exitStatement() != null) {
-			return AbstractSyntaxTree.process(node.exitStatement());
+			Exit result = new Exit();
+			result.setType(Type.voidType());
+			return result;
 		}
 
 		AbstractSyntaxTree.log.warn(
@@ -1634,6 +1621,14 @@ public class AbstractSyntaxTree {
 		result.addChild(AbstractSyntaxTree.process(node.expression()));
 		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
 		return result;
+	}
+
+	/**
+	 * Private constructor so that this class is not instantiated.
+	 */
+	private AbstractSyntaxTree() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
 	}
 
 }

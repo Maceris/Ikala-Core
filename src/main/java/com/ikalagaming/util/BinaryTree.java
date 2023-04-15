@@ -192,11 +192,6 @@ public class BinaryTree<T extends Comparable<T>> {
 	protected int size;
 
 	/**
-	 * Create a new empty binary tree.
-	 */
-	public BinaryTree() {}
-
-	/**
 	 * Removes all objects from the tree.
 	 */
 	public void clear() {
@@ -567,10 +562,11 @@ public class BinaryTree<T extends Comparable<T>> {
 				this.rebalance(parent);
 			}
 		}
-		// there are two children
-		// Because the null status of both children is the same
-		// and the children cant be null because of the previous else in the
-		// if-else chain
+		/*
+		 * There are two children Because the null status of both children is
+		 * the same and the children can't be null because of the previous else
+		 * in the if-else chain
+		 */
 		else {
 			BinaryTreeNode<T> smallestRight =
 				this.getSmallestSubnode(toRemove.right);

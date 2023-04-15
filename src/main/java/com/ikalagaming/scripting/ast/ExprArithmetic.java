@@ -98,30 +98,26 @@ public class ExprArithmetic extends Node {
 			this.children.size() > 1 ? this.children.get(1).toString() : "";
 
 		switch (this.operator) {
-			case ADD:
-			case SUB:
+			case ADD, SUB:
 				if (this.children.size() == 1) {
 					result.append(this.operator.getReadable());
 					result.append(firstChild);
 					break;
 				}
-			case MOD:
-			case MUL:
-			case DIV:
+				// fallthrough
+			case MOD, MUL, DIV:
 				result.append(firstChild);
 				result.append(' ');
 				result.append(this.operator.getReadable());
 				result.append(' ');
 				result.append(secondChild);
 				break;
-			case DEC_PREFIX:
-			case INC_PREFIX:
+			case DEC_PREFIX, INC_PREFIX:
 				result.append(this.operator.getReadable());
 				result.append(' ');
 				result.append(firstChild);
 				break;
-			case DEC_SUFFIX:
-			case INC_SUFFIX:
+			case DEC_SUFFIX, INC_SUFFIX:
 				result.append(firstChild);
 				result.append(' ');
 				result.append(this.operator.getReadable());

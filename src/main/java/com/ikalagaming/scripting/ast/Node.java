@@ -55,7 +55,7 @@ public abstract class Node {
 			result.append("____ ");
 		}
 		result.append(this.getClass().getSimpleName());
-		if (this.children.size() > 0) {
+		if (!this.children.isEmpty()) {
 			result.append(" { ");
 			result.append(this.children.stream()
 				.map(node -> node == null ? "null" : node.toString())

@@ -30,7 +30,6 @@ import java.util.Optional;
  */
 @Slf4j
 public class ConfigManager {
-
 	/**
 	 * The name of the default configuration file.
 	 */
@@ -224,5 +223,13 @@ public class ConfigManager {
 					PluginManager.getInstance().getResourceBundle()),
 				configName, owner.getName(), e.getLocalizedMessage());
 		}
+	}
+
+	/**
+	 * Private constructor so that this class is not instantiated.
+	 */
+	private ConfigManager() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
 	}
 }

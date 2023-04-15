@@ -146,11 +146,6 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 	private int size;
 
 	/**
-	 * Create a new AVLTreeMap.
-	 */
-	public AVLTreeMap() {}
-
-	/**
 	 * Removes all objects from the tree.
 	 */
 	public void clear() {
@@ -309,8 +304,10 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 
 		// if it is unbalanced, handle the 4 special cases
 
-		// single right, because its larger on the left and inserting on
-		// left.left
+		/*
+		 * single right, because its larger on the left and inserting on
+		 * left.left
+		 */
 		if (root.getLeft() != null && root.getLeft().getKey() != null) {
 			if (balance > 1 && key.compareTo(root.getLeft().getKey()) < 0) {
 				BinaryTreeNode<K, V> newRoot = this.rightRotate(root);
@@ -319,8 +316,10 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 				}
 				return newRoot;
 			}
-			// double right, because its larger on the left and inserting on
-			// left.right
+			/*
+			 * double right, because its larger on the left and inserting on
+			 * left.right
+			 */
 			if (balance > 1 && key.compareTo(root.getLeft().getKey()) > 0) {
 				root.setLeft(this.leftRotate(root.getLeft()));
 				BinaryTreeNode<K, V> newRoot = this.rightRotate(root);
@@ -330,8 +329,10 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 				return newRoot;
 			}
 		}
-		// single left, because its larger on the right and its inserting on
-		// right.right
+		/*
+		 * single left, because its larger on the right and its inserting on
+		 * right.right
+		 */
 		if (root.getRight() != null && root.getRight().getKey() != null) {
 			if (balance < -1 && key.compareTo(root.getRight().getKey()) > 0) {
 				BinaryTreeNode<K, V> newRoot = this.leftRotate(root);
