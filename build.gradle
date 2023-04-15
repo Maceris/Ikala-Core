@@ -62,7 +62,7 @@ tasks.register('delombok', DelombokTask) {
 	description 'Delomboks the source code'
     ext.outputDir = file("${delombokedSourceDir}")
     outputs.dir(outputDir)
-    sourceSets.main.java.srcDirs.each { 
+    sourceSets.main.java.srcDirs.each {
         inputs.dir(it)
         args(it, "-d", outputDir)
     }
@@ -97,7 +97,14 @@ tasks.named('jar') {
         attributes 'Main-Class': 'com.ikalagaming.launcher.Launcher'
     }
     from {
-        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        [
+        configurations.compileClasspath.collect {
+        	it.isDirectory() ? it : zipTree(it).matching { exclude 'LICENSE' }
+        },
+        'docs/licenses/',
+        'LICENSE'
+        ]
     }
+    exclude 'META-INF/*'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
