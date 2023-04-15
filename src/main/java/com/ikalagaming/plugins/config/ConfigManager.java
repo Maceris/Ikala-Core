@@ -7,6 +7,7 @@ import com.ikalagaming.plugins.PluginManager;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -121,6 +123,57 @@ public class ConfigManager {
 		PluginConfig cached = ConfigManager.emptyConfig(configName);
 		ConfigManager.configCache.put(cacheName, cached);
 		return cached;
+	}
+
+	/**
+	 * Save the default configuration file to disk, including changes that have
+	 * been made in memory.
+	 *
+	 * @param pluginName The plugin to load configuration for.
+	 */
+	public static void saveConfigToDisk(@NonNull String pluginName) {
+		ConfigManager.saveConfigToDisk(pluginName, ConfigManager.DEFAULT_NAME);
+	}
+
+	/**
+	 * Save a configuration file to disk, including changes that have been made
+	 * in memory.
+	 *
+	 * @param pluginName The plugin to load configuration for.
+	 * @param configName The configuration file to load. Should be of the format
+	 *            like "example.yml".
+	 */
+	public static void saveConfigToDisk(@NonNull String pluginName,
+		@NonNull String configName) {
+
+		final String cacheName =
+			ConfigManager.getCacheName(pluginName, configName);
+
+		PluginConfig config;
+		if (ConfigManager.configCache.containsKey(cacheName)) {
+			config = ConfigManager.configCache.get(cacheName);
+		}
+		else {
+			ConfigManager.log.warn("We don't have a {} config in memory for {}",
+				configName, pluginName);
+			return;
+		}
+
+		File configFile = PluginFolder.getResource(pluginName,
+			ResourceType.CONFIG, configName);
+		try {
+			DumperOptions options = new DumperOptions();
+			options.setIndent(2);
+			options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+			options.setPrettyFlow(true);
+			Yaml yaml = new Yaml(options);
+			Files.writeString(configFile.toPath(),
+				yaml.dump(config.getContents()), StandardOpenOption.WRITE);
+		}
+		catch (IOException e) {
+			ConfigManager.log.warn("Error writing {} config for {} to disk: {}",
+				configName, pluginName, e.getLocalizedMessage());
+		}
 	}
 
 	/**
