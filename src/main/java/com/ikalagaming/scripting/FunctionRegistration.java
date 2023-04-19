@@ -1,4 +1,4 @@
-package com.ikalagaming.scripting.interpreter;
+package com.ikalagaming.scripting;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

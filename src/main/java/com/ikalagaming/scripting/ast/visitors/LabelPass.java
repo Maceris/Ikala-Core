@@ -1,6 +1,5 @@
 package com.ikalagaming.scripting.ast.visitors;
 
-import com.ikalagaming.scripting.VariableTypeMap;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.Label;
@@ -28,7 +27,7 @@ public class LabelPass implements ASTVisitor {
 	 *            traversal.
 	 */
 	public void processLabels(Node root) {
-		if (root.getChildren().size() > 0) {
+		if (!root.getChildren().isEmpty()) {
 			root.getChildren().forEach(this::processLabels);
 		}
 		root.process(this);

@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast;
 
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.IkalaScriptParser.AdditiveExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArgumentListContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccessContext;
@@ -72,6 +73,7 @@ import com.ikalagaming.scripting.IkalaScriptParser.VariableDeclaratorIdContext;
 import com.ikalagaming.scripting.IkalaScriptParser.WhileStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.WhileStatementNoShortIfContext;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -102,10 +104,11 @@ public class AbstractSyntaxTree {
 
 		NumericTypeContext number = node.numericType();
 		if (number == null) {
-			AbstractSyntaxTree.log.warn("Unknown non-numeric primitive type {}",
-				node.getText());
+			final String error = SafeResourceLoader.getString(
+				"UNKNOWN_NON_NUMERIC_TYPE", ScriptManager.getResourceBundle());
+			AbstractSyntaxTree.log.warn(error, node.getText());
 			throw new IllegalArgumentException(
-				"Unknown non-numeric primitive type " + node.getText());
+				SafeResourceLoader.format(error, node.getText()));
 		}
 
 		if (number.INT() != null) {
@@ -117,11 +120,12 @@ public class AbstractSyntaxTree {
 		if (number.DOUBLE() != null) {
 			return Base.DOUBLE;
 		}
+		final String error = SafeResourceLoader.getString(
+			"UNKNOWN_PRIMITIVE_TYPE", ScriptManager.getResourceBundle());
 
-		AbstractSyntaxTree.log.warn("Unknown primitive type {}",
-			node.getText());
+		AbstractSyntaxTree.log.warn(error, node.getText());
 		throw new IllegalArgumentException(
-			"Unknown non-numeric primitive type " + node.getText());
+			SafeResourceLoader.format(error, node.getText()));
 	}
 
 	/**
@@ -158,13 +162,17 @@ public class AbstractSyntaxTree {
 				return Type.identifierArray(arrayType.Identifier().getText(),
 					dims);
 			}
-			AbstractSyntaxTree.log.warn("Unknown array type {}",
-				arrayType.getText());
+			AbstractSyntaxTree.log
+				.warn(
+					SafeResourceLoader.getString("UNKNOWN_ARRAY_TYPE",
+						ScriptManager.getResourceBundle()),
+					arrayType.getText());
 		}
-		AbstractSyntaxTree.log.warn("Unknown reference type {}",
-			node.getText());
+		final String error = SafeResourceLoader.getString(
+			"UNKNOWN_REFERENCE_TYPE", ScriptManager.getResourceBundle());
+		AbstractSyntaxTree.log.warn(error, node.getText());
 		throw new IllegalArgumentException(
-			"Unknown reference type " + node.getText());
+			SafeResourceLoader.format(error, node.getText()));
 	}
 
 	/**
@@ -182,9 +190,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.getType(node.referenceType());
 		}
 
-		AbstractSyntaxTree.log.warn("Unknown type statement {}",
-			node.getText());
-
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_TYPE_STATEMENT",
+				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 
@@ -220,7 +228,8 @@ public class AbstractSyntaxTree {
 			else {
 				// Should be impossible unless the grammar changes
 				AbstractSyntaxTree.log.warn(
-					"Unknown additive operator in expression {}",
+					SafeResourceLoader.getString("UNKNOWN_ADDITIVE_OPERATOR",
+						ScriptManager.getResourceBundle()),
 					node.getText());
 			}
 			result.addChild(
@@ -270,7 +279,9 @@ public class AbstractSyntaxTree {
 			}
 			else {
 				AbstractSyntaxTree.log.warn(
-					"Unknown array access left hand side {}", lhs.getText());
+					SafeResourceLoader.getString("UNKNOWN_ARRAY_LEFT_SIDE",
+						ScriptManager.getResourceBundle()),
+					lhs.getText());
 			}
 		}
 
@@ -301,8 +312,9 @@ public class AbstractSyntaxTree {
 			result.addChild(AbstractSyntaxTree.process(lhs.arrayAccess()));
 		}
 		else {
-			AbstractSyntaxTree.log.warn("Unknown assignment left hand side {}",
-				lhs.getText());
+			AbstractSyntaxTree.log
+				.warn(SafeResourceLoader.getString("UNKNOWN_ASSIGN_LEFT_SIDE",
+					ScriptManager.getResourceBundle()), lhs.getText());
 		}
 
 		result.setOperator(
@@ -402,8 +414,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.label());
 		}
 
-		AbstractSyntaxTree.log.warn("Unknown block statement {}",
-			node.getText());
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_BLOCK_STATEMENT",
+				ScriptManager.getResourceBundle()), node.getText());
 
 		return null;
 	}
@@ -445,7 +458,8 @@ public class AbstractSyntaxTree {
 				AbstractSyntaxTree.process(node.unaryExpressionNotPlusMinus()));
 		}
 		else {
-			AbstractSyntaxTree.log.warn("Unknown cast expresssion {}",
+			AbstractSyntaxTree.log.warn(SafeResourceLoader
+				.getString("UNKNOWN_CAST", ScriptManager.getResourceBundle()),
 				node.getText());
 			return null;
 		}
@@ -646,7 +660,8 @@ public class AbstractSyntaxTree {
 			else {
 				// Should be impossible unless the grammar changes
 				AbstractSyntaxTree.log.warn(
-					"Unknown equality operator in expression {}",
+					SafeResourceLoader.getString("UNKNOWN_EQUALITY_OPERATOR",
+						ScriptManager.getResourceBundle()),
 					node.getText());
 			}
 			result.addChild(
@@ -672,7 +687,9 @@ public class AbstractSyntaxTree {
 		if (node.conditionalExpression() != null) {
 			return AbstractSyntaxTree.process(node.conditionalExpression());
 		}
-		AbstractSyntaxTree.log.warn("Unknown expression {}", node.getText());
+		AbstractSyntaxTree.log.warn(SafeResourceLoader
+			.getString("UNKNOWN_EXPRESSION", ScriptManager.getResourceBundle()),
+			node.getText());
 		return null;
 	}
 
@@ -705,7 +722,9 @@ public class AbstractSyntaxTree {
 		if (node.localVariableDeclaration() != null) {
 			return AbstractSyntaxTree.process(node.localVariableDeclaration());
 		}
-		AbstractSyntaxTree.log.warn("Unknown for init {}", node.getText());
+		AbstractSyntaxTree.log.warn(SafeResourceLoader
+			.getString("UNKNOWN_FOR_INIT", ScriptManager.getResourceBundle()),
+			node.getText());
 		return null;
 	}
 
@@ -722,7 +741,9 @@ public class AbstractSyntaxTree {
 		if (node.enhancedForStatement() != null) {
 			return AbstractSyntaxTree.process(node.enhancedForStatement());
 		}
-		AbstractSyntaxTree.log.warn("Unknown for statement {}", node.getText());
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_FOR_STATEMENT",
+				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 
@@ -741,8 +762,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree
 				.process(node.enhancedForStatementNoShortIf());
 		}
-		AbstractSyntaxTree.log.warn(
-			"Unknown for statement without a short if {}", node.getText());
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_FOR_STATEMENT",
+				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 
@@ -859,8 +881,9 @@ public class AbstractSyntaxTree {
 					Integer.parseInt(node.IntegerLiteral().getText()));
 			}
 			catch (NumberFormatException e) {
-				AbstractSyntaxTree.log.warn("Invalid integer {}",
-					node.getText());
+				AbstractSyntaxTree.log
+					.warn(SafeResourceLoader.getString("INVALID_INT",
+						ScriptManager.getResourceBundle()), node.getText());
 			}
 			result.setType(Type.primitive(Base.INT));
 			return result;
@@ -872,8 +895,9 @@ public class AbstractSyntaxTree {
 					Double.parseDouble(node.FloatingPointLiteral().getText()));
 			}
 			catch (NumberFormatException e) {
-				AbstractSyntaxTree.log.warn("Invalid floating point {}",
-					node.getText());
+				AbstractSyntaxTree.log
+					.warn(SafeResourceLoader.getString("INVALID_FLOAT",
+						ScriptManager.getResourceBundle()), node.getText());
 			}
 			result.setType(Type.primitive(Base.DOUBLE));
 			return result;
@@ -900,7 +924,9 @@ public class AbstractSyntaxTree {
 		if (node.NullLiteral() != null) {
 			return new ConstNull();
 		}
-		AbstractSyntaxTree.log.warn("Unknown constant {}", node.getText());
+		AbstractSyntaxTree.log.warn(SafeResourceLoader
+			.getString("UNKNOWN_CONSTANT", ScriptManager.getResourceBundle()),
+			node.getText());
 		return null;
 	}
 
@@ -1002,9 +1028,9 @@ public class AbstractSyntaxTree {
 			}
 			else {
 				// Should be impossible unless the grammar changes
-				AbstractSyntaxTree.log.warn(
-					"Unknown multiplicative operator in expression {}",
-					node.getText());
+				AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
+					"UNKNOWN_MULTIPLICATIVE_OPERATOR",
+					ScriptManager.getResourceBundle()), node.getText());
 			}
 			result.addChild(
 				AbstractSyntaxTree.process(node.multiplicativeExpression()));
@@ -1154,14 +1180,18 @@ public class AbstractSyntaxTree {
 				}
 				else {
 					// Should be impossible unless the grammar changes
-					AbstractSyntaxTree.log.warn("Unknown primary LHS access {}",
+					AbstractSyntaxTree.log.warn(
+						SafeResourceLoader.getString(
+							"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
+							ScriptManager.getResourceBundle()),
 						arrayLeft.getText());
 				}
 			}
 			else {
 				// Should be impossible unless the grammar changes
-				AbstractSyntaxTree.log.warn("Unknown array access LHS {}",
-					array.getText());
+				AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
+					"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
+					ScriptManager.getResourceBundle()), array.getText());
 			}
 			array.expression().stream().map(AbstractSyntaxTree::process)
 				.forEach(leftNode::addChild);
@@ -1171,8 +1201,9 @@ public class AbstractSyntaxTree {
 		}
 		else {
 			// Should be impossible unless the grammar changes
-			AbstractSyntaxTree.log.warn("Unknown primary expression {}",
-				lhs.getText());
+			AbstractSyntaxTree.log
+				.warn(SafeResourceLoader.getString("UNKNOWN_PRIMARY_EXPRESSION",
+					ScriptManager.getResourceBundle()), lhs.getText());
 		}
 
 		if (node.primary_extension() != null) {
@@ -1247,7 +1278,9 @@ public class AbstractSyntaxTree {
 					}
 					else {
 						AbstractSyntaxTree.log.warn(
-							"Unknown primary extension access {}",
+							SafeResourceLoader.getString(
+								"UNKNOWN_PRIMARY_EXPRESSION_ACCESS",
+								ScriptManager.getResourceBundle()),
 							extension.getText());
 					}
 				}
@@ -1272,7 +1305,10 @@ public class AbstractSyntaxTree {
 					leftNode = newNode;
 				}
 				else {
-					AbstractSyntaxTree.log.warn("Unknown primary extension {}",
+					AbstractSyntaxTree.log.warn(
+						SafeResourceLoader.getString(
+							"UNKNOWN_PRIMARY_EXTENSION",
+							ScriptManager.getResourceBundle()),
 						extension.getText());
 				}
 			}
@@ -1305,7 +1341,8 @@ public class AbstractSyntaxTree {
 			else {
 				// Should be impossible unless the grammar changes
 				AbstractSyntaxTree.log.warn(
-					"Unknown relational operator in expression {}",
+					SafeResourceLoader.getString("UNKNOWN_RELATIONAL_OPERATOR",
+						ScriptManager.getResourceBundle()),
 					node.getText());
 			}
 			result.addChild(
@@ -1345,7 +1382,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.forStatement());
 		}
 
-		AbstractSyntaxTree.log.warn("Unknown statement {}", node.getText());
+		AbstractSyntaxTree.log.warn(SafeResourceLoader
+			.getString("UNKNOWN_STATEMENT", ScriptManager.getResourceBundle()),
+			node.getText());
 		return null;
 	}
 
@@ -1375,8 +1414,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.methodInvocation());
 		}
 
-		AbstractSyntaxTree.log.warn("Unknown statement expression {}",
-			node.getText());
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_STATEMENT_EXPRESSION",
+				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 
@@ -1419,7 +1459,8 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.forStatementNoShortIf());
 		}
 
-		AbstractSyntaxTree.log.warn("Unknown statement with no short if {}",
+		AbstractSyntaxTree.log.warn(SafeResourceLoader
+			.getString("UNKNOWN_STATEMENT", ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1459,8 +1500,8 @@ public class AbstractSyntaxTree {
 			return result;
 		}
 
-		AbstractSyntaxTree.log.warn(
-			"Unknown statement without trailing substatement {}",
+		AbstractSyntaxTree.log.warn(SafeResourceLoader
+			.getString("UNKNOWN_STATEMENT", ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1555,7 +1596,9 @@ public class AbstractSyntaxTree {
 				result.setOperator(ExprArithmetic.Operator.SUB);
 			}
 			else {
-				AbstractSyntaxTree.log.warn("Unknown unary expression {}",
+				AbstractSyntaxTree.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_UNARY_EXPRESSION",
+						ScriptManager.getResourceBundle()),
 					node.getText());
 			}
 			result.addChild(AbstractSyntaxTree.process(node.unaryExpression()));
@@ -1566,8 +1609,9 @@ public class AbstractSyntaxTree {
 				.process(node.unaryExpressionNotPlusMinus());
 		}
 
-		AbstractSyntaxTree.log.warn("Unknown unary expression {}",
-			node.getText());
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_UNARY_EXPRESSION",
+				ScriptManager.getResourceBundle()), node.getText());
 
 		return null;
 	}
@@ -1589,9 +1633,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.castExpression());
 		}
 
-		AbstractSyntaxTree.log.warn(
-			"Unknown unary expression that is not plus or minus {}",
-			node.getText());
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_UNARY_EXPRESSION",
+				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 

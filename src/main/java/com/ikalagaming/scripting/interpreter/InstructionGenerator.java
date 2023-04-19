@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.interpreter;
 
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstInt;
@@ -8,6 +9,7 @@ import com.ikalagaming.scripting.ast.ExprArithmetic.Operator;
 import com.ikalagaming.scripting.ast.Label;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -113,14 +115,13 @@ public class InstructionGenerator implements ASTVisitor {
 				// We assume it's an integer, as that's most common
 				clazz = Integer.class;
 				break;
-			case BOOLEAN:
-			case IDENTIFIER:
-			case LABEL:
-			case VOID:
+			case BOOLEAN, IDENTIFIER, LABEL, VOID:
 			default:
 				// Fallback, but the tree verification should(tm) prevent this
 				clazz = Integer.class;
-				log.warn("Trying to add nodes to get a {}",
+				log.warn(
+					SafeResourceLoader.getString("INVALID_ARITHMETIC_TYPE",
+						ScriptManager.getResourceBundle()),
 					node.getType().toString());
 				break;
 		}
@@ -140,8 +141,7 @@ public class InstructionGenerator implements ASTVisitor {
 				}
 				second = new MemLocation(MemArea.STACK, clazz);
 				break;
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
+			case DEC_PREFIX, DEC_SUFFIX:
 				if (node.getType().anyOf(Base.INT)) {
 					type = InstructionType.SUB_INT;
 				}
@@ -166,8 +166,7 @@ public class InstructionGenerator implements ASTVisitor {
 				}
 				second = new MemLocation(MemArea.STACK, clazz);
 				break;
-			case INC_PREFIX:
-			case INC_SUFFIX:
+			case INC_PREFIX, INC_SUFFIX:
 				if (node.getType().anyOf(Base.INT)) {
 					type = InstructionType.ADD_INT;
 				}
@@ -253,13 +252,13 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @param root The root of the tree to look through.
 	 */
 	private void processLabels(Node root) {
-		if (root.getChildren().size() > 0) {
+		if (!root.getChildren().isEmpty()) {
 			for (Node child : root.getChildren()) {
 				processLabels(child);
 			}
 		}
-		if (root instanceof Label) {
-			labelMap.put(((Label) root).getName(), root);
+		if (root instanceof Label label) {
+			labelMap.put(label.getName(), root);
 		}
 	}
 }

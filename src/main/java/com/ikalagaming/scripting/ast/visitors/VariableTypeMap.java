@@ -1,6 +1,8 @@
-package com.ikalagaming.scripting;
+package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.Type;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +17,7 @@ import java.util.Map;
  *
  */
 @Slf4j
-public class VariableTypeMap {
+class VariableTypeMap {
 	/**
 	 * The default type to return if no mapping exists.
 	 */
@@ -64,7 +66,9 @@ public class VariableTypeMap {
 	 */
 	public void put(@NonNull String variable, @NonNull Type type) {
 		if (this.map.containsKey(variable)) {
-			VariableTypeMap.log.warn("Variable {} already defined", variable);
+			VariableTypeMap.log
+				.warn(SafeResourceLoader.getString("VARIABLE_ALREADY_DEFINED",
+					ScriptManager.getResourceBundle()), variable);
 			this.map.put(variable, VariableTypeMap.DEFAULT);
 		}
 		this.map.put(variable, type);

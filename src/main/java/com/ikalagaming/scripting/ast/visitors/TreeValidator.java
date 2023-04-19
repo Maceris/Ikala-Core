@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
@@ -9,6 +10,7 @@ import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,53 +54,59 @@ public class TreeValidator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprArithmetic node) {
-		if (node.getChildren().size() < 1) {
-			TreeValidator.log.warn("Missing first child for node {}",
-				node.toString());
+		if (node.getChildren().isEmpty()) {
+			TreeValidator.log
+				.warn(SafeResourceLoader.getString("MISSING_FIRST_CHILD",
+					ScriptManager.getResourceBundle()), node.toString());
 			this.valid = false;
 		}
 		final Node firstChild = node.getChildren().get(0);
 		if (firstChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
-			TreeValidator.log.warn("Invalid first child {}",
-				firstChild.toString());
+			TreeValidator.log
+				.warn(
+					SafeResourceLoader.getString("INVALID_FIRST_CHILD",
+						ScriptManager.getResourceBundle()),
+					firstChild.toString());
 			this.valid = false;
 		}
 		if (node.getChildren().size() == 2) {
 			final Node secondChild = node.getChildren().get(1);
 			if (secondChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
-				TreeValidator.log.warn("Invalid second child {}",
+				TreeValidator.log.warn(
+					SafeResourceLoader.getString("INVALID_SECOND_CHILD",
+						ScriptManager.getResourceBundle()),
 					secondChild.toString());
 				this.valid = false;
 			}
 		}
 		switch (node.getOperator()) {
-			case ADD:
-			case SUB:
+			case ADD, SUB:
 				break;
-			case DIV:
-			case MUL:
-			case MOD:
+			case DIV, MUL, MOD:
 				if (node.getChildren().size() < 2) {
-					TreeValidator.log.warn("Missing second child for node {}",
+					TreeValidator.log.warn(
+						SafeResourceLoader.getString("MISSING_SECOND_CHILD",
+							ScriptManager.getResourceBundle()),
 						this.toString());
 					this.valid = false;
 				}
 				break;
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
-			case INC_PREFIX:
-			case INC_SUFFIX:
+			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
 				if (firstChild instanceof ConstChar
 					|| firstChild instanceof ConstDouble
 					|| firstChild instanceof ConstInt) {
-					TreeValidator.log.warn("Can't use operator {} on a {}",
+					TreeValidator.log.warn(
+						SafeResourceLoader.getString("INVALID_OPERATOR",
+							ScriptManager.getResourceBundle()),
 						node.getOperator().toString(),
 						firstChild.getClass().getSimpleName());
 					this.valid = false;
 				}
 				break;
 			default:
-				TreeValidator.log.warn("Unknown operator {}",
+				TreeValidator.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_OPERATOR",
+						ScriptManager.getResourceBundle()),
 					node.getOperator().toString());
 				this.valid = false;
 		}
@@ -107,8 +115,9 @@ public class TreeValidator implements ASTVisitor {
 	@Override
 	public void visit(Identifier node) {
 		if (node.getType().anyOf(Base.VOID)) {
-			TreeValidator.log.warn("Invalid use of variable {}",
-				node.getName());
+			TreeValidator.log
+				.warn(SafeResourceLoader.getString("INVALID_VARIABLE_USE",
+					ScriptManager.getResourceBundle()), node.getName());
 			this.valid = false;
 		}
 	}

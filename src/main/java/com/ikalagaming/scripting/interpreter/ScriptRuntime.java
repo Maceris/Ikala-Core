@@ -1,6 +1,8 @@
 package com.ikalagaming.scripting.interpreter;
 
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.Type;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -119,25 +121,37 @@ public class ScriptRuntime {
 		switch (intended) {
 			case BOOLEAN:
 				if (!memory.isBoolean()) {
-					ScriptRuntime.log.warn("Memory is not a boolean!");
+					ScriptRuntime.log.warn(
+						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+							ScriptManager.getResourceBundle()),
+						intended.toString());
 					this.halt();
 				}
 				break;
 			case CHAR:
 				if (!memory.isChar()) {
-					ScriptRuntime.log.warn("Memory is not a char!");
+					ScriptRuntime.log.warn(
+						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+							ScriptManager.getResourceBundle()),
+						intended.toString());
 					this.halt();
 				}
 				break;
 			case DOUBLE:
 				if (!(memory.isChar() || memory.isInt() || memory.isDouble())) {
-					ScriptRuntime.log.warn("Memory is not a double!");
+					ScriptRuntime.log.warn(
+						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+							ScriptManager.getResourceBundle()),
+						intended.toString());
 					this.halt();
 				}
 				break;
 			case INT:
 				if (!(memory.isChar() || memory.isInt())) {
-					ScriptRuntime.log.warn("Memory is not an int!");
+					ScriptRuntime.log.warn(
+						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+							ScriptManager.getResourceBundle()),
+						intended.toString());
 					this.halt();
 				}
 				break;
@@ -149,7 +163,10 @@ public class ScriptRuntime {
 			case UNKNOWN:
 			case VOID:
 			default:
-				ScriptRuntime.log.warn("Invalid type {}", intended.toString());
+				ScriptRuntime.log.warn(
+					SafeResourceLoader.getString("INVALID_MEMORY_TYPE",
+						ScriptManager.getResourceBundle()),
+					intended.toString());
 				this.halt();
 				break;
 		}
@@ -353,7 +370,9 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			default:
-				ScriptRuntime.log.warn("Unknown instruction {}",
+				ScriptRuntime.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_INSTRUCTION",
+						ScriptManager.getResourceBundle()),
 					i.type().toString());
 				this.halt();
 				break;
@@ -436,7 +455,9 @@ public class ScriptRuntime {
 	private void jump(int location, Function<Integer, Boolean> operator) {
 		if (location < 0 || location > this.instructions.size()) {
 			// instructions.size is for when we want to bail on the program.
-			ScriptRuntime.log.warn("Invalid jump location {}", location);
+			ScriptRuntime.log
+				.warn(SafeResourceLoader.getString("INVALID_JUMP_LOCATION",
+					ScriptManager.getResourceBundle()), location);
 			this.halt();
 			return;
 		}
@@ -459,22 +480,28 @@ public class ScriptRuntime {
 			case IMMEDIATE:
 				return new MemoryItem(from.getClass(), from.value());
 			case STACK:
-				if (this.stack.size() <= 0) {
-					ScriptRuntime.log
-						.warn("Trying to pop more than is on the stack!");
+				if (this.stack.isEmpty()) {
+					ScriptRuntime.log.warn(SafeResourceLoader.getString(
+						"POPPING_TOO_FAR", ScriptManager.getResourceBundle()));
 					this.halt();
 					return null;
 				}
 				return this.stack.pop();
 			case VARIABLE:
 				if (!this.symbolTable.containsKey(from.value())) {
-					ScriptRuntime.log.warn("Unkown variable {}!", from.value());
+					ScriptRuntime.log
+						.warn(
+							SafeResourceLoader.getString("UNKNOWN_VARIABLE",
+								ScriptManager.getResourceBundle()),
+							from.value());
 					this.halt();
 					return null;
 				}
 				return this.symbolTable.get(from.value());
 			default:
-				ScriptRuntime.log.warn("Unknown memory area {}",
+				ScriptRuntime.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_MEMORY_AREA",
+						ScriptManager.getResourceBundle()),
 					from.area().toString());
 				this.halt();
 				return null;
@@ -508,14 +535,17 @@ public class ScriptRuntime {
 			case VARIABLE:
 				final String variable = (String) location.value();
 				if (!this.symbolTable.containsKey(variable)) {
-					ScriptRuntime.log.warn("Invalid variable {}", variable);
+					ScriptRuntime.log
+						.warn(SafeResourceLoader.getString("UNKNOWN_VARIABLE",
+							ScriptManager.getResourceBundle()), variable);
 					this.halt();
 					break;
 				}
 				MemoryItem existingValue = this.symbolTable.get(variable);
 				if (!existingValue.getClass().equals(item.getClass())) {
 					ScriptRuntime.log.warn(
-						"Trying to store the type {} in the variable {}, but it's currently {}",
+						SafeResourceLoader.getString("VARIABLE_TYPE_MISMATCH",
+							ScriptManager.getResourceBundle()),
 						item.getClass().getSimpleName(), variable,
 						existingValue.getClass().getSimpleName());
 					this.halt();
@@ -525,8 +555,11 @@ public class ScriptRuntime {
 				break;
 			case IMMEDIATE:
 			default:
-				ScriptRuntime.log.warn("Invalid memory location {}",
-					location.area());
+				ScriptRuntime.log
+					.warn(
+						SafeResourceLoader.getString("INVALID_MEMORY_LOCATION",
+							ScriptManager.getResourceBundle()),
+						location.area());
 				this.halt();
 				break;
 		}

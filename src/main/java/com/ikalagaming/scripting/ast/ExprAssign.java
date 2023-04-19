@@ -1,5 +1,8 @@
 package com.ikalagaming.scripting.ast;
 
+import com.ikalagaming.scripting.ScriptManager;
+import com.ikalagaming.util.SafeResourceLoader;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
@@ -60,7 +63,9 @@ public class ExprAssign extends Node {
 					return o;
 				}
 			}
-			throw new IllegalArgumentException("Unknown operator " + text);
+			throw new IllegalArgumentException(
+				SafeResourceLoader.getStringFormatted("UNKNOWN_OPERATOR",
+					ScriptManager.getResourceBundle(), text));
 		}
 
 		private final String value;

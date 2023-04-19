@@ -1,4 +1,8 @@
-package com.ikalagaming.scripting.interpreter;
+package com.ikalagaming.scripting;
+
+import com.ikalagaming.localization.Localization;
+
+import lombok.Getter;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -7,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
  * Handles scripting.
@@ -15,6 +20,16 @@ import java.util.Map;
  *
  */
 public class ScriptManager {
+
+	/**
+	 * The current resource bundle for the script manager.
+	 *
+	 * @return The current resource bundle.
+	 */
+	@SuppressWarnings("javadoc")
+	@Getter
+	private static ResourceBundle resourceBundle = ResourceBundle.getBundle(
+		"com.ikalagaming.scripting.Scripting", Localization.getLocale());
 
 	private static List<Class<?>> registeredClasses =
 		Collections.synchronizedList(new ArrayList<>());
@@ -41,8 +56,8 @@ public class ScriptManager {
 
 		for (Method method : clazz.getMethods()) {
 			final int modifiers = method.getModifiers();
-			if (!(Modifier.isStatic(modifiers)
-				|| Modifier.isPublic(modifiers)) || Modifier.isAbstract(modifiers)
+			if (!(Modifier.isStatic(modifiers) || Modifier.isPublic(modifiers))
+				|| Modifier.isAbstract(modifiers)
 				|| Modifier.isInterface(modifiers)) {
 				continue;
 			}
@@ -64,6 +79,14 @@ public class ScriptManager {
 		}
 		ScriptManager.registeredClasses.remove(clazz);
 		ScriptManager.registeredMethods.remove(clazz.getSimpleName());
+	}
+
+	/**
+	 * Private constructor so that this class is not instantiated.
+	 */
+	private ScriptManager() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
 	}
 
 }

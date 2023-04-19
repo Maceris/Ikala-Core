@@ -21,6 +21,27 @@ import java.util.ResourceBundle;
 public class SafeResourceLoader {
 
 	/**
+	 * The arguments are used to replace any "{}" in the string, intended only
+	 * for use in creating messages for exceptions. Strings for logging should
+	 * not use this method, as it is inefficient.
+	 * 
+	 * Intended for when we need to log a string, and also throw an exception
+	 * with the same message.
+	 *
+	 * @param message The message to format.
+	 * @param args The arguments to insert into the string.
+	 * @return The formatted string.
+	 * @see #getStringFormatted(String, ResourceBundle, String...)
+	 */
+	public static String format(String message, String... args) {
+		String temp = message;
+		for (String arg : args) {
+			temp = temp.replaceFirst("\\{\\}", arg);
+		}
+		return temp;
+	}
+
+	/**
 	 * Returns a string from the supplied bundle. Any errors are printed to
 	 * console. If no string is loaded, it attempts to load from the root
 	 * resource bundle. If it fails again, the name is returned.
@@ -155,6 +176,27 @@ public class SafeResourceLoader {
 			SafeResourceLoader.logClassCastException(name, from);
 		}
 		return fallback;
+	}
+
+	/**
+	 * Returns a string from the supplied bundle. Any errors are printed to
+	 * console. If no string is loaded, it attempts to load from the root
+	 * resource bundle. If it fails again, the name is returned.
+	 *
+	 * The arguments are used to replace any "{}" in the string, intended only
+	 * for use in creating messages for exceptions. Strings for logging should
+	 * not use this method, as it is inefficient.
+	 *
+	 * @param name what to get from the bundle
+	 * @param from the bundle to use
+	 * @param args The arguments to insert into the string.
+	 * @return The string from the bundle or name, after formatting.
+	 * @see #format(String, String...)
+	 */
+	public static String getStringFormatted(String name, ResourceBundle from,
+		String... args) {
+		return SafeResourceLoader
+			.format(SafeResourceLoader.getString(name, from), args);
 	}
 
 	private static void logClassCastException(String name, String bundle) {

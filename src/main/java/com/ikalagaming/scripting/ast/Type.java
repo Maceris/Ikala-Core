@@ -1,5 +1,8 @@
 package com.ikalagaming.scripting.ast;
 
+import com.ikalagaming.scripting.ScriptManager;
+import com.ikalagaming.util.SafeResourceLoader;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -73,18 +76,13 @@ public class Type {
 	 */
 	private static void checkForPrimitives(@NonNull Base base) {
 		switch (base) {
-			case BOOLEAN:
-			case CHAR:
-			case DOUBLE:
-			case INT:
-			case STRING:
+			case BOOLEAN, CHAR, DOUBLE, INT, STRING:
 				break;
-			case IDENTIFIER:
-			case UNKNOWN:
-			case VOID:
+			case IDENTIFIER, UNKNOWN, VOID:
 			default:
 				throw new IllegalArgumentException(
-					base.toString() + " is not a primitive type.");
+					SafeResourceLoader.getStringFormatted("NOT_PRIMITIVE",
+						ScriptManager.getResourceBundle(), base.toString()));
 		}
 	}
 

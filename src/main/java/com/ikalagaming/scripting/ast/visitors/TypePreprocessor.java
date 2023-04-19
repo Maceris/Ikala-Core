@@ -1,6 +1,6 @@
 package com.ikalagaming.scripting.ast.visitors;
 
-import com.ikalagaming.scripting.VariableTypeMap;
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.ArrayAccess;
 import com.ikalagaming.scripting.ast.Block;
@@ -17,6 +17,7 @@ import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.scripting.ast.VarDeclarationList;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,17 +70,14 @@ public class TypePreprocessor implements ASTVisitor {
 			this.variableMaps.push(this.variableMaps.peek().clone());
 		}
 
-		if (root.getChildren().size() > 0) {
+		if (!root.getChildren().isEmpty()) {
 			for (int i = 0; i < root.getChildren().size(); ++i) {
 				Node child = root.getChildren().get(i);
-				if (root instanceof Call) {
-					Call call = (Call) root;
-					if (!call.isPrimary() && i == 0
-						|| call.isPrimary() && i == 1) {
-						// Skip the method name lookup
-						child.setType(Type.unknownType());
-						continue;
-					}
+				if (root instanceof Call call && (!call.isPrimary() && i == 0
+					|| call.isPrimary() && i == 1)) {
+					// Skip the method name lookup
+					child.setType(Type.unknownType());
+					continue;
 				}
 
 				this.processTypes(child);
@@ -101,9 +99,10 @@ public class TypePreprocessor implements ASTVisitor {
 
 	@Override
 	public void visit(ExprArithmetic node) {
-		if (node.getChildren().size() < 1) {
-			TypePreprocessor.log.warn("Missing child for node {}",
-				this.toString());
+		if (node.getChildren().isEmpty()) {
+			TypePreprocessor.log
+				.warn(SafeResourceLoader.getString("MISSING_FIRST_CHILD",
+					ScriptManager.getResourceBundle()), this.toString());
 			return;
 		}
 		final Type firstType = node.getChildren().get(0).getType();
@@ -117,13 +116,15 @@ public class TypePreprocessor implements ASTVisitor {
 		}
 
 		switch (node.getOperator()) {
-			case DIV:
-			case MUL:
+			case DIV, MUL:
 				if (node.getChildren().size() < 2) {
 					TypePreprocessor.log.warn(
-						"Missing second child for node {}", this.toString());
+						SafeResourceLoader.getString("MISSING_SECOND_CHILD",
+							ScriptManager.getResourceBundle()),
+						this.toString());
 					return;
 				}
+				// fallthrough
 			case ADD:
 				if (node.getChildren().size() > 1
 					&& firstType.anyOf(Base.STRING) && !secondType
@@ -139,6 +140,7 @@ public class TypePreprocessor implements ASTVisitor {
 					node.setType(secondType);
 					return;
 				}
+				// fallthrough
 			case SUB:
 				if (node.getChildren().size() < 2) {
 					node.setType(firstType);
@@ -148,7 +150,9 @@ public class TypePreprocessor implements ASTVisitor {
 				if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)
 					|| secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER,
 						Base.VOID)) {
-					TypePreprocessor.log.warn("Invalid types {} {} {}",
+					TypePreprocessor.log.warn(
+						SafeResourceLoader.getString("INVALID_TYPES",
+							ScriptManager.getResourceBundle()),
 						firstType.toString(), node.getOperator().getReadable(),
 						secondType.toString());
 					return;
@@ -183,27 +187,29 @@ public class TypePreprocessor implements ASTVisitor {
 					break;
 				}
 				TypePreprocessor.log.warn(
-					"Cannot automatically cast types {} and {}",
+					SafeResourceLoader.getString("INVALID_CAST",
+						ScriptManager.getResourceBundle()),
 					firstType.toString(), secondType.toString());
 				break;
 
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
-			case INC_PREFIX:
-			case INC_SUFFIX:
+			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
 				if (firstType.anyOf(Base.INT, Base.CHAR, Base.DOUBLE,
 					Base.UNKNOWN)) {
 					node.setType(firstType);
 				}
 				else {
-					TypePreprocessor.log.warn("Invalid type {}",
-						firstType.toString());
+					TypePreprocessor.log.warn(
+						SafeResourceLoader.getString("INVALID_OPERATOR",
+							ScriptManager.getResourceBundle()),
+						node.getOperator().toString(), firstType.toString());
 				}
 				break;
 			case MOD:
 				if (node.getChildren().size() < 2) {
 					TypePreprocessor.log.warn(
-						"Missing second child for node {}", this.toString());
+						SafeResourceLoader.getString("MISSING_SECOND_CHILD",
+							ScriptManager.getResourceBundle()),
+						this.toString());
 					return;
 				}
 				if ((firstType.anyOf(Base.INT)
@@ -221,11 +227,14 @@ public class TypePreprocessor implements ASTVisitor {
 					break;
 				}
 				TypePreprocessor.log.warn(
-					"Cannot automatically cast types {} and {}",
+					SafeResourceLoader.getString("INVALID_CAST",
+						ScriptManager.getResourceBundle()),
 					firstType.toString(), secondType.toString());
 				break;
 			default:
-				TypePreprocessor.log.warn("Unknown operator {}",
+				TypePreprocessor.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_OPERATOR",
+						ScriptManager.getResourceBundle()),
 					node.getOperator().toString());
 				break;
 		}
@@ -276,8 +285,9 @@ public class TypePreprocessor implements ASTVisitor {
 			}
 		}
 
-		TypePreprocessor.log.warn("Non-matching types {} and {}", ifTrue,
-			ifFalse);
+		TypePreprocessor.log.warn(SafeResourceLoader
+			.getString("NON_MATCHING_TYPES", ScriptManager.getResourceBundle()),
+			ifTrue, ifFalse);
 	}
 
 	@Override

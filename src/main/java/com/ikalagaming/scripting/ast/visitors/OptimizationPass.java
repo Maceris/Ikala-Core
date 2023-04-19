@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
@@ -9,6 +10,7 @@ import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +22,15 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class OptimizationPass implements ASTVisitor {
+
+	/**
+	 * Used for localization.
+	 */
+	private static final String INVALID_CONSTANT = "INVALID_CONSTANT";
+	/**
+	 * Used for localization.
+	 */
+	private static final String INVALID_OPERATOR = "INVALID_OPERATOR";
 
 	/**
 	 * Optimize the syntax tree.
@@ -39,15 +50,14 @@ public class OptimizationPass implements ASTVisitor {
 		for (int i = 0; i < node.getChildren().size(); ++i) {
 			Node child = node.getChildren().get(i);
 			this.processTree(child);
-			if (child instanceof ExprArithmetic) {
+			if (child instanceof ExprArithmetic expr) {
 				/*
 				 * We might need to replace this node with a constant after
 				 * processing the children. This will recursively calculate
 				 * constant expressions and allows final variable replacements.
 				 */
 				// replace the node
-				node.getChildren().set(i,
-					this.simplify((ExprArithmetic) child));
+				node.getChildren().set(i, this.simplify(expr));
 			}
 		}
 		node.process(this);
@@ -107,44 +117,48 @@ public class OptimizationPass implements ASTVisitor {
 		char firstValue;
 		char secondValue;
 
-		if (firstChild instanceof ConstInt) {
-			int value = ((ConstInt) firstChild).getValue();
+		if (firstChild instanceof ConstInt convertedFirst) {
+			int value = convertedFirst.getValue();
 			// Good luck
 			firstValue = (char) value;
 		}
-		else if (firstChild instanceof ConstDouble) {
-			double value = ((ConstDouble) firstChild).getValue();
+		else if (firstChild instanceof ConstDouble convertedFirst) {
+			double value = convertedFirst.getValue();
 			// Good luck
 			firstValue = (char) value;
 		}
-		else if (firstChild instanceof ConstChar) {
-			char value = ((ConstChar) firstChild).getValue();
+		else if (firstChild instanceof ConstChar convertedFirst) {
+			char value = convertedFirst.getValue();
 			// Already a char
 			firstValue = value;
 		}
 		else {
-			OptimizationPass.log.warn("Invalid constant {}",
+			OptimizationPass.log.warn(
+				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
+					ScriptManager.getResourceBundle()),
 				firstChild.toString());
 			return node;
 		}
 
-		if (secondChild instanceof ConstInt) {
-			int value = ((ConstInt) secondChild).getValue();
+		if (secondChild instanceof ConstInt convertedSecond) {
+			int value = convertedSecond.getValue();
 			// Good luck
 			secondValue = (char) value;
 		}
-		else if (secondChild instanceof ConstDouble) {
-			double value = ((ConstDouble) secondChild).getValue();
+		else if (secondChild instanceof ConstDouble convertedSecond) {
+			double value = convertedSecond.getValue();
 			// Good luck
 			secondValue = (char) value;
 		}
-		else if (secondChild instanceof ConstChar) {
-			char value = ((ConstChar) secondChild).getValue();
+		else if (secondChild instanceof ConstChar convertedSecond) {
+			char value = convertedSecond.getValue();
 			// Already a char
 			secondValue = value;
 		}
 		else {
-			OptimizationPass.log.warn("Invalid constant {}",
+			OptimizationPass.log.warn(
+				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
+					ScriptManager.getResourceBundle()),
 				secondChild.toString());
 			return node;
 		}
@@ -153,16 +167,6 @@ public class OptimizationPass implements ASTVisitor {
 		result.setType(Type.primitive(Base.CHAR));
 
 		switch (node.getOperator()) {
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
-			case INC_PREFIX:
-			case INC_SUFFIX:
-			default:
-				// Can't happen, but let's cover it anyway
-				OptimizationPass.log.warn("Can't use operator {} on a {}",
-					node.getOperator().toString(),
-					firstChild.getClass().getSimpleName());
-				return node;
 			case ADD:
 				result.setValue((char) (firstValue + secondValue));
 				break;
@@ -178,6 +182,16 @@ public class OptimizationPass implements ASTVisitor {
 			case SUB:
 				result.setValue((char) (firstValue - secondValue));
 				break;
+			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+			default:
+				// Can't happen, but let's cover it anyway
+				OptimizationPass.log.warn(
+					SafeResourceLoader.getString(
+						OptimizationPass.INVALID_OPERATOR,
+						ScriptManager.getResourceBundle()),
+					node.getOperator().toString(),
+					firstChild.getClass().getSimpleName());
+				return node;
 		}
 
 		return result;
@@ -196,44 +210,48 @@ public class OptimizationPass implements ASTVisitor {
 		double firstValue;
 		double secondValue;
 
-		if (firstChild instanceof ConstInt) {
-			int value = ((ConstInt) firstChild).getValue();
+		if (firstChild instanceof ConstInt convertedFirst) {
+			int value = convertedFirst.getValue();
 			// Fits fine
 			firstValue = value;
 		}
-		else if (firstChild instanceof ConstDouble) {
-			double value = ((ConstDouble) firstChild).getValue();
+		else if (firstChild instanceof ConstDouble convertedFirst) {
+			double value = convertedFirst.getValue();
 			// Already a double
 			firstValue = value;
 		}
-		else if (firstChild instanceof ConstChar) {
-			char value = ((ConstChar) firstChild).getValue();
+		else if (firstChild instanceof ConstChar convertedFirst) {
+			char value = convertedFirst.getValue();
 			// Fits fine
 			firstValue = value;
 		}
 		else {
-			OptimizationPass.log.warn("Invalid constant {}",
+			OptimizationPass.log.warn(
+				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
+					ScriptManager.getResourceBundle()),
 				firstChild.toString());
 			return node;
 		}
 
-		if (secondChild instanceof ConstInt) {
-			int value = ((ConstInt) secondChild).getValue();
+		if (secondChild instanceof ConstInt convertedSecond) {
+			int value = convertedSecond.getValue();
 			// Fits fine
 			secondValue = value;
 		}
-		else if (secondChild instanceof ConstDouble) {
-			double value = ((ConstDouble) secondChild).getValue();
+		else if (secondChild instanceof ConstDouble convertedSecond) {
+			double value = convertedSecond.getValue();
 			// Already a double
 			secondValue = value;
 		}
-		else if (secondChild instanceof ConstChar) {
-			char value = ((ConstChar) secondChild).getValue();
+		else if (secondChild instanceof ConstChar convertedSecond) {
+			char value = convertedSecond.getValue();
 			// Fits fine
 			secondValue = value;
 		}
 		else {
-			OptimizationPass.log.warn("Invalid constant {}",
+			OptimizationPass.log.warn(
+				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
+					ScriptManager.getResourceBundle()),
 				secondChild.toString());
 			return node;
 		}
@@ -242,16 +260,6 @@ public class OptimizationPass implements ASTVisitor {
 		result.setType(Type.primitive(Base.DOUBLE));
 
 		switch (node.getOperator()) {
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
-			case INC_PREFIX:
-			case INC_SUFFIX:
-			default:
-				// Can't happen, but let's cover it anyway
-				OptimizationPass.log.warn("Can't use operator {} on a {}",
-					node.getOperator().toString(),
-					firstChild.getClass().getSimpleName());
-				return node;
 			case ADD:
 				result.setValue(firstValue + secondValue);
 				break;
@@ -267,6 +275,16 @@ public class OptimizationPass implements ASTVisitor {
 			case SUB:
 				result.setValue(firstValue - secondValue);
 				break;
+			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+			default:
+				// Can't happen, but let's cover it anyway
+				OptimizationPass.log.warn(
+					SafeResourceLoader.getString(
+						OptimizationPass.INVALID_OPERATOR,
+						ScriptManager.getResourceBundle()),
+					node.getOperator().toString(),
+					firstChild.getClass().getSimpleName());
+				return node;
 		}
 
 		return result;
@@ -285,44 +303,48 @@ public class OptimizationPass implements ASTVisitor {
 		int firstValue;
 		int secondValue;
 
-		if (firstChild instanceof ConstInt) {
-			int value = ((ConstInt) firstChild).getValue();
+		if (firstChild instanceof ConstInt convertedFirst) {
+			int value = convertedFirst.getValue();
 			// Already an int
 			firstValue = value;
 		}
-		else if (firstChild instanceof ConstDouble) {
-			double value = ((ConstDouble) firstChild).getValue();
+		else if (firstChild instanceof ConstDouble convertedFirst) {
+			double value = convertedFirst.getValue();
 			// Truncate
 			firstValue = (int) value;
 		}
-		else if (firstChild instanceof ConstChar) {
-			char value = ((ConstChar) firstChild).getValue();
+		else if (firstChild instanceof ConstChar convertedFirst) {
+			char value = convertedFirst.getValue();
 			// Fits fine
 			firstValue = value;
 		}
 		else {
-			OptimizationPass.log.warn("Invalid constant {}",
+			OptimizationPass.log.warn(
+				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
+					ScriptManager.getResourceBundle()),
 				firstChild.toString());
 			return node;
 		}
 
-		if (secondChild instanceof ConstInt) {
-			int value = ((ConstInt) secondChild).getValue();
+		if (secondChild instanceof ConstInt convertedSecond) {
+			int value = convertedSecond.getValue();
 			// Already an int
 			secondValue = value;
 		}
-		else if (secondChild instanceof ConstDouble) {
-			double value = ((ConstDouble) secondChild).getValue();
+		else if (secondChild instanceof ConstDouble convertedSecond) {
+			double value = convertedSecond.getValue();
 			// Truncate
 			secondValue = (int) value;
 		}
-		else if (secondChild instanceof ConstChar) {
-			char value = ((ConstChar) secondChild).getValue();
+		else if (secondChild instanceof ConstChar convertedSecond) {
+			char value = convertedSecond.getValue();
 			// Fits fine
 			secondValue = value;
 		}
 		else {
-			OptimizationPass.log.warn("Invalid constant {}",
+			OptimizationPass.log.warn(
+				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
+					ScriptManager.getResourceBundle()),
 				secondChild.toString());
 			return node;
 		}
@@ -331,16 +353,6 @@ public class OptimizationPass implements ASTVisitor {
 		result.setType(Type.primitive(Base.INT));
 
 		switch (node.getOperator()) {
-			case DEC_PREFIX:
-			case DEC_SUFFIX:
-			case INC_PREFIX:
-			case INC_SUFFIX:
-			default:
-				// Can't happen, but let's cover it anyway
-				OptimizationPass.log.warn("Can't use operator {} on a {}",
-					node.getOperator().toString(),
-					firstChild.getClass().getSimpleName());
-				return node;
 			case ADD:
 				result.setValue(firstValue + secondValue);
 				break;
@@ -356,6 +368,16 @@ public class OptimizationPass implements ASTVisitor {
 			case SUB:
 				result.setValue(firstValue - secondValue);
 				break;
+			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+			default:
+				// Can't happen, but let's cover it anyway
+				OptimizationPass.log.warn(
+					SafeResourceLoader.getString(
+						OptimizationPass.INVALID_OPERATOR,
+						ScriptManager.getResourceBundle()),
+					node.getOperator().toString(),
+					firstChild.getClass().getSimpleName());
+				return node;
 		}
 
 		return result;

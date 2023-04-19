@@ -453,7 +453,7 @@ public class PluginManager {
 					.contains(next))
 				.filter(entry -> PluginState.ENABLED
 					.equals(entry.getValue().getState()))
-				.map(Entry::getKey).collect(Collectors.toList());
+				.map(Entry::getKey).toList();
 
 			for (String dependent : dependents) {
 				if (processingQueue.contains(dependent)
@@ -635,7 +635,7 @@ public class PluginManager {
 		return this.pluginDetails.keySet().stream()
 			.filter(
 				name -> state.equals(this.pluginDetails.get(name).getState()))
-			.collect(Collectors.toList());
+			.toList();
 	}
 
 	/**
