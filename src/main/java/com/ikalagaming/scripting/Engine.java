@@ -1,5 +1,7 @@
 package com.ikalagaming.scripting;
 
+import com.ikalagaming.util.SafeResourceLoader;
+
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -66,8 +68,8 @@ public class Engine {
 		Engine.registeredClasses.add(clazz);
 		ScriptEngine engine = Engine.getLuaEngine();
 		engine.put(clazz.getSimpleName(), clazz);
-		Engine.log.debug("Registered class {} for scripting",
-			clazz.getSimpleName());
+		Engine.log.debug(SafeResourceLoader.getString("REGISTERED_CLASS",
+			ScriptManager.getResourceBundle()), clazz.getSimpleName());
 	}
 
 	/**
@@ -82,13 +84,16 @@ public class Engine {
 		}
 		ScriptEngine engine = Engine.getLuaEngine();
 		engine.put(clazz.getSimpleName(), null);
-		Engine.log.debug("Unregistered class {} for scripting",
-			clazz.getSimpleName());
+		Engine.log.debug(SafeResourceLoader.getString("UNREGISTERED_CLASS",
+			ScriptManager.getResourceBundle()), clazz.getSimpleName());
 	}
 
 	/**
 	 * Private method so this class is not instantiated.
 	 */
-	private Engine() {}
+	private Engine() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
+	}
 
 }
