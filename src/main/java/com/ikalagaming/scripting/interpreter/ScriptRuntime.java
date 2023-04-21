@@ -12,8 +12,10 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.BinaryOperator;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntPredicate;
 
 /**
  * A runtime environment for a script, equivalent to a small VM or Turing
@@ -66,8 +68,7 @@ public class ScriptRuntime {
 	 * @param i The instruction.
 	 * @param operation The operation to perform on the two numbers.
 	 */
-	private void charMath(Instruction i,
-		BiFunction<Character, Character, Character> operation) {
+	private void charMath(Instruction i, BinaryOperator<Character> operation) {
 
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
@@ -88,7 +89,8 @@ public class ScriptRuntime {
 		char secondNumber;
 
 		if (firstLocation.isChar()) {
-			final char unboxed = (Character) firstItem.value();
+			// If memory was null, we would have returned by now
+			final char unboxed = (Character) firstItem.value();// NOSONAR
 			firstNumber = unboxed;
 		}
 		else {
@@ -97,7 +99,7 @@ public class ScriptRuntime {
 		}
 
 		if (secondLocation.isChar()) {
-			final char unboxed = (Character) secondItem.value();
+			final char unboxed = (Character) secondItem.value();// NOSONAR
 			secondNumber = unboxed;
 		}
 		else {
@@ -118,11 +120,12 @@ public class ScriptRuntime {
 	 * @param intended The type we are expecting to see or at least cast to.
 	 */
 	private void checkType(MemLocation memory, Type.Base intended) {
+		final String MEMORY_MISMATCH = "MEMORY_TYPE_MISMATCH";
 		switch (intended) {
 			case BOOLEAN:
 				if (!memory.isBoolean()) {
 					ScriptRuntime.log.warn(
-						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+						SafeResourceLoader.getString(MEMORY_MISMATCH,
 							ScriptManager.getResourceBundle()),
 						intended.toString());
 					this.halt();
@@ -131,7 +134,7 @@ public class ScriptRuntime {
 			case CHAR:
 				if (!memory.isChar()) {
 					ScriptRuntime.log.warn(
-						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+						SafeResourceLoader.getString(MEMORY_MISMATCH,
 							ScriptManager.getResourceBundle()),
 						intended.toString());
 					this.halt();
@@ -140,7 +143,7 @@ public class ScriptRuntime {
 			case DOUBLE:
 				if (!(memory.isChar() || memory.isInt() || memory.isDouble())) {
 					ScriptRuntime.log.warn(
-						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+						SafeResourceLoader.getString(MEMORY_MISMATCH,
 							ScriptManager.getResourceBundle()),
 						intended.toString());
 					this.halt();
@@ -149,7 +152,7 @@ public class ScriptRuntime {
 			case INT:
 				if (!(memory.isChar() || memory.isInt())) {
 					ScriptRuntime.log.warn(
-						SafeResourceLoader.getString("MEMORY_TYPE_MISMATCH",
+						SafeResourceLoader.getString(MEMORY_MISMATCH,
 							ScriptManager.getResourceBundle()),
 						intended.toString());
 					this.halt();
@@ -158,10 +161,7 @@ public class ScriptRuntime {
 			case STRING:
 				// We can cast pretty much anything to string, so ignore this
 				break;
-			case LABEL:
-			case IDENTIFIER:
-			case UNKNOWN:
-			case VOID:
+			case LABEL, IDENTIFIER, UNKNOWN, VOID:
 			default:
 				ScriptRuntime.log.warn(
 					SafeResourceLoader.getString("INVALID_MEMORY_TYPE",
@@ -178,8 +178,7 @@ public class ScriptRuntime {
 	 * @param i The instruction.
 	 * @param operation The operation to perform on the two numbers.
 	 */
-	private void doubleMath(Instruction i,
-		BiFunction<Double, Double, Double> operation) {
+	private void doubleMath(Instruction i, DoubleBinaryOperator operation) {
 
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
@@ -200,14 +199,15 @@ public class ScriptRuntime {
 		double secondNumber;
 
 		if (firstLocation.isDouble()) {
-			firstNumber = (Double) firstItem.value();
+			// If memory was null, we would have returned by now
+			firstNumber = (Double) firstItem.value();// NOSONAR
 		}
 		else if (firstLocation.isInt()) {
-			final int unboxed = (Integer) firstItem.value();
+			final int unboxed = (Integer) firstItem.value();// NOSONAR
 			firstNumber = unboxed;
 		}
 		else if (firstLocation.isChar()) {
-			final char unboxed = (Character) firstItem.value();
+			final char unboxed = (Character) firstItem.value();// NOSONAR
 			firstNumber = unboxed;
 		}
 		else {
@@ -216,14 +216,14 @@ public class ScriptRuntime {
 		}
 
 		if (secondLocation.isDouble()) {
-			secondNumber = (Double) secondItem.value();
+			secondNumber = (Double) secondItem.value();// NOSONAR
 		}
 		else if (secondLocation.isInt()) {
-			final int unboxed = (Integer) secondItem.value();
+			final int unboxed = (Integer) secondItem.value();// NOSONAR
 			secondNumber = unboxed;
 		}
 		else if (secondLocation.isChar()) {
-			final char unboxed = (Character) secondItem.value();
+			final char unboxed = (Character) secondItem.value();// NOSONAR
 			secondNumber = unboxed;
 		}
 
@@ -233,7 +233,7 @@ public class ScriptRuntime {
 		}
 
 		MemoryItem result = new MemoryItem(Double.class,
-			operation.apply(firstNumber, secondNumber));
+			operation.applyAsDouble(firstNumber, secondNumber));
 
 		this.storeValue(result, i.targetLocation());
 	}
@@ -393,8 +393,7 @@ public class ScriptRuntime {
 	 * @param i The instruction.
 	 * @param operation The operation to perform on the two numbers.
 	 */
-	private void intMath(Instruction i,
-		BiFunction<Integer, Integer, Integer> operation) {
+	private void intMath(Instruction i, IntBinaryOperator operation) {
 
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
@@ -415,10 +414,11 @@ public class ScriptRuntime {
 		int secondNumber;
 
 		if (firstLocation.isInt()) {
-			firstNumber = (Integer) firstItem.value();
+			// If memory was null, we would have returned by now
+			firstNumber = (Integer) firstItem.value();// NOSONAR
 		}
 		else if (firstLocation.isChar()) {
-			final char unboxed = (Character) firstItem.value();
+			final char unboxed = (Character) firstItem.value();// NOSONAR
 			firstNumber = unboxed;
 		}
 		else {
@@ -427,10 +427,10 @@ public class ScriptRuntime {
 		}
 
 		if (secondLocation.isInt()) {
-			secondNumber = (Integer) secondItem.value();
+			secondNumber = (Integer) secondItem.value();// NOSONAR
 		}
 		else if (secondLocation.isChar()) {
-			final char unboxed = (Character) secondItem.value();
+			final char unboxed = (Character) secondItem.value();// NOSONAR
 			secondNumber = unboxed;
 		}
 		else {
@@ -439,7 +439,7 @@ public class ScriptRuntime {
 		}
 
 		MemoryItem result = new MemoryItem(Integer.class,
-			operation.apply(firstNumber, secondNumber));
+			operation.applyAsInt(firstNumber, secondNumber));
 
 		this.storeValue(result, i.targetLocation());
 	}
@@ -452,7 +452,7 @@ public class ScriptRuntime {
 	 * @param location The location to jump to.
 	 * @param operator The function that determines if we should jump.
 	 */
-	private void jump(int location, Function<Integer, Boolean> operator) {
+	private void jump(int location, IntPredicate operator) {
 		if (location < 0 || location > this.instructions.size()) {
 			// instructions.size is for when we want to bail on the program.
 			ScriptRuntime.log
@@ -461,7 +461,7 @@ public class ScriptRuntime {
 			this.halt();
 			return;
 		}
-		if (operator.apply(this.lastComparison)) {
+		if (operator.test(this.lastComparison)) {
 			this.programCounter = location;
 		}
 		else {
