@@ -267,21 +267,13 @@ public class PluginManager {
 					 */
 					stillEvaluatingChildren = true;
 					break;
-				case DEPS_SATISFIED:
-				case DISABLED:
-				case DISABLING:
-				case DISCOVERED:
-				case ENABLED:
-				case ENABLING:
-				case LOADING:
+				case DEPS_SATISFIED, DISABLED, DISABLING, DISCOVERED, ENABLED,
+					ENABLING, LOADING:
 					// satisfied, we can keep going
 					break;
-				case DEPS_MISSING:
+				case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL,
+					UNLOADING:
 					// propagate the failure up
-				case CORRUPTED:
-				case NOT_LOADED:
-				case PENDING_REMOVAL:
-				case UNLOADING:
 					/*
 					 * Not satisfied or won't be, impossible to load so we just
 					 * bail out of the method immediately
@@ -453,7 +445,8 @@ public class PluginManager {
 					.contains(next))
 				.filter(entry -> PluginState.ENABLED
 					.equals(entry.getValue().getState()))
-				.map(Entry::getKey).toList();
+				.map(Entry::getKey)
+				.collect(Collectors.toCollection(ArrayList::new));
 
 			for (String dependent : dependents) {
 				if (processingQueue.contains(dependent)
@@ -635,7 +628,7 @@ public class PluginManager {
 		return this.pluginDetails.keySet().stream()
 			.filter(
 				name -> state.equals(this.pluginDetails.get(name).getState()))
-			.toList();
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/**
@@ -828,21 +821,11 @@ public class PluginManager {
 			return false;
 		}
 		switch (details.getState()) {
-			case CORRUPTED:
-			case DEPS_CHECKING:
-			case DEPS_MISSING:
-			case DEPS_SATISFIED:
-			case DISABLED:
-			case DISABLING:
-			case DISCOVERED:
-			case ENABLED:
-			case ENABLING:
-			case LOADING:
+			case CORRUPTED, DEPS_CHECKING, DEPS_MISSING, DEPS_SATISFIED,
+				DISABLED, DISABLING, DISCOVERED, ENABLED, ENABLING, LOADING:
 				return true;
+			case UNLOADING, PENDING_REMOVAL, NOT_LOADED:
 			default:
-			case UNLOADING:
-			case PENDING_REMOVAL:
-			case NOT_LOADED:
 				return false;
 		}
 	}
@@ -1479,11 +1462,8 @@ public class PluginManager {
 							queue.add(child);
 						}
 						break;
-					case DEPS_MISSING:
-					case CORRUPTED:
-					case NOT_LOADED:
-					case PENDING_REMOVAL:
-					case UNLOADING:
+					case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL,
+						UNLOADING:
 						// propagate failure up to the root and bail
 						this.setPluginState(currentNode.getName(),
 							PluginState.DEPS_MISSING);
@@ -1494,13 +1474,8 @@ public class PluginManager {
 							parent = parent.getParent();
 						}
 						return;
-					case DEPS_SATISFIED:
-					case DISABLED:
-					case DISABLING:
-					case DISCOVERED:
-					case ENABLED:
-					case ENABLING:
-					case LOADING:
+					case DEPS_SATISFIED, DISABLED, DISABLING, DISCOVERED,
+						ENABLED, ENABLING, LOADING:
 					default:
 						// satisfied, we don't need to do anything here
 						break;
@@ -1728,7 +1703,8 @@ public class PluginManager {
 			List<String> dependents = pluginDetails.entrySet().stream()
 				.filter(entry -> entry.getValue().getInfo().getDependencies()
 					.contains(next))
-				.map(Entry::getKey).collect(Collectors.toList());
+				.map(Entry::getKey)
+				.collect(Collectors.toCollection(ArrayList::new));
 
 			for (String dependent : dependents) {
 				if (processingQueue.contains(dependent)
