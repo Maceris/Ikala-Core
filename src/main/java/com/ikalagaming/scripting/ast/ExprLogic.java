@@ -60,8 +60,7 @@ public class ExprLogic extends Node {
 
 		result.append(" { ");
 		switch (this.operator) {
-			case AND:
-			case OR:
+			case AND, OR:
 				result.append(this.children.get(0).toString());
 				result.append(' ');
 				result.append(this.operator.value);
