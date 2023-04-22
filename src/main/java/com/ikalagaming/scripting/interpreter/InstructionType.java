@@ -36,6 +36,10 @@ public enum InstructionType {
 	 */
 	CMP,
 	/**
+	 * Compare whether two values are equal.
+	 */
+	CMP_EQ,
+	/**
 	 * Add one string to another.
 	 */
 	CONCAT_STRING,
