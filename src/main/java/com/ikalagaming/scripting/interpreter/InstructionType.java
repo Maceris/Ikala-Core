@@ -6,7 +6,7 @@ package com.ikalagaming.scripting.interpreter;
  * @author Ches Burks
  *
  */
-enum InstructionType {
+public enum InstructionType {
 	/**
 	 * Add one character to another.
 	 */

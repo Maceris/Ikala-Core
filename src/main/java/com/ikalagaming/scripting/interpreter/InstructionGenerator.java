@@ -69,11 +69,9 @@ public class InstructionGenerator implements ASTVisitor {
 
 		this.processTree(ast);
 
-		tempInstructions.forEach(System.out::println);
-
 		// generate temporary instructions
 
-		return processJumps(tempInstructions2);
+		return processJumps(tempInstructions);
 	}
 
 	private void processTree(Node node) {

@@ -238,10 +238,35 @@ public class ScriptRuntime {
 		this.storeValue(result, i.targetLocation());
 	}
 
+	/**
+	 * Compares two things.
+	 * 
+	 * When comparing numbers: If the first number is less than the second, this
+	 * will be -1. If they are equal, it will be 0. If the first number is
+	 * greater than the second, this will be 1. If two items are not equal, this
+	 * will be nonzero.
+	 * 
+	 * @param i
+	 */
 	private void compare(Instruction i) {
 		// TODO complete
+		final MemLocation firstLocation = i.firstLocation();
+		final MemLocation secondLocation = i.secondLocation();
 
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+		final MemoryItem secondItem = this.loadValue(secondLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+		
 	}
+	
+	private void compareInts() {}
+	private void compareDoubles(){}
+	private void compareChars() {}
+	private void compareBooleans() {}
+	private void compareStrings() {}
 
 	private void execute(Instruction i) {
 		switch (i.type()) {

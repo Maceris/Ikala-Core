@@ -6,7 +6,7 @@ package com.ikalagaming.scripting.interpreter;
  * @author Ches Burks
  *
  */
-enum MemArea {
+public enum MemArea {
 	/**
 	 * An item stored on the stack.
 	 */

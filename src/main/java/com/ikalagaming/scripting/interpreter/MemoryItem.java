@@ -13,7 +13,7 @@ import lombok.NonNull;
  * @param type The type of the object, since it gets erased.
  * @param value The actual object.
  */
-record MemoryItem(@NonNull Class<?> type, @NonNull Object value) {
+public record MemoryItem(@NonNull Class<?> type, @NonNull Object value) {
 	/**
 	 * Construct without specifying the type.
 	 *

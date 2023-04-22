@@ -10,7 +10,7 @@ import lombok.NonNull;
  * @param type The type of the contents of this memory.
  * @param value The literal value, null if this is not an immediate value.
  */
-record MemLocation(@NonNull MemArea area, @NonNull Class<?> type,
+public record MemLocation(@NonNull MemArea area, @NonNull Class<?> type,
 	Object value) {
 	/**
 	 * Construct a new memory location without an immediate value.
