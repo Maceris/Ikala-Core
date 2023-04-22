@@ -12,6 +12,7 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntBinaryOperator;
@@ -28,6 +29,13 @@ import java.util.function.IntPredicate;
 @Getter
 @RequiredArgsConstructor
 public class ScriptRuntime {
+
+	/**
+	 * Used instead of null memory.
+	 */
+	private static final MemoryItem VOID_MEMORY =
+		new MemoryItem(Void.class, null);
+
 	/**
 	 * Where we are in the program.
 	 */
@@ -52,8 +60,10 @@ public class ScriptRuntime {
 	 *
 	 * When comparing numbers: If the first number is less than the second, this
 	 * will be -1. If they are equal, it will be 0. If the first number is
-	 * greater than the second, this will be 1. If two items are not equal, this
-	 * will be nonzero.
+	 * greater than the second, this will be 1.
+	 *
+	 * When comparing equality: If two items are equal, this will be zero. If
+	 * they are not equal, this will be 1.
 	 */
 	private int lastComparison;
 
@@ -89,8 +99,7 @@ public class ScriptRuntime {
 		char secondNumber;
 
 		if (firstLocation.isChar()) {
-			// If memory was null, we would have returned by now
-			final char unboxed = (Character) firstItem.value();// NOSONAR
+			final char unboxed = (Character) firstItem.value();
 			firstNumber = unboxed;
 		}
 		else {
@@ -99,7 +108,7 @@ public class ScriptRuntime {
 		}
 
 		if (secondLocation.isChar()) {
-			final char unboxed = (Character) secondItem.value();// NOSONAR
+			final char unboxed = (Character) secondItem.value();
 			secondNumber = unboxed;
 		}
 		else {
@@ -173,6 +182,127 @@ public class ScriptRuntime {
 	}
 
 	/**
+	 * Compares two items for equality.
+	 *
+	 * @param i The instruction to execute.
+	 * @see #lastComparison
+	 */
+	private void compareEquality(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemLocation secondLocation = i.secondLocation();
+
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+		final MemoryItem secondItem = this.loadValue(secondLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+
+		if ((firstLocation.isChar() || firstLocation.isDouble()
+			|| firstLocation.isInt())
+			&& (secondLocation.isChar() || secondLocation.isDouble()
+				|| secondLocation.isInt())) {
+
+			this.doubleComparison(i, (a, b) -> {
+				final double TOLERANCE = 0.00001;
+				if (Math.abs(a - b) < TOLERANCE) {
+					this.lastComparison = 0;
+				}
+				else {
+					this.lastComparison = 1;
+				}
+			});
+			return;
+		}
+
+		Object first = firstItem.value();
+		Object second = secondItem.value();
+		if (first.equals(second)) {
+			this.lastComparison = 0;
+		}
+		else {
+			// Different types
+			this.lastComparison = 1;
+		}
+	}
+
+	/**
+	 * Compares two numbers.
+	 *
+	 * @param i The instruction to execute.
+	 * @see #lastComparison
+	 */
+	private void compareNumbers(Instruction i) {
+		this.doubleComparison(i, (a, b) -> {
+			if (a < b) {
+				this.lastComparison = -1;
+			}
+			else if (a > b) {
+				this.lastComparison = 1;
+			}
+			else {
+				this.lastComparison = 0;
+			}
+		});
+	}
+
+	/**
+	 * Compares the values of the given instruction as doubles using the
+	 * provided function.
+	 *
+	 * @param i The instruction we are doing comparisons on.
+	 * @param comparisonFunction The function to use for comparisons.
+	 */
+	private void doubleComparison(Instruction i,
+		BiConsumer<Double, Double> comparisonFunction) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemLocation secondLocation = i.secondLocation();
+
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+		final MemoryItem secondItem = this.loadValue(secondLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+
+		// Just cast all numbers to doubles.
+		double first;
+		double second;
+
+		if (firstLocation.isInt()) {
+			first = (int) firstItem.value();
+		}
+		else if (firstLocation.isChar()) {
+			first = (char) firstItem.value();
+		}
+		else if (firstLocation.isDouble()) {
+			first = (double) firstItem.value();
+		}
+		else {
+			// Should not happen
+			this.halt();
+			return;
+		}
+
+		if (secondLocation.isInt()) {
+			second = (int) secondItem.value();
+		}
+		else if (secondLocation.isChar()) {
+			second = (char) secondItem.value();
+		}
+		else if (secondLocation.isDouble()) {
+			second = (double) secondItem.value();
+		}
+		else {
+			// Should not happen
+			this.halt();
+			return;
+		}
+
+		comparisonFunction.accept(first, second);
+	}
+
+	/**
 	 * Deal with any kind of math operation on two doubles.
 	 *
 	 * @param i The instruction.
@@ -199,15 +329,14 @@ public class ScriptRuntime {
 		double secondNumber;
 
 		if (firstLocation.isDouble()) {
-			// If memory was null, we would have returned by now
-			firstNumber = (Double) firstItem.value();// NOSONAR
+			firstNumber = (Double) firstItem.value();
 		}
 		else if (firstLocation.isInt()) {
-			final int unboxed = (Integer) firstItem.value();// NOSONAR
+			final int unboxed = (Integer) firstItem.value();
 			firstNumber = unboxed;
 		}
 		else if (firstLocation.isChar()) {
-			final char unboxed = (Character) firstItem.value();// NOSONAR
+			final char unboxed = (Character) firstItem.value();
 			firstNumber = unboxed;
 		}
 		else {
@@ -216,14 +345,14 @@ public class ScriptRuntime {
 		}
 
 		if (secondLocation.isDouble()) {
-			secondNumber = (Double) secondItem.value();// NOSONAR
+			secondNumber = (Double) secondItem.value();
 		}
 		else if (secondLocation.isInt()) {
-			final int unboxed = (Integer) secondItem.value();// NOSONAR
+			final int unboxed = (Integer) secondItem.value();
 			secondNumber = unboxed;
 		}
 		else if (secondLocation.isChar()) {
-			final char unboxed = (Character) secondItem.value();// NOSONAR
+			final char unboxed = (Character) secondItem.value();
 			secondNumber = unboxed;
 		}
 
@@ -237,36 +366,6 @@ public class ScriptRuntime {
 
 		this.storeValue(result, i.targetLocation());
 	}
-
-	/**
-	 * Compares two things.
-	 * 
-	 * When comparing numbers: If the first number is less than the second, this
-	 * will be -1. If they are equal, it will be 0. If the first number is
-	 * greater than the second, this will be 1. If two items are not equal, this
-	 * will be nonzero.
-	 * 
-	 * @param i
-	 */
-	private void compare(Instruction i) {
-		// TODO complete
-		final MemLocation firstLocation = i.firstLocation();
-		final MemLocation secondLocation = i.secondLocation();
-
-		final MemoryItem firstItem = this.loadValue(firstLocation);
-		final MemoryItem secondItem = this.loadValue(secondLocation);
-
-		if (this.fatalError) {
-			return;
-		}
-		
-	}
-	
-	private void compareInts() {}
-	private void compareDoubles(){}
-	private void compareChars() {}
-	private void compareBooleans() {}
-	private void compareStrings() {}
 
 	private void execute(Instruction i) {
 		switch (i.type()) {
@@ -295,7 +394,11 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case CMP:
-				this.compare(i);
+				this.compareNumbers(i);
+				this.programCounter++;
+				break;
+			case CMP_EQ:
+				this.compareEquality(i);
 				this.programCounter++;
 				break;
 			case CONCAT_STRING:
@@ -439,11 +542,10 @@ public class ScriptRuntime {
 		int secondNumber;
 
 		if (firstLocation.isInt()) {
-			// If memory was null, we would have returned by now
-			firstNumber = (Integer) firstItem.value();// NOSONAR
+			firstNumber = (Integer) firstItem.value();
 		}
 		else if (firstLocation.isChar()) {
-			final char unboxed = (Character) firstItem.value();// NOSONAR
+			final char unboxed = (Character) firstItem.value();
 			firstNumber = unboxed;
 		}
 		else {
@@ -452,10 +554,10 @@ public class ScriptRuntime {
 		}
 
 		if (secondLocation.isInt()) {
-			secondNumber = (Integer) secondItem.value();// NOSONAR
+			secondNumber = (Integer) secondItem.value();
 		}
 		else if (secondLocation.isChar()) {
-			final char unboxed = (Character) secondItem.value();// NOSONAR
+			final char unboxed = (Character) secondItem.value();
 			secondNumber = unboxed;
 		}
 		else {
@@ -495,10 +597,12 @@ public class ScriptRuntime {
 	}
 
 	/**
-	 * Read the value from the memory location.
+	 * Read the value from the memory location. You should check if the program
+	 * halted after using this.
 	 *
 	 * @param from The location we are reading from.
-	 * @return The appropriate value, will be null if the location is invalid.
+	 * @return The appropriate value, will be void memory if the location is
+	 *         invalid.
 	 */
 	private MemoryItem loadValue(MemLocation from) {
 		switch (from.area()) {
@@ -509,7 +613,7 @@ public class ScriptRuntime {
 					ScriptRuntime.log.warn(SafeResourceLoader.getString(
 						"POPPING_TOO_FAR", ScriptManager.getResourceBundle()));
 					this.halt();
-					return null;
+					return ScriptRuntime.VOID_MEMORY;
 				}
 				return this.stack.pop();
 			case VARIABLE:
@@ -520,7 +624,7 @@ public class ScriptRuntime {
 								ScriptManager.getResourceBundle()),
 							from.value());
 					this.halt();
-					return null;
+					return ScriptRuntime.VOID_MEMORY;
 				}
 				return this.symbolTable.get(from.value());
 			default:
@@ -529,7 +633,7 @@ public class ScriptRuntime {
 						ScriptManager.getResourceBundle()),
 					from.area().toString());
 				this.halt();
-				return null;
+				return ScriptRuntime.VOID_MEMORY;
 		}
 	}
 
