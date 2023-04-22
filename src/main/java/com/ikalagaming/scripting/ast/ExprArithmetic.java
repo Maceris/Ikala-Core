@@ -114,6 +114,8 @@ public class ExprArithmetic extends Node {
 				break;
 			case DEC_PREFIX, INC_PREFIX:
 				result.append(this.operator.getReadable());
+				result.append('x');
+				result.append(this.unaryCount);
 				result.append(' ');
 				result.append(firstChild);
 				break;
@@ -121,6 +123,8 @@ public class ExprArithmetic extends Node {
 				result.append(firstChild);
 				result.append(' ');
 				result.append(this.operator.getReadable());
+				result.append('x');
+				result.append(this.unaryCount);
 				break;
 			default:
 				result.append(this.operator.toString());

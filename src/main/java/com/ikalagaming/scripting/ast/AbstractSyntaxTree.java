@@ -1050,6 +1050,7 @@ public class AbstractSyntaxTree {
 		ExprArithmetic result = new ExprArithmetic();
 		result.addChild(AbstractSyntaxTree.process(node.postfixExpression()));
 		result.setOperator(ExprArithmetic.Operator.DEC_SUFFIX);
+		result.setUnaryCount(1);
 		return result;
 	}
 
@@ -1081,7 +1082,7 @@ public class AbstractSyntaxTree {
 		}
 
 		if (totalDelta == 0) {
-			// We don't have any increments and decrements, or they cancel out
+			// We don't have increments or decrements, or they cancel out
 			return statement;
 		}
 
@@ -1110,6 +1111,7 @@ public class AbstractSyntaxTree {
 		ExprArithmetic result = new ExprArithmetic();
 		result.addChild(AbstractSyntaxTree.process(node.postfixExpression()));
 		result.setOperator(ExprArithmetic.Operator.INC_SUFFIX);
+		result.setUnaryCount(1);
 		return result;
 	}
 
@@ -1123,6 +1125,7 @@ public class AbstractSyntaxTree {
 		ExprArithmetic result = new ExprArithmetic();
 		result.addChild(AbstractSyntaxTree.process(node.unaryExpression()));
 		result.setOperator(ExprArithmetic.Operator.DEC_PREFIX);
+		result.setUnaryCount(1);
 		return result;
 	}
 
@@ -1136,6 +1139,7 @@ public class AbstractSyntaxTree {
 		ExprArithmetic result = new ExprArithmetic();
 		result.addChild(AbstractSyntaxTree.process(node.unaryExpression()));
 		result.setOperator(ExprArithmetic.Operator.INC_PREFIX);
+		result.setUnaryCount(1);
 		return result;
 	}
 

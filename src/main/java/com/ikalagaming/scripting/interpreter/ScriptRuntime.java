@@ -34,7 +34,7 @@ public class ScriptRuntime {
 	 * Used instead of null memory.
 	 */
 	private static final MemoryItem VOID_MEMORY =
-		new MemoryItem(Void.class, null);
+		new MemoryItem(Void.class, "void");
 
 	/**
 	 * Where we are in the program.
@@ -71,6 +71,38 @@ public class ScriptRuntime {
 	 * If we should stop running the program.
 	 */
 	private boolean fatalError;
+
+	/**
+	 * Deal with logical operations on two booleans.
+	 *
+	 * @param i The instruction.
+	 * @param operation The operation to perform on the two booleans.
+	 */
+	private void boolLogic(Instruction i, BinaryOperator<Boolean> operation) {
+
+		final MemLocation firstLocation = i.firstLocation();
+		final MemLocation secondLocation = i.secondLocation();
+
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+		final MemoryItem secondItem = this.loadValue(secondLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+		this.checkType(firstLocation, Type.Base.BOOLEAN);
+		this.checkType(secondLocation, Type.Base.BOOLEAN);
+		if (this.fatalError) {
+			return;
+		}
+
+		boolean first = (Boolean) firstItem.value();
+		boolean second = (Boolean) secondItem.value();
+
+		MemoryItem result =
+			new MemoryItem(Boolean.class, operation.apply(first, second));
+
+		this.storeValue(result, i.targetLocation());
+	}
 
 	/**
 	 * Deal with any kind of math operation on two integers.
@@ -382,7 +414,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case AND:
-				// TODO implement
+				this.boolLogic(i, (a, b) -> a && b);
 				this.programCounter++;
 				break;
 			case ARRAY_ACCESS:
@@ -482,7 +514,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case OR:
-				// TODO implement
+				this.boolLogic(i, (a, b) -> a || b);
 				this.programCounter++;
 				break;
 			case SUB_CHAR:
