@@ -8,6 +8,7 @@ import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.Node;
+import com.ikalagaming.scripting.ast.StatementList;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.util.SafeResourceLoader;
@@ -58,6 +59,14 @@ public class OptimizationPass implements ASTVisitor {
 				 */
 				// replace the node
 				node.getChildren().set(i, this.simplify(expr));
+			}
+			if (child instanceof StatementList
+				&& (child.getChildren().size() == 1)) {
+				/*
+				 * If a statement list has only 1 child, we replace the list
+				 * with its child. Essentially removing pointless nesting.
+				 */
+				node.getChildren().set(i, child.getChildren().get(0));
 			}
 		}
 		node.process(this);
