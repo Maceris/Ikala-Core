@@ -74,6 +74,12 @@ public class ExprArithmetic extends Node {
 	 */
 	private int unaryCount;
 
+	/**
+	 * Used to signify that the result of this expression is not used for
+	 * anything, and does not need to be stored on the stack.
+	 */
+	private boolean ignoreResult;
+
 	@Override
 	public void process(ASTVisitor visitor) {
 		visitor.visit(this);
