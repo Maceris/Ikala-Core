@@ -231,9 +231,46 @@ public class InstructionGenerator implements ASTVisitor {
 				this.processTree(node.getChildren().get(i));
 			}
 		}
+		else if (node instanceof ForLoop loop) {
+			// Handle post/pre-fix expressions being thrown away in for loops
+
+			// Index of the update expression
+			int updateIndex = 0;
+			if (loop.isUpdate()) {
+				if (loop.isCondition()) {
+					++updateIndex;
+				}
+				if (loop.isInitializer()) {
+					++updateIndex;
+				}
+			}
+			else {
+				updateIndex = -1;
+			}
+			for (int i = 0; i < loop.getChildren().size(); ++i) {
+				Node child = loop.getChildren().get(i);
+				if (i == updateIndex
+					&& (child instanceof ExprArithmetic expr)) {
+					expr.setIgnoreResult(true);
+				}
+				this.processTree(child);
+			}
+		}
 		else {
 			// Forward order
 			for (Node child : node.getChildren()) {
+				if (node instanceof CompilationUnit
+					&& (child instanceof ExprArithmetic expr)) {
+					switch (expr.getOperator()) {
+						case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+							expr.setIgnoreResult(true);
+							break;
+						case ADD, DIV, MOD, MUL, SUB:
+						default:
+							break;
+					}
+				}
+
 				this.processTree(child);
 			}
 		}
@@ -378,20 +415,23 @@ public class InstructionGenerator implements ASTVisitor {
 				break;
 		}
 
-		// TODO don't push values to the stack if we don't need them later
 		if (node.getOperator().equals(Operator.DEC_PREFIX)
 			|| node.getOperator().equals(Operator.INC_PREFIX)) {
 			this.tempInstructions
 				.add(new Instruction(type, first, second, first));
-			// Copy the post-increment value onto the stack
-			this.tempInstructions.add(new Instruction(InstructionType.MOV,
-				first, null, new MemLocation(MemArea.STACK, clazz)));
+			if (!node.isIgnoreResult()) {
+				// Copy the post-increment value onto the stack
+				this.tempInstructions.add(new Instruction(InstructionType.MOV,
+					first, null, new MemLocation(MemArea.STACK, clazz)));
+			}
 		}
 		else if (node.getOperator().equals(Operator.DEC_SUFFIX)
 			|| node.getOperator().equals(Operator.INC_SUFFIX)) {
-			// Push the pre-increment value onto the stack
-			this.tempInstructions.add(new Instruction(InstructionType.MOV,
-				first, null, new MemLocation(MemArea.STACK, clazz)));
+			if (!node.isIgnoreResult()) {
+				// Push the pre-increment value onto the stack
+				this.tempInstructions.add(new Instruction(InstructionType.MOV,
+					first, null, new MemLocation(MemArea.STACK, clazz)));
+			}
 			// Update the value by however much, in place
 			this.tempInstructions
 				.add(new Instruction(type, first, second, first));
