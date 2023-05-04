@@ -529,6 +529,9 @@ public class ScriptRuntime {
 				this.intMath(i, (a, b) -> a - b);
 				this.programCounter++;
 				break;
+			case TEST:
+				// TODO implement
+				break;
 			default:
 				ScriptRuntime.log.warn(
 					SafeResourceLoader.getString("UNKNOWN_INSTRUCTION",
