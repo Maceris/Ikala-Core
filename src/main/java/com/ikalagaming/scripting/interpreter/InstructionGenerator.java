@@ -74,6 +74,80 @@ public class InstructionGenerator implements ASTVisitor {
 	private List<Instruction> tempInstructions;
 
 	/**
+	 * Calculate and emit a jump based on the expression provided. This does not
+	 * emit the expression itself, only calculates which jump expression is
+	 * appropriate based on what we predict the expression to emit.
+	 *
+	 * We do this because comparison and jumps are separate instructions,
+	 * emitted by different visitors, but we need them to cooperate.
+	 *
+	 * @param expression Any kind of expression according to the grammar, but
+	 *            must evaluate to a boolean.
+	 * @param targetLabel Where we are jumping to.
+	 */
+	private void calculateJump(@NonNull Node expression,
+		@NonNull String targetLabel) {
+		/*
+		 * These are arranged in descending order of how likely I think they are
+		 * to show up in practice, because I have to pick an order so I may as
+		 * well try to minimize the expected number of checks.
+		 */
+		if (expression instanceof ExprRelation relation) {
+			InstructionType type;
+			switch (relation.getOperator()) {
+				case GT:
+					type = InstructionType.JGT;
+					break;
+				case GTE:
+					type = InstructionType.JGE;
+					break;
+				case LT:
+					type = InstructionType.JLT;
+					break;
+				case LTE:
+					type = InstructionType.JLE;
+					break;
+				default:
+					type = InstructionType.JMP;
+					break;
+			}
+			this.emitJump(type, targetLabel);
+			return;
+		}
+		if (expression instanceof ExprEquality equality) {
+			InstructionType type;
+			switch (equality.getOperator()) {
+				case EQUAL:
+					type = InstructionType.JEQ;
+					break;
+				case NOT_EQUAL:
+					type = InstructionType.JNE;
+					break;
+				default:
+					type = InstructionType.JMP;
+					break;
+			}
+			this.emitJump(type, targetLabel);
+			return;
+		}
+		if (expression instanceof ExprLogic || expression instanceof ExprAssign
+			|| expression instanceof ExprTernary) {
+			// Boolean values
+
+			// Convert the resulting boolean value to a flag, clean the stack
+			this.tempInstructions.add(new Instruction(InstructionType.TEST,
+				new MemLocation(MemArea.STACK, Boolean.class),
+				new MemLocation(MemArea.IMMEDIATE, Boolean.class, true), null));
+
+			this.emitJump(InstructionType.JEQ, targetLabel);
+			return;
+		}
+		InstructionGenerator.log
+			.warn(SafeResourceLoader.getString("UNEXPECTED_EXPRESSION",
+				ScriptManager.getResourceBundle()), expression.toString());
+	}
+
+	/**
 	 * Calculate where the value will be found for the given node, as part of an
 	 * expression.
 	 *
@@ -113,6 +187,41 @@ public class InstructionGenerator implements ASTVisitor {
 			.warn(SafeResourceLoader.getString("UNHANDLED_EXPRESSION_MEMBER",
 				ScriptManager.getResourceBundle()), node.toString());
 		return new MemLocation(MemArea.STACK, clazz);
+	}
+
+	/**
+	 * Emit a temporary jump instruction. The type should be one of the jump
+	 * types.
+	 *
+	 * @param type The instruction type, one of the jumps.
+	 * @param target The name of the target label.
+	 */
+	private void emitJump(@NonNull final InstructionType type,
+		@NonNull final String target) {
+		this.tempInstructions.add(new Instruction(type,
+			new MemLocation(MemArea.IMMEDIATE, String.class, target), null,
+			null));
+	}
+
+	/**
+	 * Emit a label, in a standardized form.
+	 *
+	 * @param label The name of the label.
+	 * @see #getNextLabelName()
+	 */
+	private void emitLabel(@NonNull final String label) {
+		this.tempInstructions.add(new Instruction(InstructionType.NOP,
+			new MemLocation(MemArea.IMMEDIATE, String.class, label), null,
+			null));
+	}
+
+	/**
+	 * Return the next label name, and update the value for the next call.
+	 *
+	 * @return The name for the next valid label.
+	 */
+	private String getNextLabelName() {
+		return String.format(".L%d", this.nextLabel++);
 	}
 
 	/**
@@ -221,39 +330,21 @@ public class InstructionGenerator implements ASTVisitor {
 		// TODO
 		// calculate jump locations for labels, conditionals, etc
 		// Strip out labels
+		// Replace jumps label field with relative locations
 		return tempResult;
 	}
 
 	private void processTree(Node node) {
-		if (node instanceof ExprArithmetic) {
+		if (node instanceof ForLoop) {
+			/*
+			 * Skip processing children because the visitor handles processing
+			 * them.
+			 */
+		}
+		else if (node instanceof ExprArithmetic) {
 			// Reverse order
 			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
 				this.processTree(node.getChildren().get(i));
-			}
-		}
-		else if (node instanceof ForLoop loop) {
-			// Handle post/pre-fix expressions being thrown away in for loops
-
-			// Index of the update expression
-			int updateIndex = 0;
-			if (loop.isUpdate()) {
-				if (loop.isCondition()) {
-					++updateIndex;
-				}
-				if (loop.isInitializer()) {
-					++updateIndex;
-				}
-			}
-			else {
-				updateIndex = -1;
-			}
-			for (int i = 0; i < loop.getChildren().size(); ++i) {
-				Node child = loop.getChildren().get(i);
-				if (i == updateIndex
-					&& (child instanceof ExprArithmetic expr)) {
-					expr.setIgnoreResult(true);
-				}
-				this.processTree(child);
 			}
 		}
 		else {
@@ -475,7 +566,51 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ForLoop node) {
-		// TODO Auto-generated method stub
+		int position = 0;
+
+		Node init = null;
+		Node condition = null;
+		Node update = null;
+		if (node.isInitializer()) {
+			init = node.getChildren().get(position);
+			++position;
+		}
+		if (node.isCondition()) {
+			condition = node.getChildren().get(position);
+			++position;
+		}
+		if (node.isUpdate()) {
+			update = node.getChildren().get(position);
+			++position;
+			if (update instanceof ExprArithmetic expr) {
+				// Handle post/pre-fix expressions being thrown away
+				expr.setIgnoreResult(true);
+			}
+		}
+		Node body = node.getChildren().get(position);
+
+		final String topOfLoopLabel = this.getNextLabelName();
+		final String conditionLabel = this.getNextLabelName();
+
+		if (init != null) {
+			this.processTree(init);
+		}
+		this.emitJump(InstructionType.JMP, conditionLabel);
+		this.emitLabel(topOfLoopLabel);
+		if (body != null) {
+			this.processTree(body);
+		}
+		if (update != null) {
+			this.processTree(update);
+		}
+		this.emitLabel(conditionLabel);
+		if (condition != null) {
+			this.processTree(condition);
+			this.calculateJump(condition, topOfLoopLabel);
+		}
+		else {
+			this.emitJump(InstructionType.JMP, topOfLoopLabel);
+		}
 	}
 
 	@Override
