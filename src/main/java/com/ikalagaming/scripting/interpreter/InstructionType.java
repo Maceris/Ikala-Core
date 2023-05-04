@@ -142,5 +142,13 @@ public enum InstructionType {
 	/**
 	 * Subtract one integer from another.
 	 */
-	SUB_INT;
+	SUB_INT,
+	/**
+	 * Computes the bit-wise logical AND of first operand and the second operand
+	 * and sets the status flags according to the result. The result is then
+	 * discarded.
+	 *
+	 * Generally used instead of CMP when we want to work with boolean results.
+	 */
+	TEST;
 }
