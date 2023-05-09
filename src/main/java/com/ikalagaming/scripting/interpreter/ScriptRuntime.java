@@ -5,6 +5,7 @@ import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -490,7 +491,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case MOV:
-				// TODO implement
+				this.move(i);
 				this.programCounter++;
 				break;
 			case MUL_CHAR:
@@ -642,7 +643,7 @@ public class ScriptRuntime {
 	private MemoryItem loadValue(MemLocation from) {
 		switch (from.area()) {
 			case IMMEDIATE:
-				return new MemoryItem(from.getClass(), from.value());
+				return new MemoryItem(from.type(), from.value());
 			case STACK:
 				if (this.stack.isEmpty()) {
 					ScriptRuntime.log.warn(SafeResourceLoader.getString(
@@ -673,6 +674,16 @@ public class ScriptRuntime {
 	}
 
 	/**
+	 * Execute a move instruction.
+	 *
+	 * @param i The instruction to execute.
+	 */
+	private void move(@NonNull Instruction i) {
+		MemoryItem memory = this.loadValue(i.firstLocation());
+		this.storeValue(memory, i.targetLocation());
+	}
+
+	/**
 	 * Execute one instruction.
 	 */
 	public void step() {
@@ -698,22 +709,18 @@ public class ScriptRuntime {
 				break;
 			case VARIABLE:
 				final String variable = (String) location.value();
-				if (!this.symbolTable.containsKey(variable)) {
-					ScriptRuntime.log
-						.warn(SafeResourceLoader.getString("UNKNOWN_VARIABLE",
-							ScriptManager.getResourceBundle()), variable);
-					this.halt();
-					break;
-				}
-				MemoryItem existingValue = this.symbolTable.get(variable);
-				if (!existingValue.getClass().equals(item.getClass())) {
-					ScriptRuntime.log.warn(
-						SafeResourceLoader.getString("VARIABLE_TYPE_MISMATCH",
-							ScriptManager.getResourceBundle()),
-						item.getClass().getSimpleName(), variable,
-						existingValue.getClass().getSimpleName());
-					this.halt();
-					break;
+				if (this.symbolTable.containsKey(variable)) {
+					MemoryItem existingValue = this.symbolTable.get(variable);
+					if (!existingValue.getClass().equals(item.getClass())) {
+						ScriptRuntime.log.warn(
+							SafeResourceLoader.getString(
+								"VARIABLE_TYPE_MISMATCH",
+								ScriptManager.getResourceBundle()),
+							item.getClass().getSimpleName(), variable,
+							existingValue.getClass().getSimpleName());
+						this.halt();
+						break;
+					}
 				}
 				this.symbolTable.put(variable, item);
 				break;
