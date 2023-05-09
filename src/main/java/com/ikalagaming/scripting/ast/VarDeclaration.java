@@ -5,7 +5,7 @@ import lombok.Setter;
 
 /**
  * A variable declaration. The children will be the identifier, then an
- * assignment expression if it exists.
+ * expression used to initialize the variable if such an expression exists.
  *
  * @author Ches Burks
  *
