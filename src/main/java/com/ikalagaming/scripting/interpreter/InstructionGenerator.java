@@ -335,10 +335,11 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	private void processTree(Node node) {
-		if (node instanceof ForLoop) {
+		if (node instanceof ForLoop || node instanceof VarDeclaration
+			|| node instanceof Goto) {
 			/*
 			 * Skip processing children because the visitor handles processing
-			 * them.
+			 * them, or they should be skipped.
 			 */
 		}
 		else if (node instanceof ExprArithmetic) {
@@ -380,7 +381,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Block node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
@@ -405,17 +406,24 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ConstBool node) {
-		// TODO Auto-generated method stub
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.IMMEDIATE, Boolean.class, node.isValue()),
+			null, new MemLocation(MemArea.STACK, Boolean.class)));
 	}
 
 	@Override
 	public void visit(ConstChar node) {
-		// TODO Auto-generated method stub
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.IMMEDIATE, Character.class,
+				node.getValue()),
+			null, new MemLocation(MemArea.STACK, Character.class)));
 	}
 
 	@Override
 	public void visit(ConstDouble node) {
-		// TODO Auto-generated method stub
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.IMMEDIATE, Double.class, node.getValue()),
+			null, new MemLocation(MemArea.STACK, Double.class)));
 	}
 
 	@Override
@@ -427,12 +435,16 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ConstNull node) {
-		// TODO Auto-generated method stub
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.IMMEDIATE, Object.class, null), null,
+			new MemLocation(MemArea.STACK, Object.class)));
 	}
 
 	@Override
 	public void visit(ConstString node) {
-		// TODO Auto-generated method stub
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.IMMEDIATE, String.class, node.getValue()),
+			null, new MemLocation(MemArea.STACK, String.class)));
 	}
 
 	@Override
@@ -536,6 +548,29 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprAssign node) {
+		final Node leftSide = node.getChildren().get(0);
+		final Node rightSide = node.getChildren().get(1);
+		this.processTree(rightSide);
+		
+		// Handle different types of assignment
+		// Use target location cleverly with instructions, add val + expr -> val
+		switch (node.getOperator()) {
+			case ADD_ASSIGN:
+				break;
+			case DIV_ASSIGN:
+				break;
+			case MOD_ASSIGN:
+				break;
+			case MUL_ASSIGN:
+				break;
+			case SUB_ASSIGN:
+				break;
+			case ASSIGN:
+			default:
+				break;
+		}
+		// Determine if the left side is a variable, field access, array access
+		
 		// TODO Auto-generated method stub
 	}
 
@@ -615,7 +650,8 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Goto node) {
-		// TODO Auto-generated method stub
+		Identifier target = (Identifier) node.getChildren().get(0);
+		emitJump(InstructionType.JMP, target.getName());
 	}
 
 	@Override
@@ -637,7 +673,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(LabeledStatement node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
@@ -672,17 +708,79 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(TypeNode node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
 	public void visit(VarDeclaration node) {
-		// TODO Auto-generated method stub
+		final int dims = node.getDimensions();
+
+		Identifier id = (Identifier) node.getChildren().get(0);
+		final String varName = id.getName();
+
+		Class<?> clazz;
+		switch (node.getType().getBase()) {
+			case BOOLEAN:
+				clazz = Boolean.class;
+				break;
+			case CHAR:
+				clazz = Character.class;
+				break;
+			case DOUBLE:
+				clazz = Double.class;
+				break;
+			case INT:
+				clazz = Integer.class;
+				break;
+			case STRING:
+				clazz = String.class;
+				break;
+			case UNKNOWN:
+				clazz = Object.class;
+				break;
+			case IDENTIFIER, LABEL, VOID:
+			default:
+				InstructionGenerator.log
+					.warn(
+						SafeResourceLoader.getString("INVALID_MEMORY_TYPE",
+							ScriptManager.getResourceBundle()),
+						node.toString());
+				clazz = Object.class;
+		}
+
+		MemLocation target = new MemLocation(MemArea.VARIABLE, clazz, varName);
+		MemLocation defaultValue;
+
+		if (node.getChildren().size() > 1) {
+			this.processTree(node.getChildren().get(1));
+			defaultValue = new MemLocation(MemArea.STACK, clazz);
+		}
+		else if (dims == 0) {
+			// Check for primitives, store defaults
+
+			if (node.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
+				defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, 0);
+			}
+			else if (node.getType().anyOf(Base.BOOLEAN)) {
+				defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, false);
+			}
+			else if (node.getType().anyOf(Base.STRING)) {
+				defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, "");
+			}
+			else {
+				defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, null);
+			}
+		}
+		else {
+			defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, null);
+		}
+		this.tempInstructions.add(
+			new Instruction(InstructionType.MOV, defaultValue, null, target));
 	}
 
 	@Override
 	public void visit(VarDeclarationList node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
