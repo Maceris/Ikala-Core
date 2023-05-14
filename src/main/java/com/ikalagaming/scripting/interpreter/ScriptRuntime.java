@@ -215,12 +215,12 @@ public class ScriptRuntime {
 	}
 
 	/**
-	 * Compares two items for equality.
+	 * Compares two items, either for equality or numerically.
 	 *
 	 * @param i The instruction to execute.
 	 * @see #lastComparison
 	 */
-	private void compareEquality(Instruction i) {
+	private void compare(Instruction i) {
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
 
@@ -241,7 +241,10 @@ public class ScriptRuntime {
 				if (Math.abs(a - b) < TOLERANCE) {
 					this.lastComparison = 0;
 				}
-				else {
+				else if (a < b) {
+					this.lastComparison = -1;
+				}
+				else if (a > b) {
 					this.lastComparison = 1;
 				}
 			});
@@ -257,26 +260,6 @@ public class ScriptRuntime {
 			// Different types
 			this.lastComparison = 1;
 		}
-	}
-
-	/**
-	 * Compares two numbers.
-	 *
-	 * @param i The instruction to execute.
-	 * @see #lastComparison
-	 */
-	private void compareNumbers(Instruction i) {
-		this.doubleComparison(i, (a, b) -> {
-			if (a < b) {
-				this.lastComparison = -1;
-			}
-			else if (a > b) {
-				this.lastComparison = 1;
-			}
-			else {
-				this.lastComparison = 0;
-			}
-		});
 	}
 
 	/**
@@ -427,11 +410,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case CMP:
-				this.compareNumbers(i);
-				this.programCounter++;
-				break;
-			case CMP_EQ:
-				this.compareEquality(i);
+				this.compare(i);
 				this.programCounter++;
 				break;
 			case CONCAT_STRING:
@@ -530,8 +509,29 @@ public class ScriptRuntime {
 				this.intMath(i, (a, b) -> a - b);
 				this.programCounter++;
 				break;
-			case TEST:
+			case SET_EQ:
 				// TODO implement
+				this.programCounter++;
+				break;
+			case SET_GE:
+				// TODO implement
+				this.programCounter++;
+				break;
+			case SET_GT:
+				// TODO implement
+				this.programCounter++;
+				break;
+			case SET_LE:
+				// TODO implement
+				this.programCounter++;
+				break;
+			case SET_LT:
+				// TODO implement
+				this.programCounter++;
+				break;
+			case SET_NE:
+				// TODO implement
+				this.programCounter++;
 				break;
 			default:
 				ScriptRuntime.log.warn(

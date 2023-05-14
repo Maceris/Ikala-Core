@@ -218,7 +218,7 @@ public class InstructionGenerator implements ASTVisitor {
 			// Boolean values
 
 			// Convert the resulting boolean value to a flag, clean the stack
-			this.tempInstructions.add(new Instruction(InstructionType.TEST,
+			this.tempInstructions.add(new Instruction(InstructionType.CMP,
 				new MemLocation(MemArea.STACK, Boolean.class),
 				new MemLocation(MemArea.IMMEDIATE, Boolean.class, true), null));
 
@@ -734,6 +734,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprEquality node) {
+		// TODO use jumps or sets instead of pushing to the stack
 		/*
 		 * We reverse the order of child parsing so the order here makes sense.
 		 * This is largely irrelevant, as it's commutative, but should be noted.
@@ -743,14 +744,8 @@ public class InstructionGenerator implements ASTVisitor {
 		MemLocation second = new MemLocation(MemArea.STACK, node.getChildren()
 			.get(1).getType().getBase().getCorrespondingClass());
 
-		this.tempInstructions.add(new Instruction(InstructionType.CMP_EQ, first,
-			second, new MemLocation(MemArea.STACK, Boolean.class)));
-		if (node.getOperator() == ExprEquality.Operator.NOT_EQUAL) {
-			// Just invert it as a second step, no need to get fancy
-			this.tempInstructions.add(new Instruction(InstructionType.NOT,
-				new MemLocation(MemArea.STACK, Boolean.class), null,
-				new MemLocation(MemArea.STACK, Boolean.class)));
-		}
+		this.tempInstructions
+			.add(new Instruction(InstructionType.CMP, first, second, null));
 	}
 
 	@Override
