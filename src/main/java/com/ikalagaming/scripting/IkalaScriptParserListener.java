@@ -80,23 +80,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 		IkalaScriptParser.AssignmentOperatorContext ctx);
 
 	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#basicForStatement}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterBasicForStatement(IkalaScriptParser.BasicForStatementContext ctx);
-
-	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#basicForStatementNoShortIf}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterBasicForStatementNoShortIf(
-		IkalaScriptParser.BasicForStatementNoShortIfContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#block}.
 	 *
 	 * @param ctx the parse tree
@@ -195,24 +178,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void enterDoStatement(IkalaScriptParser.DoStatementContext ctx);
-
-	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#enhancedForStatement}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterEnhancedForStatement(
-		IkalaScriptParser.EnhancedForStatementContext ctx);
-
-	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#enhancedForStatementNoShortIf}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterEnhancedForStatementNoShortIf(
-		IkalaScriptParser.EnhancedForStatementNoShortIfContext ctx);
 
 	/**
 	 * Enter a parse tree produced by
@@ -715,23 +680,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 		IkalaScriptParser.AssignmentOperatorContext ctx);
 
 	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#basicForStatement}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitBasicForStatement(IkalaScriptParser.BasicForStatementContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#basicForStatementNoShortIf}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitBasicForStatementNoShortIf(
-		IkalaScriptParser.BasicForStatementNoShortIfContext ctx);
-
-	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#block}.
 	 *
 	 * @param ctx the parse tree
@@ -830,24 +778,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitDoStatement(IkalaScriptParser.DoStatementContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#enhancedForStatement}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitEnhancedForStatement(
-		IkalaScriptParser.EnhancedForStatementContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#enhancedForStatementNoShortIf}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitEnhancedForStatementNoShortIf(
-		IkalaScriptParser.EnhancedForStatementNoShortIfContext ctx);
 
 	/**
 	 * Exit a parse tree produced by

@@ -181,20 +181,10 @@ doStatement
 	;
 
 forStatement
-	:	basicForStatement
-	|	enhancedForStatement
-	;
-
-forStatementNoShortIf
-	:	basicForStatementNoShortIf
-	|	enhancedForStatementNoShortIf
-	;
-
-basicForStatement
 	:	FOR LPAREN forInit? SEMICOLON expression? SEMICOLON statementExpressionList? RPAREN statement
 	;
 
-basicForStatementNoShortIf
+forStatementNoShortIf
 	:	FOR LPAREN forInit? SEMICOLON expression? SEMICOLON statementExpressionList? RPAREN statementNoShortIf
 	;
 
@@ -205,14 +195,6 @@ forInit
 
 statementExpressionList
 	:	statementExpression (COMMA statementExpression)*
-	;
-
-enhancedForStatement
-	:	FOR LPAREN FINAL? type variableDeclaratorId COLON expression RPAREN statement
-	;
-
-enhancedForStatementNoShortIf
-	:	FOR LPAREN FINAL? type variableDeclaratorId COLON expression RPAREN statementNoShortIf
 	;
 
 breakStatement

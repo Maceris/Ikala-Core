@@ -1,6 +1,5 @@
 package com.ikalagaming.scripting.ast;
 
-import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.IkalaScriptParser.AdditiveExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArgumentListContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccessContext;
@@ -8,8 +7,6 @@ import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccess_LHSContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccess_LHS_GeneralContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.AssignmentContext;
-import com.ikalagaming.scripting.IkalaScriptParser.BasicForStatementContext;
-import com.ikalagaming.scripting.IkalaScriptParser.BasicForStatementNoShortIfContext;
 import com.ikalagaming.scripting.IkalaScriptParser.BlockContext;
 import com.ikalagaming.scripting.IkalaScriptParser.BlockStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.BreakStatementContext;
@@ -21,8 +18,6 @@ import com.ikalagaming.scripting.IkalaScriptParser.ConditionalExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ConditionalOrExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ContinueStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.DoStatementContext;
-import com.ikalagaming.scripting.IkalaScriptParser.EnhancedForStatementContext;
-import com.ikalagaming.scripting.IkalaScriptParser.EnhancedForStatementNoShortIfContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EqualityExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.FieldAccessContext;
@@ -72,6 +67,7 @@ import com.ikalagaming.scripting.IkalaScriptParser.VariableDeclaratorContext;
 import com.ikalagaming.scripting.IkalaScriptParser.VariableDeclaratorIdContext;
 import com.ikalagaming.scripting.IkalaScriptParser.WhileStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.WhileStatementNoShortIfContext;
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -331,7 +327,7 @@ public class AbstractSyntaxTree {
 	 * @param node The context to parse.
 	 * @return The parsed version of the node.
 	 */
-	private static Node process(BasicForStatementContext node) {
+	private static Node process(ForStatementContext node) {
 		ForLoop result = new ForLoop();
 		result.setType(Type.voidType());
 		if (node.forInit() != null) {
@@ -359,7 +355,7 @@ public class AbstractSyntaxTree {
 	 * @param node The context to parse.
 	 * @return The parsed version of the node.
 	 */
-	private static Node process(BasicForStatementNoShortIfContext node) {
+	private static Node process(ForStatementNoShortIfContext node) {
 		ForLoop result = new ForLoop();
 		result.setType(Type.voidType());
 		if (node.forInit() != null) {
@@ -580,68 +576,6 @@ public class AbstractSyntaxTree {
 	}
 
 	/**
-	 * Process an enhanced for statement.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(EnhancedForStatementContext node) {
-		EnhancedForLoop result = new EnhancedForLoop();
-		result.setType(Type.voidType());
-
-		TypeNode type = new TypeNode();
-		type.setType(AbstractSyntaxTree.getType(node.type()));
-		if (node.FINAL() != null) {
-			type.setFinal(true);
-		}
-		result.addChild(type);
-
-		VarDeclaration varDecl = new VarDeclaration();
-		VariableDeclaratorIdContext id = node.variableDeclaratorId();
-		varDecl.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
-		if (id.dims() != null) {
-			varDecl.setDimensions(id.dims().LBRACK().size());
-		}
-
-		result.addChild(varDecl);
-		result.addChild(AbstractSyntaxTree.process(node.expression()));
-		result.addChild(AbstractSyntaxTree.process(node.statement()));
-
-		return result;
-	}
-
-	/**
-	 * Process an enhanced for statement.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(EnhancedForStatementNoShortIfContext node) {
-		EnhancedForLoop result = new EnhancedForLoop();
-		result.setType(Type.voidType());
-
-		TypeNode type = new TypeNode();
-		type.setType(AbstractSyntaxTree.getType(node.type()));
-		if (node.FINAL() != null) {
-			type.setFinal(true);
-		}
-		result.addChild(type);
-
-		VarDeclaration varDecl = new VarDeclaration();
-		VariableDeclaratorIdContext id = node.variableDeclaratorId();
-		varDecl.addChild(AbstractSyntaxTree.identifierNode(id.Identifier()));
-		if (id.dims() != null) {
-			varDecl.setDimensions(id.dims().LBRACK().size());
-		}
-
-		result.addChild(varDecl);
-		result.addChild(AbstractSyntaxTree.process(node.expression()));
-		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
-
-		return result;
-	}
-
-	/**
 	 * Process a equality expression. The result is going to be a boolean,
 	 * regardless of what we are comparing, as long as it's a valid comparison.
 	 *
@@ -725,46 +659,6 @@ public class AbstractSyntaxTree {
 		AbstractSyntaxTree.log.warn(SafeResourceLoader
 			.getString("UNKNOWN_FOR_INIT", ScriptManager.getResourceBundle()),
 			node.getText());
-		return null;
-	}
-
-	/**
-	 * Process a for statement.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ForStatementContext node) {
-		if (node.basicForStatement() != null) {
-			return AbstractSyntaxTree.process(node.basicForStatement());
-		}
-		if (node.enhancedForStatement() != null) {
-			return AbstractSyntaxTree.process(node.enhancedForStatement());
-		}
-		AbstractSyntaxTree.log
-			.warn(SafeResourceLoader.getString("UNKNOWN_FOR_STATEMENT",
-				ScriptManager.getResourceBundle()), node.getText());
-		return null;
-	}
-
-	/**
-	 * Process a for statement.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ForStatementNoShortIfContext node) {
-		if (node.basicForStatementNoShortIf() != null) {
-			return AbstractSyntaxTree
-				.process(node.basicForStatementNoShortIf());
-		}
-		if (node.enhancedForStatementNoShortIf() != null) {
-			return AbstractSyntaxTree
-				.process(node.enhancedForStatementNoShortIf());
-		}
-		AbstractSyntaxTree.log
-			.warn(SafeResourceLoader.getString("UNKNOWN_FOR_STATEMENT",
-				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 

@@ -116,28 +116,6 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
-	public void enterBasicForStatement(
-		IkalaScriptParser.BasicForStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterBasicForStatementNoShortIf(
-		IkalaScriptParser.BasicForStatementNoShortIfContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void enterBlock(IkalaScriptParser.BlockContext ctx) {}
 
 	/**
@@ -269,28 +247,6 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void enterDoStatement(IkalaScriptParser.DoStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterEnhancedForStatement(
-		IkalaScriptParser.EnhancedForStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterEnhancedForStatementNoShortIf(
-		IkalaScriptParser.EnhancedForStatementNoShortIfContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -974,28 +930,6 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
-	public void
-		exitBasicForStatement(IkalaScriptParser.BasicForStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitBasicForStatementNoShortIf(
-		IkalaScriptParser.BasicForStatementNoShortIfContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitBlock(IkalaScriptParser.BlockContext ctx) {}
 
 	/**
@@ -1127,28 +1061,6 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void exitDoStatement(IkalaScriptParser.DoStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitEnhancedForStatement(
-		IkalaScriptParser.EnhancedForStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitEnhancedForStatementNoShortIf(
-		IkalaScriptParser.EnhancedForStatementNoShortIfContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
