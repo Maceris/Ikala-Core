@@ -5,7 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Compares equality of two things.
+ * Compares equality of two things. There are two children, the nodes being
+ * compared.
  *
  * @author Ches Burks
  *
