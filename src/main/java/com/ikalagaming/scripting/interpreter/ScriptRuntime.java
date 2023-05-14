@@ -663,6 +663,10 @@ public class ScriptRuntime {
 					return ScriptRuntime.VOID_MEMORY;
 				}
 				return this.symbolTable.get(from.value());
+			case ARRAY:
+				// TODO read array from stack, access index
+			case MEMBER:
+				// TODO read object from stack. access member
 			default:
 				ScriptRuntime.log.warn(
 					SafeResourceLoader.getString("UNKNOWN_MEMORY_AREA",
