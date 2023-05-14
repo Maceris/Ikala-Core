@@ -336,7 +336,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	private void processTree(Node node) {
 		if (node instanceof ForLoop || node instanceof VarDeclaration
-			|| node instanceof Goto) {
+			|| node instanceof Goto || node instanceof ExprAssign) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
@@ -377,6 +377,7 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(ArrayAccess node) {
 		// TODO Auto-generated method stub
+		// Push the array access to the stack to be read or written to
 	}
 
 	@Override
@@ -468,36 +469,34 @@ public class InstructionGenerator implements ASTVisitor {
 			.add(new Instruction(InstructionType.HALT, null, null, null));
 	}
 
-	@Override
-	public void visit(ExprArithmetic node) {
-		Class<?> clazz;
+	/**
+	 * Calculate which numeric class best represents the math that will be done
+	 * involving a node, based on the base of the type of that node.
+	 * 
+	 * @param node The nod ewe are interested in.
+	 * @return The class that best represents that node's base type.
+	 */
+	private Class<?> getNumericBase(Node node) {
 		switch (node.getType().getBase()) {
-			case CHAR:
-				clazz = Character.class;
-				break;
-			case DOUBLE:
-				clazz = Double.class;
-				break;
-			case INT:
-				clazz = Integer.class;
-				break;
-			case STRING:
-				clazz = String.class;
-				break;
+			case CHAR, DOUBLE, INT, STRING:
+				return node.getType().getBase().getCorrespondingClass();
 			case UNKNOWN:
 				// We assume it's an integer, as that's most common
-				clazz = Integer.class;
-				break;
+				return Integer.class;
 			case BOOLEAN, IDENTIFIER, LABEL, VOID:
 			default:
 				// Fallback, but the tree verification should(tm) prevent this
-				clazz = Integer.class;
 				InstructionGenerator.log.warn(
 					SafeResourceLoader.getString("INVALID_ARITHMETIC_TYPE",
 						ScriptManager.getResourceBundle()),
 					node.getType().toString());
-				break;
+				return Integer.class;
 		}
+	}
+
+	@Override
+	public void visit(ExprArithmetic node) {
+		Class<?> clazz = getNumericBase(node);
 
 		InstructionType type = this.instructionType(node);
 
@@ -546,32 +545,144 @@ public class InstructionGenerator implements ASTVisitor {
 		}
 	}
 
+	/**
+	 * Calculates the type of instruction to use for assignment, since we can
+	 * have shortcuts like "+=", we can use different instructions for
+	 * efficiency.
+	 * 
+	 * @param operator The Operator we want to use.
+	 * @param numericType The numerical type, assuming this is not a standard
+	 *            assignment. Might be null for normal assigns.
+	 * @return The instruction type to use.
+	 */
+	private InstructionType assignmentExpressionInstruction(
+		@NonNull ExprAssign.Operator operator, Class<?> numericType) {
+		// Yikes
+		switch (operator) {
+			case ADD_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.ADD_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.ADD_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.ADD_CHAR;
+				}
+				break;
+			case DIV_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.DIV_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.DIV_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.DIV_CHAR;
+				}
+				break;
+			case MOD_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.MOD_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.MOD_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.MOD_CHAR;
+				}
+				break;
+			case MUL_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.MUL_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.MUL_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.MUL_CHAR;
+				}
+				break;
+			case SUB_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.SUB_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.SUB_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.SUB_CHAR;
+				}
+				break;
+			case ASSIGN:
+				return InstructionType.MOV;
+			default:
+				break;
+		}
+		InstructionGenerator.log
+			.warn(SafeResourceLoader.getString("UNKNONW_ASSIGN_OPERATOR",
+				ScriptManager.getResourceBundle()), operator.toString());
+		return InstructionType.NOP;
+	}
+
 	@Override
 	public void visit(ExprAssign node) {
 		final Node leftSide = node.getChildren().get(0);
 		final Node rightSide = node.getChildren().get(1);
 		this.processTree(rightSide);
-		
+
+		Class<?> numericType = null;
+		if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
+			numericType = getNumericBase(leftSide);
+		}
+
+		InstructionType instruction =
+			assignmentExpressionInstruction(node.getOperator(), numericType);
+
+		MemLocation first = new MemLocation(MemArea.STACK,
+			rightSide.getType().getBase().getCorrespondingClass());
+
 		// Handle different types of assignment
 		// Use target location cleverly with instructions, add val + expr -> val
-		switch (node.getOperator()) {
-			case ADD_ASSIGN:
-				break;
-			case DIV_ASSIGN:
-				break;
-			case MOD_ASSIGN:
-				break;
-			case MUL_ASSIGN:
-				break;
-			case SUB_ASSIGN:
-				break;
-			case ASSIGN:
-			default:
-				break;
-		}
+
+		Class<?> clazz = node.getType().getBase().getCorrespondingClass();
+
 		// Determine if the left side is a variable, field access, array access
-		
-		// TODO Auto-generated method stub
+
+		MemLocation target = null;
+
+		if (leftSide instanceof Identifier identifier) {
+			target =
+				new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
+		}
+		else if (leftSide instanceof FieldAccess field) {
+			Identifier id = (Identifier) field.getChildren().get(1);
+			target = new MemLocation(MemArea.VARIABLE, clazz, id.getName());
+			this.processTree(leftSide);
+		}
+		else if (leftSide instanceof ArrayAccess) {
+			target = new MemLocation(MemArea.ARRAY, clazz);
+			this.processTree(leftSide);
+		}
+		else {
+			// Impossible due to grammar.
+			InstructionGenerator.log
+				.warn(
+					SafeResourceLoader.getString("UNKNOWN_ASSIGN_LEFT_SIDE",
+						ScriptManager.getResourceBundle()),
+					leftSide.toString());
+			target = new MemLocation(MemArea.IMMEDIATE, Void.class);
+		}
+
+		MemLocation second = null;
+		if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
+			// We want to do target _= right -> target for whatever operator _
+			second =
+				new MemLocation(target.area(), target.type(), target.value());
+		}
+
+		this.tempInstructions
+			.add(new Instruction(instruction, first, second, target));
 	}
 
 	@Override
@@ -597,6 +708,7 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(FieldAccess node) {
 		// TODO Auto-generated method stub
+		// Push the field access to the stack to be read or written to
 	}
 
 	@Override
