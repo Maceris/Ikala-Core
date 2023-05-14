@@ -3,6 +3,7 @@ package com.ikalagaming.scripting.ast;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -27,44 +28,51 @@ public class Type {
 	 * @author Ches Burks
 	 *
 	 */
+	@Getter
+	@AllArgsConstructor
 	public enum Base {
 		/**
 		 * A node that does not evaluate to a type.
 		 */
-		VOID,
+		VOID(Void.class),
 		/**
 		 * A node that is treated as a boolean.
 		 */
-		BOOLEAN,
+		BOOLEAN(Boolean.class),
 		/**
 		 * A node that is treated as a character.
 		 */
-		CHAR,
+		CHAR(Character.class),
 		/**
 		 * A node that is treated as a double.
 		 */
-		DOUBLE,
+		DOUBLE(Double.class),
 		/**
 		 * A node that is treated as an integer.
 		 */
-		INT,
+		INT(Integer.class),
 		/**
 		 * A node that is treated as an identifier, a class or interface type.
 		 */
-		IDENTIFIER,
+		IDENTIFIER(Object.class),
 		/**
 		 * A node that is treated as a string.
 		 */
-		STRING,
+		STRING(String.class),
 		/**
 		 * A type that we can't determine until runtime.
 		 */
-		UNKNOWN,
+		UNKNOWN(Object.class),
 		/**
 		 * A node that is used as a label we can jump to. Mostly used to reserve
 		 * identifiers.
 		 */
-		LABEL;
+		LABEL(Void.class);
+
+		/**
+		 * The type that this best maps onto in Java.
+		 */
+		private Class<?> correspondingClass;
 	}
 
 	/**
