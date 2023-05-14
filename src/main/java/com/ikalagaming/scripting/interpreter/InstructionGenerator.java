@@ -497,8 +497,8 @@ public class InstructionGenerator implements ASTVisitor {
 			 * them, or they should be skipped.
 			 */
 		}
-		else if (node instanceof ExprArithmetic
-			|| node instanceof ExprEquality) {
+		else if (node instanceof ExprArithmetic || node instanceof ExprEquality
+			|| node instanceof ExprRelation) {
 			// Reverse order
 			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
 				this.processTree(node.getChildren().get(i));
@@ -735,14 +735,38 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(ExprEquality node) {
 		// TODO use jumps or sets instead of pushing to the stack
+		// This happens on ExprLogic, for loop, and ifs
 		/*
 		 * We reverse the order of child parsing so the order here makes sense.
 		 * This is largely irrelevant, as it's commutative, but should be noted.
 		 */
-		MemLocation first = new MemLocation(MemArea.STACK, node.getChildren()
-			.get(0).getType().getBase().getCorrespondingClass());
-		MemLocation second = new MemLocation(MemArea.STACK, node.getChildren()
-			.get(1).getType().getBase().getCorrespondingClass());
+		Node left = node.getChildren().get(0);
+		Node right = node.getChildren().get(1);
+
+		/*
+		 * We reverse the order of child parsing so the order here makes sense.
+		 */
+		MemLocation first;
+		if (left instanceof Identifier leftID) {
+			first = new MemLocation(MemArea.VARIABLE,
+				left.getType().getBase().getCorrespondingClass(),
+				leftID.getName());
+		}
+		else {
+			first = new MemLocation(MemArea.STACK,
+				left.getType().getBase().getCorrespondingClass());
+		}
+		MemLocation second;
+
+		if (right instanceof Identifier rightID) {
+			second = new MemLocation(MemArea.VARIABLE,
+				left.getType().getBase().getCorrespondingClass(),
+				rightID.getName());
+		}
+		else {
+			second = new MemLocation(MemArea.STACK,
+				left.getType().getBase().getCorrespondingClass());
+		}
 
 		this.tempInstructions
 			.add(new Instruction(InstructionType.CMP, first, second, null));
@@ -751,11 +775,45 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(ExprLogic node) {
 		// TODO Auto-generated method stub
+		// TODO handle
 	}
 
 	@Override
 	public void visit(ExprRelation node) {
 		// TODO Auto-generated method stub
+		// TODO use jumps or sets instead of pushing to the stack
+		// This happens on ExprLogic, for loop, and ifs
+
+		Node left = node.getChildren().get(0);
+		Node right = node.getChildren().get(1);
+
+		/*
+		 * We reverse the order of child parsing so the order here makes sense.
+		 */
+		MemLocation first;
+		if (left instanceof Identifier leftID) {
+			first = new MemLocation(MemArea.VARIABLE,
+				left.getType().getBase().getCorrespondingClass(),
+				leftID.getName());
+		}
+		else {
+			first = new MemLocation(MemArea.STACK,
+				left.getType().getBase().getCorrespondingClass());
+		}
+		MemLocation second;
+
+		if (right instanceof Identifier rightID) {
+			second = new MemLocation(MemArea.VARIABLE,
+				left.getType().getBase().getCorrespondingClass(),
+				rightID.getName());
+		}
+		else {
+			second = new MemLocation(MemArea.STACK,
+				left.getType().getBase().getCorrespondingClass());
+		}
+
+		this.tempInstructions
+			.add(new Instruction(InstructionType.CMP, first, second, null));
 	}
 
 	@Override
@@ -826,7 +884,10 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Identifier node) {
-		// TODO Auto-generated method stub
+		this.tempInstructions.add(new Instruction(InstructionType.NOP,
+			new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
+			null, new MemLocation(MemArea.STACK,
+				node.getType().getBase().getCorrespondingClass())));
 	}
 
 	@Override
