@@ -236,7 +236,7 @@ public class ScriptRuntime {
 			&& (secondLocation.isChar() || secondLocation.isDouble()
 				|| secondLocation.isInt())) {
 
-			this.doubleComparison(i, (a, b) -> {
+			this.doubleComparison(i, firstItem, secondItem, (a, b) -> {
 				final double TOLERANCE = 0.00001;
 				if (Math.abs(a - b) < TOLERANCE) {
 					this.lastComparison = 0;
@@ -267,15 +267,14 @@ public class ScriptRuntime {
 	 * provided function.
 	 *
 	 * @param i The instruction we are doing comparisons on.
+	 * @param firstItem The first memory item.
+	 * @param secondItem The second memory item.
 	 * @param comparisonFunction The function to use for comparisons.
 	 */
-	private void doubleComparison(Instruction i,
-		BiConsumer<Double, Double> comparisonFunction) {
+	private void doubleComparison(Instruction i, MemoryItem firstItem,
+		MemoryItem secondItem, BiConsumer<Double, Double> comparisonFunction) {
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
-
-		final MemoryItem firstItem = this.loadValue(firstLocation);
-		final MemoryItem secondItem = this.loadValue(secondLocation);
 
 		if (this.fatalError) {
 			return;
