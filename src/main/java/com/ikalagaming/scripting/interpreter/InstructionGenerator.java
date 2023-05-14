@@ -642,15 +642,10 @@ public class InstructionGenerator implements ASTVisitor {
 		MemLocation first = new MemLocation(MemArea.STACK,
 			rightSide.getType().getBase().getCorrespondingClass());
 
-		// Handle different types of assignment
-		// Use target location cleverly with instructions, add val + expr -> val
-
 		Class<?> clazz = node.getType().getBase().getCorrespondingClass();
 
-		// Determine if the left side is a variable, field access, array access
-
 		MemLocation target = null;
-
+		// Determine if the left side is a variable, field access, array access
 		if (leftSide instanceof Identifier identifier) {
 			target =
 				new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
@@ -676,6 +671,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 		MemLocation second = null;
 		if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
+			// Handle somewhat in-place modification
 			// We want to do target _= right -> target for whatever operator _
 			second =
 				new MemLocation(target.area(), target.type(), target.value());
