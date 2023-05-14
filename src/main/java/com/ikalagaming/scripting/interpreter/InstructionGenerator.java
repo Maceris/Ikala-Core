@@ -50,8 +50,11 @@ import com.ikalagaming.util.SafeResourceLoader;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for transforming an abstract syntax tree into instructions.
@@ -428,15 +431,62 @@ public class InstructionGenerator implements ASTVisitor {
 
 		// generate temporary instructions
 
-		return this.processJumps(this.tempInstructions);
+		return this.processJumps();
 	}
 
-	private List<Instruction> processJumps(List<Instruction> tempResult) {
-		// TODO
+	private List<Instruction> processJumps() {
+		List<Instruction> result = new ArrayList<>();
+
 		// calculate jump locations for labels, conditionals, etc
-		// Strip out labels
+
+		/**
+		 * The number of the instruction each label actually refers to.
+		 */
+		Map<String, Integer> labelLocations = new HashMap<>();
+		/**
+		 * Stores labels we have passed, but not yet assigned a jump location
+		 * to. We might have multiple labels in a row between instructions.
+		 */
+		List<String> currentLabels = new ArrayList<>();
+		/**
+		 * The actual instruction number we are on, ignoring labels.
+		 */
+		int instructionCount = 0;
+		for (Instruction i : this.tempInstructions) {
+			if (i.type() == InstructionType.NOP) {
+				// Label
+				currentLabels.add((String) i.firstLocation().value());
+				// Strip out labels by just not copying them over
+				continue;
+			}
+			if (!currentLabels.isEmpty()) {
+				for (String label : currentLabels) {
+					labelLocations.put(label, instructionCount);
+				}
+				currentLabels.clear();
+			}
+			result.add(i);
+			++instructionCount;
+		}
+
 		// Replace jumps label field with relative locations
-		return tempResult;
+		for (int i = 0; i < result.size(); ++i) {
+			Instruction current = result.get(i);
+			final InstructionType type = current.type();
+
+			if (type == InstructionType.JEQ || type == InstructionType.JNE
+				|| type == InstructionType.JGE || type == InstructionType.JGT
+				|| type == InstructionType.JLE || type == InstructionType.JLT
+				|| type == InstructionType.JMP) {
+				// Look up the jump target
+				Instruction replacement = new Instruction(current.type(),
+					new MemLocation(MemArea.IMMEDIATE, Integer.class,
+						labelLocations.get(current.firstLocation().value())),
+					null, null);
+				result.set(i, replacement);
+			}
+		}
+		return result;
 	}
 
 	private void processTree(Node node) {
