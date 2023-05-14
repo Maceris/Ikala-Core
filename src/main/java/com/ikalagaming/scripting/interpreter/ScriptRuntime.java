@@ -458,25 +458,25 @@ public class ScriptRuntime {
 				this.halt();
 				break;
 			case JEQ:
-				this.jump(this.programCounter, comp -> comp == 0);
+				this.jump(i, comp -> comp == 0);
 				break;
 			case JGE:
-				this.jump(this.programCounter, comp -> comp >= 0);
+				this.jump(i, comp -> comp >= 0);
 				break;
 			case JGT:
-				this.jump(this.programCounter, comp -> comp > 0);
+				this.jump(i, comp -> comp > 0);
 				break;
 			case JLE:
-				this.jump(this.programCounter, comp -> comp <= 0);
+				this.jump(i, comp -> comp <= 0);
 				break;
 			case JLT:
-				this.jump(this.programCounter, comp -> comp < 0);
+				this.jump(i, comp -> comp < 0);
 				break;
 			case JMP:
-				this.jump(this.programCounter, comp -> true);
+				this.jump(i, comp -> true);
 				break;
 			case JNE:
-				this.jump(this.programCounter, comp -> comp != 0);
+				this.jump(i, comp -> comp != 0);
 				break;
 			case MOD_CHAR:
 				this.charMath(i, (a, b) -> (char) (a % b));
@@ -612,10 +612,11 @@ public class ScriptRuntime {
 	 * returns true when passed the last comparison value. If we don't jump, we
 	 * just move to the next instruction.
 	 *
-	 * @param location The location to jump to.
+	 * @param instruction The relevant jump instruction.
 	 * @param operator The function that determines if we should jump.
 	 */
-	private void jump(int location, IntPredicate operator) {
+	private void jump(Instruction instruction, IntPredicate operator) {
+		final int location = (Integer) instruction.firstLocation().value();
 		if (location < 0 || location > this.instructions.size()) {
 			// instructions.size is for when we want to bail on the program.
 			ScriptRuntime.log
