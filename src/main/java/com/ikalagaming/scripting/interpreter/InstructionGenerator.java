@@ -74,6 +74,86 @@ public class InstructionGenerator implements ASTVisitor {
 	private List<Instruction> tempInstructions;
 
 	/**
+	 * Calculates the type of instruction to use for assignment, since we can
+	 * have shortcuts like "+=", we can use different instructions for
+	 * efficiency.
+	 *
+	 * @param operator The Operator we want to use.
+	 * @param numericType The numerical type, assuming this is not a standard
+	 *            assignment. Might be null for normal assigns.
+	 * @return The instruction type to use.
+	 */
+	private InstructionType assignmentExpressionInstruction(
+		@NonNull ExprAssign.Operator operator, Class<?> numericType) {
+		// Yikes
+		switch (operator) {
+			case ADD_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.ADD_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.ADD_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.ADD_CHAR;
+				}
+				break;
+			case DIV_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.DIV_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.DIV_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.DIV_CHAR;
+				}
+				break;
+			case MOD_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.MOD_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.MOD_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.MOD_CHAR;
+				}
+				break;
+			case MUL_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.MUL_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.MUL_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.MUL_CHAR;
+				}
+				break;
+			case SUB_ASSIGN:
+				if (numericType == Integer.class) {
+					return InstructionType.SUB_INT;
+				}
+				if (numericType == Double.class) {
+					return InstructionType.SUB_DOUBLE;
+				}
+				if (numericType == Character.class) {
+					return InstructionType.SUB_CHAR;
+				}
+				break;
+			case ASSIGN:
+				return InstructionType.MOV;
+			default:
+				break;
+		}
+		InstructionGenerator.log
+			.warn(SafeResourceLoader.getString("UNKNONW_ASSIGN_OPERATOR",
+				ScriptManager.getResourceBundle()), operator.toString());
+		return InstructionType.NOP;
+	}
+
+	/**
 	 * Calculate and emit a jump based on the expression provided. This does not
 	 * emit the expression itself, only calculates which jump expression is
 	 * appropriate based on what we predict the expression to emit.
@@ -225,6 +305,31 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	/**
+	 * Calculate which numeric class best represents the math that will be done
+	 * involving a node, based on the base of the type of that node.
+	 *
+	 * @param node The nod ewe are interested in.
+	 * @return The class that best represents that node's base type.
+	 */
+	private Class<?> getNumericBase(Node node) {
+		switch (node.getType().getBase()) {
+			case CHAR, DOUBLE, INT, STRING:
+				return node.getType().getBase().getCorrespondingClass();
+			case UNKNOWN:
+				// We assume it's an integer, as that's most common
+				return Integer.class;
+			case BOOLEAN, IDENTIFIER, LABEL, VOID:
+			default:
+				// Fallback, but the tree verification should(tm) prevent this
+				InstructionGenerator.log.warn(
+					SafeResourceLoader.getString("INVALID_ARITHMETIC_TYPE",
+						ScriptManager.getResourceBundle()),
+					node.getType().toString());
+				return Integer.class;
+		}
+	}
+
+	/**
 	 * Calculate the instruction type based on the operator.
 	 *
 	 * @param node The node we are interested in.
@@ -342,7 +447,8 @@ public class InstructionGenerator implements ASTVisitor {
 			 * them, or they should be skipped.
 			 */
 		}
-		else if (node instanceof ExprArithmetic) {
+		else if (node instanceof ExprArithmetic
+			|| node instanceof ExprEquality) {
 			// Reverse order
 			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
 				this.processTree(node.getChildren().get(i));
@@ -469,34 +575,9 @@ public class InstructionGenerator implements ASTVisitor {
 			.add(new Instruction(InstructionType.HALT, null, null, null));
 	}
 
-	/**
-	 * Calculate which numeric class best represents the math that will be done
-	 * involving a node, based on the base of the type of that node.
-	 * 
-	 * @param node The nod ewe are interested in.
-	 * @return The class that best represents that node's base type.
-	 */
-	private Class<?> getNumericBase(Node node) {
-		switch (node.getType().getBase()) {
-			case CHAR, DOUBLE, INT, STRING:
-				return node.getType().getBase().getCorrespondingClass();
-			case UNKNOWN:
-				// We assume it's an integer, as that's most common
-				return Integer.class;
-			case BOOLEAN, IDENTIFIER, LABEL, VOID:
-			default:
-				// Fallback, but the tree verification should(tm) prevent this
-				InstructionGenerator.log.warn(
-					SafeResourceLoader.getString("INVALID_ARITHMETIC_TYPE",
-						ScriptManager.getResourceBundle()),
-					node.getType().toString());
-				return Integer.class;
-		}
-	}
-
 	@Override
 	public void visit(ExprArithmetic node) {
-		Class<?> clazz = getNumericBase(node);
+		Class<?> clazz = this.getNumericBase(node);
 
 		InstructionType type = this.instructionType(node);
 
@@ -545,86 +626,6 @@ public class InstructionGenerator implements ASTVisitor {
 		}
 	}
 
-	/**
-	 * Calculates the type of instruction to use for assignment, since we can
-	 * have shortcuts like "+=", we can use different instructions for
-	 * efficiency.
-	 * 
-	 * @param operator The Operator we want to use.
-	 * @param numericType The numerical type, assuming this is not a standard
-	 *            assignment. Might be null for normal assigns.
-	 * @return The instruction type to use.
-	 */
-	private InstructionType assignmentExpressionInstruction(
-		@NonNull ExprAssign.Operator operator, Class<?> numericType) {
-		// Yikes
-		switch (operator) {
-			case ADD_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.ADD_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.ADD_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.ADD_CHAR;
-				}
-				break;
-			case DIV_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.DIV_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.DIV_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.DIV_CHAR;
-				}
-				break;
-			case MOD_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.MOD_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.MOD_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.MOD_CHAR;
-				}
-				break;
-			case MUL_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.MUL_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.MUL_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.MUL_CHAR;
-				}
-				break;
-			case SUB_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.SUB_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.SUB_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.SUB_CHAR;
-				}
-				break;
-			case ASSIGN:
-				return InstructionType.MOV;
-			default:
-				break;
-		}
-		InstructionGenerator.log
-			.warn(SafeResourceLoader.getString("UNKNONW_ASSIGN_OPERATOR",
-				ScriptManager.getResourceBundle()), operator.toString());
-		return InstructionType.NOP;
-	}
-
 	@Override
 	public void visit(ExprAssign node) {
 		final Node leftSide = node.getChildren().get(0);
@@ -633,11 +634,11 @@ public class InstructionGenerator implements ASTVisitor {
 
 		Class<?> numericType = null;
 		if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
-			numericType = getNumericBase(leftSide);
+			numericType = this.getNumericBase(leftSide);
 		}
 
-		InstructionType instruction =
-			assignmentExpressionInstruction(node.getOperator(), numericType);
+		InstructionType instruction = this
+			.assignmentExpressionInstruction(node.getOperator(), numericType);
 
 		MemLocation first = new MemLocation(MemArea.STACK,
 			rightSide.getType().getBase().getCorrespondingClass());
@@ -683,7 +684,23 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprEquality node) {
-		// TODO Auto-generated method stub
+		/*
+		 * We reverse the order of child parsing so the order here makes sense.
+		 * This is largely irrelevant, as it's commutative, but should be noted.
+		 */
+		MemLocation first = new MemLocation(MemArea.STACK, node.getChildren()
+			.get(0).getType().getBase().getCorrespondingClass());
+		MemLocation second = new MemLocation(MemArea.STACK, node.getChildren()
+			.get(1).getType().getBase().getCorrespondingClass());
+
+		this.tempInstructions.add(new Instruction(InstructionType.CMP_EQ, first,
+			second, new MemLocation(MemArea.STACK, Boolean.class)));
+		if (node.getOperator() == ExprEquality.Operator.NOT_EQUAL) {
+			// Just invert it as a second step, no need to get fancy
+			this.tempInstructions.add(new Instruction(InstructionType.NOT,
+				new MemLocation(MemArea.STACK, Boolean.class), null,
+				new MemLocation(MemArea.STACK, Boolean.class)));
+		}
 	}
 
 	@Override
@@ -759,7 +776,7 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(Goto node) {
 		Identifier target = (Identifier) node.getChildren().get(0);
-		emitJump(InstructionType.JMP, target.getName());
+		this.emitJump(InstructionType.JMP, target.getName());
 	}
 
 	@Override
