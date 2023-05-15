@@ -198,11 +198,11 @@ statementExpressionList
 	;
 
 breakStatement
-	:	BREAK Identifier?
+	:	BREAK
 	;
 
 continueStatement
-	:	CONTINUE Identifier?
+	:	CONTINUE
 	;
 
 gotoStatement

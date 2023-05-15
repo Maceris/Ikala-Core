@@ -71,6 +71,18 @@ public class InstructionGenerator implements ASTVisitor {
 	private int nextLabel = 0;
 
 	/**
+	 * Where we need to jump to in order to break out of the current, most
+	 * proximal, loop.
+	 */
+	private String breakLabel;
+
+	/**
+	 * Where we need to jump to in order to continue with the next iteration of
+	 * the current, most proximal, loop.
+	 */
+	private String continueLabel;
+
+	/**
 	 * A temporary list of instructions. We include a bunch of labels, including
 	 * temporary ones used for loops and conditionals.
 	 */
@@ -270,6 +282,26 @@ public class InstructionGenerator implements ASTVisitor {
 			.warn(SafeResourceLoader.getString("UNHANDLED_EXPRESSION_MEMBER",
 				ScriptManager.getResourceBundle()), node.toString());
 		return new MemLocation(MemArea.STACK, clazz);
+	}
+
+	/**
+	 * Check if a loop contains a break without a label name. We will need a
+	 * label to break to after the loop in that case.
+	 *
+	 * @param loop The loop we are interested in.
+	 * @return Whether there is a generic break in that loop.
+	 */
+	private boolean containsBreak(Node loop) {
+		for (Node child : loop.getChildren()) {
+			if (child instanceof Break br) {
+				return br.getChildren().isEmpty();
+			}
+			// recurse
+			if (this.containsBreak(child)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -544,6 +576,7 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(Break node) {
 		// TODO Auto-generated method stub
+		// Need a label after things like labeled blocks
 	}
 
 	@Override
@@ -606,7 +639,9 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Continue node) {
-		// TODO Auto-generated method stub
+		String target;
+		target = continueLabel;
+		emitJump(InstructionType.JMP, target);
 	}
 
 	@Override
@@ -855,14 +890,19 @@ public class InstructionGenerator implements ASTVisitor {
 		final String topOfLoopLabel = this.getNextLabelName();
 		final String conditionLabel = this.getNextLabelName();
 
+		final boolean containsBreak = this.containsBreak(body);
+		if (containsBreak) {
+			this.breakLabel = this.getNextLabelName();
+		}
+
+		this.continueLabel = conditionLabel;
+
 		if (init != null) {
 			this.processTree(init);
 		}
 		this.emitJump(InstructionType.JMP, conditionLabel);
 		this.emitLabel(topOfLoopLabel);
-		if (body != null) {
-			this.processTree(body);
-		}
+		this.processTree(body);
 		if (update != null) {
 			this.processTree(update);
 		}
@@ -873,6 +913,9 @@ public class InstructionGenerator implements ASTVisitor {
 		}
 		else {
 			this.emitJump(InstructionType.JMP, topOfLoopLabel);
+		}
+		if (containsBreak) {
+			this.emitLabel(this.breakLabel);
 		}
 	}
 

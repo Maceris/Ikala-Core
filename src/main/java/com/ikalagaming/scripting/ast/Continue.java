@@ -1,8 +1,7 @@
 package com.ikalagaming.scripting.ast;
 
 /**
- * A continue statement, which might contain an identifier for which labeled
- * statement to continue with.
+ * A continue statement.
  *
  * @author Ches Burks
  *

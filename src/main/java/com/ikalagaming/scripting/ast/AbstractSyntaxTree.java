@@ -83,6 +83,10 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  */
 @Slf4j
 public class AbstractSyntaxTree {
+	private static final String UNKNOWN_STATEMENT = "UNKNOWN_STATEMENT";
+	private static final String UNKNOWN_UNARY_EXPRESSION =
+		"UNKNOWN_UNARY_EXPRESSION";
+
 	/**
 	 * Fetch the base type of a primitive type.
 	 *
@@ -423,13 +427,9 @@ public class AbstractSyntaxTree {
 	 * @param node The context to parse.
 	 * @return The parsed version of the node.
 	 */
-	private static Node process(BreakStatementContext node) {
+	private static Node process(BreakStatementContext node/* NOSONAR */) {
 		Break result = new Break();
 		result.setType(Type.voidType());
-		if (node.Identifier() != null) {
-			result
-				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
-		}
 		return result;
 	}
 
@@ -551,13 +551,9 @@ public class AbstractSyntaxTree {
 	 * @param node The context to parse.
 	 * @return The parsed version of the node.
 	 */
-	private static Node process(ContinueStatementContext node) {
+	private static Node process(ContinueStatementContext node/* NOSONAR */) {
 		Continue result = new Continue();
 		result.setType(Type.voidType());
-		if (node.Identifier() != null) {
-			result
-				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
-		}
 		return result;
 	}
 
@@ -1281,7 +1277,7 @@ public class AbstractSyntaxTree {
 		}
 
 		AbstractSyntaxTree.log.warn(SafeResourceLoader
-			.getString("UNKNOWN_STATEMENT", ScriptManager.getResourceBundle()),
+			.getString(UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1358,7 +1354,7 @@ public class AbstractSyntaxTree {
 		}
 
 		AbstractSyntaxTree.log.warn(SafeResourceLoader
-			.getString("UNKNOWN_STATEMENT", ScriptManager.getResourceBundle()),
+			.getString(UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1399,7 +1395,7 @@ public class AbstractSyntaxTree {
 		}
 
 		AbstractSyntaxTree.log.warn(SafeResourceLoader
-			.getString("UNKNOWN_STATEMENT", ScriptManager.getResourceBundle()),
+			.getString(UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1494,10 +1490,9 @@ public class AbstractSyntaxTree {
 				result.setOperator(ExprArithmetic.Operator.SUB);
 			}
 			else {
-				AbstractSyntaxTree.log.warn(
-					SafeResourceLoader.getString("UNKNOWN_UNARY_EXPRESSION",
-						ScriptManager.getResourceBundle()),
-					node.getText());
+				AbstractSyntaxTree.log
+					.warn(SafeResourceLoader.getString(UNKNOWN_UNARY_EXPRESSION,
+						ScriptManager.getResourceBundle()), node.getText());
 			}
 			result.addChild(AbstractSyntaxTree.process(node.unaryExpression()));
 			return result;
@@ -1508,7 +1503,7 @@ public class AbstractSyntaxTree {
 		}
 
 		AbstractSyntaxTree.log
-			.warn(SafeResourceLoader.getString("UNKNOWN_UNARY_EXPRESSION",
+			.warn(SafeResourceLoader.getString(UNKNOWN_UNARY_EXPRESSION,
 				ScriptManager.getResourceBundle()), node.getText());
 
 		return null;
@@ -1532,7 +1527,7 @@ public class AbstractSyntaxTree {
 		}
 
 		AbstractSyntaxTree.log
-			.warn(SafeResourceLoader.getString("UNKNOWN_UNARY_EXPRESSION",
+			.warn(SafeResourceLoader.getString(UNKNOWN_UNARY_EXPRESSION,
 				ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
