@@ -1,5 +1,8 @@
 package com.ikalagaming.scripting.ast;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.stream.Collectors;
 
 /**
@@ -8,7 +11,15 @@ import java.util.stream.Collectors;
  * @author Ches Burks
  *
  */
+@Getter
+@Setter
 public class CompilationUnit extends Node {
+	/**
+	 * If we know immediately that this is not valid because we found unknown
+	 * block statements on the initial build of the tree.
+	 */
+	private boolean invalid = false;
+
 	@Override
 	public void process(ASTVisitor visitor) {
 		visitor.visit(this);

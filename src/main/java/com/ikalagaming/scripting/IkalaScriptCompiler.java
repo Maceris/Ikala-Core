@@ -33,13 +33,26 @@ public class IkalaScriptCompiler {
 	 */
 	public Optional<ScriptRuntime> parse(CharStream input) {
 		// Generate parse tree
+		ParserErrorListener errorListener = new ParserErrorListener();
+
 		IkalaScriptLexer lexer = new IkalaScriptLexer(input);
+		lexer.removeErrorListeners();
+		lexer.addErrorListener(errorListener);
 		TokenStream tokenStream = new BufferedTokenStream(lexer);
 		IkalaScriptParser parser = new IkalaScriptParser(tokenStream);
+		parser.removeErrorListeners();
+		parser.addErrorListener(errorListener);
+		
 		CompilationUnitContext context = parser.compilationUnit();
+		if (errorListener.getErrorCount() > 0) {
+			return Optional.empty();
+		}
 
 		// Convert parse tree to an Abstract Syntax Tree
 		CompilationUnit ast = AbstractSyntaxTree.process(context);
+		if (ast.isInvalid()) {
+			return Optional.empty();
+		}
 
 		// Clean up types
 		TypePreprocessor processor = new TypePreprocessor();

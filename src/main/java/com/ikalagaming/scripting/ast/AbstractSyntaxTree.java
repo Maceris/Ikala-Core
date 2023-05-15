@@ -475,8 +475,15 @@ public class AbstractSyntaxTree {
 		if (parserOutput.blockStatement() != null) {
 			final int count = parserOutput.blockStatement().size();
 			for (int i = 0; i < count; ++i) {
-				root.addChild(
-					AbstractSyntaxTree.process(parserOutput.blockStatement(i)));
+				Node child =
+					AbstractSyntaxTree.process(parserOutput.blockStatement(i));
+				if (child == null) {
+					root.setInvalid(true);
+					// Might as well immediately bail
+					return root;
+				}
+				root.addChild(child);
+
 			}
 		}
 		return root;
