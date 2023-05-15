@@ -76,7 +76,8 @@ public class ExprArithmetic extends Node {
 
 	/**
 	 * Used to signify that the result of this expression is not used for
-	 * anything, and does not need to be stored on the stack.
+	 * anything, and does not need to be stored on the stack. Mostly required
+	 * because things like ++x and x-- are valid statements.
 	 */
 	private boolean ignoreResult;
 

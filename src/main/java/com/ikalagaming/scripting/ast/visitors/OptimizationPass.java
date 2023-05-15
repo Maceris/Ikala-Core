@@ -2,6 +2,7 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
+import com.ikalagaming.scripting.ast.Block;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
@@ -390,5 +391,23 @@ public class OptimizationPass implements ASTVisitor {
 		}
 
 		return result;
+	}
+
+	@Override
+	public void visit(Block node) {
+		for (Node child : node.getChildren()) {
+			if (child instanceof ExprArithmetic arithmetic) {
+				arithmetic.setIgnoreResult(true);
+			}
+		}
+	}
+
+	@Override
+	public void visit(CompilationUnit node) {
+		for (Node child : node.getChildren()) {
+			if (child instanceof ExprArithmetic arithmetic) {
+				arithmetic.setIgnoreResult(true);
+			}
+		}
 	}
 }

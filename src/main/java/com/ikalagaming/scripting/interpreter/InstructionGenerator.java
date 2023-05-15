@@ -523,7 +523,8 @@ public class InstructionGenerator implements ASTVisitor {
 
 	private void processTree(Node node) {
 		if (node instanceof ForLoop || node instanceof VarDeclaration
-			|| node instanceof Goto || node instanceof ExprAssign) {
+			|| node instanceof Goto || node instanceof ExprAssign
+			|| node instanceof While || node instanceof DoWhile) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
@@ -575,8 +576,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Break node) {
-		// TODO Auto-generated method stub
-		// Need a label after things like labeled blocks
+		emitJump(InstructionType.JMP, breakLabel);
 	}
 
 	@Override
@@ -639,9 +639,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Continue node) {
-		String target;
-		target = continueLabel;
-		emitJump(InstructionType.JMP, target);
+		emitJump(InstructionType.JMP, continueLabel);
 	}
 
 	@Override
@@ -1060,6 +1058,32 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(While node) {
 		// TODO Auto-generated method stub
+
+		Node conditional = node.getChildren().get(0);
+		Node body = node.getChildren().get(1);
+
+		final String topOfLoopLabel = this.getNextLabelName();
+		final String conditionLabel = this.getNextLabelName();
+
+		final boolean containsBreak = this.containsBreak(body);
+		if (containsBreak) {
+			this.breakLabel = this.getNextLabelName();
+		}
+
+		this.continueLabel = conditionLabel;
+
+		this.emitJump(InstructionType.JMP, conditionLabel);
+		this.emitLabel(topOfLoopLabel);
+
+		this.processTree(body);
+
+		this.emitLabel(conditionLabel);
+		this.processTree(conditional);
+		this.calculateJump(conditional, topOfLoopLabel);
+
+		if (containsBreak) {
+			this.emitLabel(this.breakLabel);
+		}
 	}
 
 }
