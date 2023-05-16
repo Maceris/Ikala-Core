@@ -114,13 +114,6 @@ public interface ASTVisitor {
 	default void visit(DoWhile node) {}
 
 	/**
-	 * Visit the EnhancedForLoop node and perform an operation.
-	 *
-	 * @param node The node we are visiting.
-	 */
-	default void visit(EnhancedForLoop node) {}
-
-	/**
 	 * Visit the Exit node and perform an operation.
 	 *
 	 * @param node The node we are visiting.

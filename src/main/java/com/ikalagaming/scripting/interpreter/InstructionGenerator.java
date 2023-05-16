@@ -17,7 +17,6 @@ import com.ikalagaming.scripting.ast.ConstNull;
 import com.ikalagaming.scripting.ast.ConstString;
 import com.ikalagaming.scripting.ast.Continue;
 import com.ikalagaming.scripting.ast.DoWhile;
-import com.ikalagaming.scripting.ast.EnhancedForLoop;
 import com.ikalagaming.scripting.ast.Exit;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprArithmetic.Operator;
@@ -591,7 +590,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(CompilationUnit node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
@@ -644,12 +643,28 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(DoWhile node) {
-		// TODO Auto-generated method stub
-	}
+		Node conditional = node.getChildren().get(0);
+		Node body = node.getChildren().get(1);
 
-	@Override
-	public void visit(EnhancedForLoop node) {
-		// TODO Auto-generated method stub
+		final String topOfLoopLabel = this.getNextLabelName();
+		final String conditionLabel = this.getNextLabelName();
+		this.continueLabel = conditionLabel;
+
+		final boolean containsBreak = this.containsBreak(body);
+		if (containsBreak) {
+			this.breakLabel = this.getNextLabelName();
+		}
+
+		this.emitLabel(topOfLoopLabel);
+
+		this.processTree(body);
+
+		this.processTree(conditional);
+		this.calculateJump(conditional, topOfLoopLabel);
+
+		if (containsBreak) {
+			this.emitLabel(this.breakLabel);
+		}
 	}
 
 	@Override
@@ -1057,20 +1072,17 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(While node) {
-		// TODO Auto-generated method stub
-
 		Node conditional = node.getChildren().get(0);
 		Node body = node.getChildren().get(1);
 
 		final String topOfLoopLabel = this.getNextLabelName();
 		final String conditionLabel = this.getNextLabelName();
+		this.continueLabel = conditionLabel;
 
 		final boolean containsBreak = this.containsBreak(body);
 		if (containsBreak) {
 			this.breakLabel = this.getNextLabelName();
 		}
-
-		this.continueLabel = conditionLabel;
 
 		this.emitJump(InstructionType.JMP, conditionLabel);
 		this.emitLabel(topOfLoopLabel);
