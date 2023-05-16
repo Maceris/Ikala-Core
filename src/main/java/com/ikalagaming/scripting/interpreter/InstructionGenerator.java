@@ -643,8 +643,8 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(DoWhile node) {
-		Node conditional = node.getChildren().get(0);
-		Node body = node.getChildren().get(1);
+		Node body = node.getChildren().get(0);
+		Node conditional = node.getChildren().get(1);
 
 		final String topOfLoopLabel = this.getNextLabelName();
 		final String conditionLabel = this.getNextLabelName();
