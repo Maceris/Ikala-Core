@@ -499,6 +499,15 @@ public class InstructionGenerator implements ASTVisitor {
 			result.add(i);
 			++instructionCount;
 		}
+		
+		// Handle labels at the end of the program
+		if (!currentLabels.isEmpty()) {
+			for (String label : currentLabels) {
+				labelLocations.put(label, instructionCount);
+			}
+			currentLabels.clear();
+		}
+		
 
 		// Replace jumps label field with relative locations
 		for (int i = 0; i < result.size(); ++i) {
