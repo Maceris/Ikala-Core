@@ -168,16 +168,108 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	/**
-	 * Calculate and emit a jump based on the expression provided. This does not
-	 * emit the expression itself, only calculates which jump expression is
-	 * appropriate based on what we predict the expression to emit.
+	 * <p>
+	 * Calculate and emit a jump based on the opposite expression provided. This
+	 * does not emit the expression itself, only calculates which jump
+	 * expression is appropriate based on what we predict the expression to
+	 * emit.
+	 * </p>
 	 *
+	 * <p>
 	 * We do this because comparison and jumps are separate instructions,
 	 * emitted by different visitors, but we need them to cooperate.
+	 * </p>
+	 *
+	 * <p>
+	 * This specific method exists because if statements need to jump to the
+	 * else clause or after the if, but fall through to the if.
+	 * </p>
+	 *
+	 * @param expression Any kind of expression according to the grammar, but
+	 *            must evaluate to a boolean.
+	 * @param targetLabel Where we are jumping to <i>unless</i> the condition is
+	 *            true.
+	 * @see #calculateJump(Node, String)
+	 */
+	private void calculateInvertedJump(@NonNull Node expression,
+		@NonNull String targetLabel) {
+		/*
+		 * These are arranged in descending order of how likely I think they are
+		 * to show up in practice, because I have to pick an order so I may as
+		 * well try to minimize the expected number of checks.
+		 */
+		if (expression instanceof ExprRelation relation) {
+			InstructionType type;
+			switch (relation.getOperator()) {
+				case GT:
+					type = InstructionType.JLE;
+					break;
+				case GTE:
+					type = InstructionType.JLT;
+					break;
+				case LT:
+					type = InstructionType.JGE;
+					break;
+				case LTE:
+					type = InstructionType.JGT;
+					break;
+				default:
+					type = InstructionType.NOP;
+					break;
+			}
+			this.emitJump(type, targetLabel);
+			return;
+		}
+		if (expression instanceof ExprEquality equality) {
+			InstructionType type;
+			switch (equality.getOperator()) {
+				case EQUAL:
+					type = InstructionType.JNE;
+					break;
+				case NOT_EQUAL:
+					type = InstructionType.JEQ;
+					break;
+				default:
+					type = InstructionType.NOP;
+					break;
+			}
+			this.emitJump(type, targetLabel);
+			return;
+		}
+		if (expression instanceof ExprLogic || expression instanceof ExprAssign
+			|| expression instanceof ExprTernary) {
+			// Boolean values
+
+			// Convert the resulting boolean value to a flag, clean the stack
+			this.tempInstructions.add(new Instruction(InstructionType.CMP,
+				new MemLocation(MemArea.STACK, Boolean.class),
+				new MemLocation(MemArea.IMMEDIATE, Boolean.class, true), null));
+
+			this.emitJump(InstructionType.JNE, targetLabel);
+			return;
+		}
+		InstructionGenerator.log
+			.warn(SafeResourceLoader.getString("UNEXPECTED_EXPRESSION",
+				ScriptManager.getResourceBundle()), expression.toString());
+	}
+
+	/**
+	 * <p>
+	 * Calculate and emit a jump based on the opposite expression provided. This
+	 * does not emit the expression itself, only calculates which jump
+	 * expression is appropriate based on what we predict the expression to
+	 * emit.
+	 * </p>
+	 *
+	 * <p>
+	 * We do this because comparison and jumps are separate instructions,
+	 * emitted by different visitors, but we need them to cooperate.
+	 * </p>
 	 *
 	 * @param expression Any kind of expression according to the grammar, but
 	 *            must evaluate to a boolean.
 	 * @param targetLabel Where we are jumping to.
+	 * @see #calculateInvertedJump(Node, String)
 	 */
 	private void calculateJump(@NonNull Node expression,
 		@NonNull String targetLabel) {
@@ -531,7 +623,8 @@ public class InstructionGenerator implements ASTVisitor {
 	private void processTree(Node node) {
 		if (node instanceof ForLoop || node instanceof VarDeclaration
 			|| node instanceof Goto || node instanceof ExprAssign
-			|| node instanceof While || node instanceof DoWhile) {
+			|| node instanceof While || node instanceof DoWhile
+			|| node instanceof If) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
@@ -583,7 +676,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Break node) {
-		emitJump(InstructionType.JMP, breakLabel);
+		this.emitJump(InstructionType.JMP, this.breakLabel);
 	}
 
 	@Override
@@ -646,7 +739,7 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Continue node) {
-		emitJump(InstructionType.JMP, continueLabel);
+		this.emitJump(InstructionType.JMP, this.continueLabel);
 	}
 
 	@Override
@@ -956,7 +1049,28 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(If node) {
-		// TODO Auto-generated method stub
+		Node conditional = node.getChildren().get(0);
+		Node ifPart = node.getChildren().get(1);
+		final boolean containsElse = node.getChildren().size() > 2;
+
+		final String end = this.getNextLabelName();
+
+		this.processTree(conditional);
+		if (containsElse) {
+			Node elsePart = node.getChildren().get(2);
+			String elseLabel = this.getNextLabelName();
+			// If not condition, goto else, otherwise we fall through to if
+			this.calculateInvertedJump(conditional, elseLabel);
+			this.processTree(ifPart);
+			this.emitJump(InstructionType.JMP, end);
+			this.emitLabel(elseLabel);
+			this.processTree(elsePart);
+		}
+		else {
+			this.calculateInvertedJump(conditional, end);
+			this.processTree(ifPart);
+		}
+		this.emitLabel(end);
 	}
 
 	@Override
