@@ -242,6 +242,7 @@ primary_LHS
 	|	LPAREN expression RPAREN
 	|	arrayAccess_LHS
 	|	methodInvocation_LHS
+	|	Identifier
 	;
 
 primary_LHS_access

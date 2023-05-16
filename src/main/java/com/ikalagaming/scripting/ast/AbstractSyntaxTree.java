@@ -326,62 +326,6 @@ public class AbstractSyntaxTree {
 	}
 
 	/**
-	 * Process a basic for loop.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ForStatementContext node) {
-		ForLoop result = new ForLoop();
-		result.setType(Type.voidType());
-		if (node.forInit() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.forInit()));
-			result.setInitializer(true);
-		}
-		if (node.expression() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.expression()));
-			result.setCondition(true);
-		}
-		if (node.statementExpressionList() != null) {
-			result.addChild(
-				AbstractSyntaxTree.process(node.statementExpressionList()));
-			result.setUpdate(true);
-		}
-
-		result.addChild(AbstractSyntaxTree.process(node.statement()));
-
-		return result;
-	}
-
-	/**
-	 * Process a basic for loop without a short if.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ForStatementNoShortIfContext node) {
-		ForLoop result = new ForLoop();
-		result.setType(Type.voidType());
-		if (node.forInit() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.forInit()));
-			result.setInitializer(true);
-		}
-		if (node.expression() != null) {
-			result.addChild(AbstractSyntaxTree.process(node.expression()));
-			result.setCondition(true);
-		}
-		if (node.statementExpressionList() != null) {
-			result.addChild(
-				AbstractSyntaxTree.process(node.statementExpressionList()));
-			result.setUpdate(true);
-		}
-
-		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
-
-		return result;
-	}
-
-	/**
 	 * Process a block.
 	 *
 	 * @param node The context to parse.
@@ -663,6 +607,62 @@ public class AbstractSyntaxTree {
 			.getString("UNKNOWN_FOR_INIT", ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
+	}
+
+	/**
+	 * Process a basic for loop.
+	 *
+	 * @param node The context to parse.
+	 * @return The parsed version of the node.
+	 */
+	private static Node process(ForStatementContext node) {
+		ForLoop result = new ForLoop();
+		result.setType(Type.voidType());
+		if (node.forInit() != null) {
+			result.addChild(AbstractSyntaxTree.process(node.forInit()));
+			result.setInitializer(true);
+		}
+		if (node.expression() != null) {
+			result.addChild(AbstractSyntaxTree.process(node.expression()));
+			result.setCondition(true);
+		}
+		if (node.statementExpressionList() != null) {
+			result.addChild(
+				AbstractSyntaxTree.process(node.statementExpressionList()));
+			result.setUpdate(true);
+		}
+
+		result.addChild(AbstractSyntaxTree.process(node.statement()));
+
+		return result;
+	}
+
+	/**
+	 * Process a basic for loop without a short if.
+	 *
+	 * @param node The context to parse.
+	 * @return The parsed version of the node.
+	 */
+	private static Node process(ForStatementNoShortIfContext node) {
+		ForLoop result = new ForLoop();
+		result.setType(Type.voidType());
+		if (node.forInit() != null) {
+			result.addChild(AbstractSyntaxTree.process(node.forInit()));
+			result.setInitializer(true);
+		}
+		if (node.expression() != null) {
+			result.addChild(AbstractSyntaxTree.process(node.expression()));
+			result.setCondition(true);
+		}
+		if (node.statementExpressionList() != null) {
+			result.addChild(
+				AbstractSyntaxTree.process(node.statementExpressionList()));
+			result.setUpdate(true);
+		}
+
+		result.addChild(AbstractSyntaxTree.process(node.statementNoShortIf()));
+
+		return result;
 	}
 
 	/**
@@ -1100,6 +1100,9 @@ public class AbstractSyntaxTree {
 		else if (lhs.methodInvocation_LHS() != null) {
 			leftNode = AbstractSyntaxTree.process(lhs.methodInvocation_LHS());
 		}
+		else if (lhs.Identifier() != null) {
+			leftNode = AbstractSyntaxTree.identifierNode(lhs.Identifier());
+		}
 		else {
 			// Should be impossible unless the grammar changes
 			AbstractSyntaxTree.log
@@ -1283,8 +1286,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.forStatement());
 		}
 
-		AbstractSyntaxTree.log.warn(SafeResourceLoader
-			.getString(UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
+		AbstractSyntaxTree.log.warn(
+			SafeResourceLoader.getString(AbstractSyntaxTree.UNKNOWN_STATEMENT,
+				ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1360,8 +1364,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.forStatementNoShortIf());
 		}
 
-		AbstractSyntaxTree.log.warn(SafeResourceLoader
-			.getString(UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
+		AbstractSyntaxTree.log.warn(
+			SafeResourceLoader.getString(AbstractSyntaxTree.UNKNOWN_STATEMENT,
+				ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1401,8 +1406,9 @@ public class AbstractSyntaxTree {
 			return result;
 		}
 
-		AbstractSyntaxTree.log.warn(SafeResourceLoader
-			.getString(UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
+		AbstractSyntaxTree.log.warn(
+			SafeResourceLoader.getString(AbstractSyntaxTree.UNKNOWN_STATEMENT,
+				ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
 	}
@@ -1497,9 +1503,9 @@ public class AbstractSyntaxTree {
 				result.setOperator(ExprArithmetic.Operator.SUB);
 			}
 			else {
-				AbstractSyntaxTree.log
-					.warn(SafeResourceLoader.getString(UNKNOWN_UNARY_EXPRESSION,
-						ScriptManager.getResourceBundle()), node.getText());
+				AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
+					AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
+					ScriptManager.getResourceBundle()), node.getText());
 			}
 			result.addChild(AbstractSyntaxTree.process(node.unaryExpression()));
 			return result;
@@ -1509,9 +1515,9 @@ public class AbstractSyntaxTree {
 				.process(node.unaryExpressionNotPlusMinus());
 		}
 
-		AbstractSyntaxTree.log
-			.warn(SafeResourceLoader.getString(UNKNOWN_UNARY_EXPRESSION,
-				ScriptManager.getResourceBundle()), node.getText());
+		AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
+			AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
+			ScriptManager.getResourceBundle()), node.getText());
 
 		return null;
 	}
@@ -1533,9 +1539,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.castExpression());
 		}
 
-		AbstractSyntaxTree.log
-			.warn(SafeResourceLoader.getString(UNKNOWN_UNARY_EXPRESSION,
-				ScriptManager.getResourceBundle()), node.getText());
+		AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
+			AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
+			ScriptManager.getResourceBundle()), node.getText());
 		return null;
 	}
 

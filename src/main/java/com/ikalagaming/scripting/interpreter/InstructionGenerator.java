@@ -499,7 +499,7 @@ public class InstructionGenerator implements ASTVisitor {
 			result.add(i);
 			++instructionCount;
 		}
-		
+
 		// Handle labels at the end of the program
 		if (!currentLabels.isEmpty()) {
 			for (String label : currentLabels) {
@@ -507,7 +507,6 @@ public class InstructionGenerator implements ASTVisitor {
 			}
 			currentLabels.clear();
 		}
-		
 
 		// Replace jumps label field with relative locations
 		for (int i = 0; i < result.size(); ++i) {
@@ -1031,16 +1030,15 @@ public class InstructionGenerator implements ASTVisitor {
 			case STRING:
 				clazz = String.class;
 				break;
-			case UNKNOWN:
+			case UNKNOWN, IDENTIFIER:
 				clazz = Object.class;
 				break;
-			case IDENTIFIER, LABEL, VOID:
+			case LABEL, VOID:
 			default:
-				InstructionGenerator.log
-					.warn(
-						SafeResourceLoader.getString("INVALID_MEMORY_TYPE",
-							ScriptManager.getResourceBundle()),
-						node.toString());
+				InstructionGenerator.log.warn(
+					SafeResourceLoader.getString("INVALID_MEMORY_TYPE",
+						ScriptManager.getResourceBundle()),
+					node.getType().getBase());
 				clazz = Object.class;
 		}
 
