@@ -53,18 +53,16 @@ public class ParserErrorListener implements ANTLRErrorListener {
 	public void reportAttemptingFullContext(Parser recognizer, DFA dfa,
 		int startIndex, int stopIndex, BitSet conflictingAlts,
 		ATNConfigSet configs) {
-		log.info(SafeResourceLoader.getString("FULL_CONTEXT",
+		log.debug(SafeResourceLoader.getString("FULL_CONTEXT",
 			ScriptManager.getResourceBundle()));
-		++errorCount;
 
 	}
 
 	@Override
 	public void reportContextSensitivity(Parser recognizer, DFA dfa,
 		int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-		log.info(SafeResourceLoader.getString("CONTEXT_SENSITIVE",
+		log.debug(SafeResourceLoader.getString("CONTEXT_SENSITIVE",
 			ScriptManager.getResourceBundle()));
-		++errorCount;
 	}
 
 }

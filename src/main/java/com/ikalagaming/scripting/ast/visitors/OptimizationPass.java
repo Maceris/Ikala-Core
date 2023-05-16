@@ -35,6 +35,20 @@ public class OptimizationPass implements ASTVisitor {
 	private static final String INVALID_OPERATOR = "INVALID_OPERATOR";
 
 	/**
+	 * Go through all immediate children nodes, and ignore expression results
+	 * that are not going to be stored anywhere.
+	 *
+	 * @param node The node that should contain statements.
+	 */
+	private void ignoreExpressionResults(Node node) {
+		for (Node child : node.getChildren()) {
+			if (child instanceof ExprArithmetic arithmetic) {
+				arithmetic.setIgnoreResult(true);
+			}
+		}
+	}
+
+	/**
 	 * Optimize the syntax tree.
 	 *
 	 * @param ast The tree to validate.
@@ -395,19 +409,16 @@ public class OptimizationPass implements ASTVisitor {
 
 	@Override
 	public void visit(Block node) {
-		for (Node child : node.getChildren()) {
-			if (child instanceof ExprArithmetic arithmetic) {
-				arithmetic.setIgnoreResult(true);
-			}
-		}
+		this.ignoreExpressionResults(node);
 	}
 
 	@Override
 	public void visit(CompilationUnit node) {
-		for (Node child : node.getChildren()) {
-			if (child instanceof ExprArithmetic arithmetic) {
-				arithmetic.setIgnoreResult(true);
-			}
-		}
+		this.ignoreExpressionResults(node);
+	}
+
+	@Override
+	public void visit(StatementList node) {
+		this.ignoreExpressionResults(node);
 	}
 }
