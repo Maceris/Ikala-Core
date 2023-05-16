@@ -43,10 +43,8 @@ public class ParserErrorListener implements ANTLRErrorListener {
 	@Override
 	public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex,
 		int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-		log.warn(SafeResourceLoader.getString("AMBIGUITY",
+		log.debug(SafeResourceLoader.getString("AMBIGUITY",
 			ScriptManager.getResourceBundle()));
-		++errorCount;
-
 	}
 
 	@Override
@@ -55,7 +53,6 @@ public class ParserErrorListener implements ANTLRErrorListener {
 		ATNConfigSet configs) {
 		log.debug(SafeResourceLoader.getString("FULL_CONTEXT",
 			ScriptManager.getResourceBundle()));
-
 	}
 
 	@Override
