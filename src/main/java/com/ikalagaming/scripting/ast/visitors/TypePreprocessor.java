@@ -98,6 +98,11 @@ public class TypePreprocessor implements ASTVisitor {
 	}
 
 	@Override
+	public void visit(Call node) {
+		node.setType(Type.unknownType());
+	}
+
+	@Override
 	public void visit(ExprArithmetic node) {
 		if (node.getChildren().isEmpty()) {
 			TypePreprocessor.log
