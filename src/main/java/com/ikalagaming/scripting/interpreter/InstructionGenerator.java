@@ -33,8 +33,6 @@ import com.ikalagaming.scripting.ast.If;
 import com.ikalagaming.scripting.ast.Label;
 import com.ikalagaming.scripting.ast.LabeledStatement;
 import com.ikalagaming.scripting.ast.Node;
-import com.ikalagaming.scripting.ast.Parameter;
-import com.ikalagaming.scripting.ast.ParameterList;
 import com.ikalagaming.scripting.ast.StatementList;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.SwitchLabel;
@@ -1083,16 +1081,6 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(LabeledStatement node) {
 		// Not required
-	}
-
-	@Override
-	public void visit(Parameter node) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void visit(ParameterList node) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override

@@ -212,20 +212,6 @@ public interface ASTVisitor {
 	default void visit(LabeledStatement node) {}
 
 	/**
-	 * Visit the Parameter node and perform an operation.
-	 *
-	 * @param node The node we are visiting.
-	 */
-	default void visit(Parameter node) {}
-
-	/**
-	 * Visit the ParameterList node and perform an operation.
-	 *
-	 * @param node The node we are visiting.
-	 */
-	default void visit(ParameterList node) {}
-
-	/**
 	 * Visit the StatementList node and perform an operation.
 	 *
 	 * @param node The node we are visiting.
