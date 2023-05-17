@@ -63,7 +63,7 @@ public enum InstructionType {
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> The location of the object.<br>
-	 * <b>Input 2:</b> Ignored.<br>
+	 * <b>Input 2:</b> The number of parameters as an integer.<br>
 	 * <b>Output:</b> The result of the call.
 	 */
 	CALL,
