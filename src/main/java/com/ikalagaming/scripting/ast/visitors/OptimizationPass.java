@@ -2,7 +2,6 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
-import com.ikalagaming.scripting.ast.Block;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
@@ -33,20 +32,6 @@ public class OptimizationPass implements ASTVisitor {
 	 * Used for localization.
 	 */
 	private static final String INVALID_OPERATOR = "INVALID_OPERATOR";
-
-	/**
-	 * Go through all immediate children nodes, and ignore expression results
-	 * that are not going to be stored anywhere.
-	 *
-	 * @param node The node that should contain statements.
-	 */
-	private void ignoreExpressionResults(Node node) {
-		for (Node child : node.getChildren()) {
-			if (child instanceof ExprArithmetic arithmetic) {
-				arithmetic.setIgnoreResult(true);
-			}
-		}
-	}
 
 	/**
 	 * Optimize the syntax tree.
@@ -407,18 +392,4 @@ public class OptimizationPass implements ASTVisitor {
 		return result;
 	}
 
-	@Override
-	public void visit(Block node) {
-		this.ignoreExpressionResults(node);
-	}
-
-	@Override
-	public void visit(CompilationUnit node) {
-		this.ignoreExpressionResults(node);
-	}
-
-	@Override
-	public void visit(StatementList node) {
-		this.ignoreExpressionResults(node);
-	}
 }

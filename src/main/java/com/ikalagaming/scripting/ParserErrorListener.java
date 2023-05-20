@@ -43,23 +43,20 @@ public class ParserErrorListener implements ANTLRErrorListener {
 	@Override
 	public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex,
 		int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-		log.debug(SafeResourceLoader.getString("AMBIGUITY",
-			ScriptManager.getResourceBundle()));
+		// ignored
 	}
 
 	@Override
 	public void reportAttemptingFullContext(Parser recognizer, DFA dfa,
 		int startIndex, int stopIndex, BitSet conflictingAlts,
 		ATNConfigSet configs) {
-		log.debug(SafeResourceLoader.getString("FULL_CONTEXT",
-			ScriptManager.getResourceBundle()));
+		// ignored
 	}
 
 	@Override
 	public void reportContextSensitivity(Parser recognizer, DFA dfa,
 		int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-		log.debug(SafeResourceLoader.getString("CONTEXT_SENSITIVE",
-			ScriptManager.getResourceBundle()));
+		// ignored
 	}
 
 }

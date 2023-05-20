@@ -1,7 +1,7 @@
 package com.ikalagaming.scripting.ast;
 
 /**
- * A switch statement.
+ * A switch statement. This has 2 children, the expression and the block.
  *
  * @author Ches Burks
  *

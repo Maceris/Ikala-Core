@@ -97,6 +97,13 @@ public class ExprArithmetic extends Node {
 			result.append("____ ");
 		}
 		result.append(this.getClass().getSimpleName());
+
+		if (ignoreResult) {
+			result.append(" result_ignored ");
+		}
+		else {
+			result.append(" result_kept ");
+		}
 		result.append(" { ");
 
 		final String firstChild = this.children.get(0).toString();

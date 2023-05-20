@@ -63,11 +63,6 @@ import java.util.Map;
 public class InstructionGenerator implements ASTVisitor {
 
 	/**
-	 * Used for generating unique label names.
-	 */
-	private int nextLabel = 0;
-
-	/**
 	 * Where we need to jump to in order to break out of the current, most
 	 * proximal, loop.
 	 */
@@ -78,6 +73,16 @@ public class InstructionGenerator implements ASTVisitor {
 	 * the current, most proximal, loop.
 	 */
 	private String continueLabel;
+
+	/**
+	 * Used for generating unique label names.
+	 */
+	private int nextLabel = 0;
+
+	/**
+	 * Used for generating unique temp variable names.
+	 */
+	private int nextVariable = 0;
 
 	/**
 	 * A temporary list of instructions. We include a bunch of labels, including
@@ -420,12 +425,25 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	/**
-	 * Return the next label name, and update the value for the next call.
+	 * Return the next label name, and update the value for the next call. These
+	 * are not valid labels according to the grammar, so there should be no
+	 * conflicts.
 	 *
 	 * @return The name for the next valid label.
 	 */
 	private String getNextLabelName() {
 		return String.format(".L%d", this.nextLabel++);
+	}
+
+	/**
+	 * Return the next temporary variable name, and update the value for the
+	 * next call. These are not valid variables according to the grammar, so
+	 * there should be no conflicts.
+	 *
+	 * @return The name for the next valid variable name.
+	 */
+	private String getNextVariableName() {
+		return String.format("$%d", this.nextVariable++);
 	}
 
 	/**
@@ -622,7 +640,7 @@ public class InstructionGenerator implements ASTVisitor {
 		if (node instanceof ForLoop || node instanceof VarDeclaration
 			|| node instanceof Goto || node instanceof ExprAssign
 			|| node instanceof While || node instanceof DoWhile
-			|| node instanceof If) {
+			|| node instanceof If || node instanceof SwitchStatement) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
@@ -638,22 +656,88 @@ public class InstructionGenerator implements ASTVisitor {
 		else {
 			// Forward order
 			for (Node child : node.getChildren()) {
-				if (node instanceof CompilationUnit
-					&& (child instanceof ExprArithmetic expr)) {
-					switch (expr.getOperator()) {
-						case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-							expr.setIgnoreResult(true);
-							break;
-						case ADD, DIV, MOD, MUL, SUB:
-						default:
-							break;
-					}
-				}
-
 				this.processTree(child);
 			}
 		}
 		node.process(this);
+	}
+
+	private void pushVarToStack(Identifier node) {
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
+			null, new MemLocation(MemArea.STACK,
+				node.getType().getBase().getCorrespondingClass())));
+	}
+
+	/**
+	 * Handle creating the jump table and calculating targets for the jump
+	 * table, for switch statements.
+	 *
+	 * @param body The block that contains the statements.
+	 * @param targetTable Where we store the labels and expressions to emit
+	 *            later.
+	 * @param expressionResult The name of the variable where the expression
+	 *            result is stored.
+	 */
+	private void switchBody(Node body, List<Node> targetTable,
+		String expressionResult) {
+		String defaultLabel = null;
+		// statement groups are first, then loose switch labels
+		for (Node child : body.getChildren()) {
+			if (!(child instanceof SwitchBlockGroup)) {
+				continue;
+			}
+			final String sharedLabel = this.getNextLabelName();
+
+			// Just used to store the label name in the target table
+			Label fakeLabel = new Label();
+			fakeLabel.setName(sharedLabel);
+			targetTable.add(fakeLabel);
+
+			for (Node subChild : child.getChildren()) {
+				if (subChild instanceof SwitchLabel label) {
+					if (label.isDefault()) {
+						defaultLabel = sharedLabel;
+					}
+					else {
+						Node labelExpression = label.getChildren().get(0);
+						this.processTree(labelExpression);
+						this.tempInstructions
+							.add(new Instruction(InstructionType.CMP,
+								new MemLocation(MemArea.STACK,
+									labelExpression.getType().getBase()
+										.getCorrespondingClass()),
+								new MemLocation(MemArea.VARIABLE, String.class,
+									expressionResult),
+								null));
+						this.emitJump(InstructionType.JEQ, sharedLabel);
+					}
+				}
+				else {
+					// block statement
+					targetTable.add(subChild);
+				}
+			}
+		}
+		/**
+		 * Used for all trailing labels.
+		 */
+		final String endLabel = this.getNextLabelName();
+		for (Node child : body.getChildren()) {
+			if (child instanceof SwitchLabel label) {
+				if (label.isDefault()) {
+					defaultLabel = endLabel;
+				}
+				else {
+					Node labelExpression = label.getChildren().get(0);
+					this.processTree(labelExpression);
+					this.emitJump(InstructionType.JEQ, endLabel);
+				}
+			}
+		}
+		if (defaultLabel != null) {
+			this.emitJump(InstructionType.JMP, defaultLabel);
+		}
 	}
 
 	@Override
@@ -1038,14 +1122,6 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	@Override
-	public void visit(Identifier node) {
-		this.tempInstructions.add(new Instruction(InstructionType.NOP,
-			new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
-			null, new MemLocation(MemArea.STACK,
-				node.getType().getBase().getCorrespondingClass())));
-	}
-
-	@Override
 	public void visit(If node) {
 		Node conditional = node.getChildren().get(0);
 		Node ifPart = node.getChildren().get(1);
@@ -1053,7 +1129,12 @@ public class InstructionGenerator implements ASTVisitor {
 
 		final String end = this.getNextLabelName();
 
-		this.processTree(conditional);
+		if (conditional instanceof Identifier id) {
+			this.pushVarToStack(id);
+		}
+		else {
+			this.processTree(conditional);
+		}
 		if (containsElse) {
 			Node elsePart = node.getChildren().get(2);
 			String elseLabel = this.getNextLabelName();
@@ -1085,22 +1166,72 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(StatementList node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
 	public void visit(SwitchBlockGroup node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
 	public void visit(SwitchLabel node) {
-		// TODO Auto-generated method stub
+		// Not required
 	}
 
 	@Override
 	public void visit(SwitchStatement node) {
-		// TODO Auto-generated method stub
+		Node expression = node.getChildren().get(0);
+		Node body = node.getChildren().get(1);
+
+		final String expressionResult = this.getNextVariableName();
+
+		final boolean containsBreak = this.containsBreak(body);
+		if (containsBreak) {
+			this.breakLabel = this.getNextLabelName();
+		}
+
+		/*
+		 * Emit the expression and store the result in a temporary variable. We
+		 * use a variable since we have many comparisons, and don't want to spam
+		 * the stack.
+		 */
+		if (expression instanceof Identifier id) {
+			this.pushVarToStack(id);
+		}
+		else {
+			this.processTree(expression);
+		}
+		this.tempInstructions.add(new Instruction(InstructionType.MOV,
+			new MemLocation(MemArea.STACK,
+				expression.getType().getBase().getCorrespondingClass()),
+			null,
+			new MemLocation(MemArea.VARIABLE, String.class, expressionResult)));
+
+		// emit jump table
+
+		/**
+		 * A list of pseudo-labels and expressions to be evaluated as the target
+		 * of the jump table.
+		 */
+		List<Node> targetTable = new ArrayList<>();
+
+		this.switchBody(body, targetTable, expressionResult);
+
+		// Then emit targets and contents
+
+		for (Node child : targetTable) {
+			if (child instanceof Label label) {
+				this.emitLabel(label.getName());
+			}
+			else {
+				this.processTree(child);
+			}
+		}
+
+		if (containsBreak) {
+			this.emitLabel(this.breakLabel);
+		}
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package com.ikalagaming.scripting;
 import com.ikalagaming.scripting.IkalaScriptParser.CompilationUnitContext;
 import com.ikalagaming.scripting.ast.AbstractSyntaxTree;
 import com.ikalagaming.scripting.ast.CompilationUnit;
+import com.ikalagaming.scripting.ast.visitors.NodeAnnotationPass;
 import com.ikalagaming.scripting.ast.visitors.OptimizationPass;
 import com.ikalagaming.scripting.ast.visitors.TreeValidator;
 import com.ikalagaming.scripting.ast.visitors.TypePreprocessor;
@@ -42,7 +43,7 @@ public class IkalaScriptCompiler {
 		IkalaScriptParser parser = new IkalaScriptParser(tokenStream);
 		parser.removeErrorListeners();
 		parser.addErrorListener(errorListener);
-		
+
 		CompilationUnitContext context = parser.compilationUnit();
 		if (errorListener.getErrorCount() > 0) {
 			return Optional.empty();
@@ -67,6 +68,10 @@ public class IkalaScriptCompiler {
 		// Optimize the tree
 		OptimizationPass optimizer = new OptimizationPass();
 		optimizer.optimize(ast);
+
+		// Annotate the tree
+		NodeAnnotationPass annotator = new NodeAnnotationPass();
+		annotator.annotate(ast);
 
 		// Generate instructions
 		InstructionGenerator gen = new InstructionGenerator();
