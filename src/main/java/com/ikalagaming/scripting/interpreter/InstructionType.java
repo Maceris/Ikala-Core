@@ -58,11 +58,14 @@ public enum InstructionType {
 	 */
 	ARRAY_ACCESS,
 	/**
-	 * Call a method. Parameters are stored on the stack.
+	 * Call a method. Parameters are stored on the stack. If this is a static
+	 * method, we use a memory location of IMMEDIATE. Otherwise the location
+	 * will reflect where we find the object to call a method on, whether that
+	 * be the stack or a variable.
 	 * 
 	 * <br>
 	 * <br>
-	 * <b>Input 1:</b> The location of the object.<br>
+	 * <b>Input 1:</b> The location of the object and name of the method.<br>
 	 * <b>Input 2:</b> The number of parameters as an integer.<br>
 	 * <b>Output:</b> The result of the call.
 	 */

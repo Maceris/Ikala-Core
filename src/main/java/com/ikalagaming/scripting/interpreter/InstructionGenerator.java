@@ -751,18 +751,19 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	private void processTree(Node node) {
-		if (node instanceof ForLoop || node instanceof VarDeclaration
-			|| node instanceof Goto || node instanceof ExprAssign
-			|| node instanceof ExprEquality || node instanceof ExprRelation
-			|| node instanceof ExprTernary || node instanceof While
-			|| node instanceof DoWhile || node instanceof If
-			|| node instanceof SwitchStatement) {
+		if (node instanceof Call || node instanceof DoWhile
+			|| node instanceof ExprAssign || node instanceof ExprEquality
+			|| node instanceof ExprRelation || node instanceof ExprTernary
+			|| node instanceof ForLoop || node instanceof Goto
+			|| node instanceof If || node instanceof SwitchStatement
+			|| node instanceof VarDeclaration || node instanceof While) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
 			 */
 		}
-		else if (node instanceof ExprArithmetic) {
+		else if (node instanceof ExprArithmetic
+			|| node instanceof ArgumentList) {
 			// Reverse order
 			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
 				this.processTree(node.getChildren().get(i));
@@ -882,11 +883,6 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	@Override
-	public void visit(ArgumentList node) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
 	public void visit(ArrayAccess node) {
 		// TODO Auto-generated method stub
 		// Push the array access to the stack to be read or written to
@@ -899,7 +895,47 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Call node) {
-		// TODO Auto-generated method stub
+		Node targetObject = node.getChildren().get(0);
+
+		MemLocation object;
+		MemLocation paramCount;
+		Node params;
+
+		if (node.isPrimary()) {
+			Identifier name = (Identifier) node.getChildren().get(1);
+			String methodName = name.getName();
+			if (targetObject instanceof Identifier id) {
+				pushVarToStack(id);
+			}
+			else {
+				this.processTree(targetObject);
+			}
+			object = new MemLocation(MemArea.STACK, String.class, methodName);
+
+			if (node.getChildren().size() > 2) {
+				params = node.getChildren().get(2);
+			}
+			else {
+				params = null;
+			}
+		}
+		else {
+			String methodName = ((Identifier) targetObject).getName();
+			object =
+				new MemLocation(MemArea.IMMEDIATE, String.class, methodName);
+
+			if (node.getChildren().size() > 1) {
+				params = node.getChildren().get(1);
+			}
+			else {
+				params = null;
+			}
+		}
+		paramCount = new MemLocation(MemArea.IMMEDIATE, Integer.class,
+			params == null ? 0 : params.getChildren().size());
+
+		this.tempInstructions.add(new Instruction(InstructionType.CALL, object,
+			paramCount, new MemLocation(MemArea.STACK, Void.class)));
 	}
 
 	@Override
