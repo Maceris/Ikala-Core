@@ -209,6 +209,172 @@ public class AbstractSyntaxTree {
 	}
 
 	/**
+	 * Process a primary expression extension.
+	 *
+	 * @param extension The context for the extension.
+	 * @param currentRoot The current root node of the primary expression, which
+	 *            is updated for each extension so that each node has an
+	 *            expression on the left and a single operation on the right.
+	 * @return The newly created node that will serve as the new root of the
+	 *         expression.
+	 */
+	private static Node primaryExtension(Primary_extensionContext extension,
+		Node currentRoot) {
+		if (extension.fieldAccess_extension() != null) {
+			FieldAccess newNode = new FieldAccess();
+			newNode.setType(Type.unknownType());
+			newNode.addChild(currentRoot);
+			newNode.addChild(AbstractSyntaxTree.identifierNode(
+				extension.fieldAccess_extension().Identifier()));
+			return newNode;
+		}
+		if (extension.arrayAccess_extension() != null) {
+			ArrayAccess newNode = new ArrayAccess();
+
+			if (extension.arrayAccess_extension().expression() != null) {
+				extension.arrayAccess_extension().expression().stream()
+					.map(AbstractSyntaxTree::process)
+					.forEach(newNode::addChild);
+			}
+			Primary_extension_accessContext arrayLHS =
+				extension.arrayAccess_extension().primary_extension_access();
+
+			if (arrayLHS.fieldAccess_extension() != null) {
+				FieldAccess newNodeLHS = new FieldAccess();
+				newNodeLHS.setType(Type.unknownType());
+				// put the current root node on the far left of the tree
+				newNodeLHS.addChild(currentRoot);
+				newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(
+					arrayLHS.fieldAccess_extension().Identifier()));
+				/*
+				 * The root node is going to have one child, an array access,
+				 * which is indexing into a field, which belongs to whatever the
+				 * current leftNode is.
+				 */
+				newNode.addChild(newNodeLHS);
+			}
+			else if (arrayLHS.methodInvocation_extension() != null) {
+				Call newNodeLHS = new Call();
+				newNodeLHS.setType(Type.unknownType());
+				newNodeLHS.addChild(currentRoot);
+				newNodeLHS.setPrimary(true);
+
+				newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(
+					arrayLHS.methodInvocation_extension().Identifier()));
+				if (arrayLHS.methodInvocation_extension()
+					.argumentList() != null) {
+					newNodeLHS.addChild(AbstractSyntaxTree.process(
+						arrayLHS.methodInvocation_extension().argumentList()));
+				}
+				/*
+				 * The root node is going to have one child, an array access,
+				 * which is indexing into the result of a method call, which is
+				 * a method on whatever the leftNode is.
+				 */
+				newNode.addChild(newNodeLHS);
+			}
+			else {
+				AbstractSyntaxTree.log.warn(
+					SafeResourceLoader.getString(
+						"UNKNOWN_PRIMARY_EXPRESSION_ACCESS",
+						ScriptManager.getResourceBundle()),
+					extension.getText());
+			}
+			return newNode;
+		}
+		if (extension.methodInvocation_extension() != null) {
+			Call newNode = new Call();
+			newNode.setType(Type.unknownType());
+			newNode.addChild(currentRoot);
+			newNode.setPrimary(true);
+
+			newNode.addChild(AbstractSyntaxTree.identifierNode(
+				extension.methodInvocation_extension().Identifier()));
+
+			if (extension.methodInvocation_extension().argumentList() != null) {
+				newNode.addChild(AbstractSyntaxTree.process(
+					extension.methodInvocation_extension().argumentList()));
+			}
+			return newNode;
+		}
+
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_PRIMARY_EXTENSION",
+				ScriptManager.getResourceBundle()), extension.getText());
+		return null;
+	}
+
+	/**
+	 * Process the left hand side of a primary expression into a node.
+	 *
+	 * @param lhs The left hand side context.
+	 * @return The resulting node.
+	 */
+	private static Node primaryLHS(Primary_LHSContext lhs) {
+		if (lhs.literal() != null) {
+			return AbstractSyntaxTree.process(lhs.literal());
+		}
+		if (lhs.expression() != null) {
+			return AbstractSyntaxTree.process(lhs.expression());
+		}
+		if (lhs.arrayAccess_LHS() != null) {
+			ArrayAccess_LHSContext array = lhs.arrayAccess_LHS();
+			Node leftNode = new ArrayAccess();
+
+			if (array.Identifier() != null) {
+				leftNode.addChild(
+					AbstractSyntaxTree.identifierNode(array.Identifier()));
+			}
+			else if (array.primary_LHS_access() != null) {
+				Primary_LHS_accessContext arrayLeft =
+					array.primary_LHS_access();
+				if (arrayLeft.literal() != null) {
+					leftNode.addChild(
+						AbstractSyntaxTree.process(arrayLeft.literal()));
+				}
+				else if (arrayLeft.expression() != null) {
+					leftNode.addChild(
+						AbstractSyntaxTree.process(arrayLeft.expression()));
+				}
+				else if (arrayLeft.methodInvocation_LHS() != null) {
+					leftNode.addChild(AbstractSyntaxTree
+						.process(arrayLeft.methodInvocation_LHS()));
+				}
+				else {
+					// Should be impossible unless the grammar changes
+					AbstractSyntaxTree.log.warn(
+						SafeResourceLoader.getString(
+							"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
+							ScriptManager.getResourceBundle()),
+						arrayLeft.getText());
+				}
+			}
+			else {
+				// Should be impossible unless the grammar changes
+				AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
+					"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
+					ScriptManager.getResourceBundle()), array.getText());
+			}
+			array.expression().stream().map(AbstractSyntaxTree::process)
+				.forEach(leftNode::addChild);
+			return leftNode;
+		}
+		if (lhs.methodInvocation_LHS() != null) {
+			return AbstractSyntaxTree.process(lhs.methodInvocation_LHS());
+		}
+		if (lhs.Identifier() != null) {
+			return AbstractSyntaxTree.identifierNode(lhs.Identifier());
+		}
+
+		// Should be impossible unless the grammar changes
+		AbstractSyntaxTree.log
+			.warn(SafeResourceLoader.getString("UNKNOWN_PRIMARY_EXPRESSION",
+				ScriptManager.getResourceBundle()), lhs.getText());
+
+		return null;
+	}
+
+	/**
 	 * Process an additive expression. We know the result will be arithmetic,
 	 * but need to work out the actual type based on the type of the numbers
 	 * involved.
@@ -888,16 +1054,13 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node process(MethodInvocationContext node) {
 		Call result = new Call();
-		if (node.Identifier() != null) {
-			result
-				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
-		}
-		else {
+		if (node.primary() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.primary()));
 			result.setPrimary(true);
-			result
-				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
 		}
+
+		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
+
 		if (node.argumentList() != null) {
 			result.addChild(AbstractSyntaxTree.process(node.argumentList()));
 		}
@@ -1049,176 +1212,17 @@ public class AbstractSyntaxTree {
 	 * @return The parsed version of the node.
 	 */
 	private static Node process(PrimaryContext node) {
-		Primary_LHSContext lhs = node.primary_LHS();
 
-		Node leftNode = null;
-		if (lhs.literal() != null) {
-			leftNode = AbstractSyntaxTree.process(lhs.literal());
-		}
-		else if (lhs.expression() != null) {
-			leftNode = AbstractSyntaxTree.process(lhs.expression());
-		}
-		else if (lhs.arrayAccess_LHS() != null) {
-			ArrayAccess_LHSContext array = lhs.arrayAccess_LHS();
-			leftNode = new ArrayAccess();
+		Node leftNode = AbstractSyntaxTree.primaryLHS(node.primary_LHS());
 
-			if (array.Identifier() != null) {
-				leftNode.addChild(
-					AbstractSyntaxTree.identifierNode(array.Identifier()));
-			}
-			else if (array.primary_LHS_access() != null) {
-				Primary_LHS_accessContext arrayLeft =
-					array.primary_LHS_access();
-				if (arrayLeft.literal() != null) {
-					leftNode.addChild(
-						AbstractSyntaxTree.process(arrayLeft.literal()));
-				}
-				else if (arrayLeft.expression() != null) {
-					leftNode.addChild(
-						AbstractSyntaxTree.process(arrayLeft.expression()));
-				}
-				else if (arrayLeft.methodInvocation_LHS() != null) {
-					leftNode.addChild(AbstractSyntaxTree
-						.process(arrayLeft.methodInvocation_LHS()));
-				}
-				else {
-					// Should be impossible unless the grammar changes
-					AbstractSyntaxTree.log.warn(
-						SafeResourceLoader.getString(
-							"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
-							ScriptManager.getResourceBundle()),
-						arrayLeft.getText());
-				}
-			}
-			else {
-				// Should be impossible unless the grammar changes
-				AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
-					"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
-					ScriptManager.getResourceBundle()), array.getText());
-			}
-			array.expression().stream().map(AbstractSyntaxTree::process)
-				.forEach(leftNode::addChild);
-		}
-		else if (lhs.methodInvocation_LHS() != null) {
-			leftNode = AbstractSyntaxTree.process(lhs.methodInvocation_LHS());
-		}
-		else if (lhs.Identifier() != null) {
-			leftNode = AbstractSyntaxTree.identifierNode(lhs.Identifier());
-		}
-		else {
-			// Should be impossible unless the grammar changes
-			AbstractSyntaxTree.log
-				.warn(SafeResourceLoader.getString("UNKNOWN_PRIMARY_EXPRESSION",
-					ScriptManager.getResourceBundle()), lhs.getText());
+		if (node.primary_extension() == null) {
+			return leftNode;
 		}
 
-		if (node.primary_extension() != null) {
-			for (Primary_extensionContext extension : node
-				.primary_extension()) {
-				if (extension.fieldAccess_extension() != null) {
-					FieldAccess newNode = new FieldAccess();
-					newNode.setType(Type.unknownType());
-					newNode.addChild(leftNode);
-					newNode.addChild(AbstractSyntaxTree.identifierNode(
-						extension.fieldAccess_extension().Identifier()));
-
-					// We need to keep the last node we created as the root
-					leftNode = newNode;
-				}
-				else if (extension.arrayAccess_extension() != null) {
-					ArrayAccess newNode = new ArrayAccess();
-
-					if (extension.arrayAccess_extension()
-						.expression() != null) {
-						extension.arrayAccess_extension().expression().stream()
-							.map(AbstractSyntaxTree::process)
-							.forEach(newNode::addChild);
-					}
-					Primary_extension_accessContext arrayLHS = extension
-						.arrayAccess_extension().primary_extension_access();
-
-					if (arrayLHS.fieldAccess_extension() != null) {
-						FieldAccess newNodeLHS = new FieldAccess();
-						newNodeLHS.setType(Type.unknownType());
-						// put the current root node on the far left of the tree
-						newNodeLHS.addChild(leftNode);
-						newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(
-							arrayLHS.fieldAccess_extension().Identifier()));
-						/*
-						 * The root node is going to have one child, an array
-						 * access, which is indexing into a field, which belongs
-						 * to whatever the current leftNode is. I am so sorry.
-						 */
-						newNode.addChild(newNodeLHS);
-
-						/*
-						 * We need to make the array access the current root
-						 * node. leftNode is not lost because it's now lower in
-						 * the tree.
-						 */
-						leftNode = newNode;
-					}
-					else if (arrayLHS.methodInvocation_extension() != null) {
-						Call newNodeLHS = new Call();
-						newNodeLHS.setType(Type.unknownType());
-						newNodeLHS.addChild(leftNode);
-						newNodeLHS.setPrimary(true);
-
-						newNodeLHS
-							.addChild(AbstractSyntaxTree.identifierNode(arrayLHS
-								.methodInvocation_extension().Identifier()));
-						if (arrayLHS.methodInvocation_extension()
-							.argumentList() != null) {
-							newNodeLHS.addChild(AbstractSyntaxTree
-								.process(arrayLHS.methodInvocation_extension()
-									.argumentList()));
-						}
-						/*
-						 * The root node is going to have one child, an array
-						 * access, which is indexing into the result of a method
-						 * call, which is a method on whatever the leftNode is.
-						 * Forgive me.
-						 */
-						newNode.addChild(newNodeLHS);
-						leftNode = newNode;
-					}
-					else {
-						AbstractSyntaxTree.log.warn(
-							SafeResourceLoader.getString(
-								"UNKNOWN_PRIMARY_EXPRESSION_ACCESS",
-								ScriptManager.getResourceBundle()),
-							extension.getText());
-					}
-				}
-				else if (extension.methodInvocation_extension() != null) {
-					Call newNode = new Call();
-					newNode.setType(Type.unknownType());
-					newNode.addChild(leftNode);
-					newNode.setPrimary(true);
-
-					newNode.addChild(AbstractSyntaxTree.identifierNode(
-						extension.methodInvocation_extension().Identifier()));
-
-					if (extension.methodInvocation_extension()
-						.argumentList() != null) {
-						newNode.addChild(AbstractSyntaxTree.process(extension
-							.methodInvocation_extension().argumentList()));
-					}
-					/*
-					 * The new root node is going to have one child, a method
-					 * access, that is made on the current root node.
-					 */
-					leftNode = newNode;
-				}
-				else {
-					AbstractSyntaxTree.log.warn(
-						SafeResourceLoader.getString(
-							"UNKNOWN_PRIMARY_EXTENSION",
-							ScriptManager.getResourceBundle()),
-						extension.getText());
-				}
-			}
+		for (Primary_extensionContext extension : node.primary_extension()) {
+			leftNode = AbstractSyntaxTree.primaryExtension(extension, leftNode);
 		}
+
 		return leftNode;
 	}
 
