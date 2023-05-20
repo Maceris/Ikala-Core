@@ -4,7 +4,6 @@ import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.ArgumentList;
 import com.ikalagaming.scripting.ast.ArrayAccess;
-import com.ikalagaming.scripting.ast.Block;
 import com.ikalagaming.scripting.ast.Break;
 import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.Cast;
@@ -31,16 +30,12 @@ import com.ikalagaming.scripting.ast.Goto;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.If;
 import com.ikalagaming.scripting.ast.Label;
-import com.ikalagaming.scripting.ast.LabeledStatement;
 import com.ikalagaming.scripting.ast.Node;
-import com.ikalagaming.scripting.ast.StatementList;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.SwitchLabel;
 import com.ikalagaming.scripting.ast.SwitchStatement;
 import com.ikalagaming.scripting.ast.Type.Base;
-import com.ikalagaming.scripting.ast.TypeNode;
 import com.ikalagaming.scripting.ast.VarDeclaration;
-import com.ikalagaming.scripting.ast.VarDeclarationList;
 import com.ikalagaming.scripting.ast.While;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -240,7 +235,8 @@ public class InstructionGenerator implements ASTVisitor {
 			return;
 		}
 		if (expression instanceof ExprLogic || expression instanceof ExprAssign
-			|| expression instanceof ExprTernary) {
+			|| expression instanceof ExprTernary
+			|| expression instanceof Identifier) {
 			// Boolean values
 
 			// Convert the resulting boolean value to a flag, clean the stack
@@ -425,6 +421,62 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	/**
+	 * Generates and emits the jump table for a switch statement. It returns the
+	 * label that corresponds to the default case, if it exists.
+	 *
+	 * @param body The body of the switch statement.
+	 * @param targetTable Where expressions and pseudo-label nodes will be
+	 *            stored. This will later be used to generate actual labels and
+	 *            expressions to jump to.
+	 * @param expressionResult The name of the variable that contains the
+	 *            results of the switch expression.
+	 * @return The name of the label that the default case jumps to, will be
+	 *         null if there is no default.
+	 */
+	private String generateSwitchJumpTable(Node body, List<Node> targetTable,
+		String expressionResult) {
+		String defaultLabel = null;
+		// statement groups are first, then loose switch labels
+		for (Node child : body.getChildren()) {
+			if (!(child instanceof SwitchBlockGroup)) {
+				continue;
+			}
+			final String sharedLabel = this.getNextLabelName();
+
+			// Just used to store the label name in the target table
+			Label fakeLabel = new Label();
+			fakeLabel.setName(sharedLabel);
+			targetTable.add(fakeLabel);
+
+			for (Node subChild : child.getChildren()) {
+				if (subChild instanceof SwitchLabel label) {
+					if (label.isDefault()) {
+						defaultLabel = sharedLabel;
+					}
+					else {
+						Node labelExpression = label.getChildren().get(0);
+						this.processTree(labelExpression);
+						this.tempInstructions
+							.add(new Instruction(InstructionType.CMP,
+								new MemLocation(MemArea.STACK,
+									labelExpression.getType().getBase()
+										.getCorrespondingClass()),
+								new MemLocation(MemArea.VARIABLE, String.class,
+									expressionResult),
+								null));
+						this.emitJump(InstructionType.JEQ, sharedLabel);
+					}
+				}
+				else {
+					// block statement
+					targetTable.add(subChild);
+				}
+			}
+		}
+		return defaultLabel;
+	}
+
+	/**
 	 * Return the next label name, and update the value for the next call. These
 	 * are not valid labels according to the grammar, so there should be no
 	 * conflicts.
@@ -558,6 +610,52 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	/**
+	 * Handles {@link ExprEquality} and {@link ExprRelation}, since they use the
+	 * exact same logic due to a common {@link InstructionType#CMP} instruction.
+	 *
+	 * @param node The ExprEquality or ExprRelation node.
+	 */
+	private void outputBooleanComparison(Node node) {
+		/*
+		 * We reverse the order of child parsing so the order here makes sense.
+		 */
+		Node left = node.getChildren().get(0);
+		Node right = node.getChildren().get(1);
+
+		this.processBoolExpression(right);
+
+		this.processBoolExpression(left);
+
+		/*
+		 * We reverse the order of child parsing so the order here makes sense.
+		 */
+		MemLocation first;
+		if (left instanceof Identifier leftID) {
+			first = new MemLocation(MemArea.VARIABLE,
+				left.getType().getBase().getCorrespondingClass(),
+				leftID.getName());
+		}
+		else {
+			first = new MemLocation(MemArea.STACK,
+				left.getType().getBase().getCorrespondingClass());
+		}
+
+		MemLocation second;
+		if (right instanceof Identifier rightID) {
+			second = new MemLocation(MemArea.VARIABLE,
+				left.getType().getBase().getCorrespondingClass(),
+				rightID.getName());
+		}
+		else {
+			second = new MemLocation(MemArea.STACK,
+				left.getType().getBase().getCorrespondingClass());
+		}
+
+		this.tempInstructions
+			.add(new Instruction(InstructionType.CMP, first, second, null));
+	}
+
+	/**
 	 * Translate an abstract syntax tree to instructions.
 	 *
 	 * @param ast The tree to process.
@@ -571,6 +669,22 @@ public class InstructionGenerator implements ASTVisitor {
 		// generate temporary instructions
 
 		return this.processJumps();
+	}
+
+	/**
+	 * Process a boolean expression node, and push the results to the stack if
+	 * it does not do that by default.
+	 *
+	 * @param node The node to process.
+	 */
+	private void processBoolExpression(Node node) {
+		this.processTree(node);
+		if (node instanceof ExprRelation relation) {
+			this.pushResultToStack(relation);
+		}
+		else if (node instanceof ExprEquality equality) {
+			this.pushResultToStack(equality);
+		}
 	}
 
 	private List<Instruction> processJumps() {
@@ -639,15 +753,16 @@ public class InstructionGenerator implements ASTVisitor {
 	private void processTree(Node node) {
 		if (node instanceof ForLoop || node instanceof VarDeclaration
 			|| node instanceof Goto || node instanceof ExprAssign
-			|| node instanceof While || node instanceof DoWhile
-			|| node instanceof If || node instanceof SwitchStatement) {
+			|| node instanceof ExprEquality || node instanceof ExprRelation
+			|| node instanceof ExprTernary || node instanceof While
+			|| node instanceof DoWhile || node instanceof If
+			|| node instanceof SwitchStatement) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
 			 */
 		}
-		else if (node instanceof ExprArithmetic || node instanceof ExprEquality
-			|| node instanceof ExprRelation) {
+		else if (node instanceof ExprArithmetic) {
 			// Reverse order
 			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
 				this.processTree(node.getChildren().get(i));
@@ -660,6 +775,68 @@ public class InstructionGenerator implements ASTVisitor {
 			}
 		}
 		node.process(this);
+	}
+
+	/**
+	 * Calculate the SET instruction to use based on the type of equality
+	 * expression, since the node itself only outputs a CMP. This is used when
+	 * we need to use the result in another expression.
+	 *
+	 * @param node The node that had a comparison.
+	 */
+	private void pushResultToStack(ExprEquality node) {
+		InstructionType type;
+		switch (node.getOperator()) {
+			case EQUAL:
+				type = InstructionType.SET_EQ;
+				break;
+			case NOT_EQUAL:
+				type = InstructionType.SET_NE;
+				break;
+			default:
+				type = InstructionType.NOP;
+				InstructionGenerator.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_EQUALITY_OPERATOR",
+						ScriptManager.getResourceBundle()),
+					node.getOperator().toString());
+				break;
+		}
+		this.tempInstructions.add(new Instruction(type, null, null,
+			new MemLocation(MemArea.STACK, Boolean.class)));
+	}
+
+	/**
+	 * Calculate the SET instruction to use based on the type of relation, since
+	 * the node itself only outputs a CMP. This is used when we need to use the
+	 * result in another expression.
+	 *
+	 * @param node The node that had a comparison.
+	 */
+	private void pushResultToStack(ExprRelation node) {
+		InstructionType type;
+		switch (node.getOperator()) {
+			case GT:
+				type = InstructionType.SET_GT;
+				break;
+			case GTE:
+				type = InstructionType.SET_GE;
+				break;
+			case LT:
+				type = InstructionType.SET_LT;
+				break;
+			case LTE:
+				type = InstructionType.SET_LE;
+				break;
+			default:
+				type = InstructionType.NOP;
+				InstructionGenerator.log.warn(
+					SafeResourceLoader.getString("UNKNOWN_RELATIONAL_OPERATOR",
+						ScriptManager.getResourceBundle()),
+					node.getOperator().toString());
+				break;
+		}
+		this.tempInstructions.add(new Instruction(type, null, null,
+			new MemLocation(MemArea.STACK, Boolean.class)));
 	}
 
 	private void pushVarToStack(Identifier node) {
@@ -681,44 +858,8 @@ public class InstructionGenerator implements ASTVisitor {
 	 */
 	private void switchBody(Node body, List<Node> targetTable,
 		String expressionResult) {
-		String defaultLabel = null;
-		// statement groups are first, then loose switch labels
-		for (Node child : body.getChildren()) {
-			if (!(child instanceof SwitchBlockGroup)) {
-				continue;
-			}
-			final String sharedLabel = this.getNextLabelName();
-
-			// Just used to store the label name in the target table
-			Label fakeLabel = new Label();
-			fakeLabel.setName(sharedLabel);
-			targetTable.add(fakeLabel);
-
-			for (Node subChild : child.getChildren()) {
-				if (subChild instanceof SwitchLabel label) {
-					if (label.isDefault()) {
-						defaultLabel = sharedLabel;
-					}
-					else {
-						Node labelExpression = label.getChildren().get(0);
-						this.processTree(labelExpression);
-						this.tempInstructions
-							.add(new Instruction(InstructionType.CMP,
-								new MemLocation(MemArea.STACK,
-									labelExpression.getType().getBase()
-										.getCorrespondingClass()),
-								new MemLocation(MemArea.VARIABLE, String.class,
-									expressionResult),
-								null));
-						this.emitJump(InstructionType.JEQ, sharedLabel);
-					}
-				}
-				else {
-					// block statement
-					targetTable.add(subChild);
-				}
-			}
-		}
+		String defaultLabel =
+			this.generateSwitchJumpTable(body, targetTable, expressionResult);
 		/**
 		 * Used for all trailing labels.
 		 */
@@ -752,11 +893,6 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	@Override
-	public void visit(Block node) {
-		// Not required
-	}
-
-	@Override
 	public void visit(Break node) {
 		this.emitJump(InstructionType.JMP, this.breakLabel);
 	}
@@ -769,11 +905,6 @@ public class InstructionGenerator implements ASTVisitor {
 	@Override
 	public void visit(Cast node) {
 		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void visit(CompilationUnit node) {
-		// Not required
 	}
 
 	@Override
@@ -911,7 +1042,7 @@ public class InstructionGenerator implements ASTVisitor {
 	public void visit(ExprAssign node) {
 		final Node leftSide = node.getChildren().get(0);
 		final Node rightSide = node.getChildren().get(1);
-		this.processTree(rightSide);
+		this.processBoolExpression(rightSide);
 
 		Class<?> numericType = null;
 		if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
@@ -965,91 +1096,97 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprEquality node) {
-		// TODO use jumps or sets instead of pushing to the stack
-		// This happens on ExprLogic, for loop, and ifs
-		/*
-		 * We reverse the order of child parsing so the order here makes sense.
-		 * This is largely irrelevant, as it's commutative, but should be noted.
-		 */
-		Node left = node.getChildren().get(0);
-		Node right = node.getChildren().get(1);
-
-		/*
-		 * We reverse the order of child parsing so the order here makes sense.
-		 */
-		MemLocation first;
-		if (left instanceof Identifier leftID) {
-			first = new MemLocation(MemArea.VARIABLE,
-				left.getType().getBase().getCorrespondingClass(),
-				leftID.getName());
-		}
-		else {
-			first = new MemLocation(MemArea.STACK,
-				left.getType().getBase().getCorrespondingClass());
-		}
-		MemLocation second;
-
-		if (right instanceof Identifier rightID) {
-			second = new MemLocation(MemArea.VARIABLE,
-				left.getType().getBase().getCorrespondingClass(),
-				rightID.getName());
-		}
-		else {
-			second = new MemLocation(MemArea.STACK,
-				left.getType().getBase().getCorrespondingClass());
-		}
-
-		this.tempInstructions
-			.add(new Instruction(InstructionType.CMP, first, second, null));
+		this.outputBooleanComparison(node);
 	}
 
 	@Override
 	public void visit(ExprLogic node) {
-		// TODO Auto-generated method stub
-		// TODO handle
+		Node left = node.getChildren().get(0);
+		MemLocation target = new MemLocation(MemArea.STACK, Boolean.class);
+
+		MemLocation first;
+		if (left instanceof Identifier leftID) {
+			first = new MemLocation(MemArea.VARIABLE, Boolean.class,
+				leftID.getName());
+		}
+		else {
+			first = new MemLocation(MemArea.STACK, Boolean.class);
+		}
+
+		if (node.getOperator() == ExprLogic.Operator.NOT) {
+			this.processBoolExpression(left);
+
+			this.tempInstructions
+				.add(new Instruction(InstructionType.NOT, first, null, target));
+			return;
+		}
+		Node right = node.getChildren().get(0);
+
+		// We want to pop the left side first, so we have to push it last
+		this.processBoolExpression(right);
+
+		this.processBoolExpression(left);
+
+		InstructionType type = InstructionType.NOP;
+		switch (node.getOperator()) {
+			case AND:
+				type = InstructionType.AND;
+				break;
+			case OR:
+				type = InstructionType.OR;
+				break;
+			case NOT:
+			default:
+				// Already handled
+				break;
+		}
+		this.tempInstructions.add(new Instruction(type, first,
+			new MemLocation(MemArea.STACK, Boolean.class), target));
 	}
 
 	@Override
 	public void visit(ExprRelation node) {
-		// TODO Auto-generated method stub
-		// TODO use jumps or sets instead of pushing to the stack
-		// This happens on ExprLogic, for loop, and ifs
-
-		Node left = node.getChildren().get(0);
-		Node right = node.getChildren().get(1);
-
-		/*
-		 * We reverse the order of child parsing so the order here makes sense.
-		 */
-		MemLocation first;
-		if (left instanceof Identifier leftID) {
-			first = new MemLocation(MemArea.VARIABLE,
-				left.getType().getBase().getCorrespondingClass(),
-				leftID.getName());
-		}
-		else {
-			first = new MemLocation(MemArea.STACK,
-				left.getType().getBase().getCorrespondingClass());
-		}
-		MemLocation second;
-
-		if (right instanceof Identifier rightID) {
-			second = new MemLocation(MemArea.VARIABLE,
-				left.getType().getBase().getCorrespondingClass(),
-				rightID.getName());
-		}
-		else {
-			second = new MemLocation(MemArea.STACK,
-				left.getType().getBase().getCorrespondingClass());
-		}
-
-		this.tempInstructions
-			.add(new Instruction(InstructionType.CMP, first, second, null));
+		this.outputBooleanComparison(node);
 	}
 
 	@Override
 	public void visit(ExprTernary node) {
-		// TODO Auto-generated method stub
+		Node conditional = node.getChildren().get(0);
+		Node ifTrue = node.getChildren().get(1);
+		Node ifFalse = node.getChildren().get(2);
+
+		final String end = this.getNextLabelName();
+
+		if (conditional instanceof Identifier id) {
+			this.pushVarToStack(id);
+		}
+		else {
+			this.processTree(conditional);
+		}
+
+		String falseLabel = this.getNextLabelName();
+		// If not condition, goto else, otherwise we fall through to if
+		this.calculateInvertedJump(conditional, falseLabel);
+		this.processTree(ifTrue);
+
+		if (ifTrue instanceof ExprRelation relation) {
+			this.pushResultToStack(relation);
+		}
+		else if (ifTrue instanceof ExprEquality equality) {
+			this.pushResultToStack(equality);
+		}
+
+		this.emitJump(InstructionType.JMP, end);
+		this.emitLabel(falseLabel);
+		this.processTree(ifFalse);
+		if (ifFalse instanceof ExprRelation relation) {
+			this.pushResultToStack(relation);
+		}
+		else if (ifFalse instanceof ExprEquality equality) {
+			this.pushResultToStack(equality);
+		}
+
+		this.emitLabel(end);
 	}
 
 	@Override
@@ -1160,26 +1297,6 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	@Override
-	public void visit(LabeledStatement node) {
-		// Not required
-	}
-
-	@Override
-	public void visit(StatementList node) {
-		// Not required
-	}
-
-	@Override
-	public void visit(SwitchBlockGroup node) {
-		// Not required
-	}
-
-	@Override
-	public void visit(SwitchLabel node) {
-		// Not required
-	}
-
-	@Override
 	public void visit(SwitchStatement node) {
 		Node expression = node.getChildren().get(0);
 		Node body = node.getChildren().get(1);
@@ -1235,11 +1352,6 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	@Override
-	public void visit(TypeNode node) {
-		// Not required
-	}
-
-	@Override
 	public void visit(VarDeclaration node) {
 		final int dims = node.getDimensions();
 
@@ -1279,8 +1391,16 @@ public class InstructionGenerator implements ASTVisitor {
 		MemLocation defaultValue;
 
 		if (node.getChildren().size() > 1) {
-			this.processTree(node.getChildren().get(1));
+			Node rightSide = node.getChildren().get(1);
+			this.processTree(rightSide);
 			defaultValue = new MemLocation(MemArea.STACK, clazz);
+			if (rightSide instanceof ExprRelation relation) {
+				this.pushResultToStack(relation);
+
+			}
+			else if (rightSide instanceof ExprEquality equality) {
+				this.pushResultToStack(equality);
+			}
 		}
 		else if (dims == 0) {
 			// Check for primitives, store defaults
@@ -1303,11 +1423,6 @@ public class InstructionGenerator implements ASTVisitor {
 		}
 		this.tempInstructions.add(
 			new Instruction(InstructionType.MOV, defaultValue, null, target));
-	}
-
-	@Override
-	public void visit(VarDeclarationList node) {
-		// Not required
 	}
 
 	@Override
