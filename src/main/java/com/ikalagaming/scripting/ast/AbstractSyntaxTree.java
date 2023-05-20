@@ -1502,11 +1502,12 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree.process(node.preDecrementExpression());
 		}
 		if (node.unaryExpression() != null) {
-			ExprArithmetic result = new ExprArithmetic();
 			if (node.ADD() != null) {
-				result.setOperator(ExprArithmetic.Operator.ADD);
+				// ignore unary plus prefix
+				return AbstractSyntaxTree.process(node.unaryExpression());
 			}
-			else if (node.SUB() != null) {
+			ExprArithmetic result = new ExprArithmetic();
+			if (node.SUB() != null) {
 				result.setOperator(ExprArithmetic.Operator.SUB);
 			}
 			else {

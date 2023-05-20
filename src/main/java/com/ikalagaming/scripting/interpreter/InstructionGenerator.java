@@ -595,6 +595,17 @@ public class InstructionGenerator implements ASTVisitor {
 					return InstructionType.MUL_CHAR;
 				}
 			case SUB:
+				if (node.getChildren().size() == 1) {
+					if (node.getType().anyOf(Base.INT)) {
+						return InstructionType.NEG_INT;
+					}
+					else if (node.getType().anyOf(Base.DOUBLE)) {
+						return InstructionType.NEG_DOUBLE;
+					}
+					else {
+						return InstructionType.NEG_CHAR;
+					}
+				}
 				if (node.getType().anyOf(Base.INT)) {
 					return InstructionType.SUB_INT;
 				}
@@ -905,7 +916,7 @@ public class InstructionGenerator implements ASTVisitor {
 			Identifier name = (Identifier) node.getChildren().get(1);
 			String methodName = name.getName();
 			if (targetObject instanceof Identifier id) {
-				pushVarToStack(id);
+				this.pushVarToStack(id);
 			}
 			else {
 				this.processTree(targetObject);
@@ -940,7 +951,20 @@ public class InstructionGenerator implements ASTVisitor {
 
 	@Override
 	public void visit(Cast node) {
-		// TODO Auto-generated method stub
+		Node expression = node.getChildren().get(0);
+
+		MemArea area;
+		if (expression instanceof Identifier) {
+			area = MemArea.VARIABLE;
+		}
+		else {
+			area = MemArea.STACK;
+		}
+		this.tempInstructions.add(new Instruction(InstructionType.CAST,
+			new MemLocation(area,
+				expression.getType().getBase().getCorrespondingClass()),
+			null, new MemLocation(MemArea.STACK,
+				node.getType().getBase().getCorrespondingClass())));
 	}
 
 	@Override
@@ -1033,7 +1057,18 @@ public class InstructionGenerator implements ASTVisitor {
 			this.calculateLocation(node.getChildren().get(0), clazz);
 		MemLocation second = null;
 		switch (node.getOperator()) {
-			case ADD, DIV, MOD, MUL, SUB:
+			case SUB:
+				if (node.getChildren().size() == 1) {
+					Node expr = node.getChildren().get(0);
+					if (expr instanceof ConstChar || expr instanceof ConstInt
+						|| expr instanceof ConstDouble) {
+						first = new MemLocation(MemArea.STACK, clazz);
+					}
+					// unary minus
+					break;
+				}
+				// fall through
+			case ADD, DIV, MOD, MUL:
 				second =
 					this.calculateLocation(node.getChildren().get(1), clazz);
 				break;

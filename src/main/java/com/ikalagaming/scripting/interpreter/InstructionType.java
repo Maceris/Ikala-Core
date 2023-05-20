@@ -71,6 +71,16 @@ public enum InstructionType {
 	 */
 	CALL,
 	/**
+	 * Cast one primitive to another and place it onto the stack.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Input 1:</b> The location of the result to cast.<br>
+	 * <b>Input 2:</b> Ignored.<br>
+	 * <b>Output:</b> None.
+	 */
+	CAST,
+	/**
 	 * Compare two values of similar types.
 	 *
 	 * Numbers are compared as double values, with a result of less than, equal
@@ -284,6 +294,36 @@ public enum InstructionType {
 	 * <b>Output:</b> The resulting integer.
 	 */
 	MUL_INT,
+	/**
+	 * Negate the sign of a character.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Input 1:</b> An character value.<br>
+	 * <b>Input 2:</b> Ignored.<br>
+	 * <b>Output:</b> The resulting character.
+	 */
+	NEG_CHAR,
+	/**
+	 * Negate the sign of an integer.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Input 1:</b> An integer value.<br>
+	 * <b>Input 2:</b> Ignored.<br>
+	 * <b>Output:</b> The resulting integer.
+	 */
+	NEG_INT,
+	/**
+	 * Negate the sign of a double.
+	 * 
+	 * <br>
+	 * <br>
+	 * <b>Input 1:</b> A double value.<br>
+	 * <b>Input 2:</b> Ignored.<br>
+	 * <b>Output:</b> The resulting double.
+	 */
+	NEG_DOUBLE,
 	/**
 	 * Does nothing.
 	 * 

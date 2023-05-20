@@ -39,23 +39,13 @@ public class ScriptRuntime {
 		new MemoryItem(Void.class, "void");
 
 	/**
-	 * Where we are in the program.
+	 * If we should stop running the program.
 	 */
-	private int programCounter = 0;
+	private boolean fatalError;
 	/**
 	 * The actual program, a list of instructions.
 	 */
 	private final List<Instruction> instructions;
-	/**
-	 * The variables in the program, which retain type information, for my own
-	 * sanity.
-	 */
-	private Map<String, MemoryItem> symbolTable = new HashMap<>();
-	/**
-	 * The stack.
-	 */
-	private ArrayDeque<MemoryItem> stack = new ArrayDeque<>();
-
 	/**
 	 * An equivalent to a register where the result of the last comparison is
 	 * stored.
@@ -68,11 +58,21 @@ public class ScriptRuntime {
 	 * they are not equal, this will be 1.
 	 */
 	private int lastComparison;
+	/**
+	 * Where we are in the program.
+	 */
+	private int programCounter = 0;
 
 	/**
-	 * If we should stop running the program.
+	 * The stack.
 	 */
-	private boolean fatalError;
+	private ArrayDeque<MemoryItem> stack = new ArrayDeque<>();
+
+	/**
+	 * The variables in the program, which retain type information, for my own
+	 * sanity.
+	 */
+	private Map<String, MemoryItem> symbolTable = new HashMap<>();
 
 	/**
 	 * Deal with logical operations on two booleans.
@@ -133,8 +133,7 @@ public class ScriptRuntime {
 		char secondNumber;
 
 		if (firstLocation.isChar()) {
-			final char unboxed = (Character) firstItem.value();
-			firstNumber = unboxed;
+			firstNumber = (Character) firstItem.value();
 		}
 		else {
 			// Can't happen because of type checks, but just to be thorough
@@ -430,6 +429,10 @@ public class ScriptRuntime {
 				// TODO implement
 				this.programCounter++;
 				break;
+			case CAST:
+				// TODO implement
+				this.programCounter++;
+				break;
 			case CALL:
 				// TODO implement
 				this.programCounter++;
@@ -508,6 +511,18 @@ public class ScriptRuntime {
 				break;
 			case MUL_INT:
 				this.intMath(i, (a, b) -> a * b);
+				this.programCounter++;
+				break;
+			case NEG_CHAR:
+				this.negateChar(i);
+				this.programCounter++;
+				break;
+			case NEG_DOUBLE:
+				this.negateDouble(i);
+				this.programCounter++;
+				break;
+			case NEG_INT:
+				this.negateInt(i);
 				this.programCounter++;
 				break;
 			case NOP:
@@ -720,6 +735,114 @@ public class ScriptRuntime {
 	private void move(@NonNull Instruction i) {
 		MemoryItem memory = this.loadValue(i.firstLocation());
 		this.storeValue(memory, i.targetLocation());
+	}
+
+	/**
+	 * Negate the sign of a character.
+	 *
+	 * @param i The instruction.
+	 */
+	private void negateChar(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+		this.checkType(firstLocation, Type.Base.CHAR);
+		if (this.fatalError) {
+			return;
+		}
+
+		char firstNumber;
+
+		if (firstLocation.isChar()) {
+			firstNumber = (Character) firstItem.value();
+		}
+		else {
+			// Can't happen because of type checks, but just to be thorough
+			firstNumber = 0;
+		}
+
+		MemoryItem result = new MemoryItem(Character.class, -firstNumber);
+
+		this.storeValue(result, i.targetLocation());
+	}
+
+	/**
+	 * Negate the sign of a double.
+	 *
+	 * @param i The instruction.
+	 */
+	private void negateDouble(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+		this.checkType(firstLocation, Type.Base.DOUBLE);
+		if (this.fatalError) {
+			return;
+		}
+
+		double firstNumber;
+
+		if (firstLocation.isDouble()) {
+			firstNumber = (Double) firstItem.value();
+		}
+		else if (firstLocation.isInt()) {
+			final int unboxed = (Integer) firstItem.value();
+			firstNumber = unboxed;
+		}
+		else if (firstLocation.isChar()) {
+			final char unboxed = (Character) firstItem.value();
+			firstNumber = unboxed;
+		}
+		else {
+			// Can't happen because of type checks, but just to be thorough
+			firstNumber = 0;
+		}
+
+		MemoryItem result = new MemoryItem(Double.class, -firstNumber);
+
+		this.storeValue(result, i.targetLocation());
+	}
+
+	/**
+	 * Negate the sign of an integer.
+	 *
+	 * @param i The instruction.
+	 */
+	private void negateInt(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+		this.checkType(firstLocation, Type.Base.INT);
+		if (this.fatalError) {
+			return;
+		}
+
+		int firstNumber;
+
+		if (firstLocation.isInt()) {
+			firstNumber = (Integer) firstItem.value();
+		}
+		else if (firstLocation.isChar()) {
+			final char unboxed = (Character) firstItem.value();
+			firstNumber = unboxed;
+		}
+		else {
+			// Can't happen because of type checks, but just to be thorough
+			firstNumber = 0;
+		}
+
+		MemoryItem result = new MemoryItem(Integer.class, -firstNumber);
+
+		this.storeValue(result, i.targetLocation());
 	}
 
 	/**
