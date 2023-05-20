@@ -163,13 +163,6 @@ public interface ASTVisitor {
 	default void visit(ExprTernary node) {}
 
 	/**
-	 * Visit the FieldAccess node and perform an operation.
-	 *
-	 * @param node The node we are visiting.
-	 */
-	default void visit(FieldAccess node) {}
-
-	/**
 	 * Visit the ForLoop node and perform an operation.
 	 *
 	 * @param node The node we are visiting.

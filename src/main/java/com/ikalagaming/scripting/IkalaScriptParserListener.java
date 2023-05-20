@@ -219,22 +219,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 		IkalaScriptParser.ExpressionStatementContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link IkalaScriptParser#fieldAccess}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterFieldAccess(IkalaScriptParser.FieldAccessContext ctx);
-
-	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#fieldAccess_extension}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterFieldAccess_extension(
-		IkalaScriptParser.FieldAccess_extensionContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#forInit}.
 	 *
 	 * @param ctx the parse tree
@@ -842,22 +826,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 */
 	void exitExpressionStatement(
 		IkalaScriptParser.ExpressionStatementContext ctx);
-
-	/**
-	 * Exit a parse tree produced by {@link IkalaScriptParser#fieldAccess}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitFieldAccess(IkalaScriptParser.FieldAccessContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#fieldAccess_extension}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitFieldAccess_extension(
-		IkalaScriptParser.FieldAccess_extensionContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#forInit}.

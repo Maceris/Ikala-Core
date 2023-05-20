@@ -24,7 +24,6 @@ import com.ikalagaming.scripting.ast.ExprEquality;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
-import com.ikalagaming.scripting.ast.FieldAccess;
 import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Goto;
 import com.ikalagaming.scripting.ast.Identifier;
@@ -84,86 +83,6 @@ public class InstructionGenerator implements ASTVisitor {
 	 * temporary ones used for loops and conditionals.
 	 */
 	private List<Instruction> tempInstructions;
-
-	/**
-	 * Calculates the type of instruction to use for assignment, since we can
-	 * have shortcuts like "+=", we can use different instructions for
-	 * efficiency.
-	 *
-	 * @param operator The Operator we want to use.
-	 * @param numericType The numerical type, assuming this is not a standard
-	 *            assignment. Might be null for normal assigns.
-	 * @return The instruction type to use.
-	 */
-	private InstructionType assignmentExpressionInstruction(
-		@NonNull ExprAssign.Operator operator, Class<?> numericType) {
-		// Yikes
-		switch (operator) {
-			case ADD_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.ADD_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.ADD_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.ADD_CHAR;
-				}
-				break;
-			case DIV_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.DIV_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.DIV_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.DIV_CHAR;
-				}
-				break;
-			case MOD_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.MOD_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.MOD_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.MOD_CHAR;
-				}
-				break;
-			case MUL_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.MUL_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.MUL_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.MUL_CHAR;
-				}
-				break;
-			case SUB_ASSIGN:
-				if (numericType == Integer.class) {
-					return InstructionType.SUB_INT;
-				}
-				if (numericType == Double.class) {
-					return InstructionType.SUB_DOUBLE;
-				}
-				if (numericType == Character.class) {
-					return InstructionType.SUB_CHAR;
-				}
-				break;
-			case ASSIGN:
-				return InstructionType.MOV;
-			default:
-				break;
-		}
-		InstructionGenerator.log
-			.warn(SafeResourceLoader.getString("UNKNONW_ASSIGN_OPERATOR",
-				ScriptManager.getResourceBundle()), operator.toString());
-		return InstructionType.NOP;
-	}
 
 	/**
 	 * <p>
@@ -340,7 +259,7 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @param clazz The class of the memory location.
 	 * @return The location where the contents would be found.
 	 */
-	private MemLocation calculateLocation(Node node, Class<?> clazz) {
+	private MemLocation calculateLocation(@NonNull Node node, Class<?> clazz) {
 		if (node instanceof ExprArithmetic) {
 			return new MemLocation(MemArea.STACK, clazz);
 		}
@@ -381,7 +300,7 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @param loop The loop we are interested in.
 	 * @return Whether there is a generic break in that loop.
 	 */
-	private boolean containsBreak(Node loop) {
+	private boolean containsBreak(@NonNull Node loop) {
 		for (Node child : loop.getChildren()) {
 			if (child instanceof Break br) {
 				return br.getChildren().isEmpty();
@@ -433,8 +352,8 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @return The name of the label that the default case jumps to, will be
 	 *         null if there is no default.
 	 */
-	private String generateSwitchJumpTable(Node body, List<Node> targetTable,
-		String expressionResult) {
+	private String generateSwitchJumpTable(@NonNull Node body,
+		@NonNull List<Node> targetTable, @NonNull String expressionResult) {
 		String defaultLabel = null;
 		// statement groups are first, then loose switch labels
 		for (Node child : body.getChildren()) {
@@ -505,7 +424,7 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @param node The nod ewe are interested in.
 	 * @return The class that best represents that node's base type.
 	 */
-	private Class<?> getNumericBase(Node node) {
+	private Class<?> getNumericBase(@NonNull Node node) {
 		switch (node.getType().getBase()) {
 			case CHAR, DOUBLE, INT, STRING:
 				return node.getType().getBase().getCorrespondingClass();
@@ -529,92 +448,222 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @param node The node we are interested in.
 	 * @return The type of instruction we are generating.
 	 */
-	private InstructionType instructionType(ExprArithmetic node) {
+	private InstructionType instructionType(@NonNull ExprArithmetic node) {
+		if (node.getType().anyOf(Base.INT)) {
+			return this.instructionTypeInt(node);
+		}
+		if (node.getType().anyOf(Base.DOUBLE)) {
+			return this.instructionTypeDouble(node);
+		}
+		if (node.getType().anyOf(Base.CHAR)) {
+			return this.instructionTypeChar(node);
+		}
+
+		// defaults
 		switch (node.getOperator()) {
 			case ADD:
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.ADD_INT;
-				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.ADD_DOUBLE;
-				}
-				else if (node.getType().anyOf(Base.CHAR)) {
-					return InstructionType.ADD_CHAR;
-				}
-				else {
-					return InstructionType.CONCAT_STRING;
-				}
+				return InstructionType.CONCAT_STRING;
+			case DEC_PREFIX, DEC_SUFFIX, DIV, INC_PREFIX, INC_SUFFIX, MOD, MUL,
+				SUB:
+			default:
+				return InstructionType.NOP;
+		}
+	}
+
+	/**
+	 * Calculates the type of instruction to use for assignment, since we can
+	 * have shortcuts like "+=", we can use different instructions for
+	 * efficiency.
+	 *
+	 * @param operator The operator we want to use.
+	 * @param numericType The numerical type, assuming this is not a standard
+	 *            assignment. Might be null for normal assigns.
+	 * @return The instruction type to use.
+	 */
+	private InstructionType instructionType(
+		@NonNull ExprAssign.Operator operator, Class<?> numericType) {
+		if (operator == ExprAssign.Operator.ASSIGN) {
+			return InstructionType.MOV;
+		}
+		if (numericType == Integer.class) {
+			return this.instructionTypeInt(operator);
+		}
+		if (numericType == Double.class) {
+			return this.instructionTypeDouble(operator);
+		}
+		if (numericType == Character.class) {
+			return this.instructionTypeChar(operator);
+		}
+		InstructionGenerator.log
+			.warn(SafeResourceLoader.getString("UNKNONW_ASSIGN_OPERATOR",
+				ScriptManager.getResourceBundle()), operator.toString());
+		return InstructionType.NOP;
+	}
+
+	/**
+	 * Calculate the instruction type based on the operator, with the knowledge
+	 * that it deals with characters.
+	 *
+	 * @param node The node we are interested in.
+	 * @return The type of instruction we are generating.
+	 */
+	private InstructionType instructionTypeChar(ExprArithmetic node) {
+		switch (node.getOperator()) {
+			case ADD:
+				return InstructionType.ADD_CHAR;
 			case DEC_PREFIX, DEC_SUFFIX:
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.SUB_INT;
-				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.SUB_DOUBLE;
-				}
-				else {
-					return InstructionType.SUB_CHAR;
-				}
+				return InstructionType.SUB_CHAR;
 			case DIV:
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.DIV_INT;
-				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.DIV_DOUBLE;
-				}
-				else {
-					return InstructionType.DIV_CHAR;
-				}
+				return InstructionType.DIV_CHAR;
 			case INC_PREFIX, INC_SUFFIX:
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.ADD_INT;
-				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.ADD_DOUBLE;
-				}
-				else {
-					return InstructionType.ADD_CHAR;
-				}
+				return InstructionType.ADD_CHAR;
 			case MOD:
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.MOD_INT;
-				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.MOD_DOUBLE;
-				}
-				else {
-					return InstructionType.MOD_CHAR;
-				}
+				return InstructionType.MOD_CHAR;
 			case MUL:
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.MUL_INT;
-				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.MUL_DOUBLE;
-				}
-				else {
-					return InstructionType.MUL_CHAR;
-				}
+				return InstructionType.MUL_CHAR;
 			case SUB:
 				if (node.getChildren().size() == 1) {
-					if (node.getType().anyOf(Base.INT)) {
-						return InstructionType.NEG_INT;
-					}
-					else if (node.getType().anyOf(Base.DOUBLE)) {
-						return InstructionType.NEG_DOUBLE;
-					}
-					else {
-						return InstructionType.NEG_CHAR;
-					}
+					return InstructionType.NEG_CHAR;
 				}
-				if (node.getType().anyOf(Base.INT)) {
-					return InstructionType.SUB_INT;
+				return InstructionType.SUB_CHAR;
+			default:
+				return InstructionType.NOP;
+		}
+	}
+
+	/**
+	 * Calculate the instruction type based on the operator, with the knowledge
+	 * that it deals with characters.
+	 *
+	 * @param operator The operator we want to use.
+	 * @return The type of instruction we are generating.
+	 */
+	private InstructionType instructionTypeChar(ExprAssign.Operator operator) {
+		switch (operator) {
+			case ADD_ASSIGN:
+				return InstructionType.ADD_CHAR;
+			case DIV_ASSIGN:
+				return InstructionType.DIV_CHAR;
+			case MOD_ASSIGN:
+				return InstructionType.MOD_CHAR;
+			case MUL_ASSIGN:
+				return InstructionType.MUL_CHAR;
+			case SUB_ASSIGN:
+				return InstructionType.SUB_CHAR;
+			case ASSIGN:
+			default:
+				return InstructionType.NOP;
+		}
+	}
+
+	/**
+	 * Calculate the instruction type based on the operator, with the knowledge
+	 * that it deals with doubles.
+	 *
+	 * @param node The node we are interested in.
+	 * @return The type of instruction we are generating.
+	 */
+	private InstructionType instructionTypeDouble(ExprArithmetic node) {
+		switch (node.getOperator()) {
+			case ADD:
+				return InstructionType.ADD_DOUBLE;
+			case DEC_PREFIX, DEC_SUFFIX:
+				return InstructionType.SUB_DOUBLE;
+			case DIV:
+				return InstructionType.DIV_DOUBLE;
+			case INC_PREFIX, INC_SUFFIX:
+				return InstructionType.ADD_DOUBLE;
+			case MOD:
+				return InstructionType.MOD_DOUBLE;
+			case MUL:
+				return InstructionType.MUL_DOUBLE;
+			case SUB:
+				if (node.getChildren().size() == 1) {
+					return InstructionType.NEG_DOUBLE;
 				}
-				else if (node.getType().anyOf(Base.DOUBLE)) {
-					return InstructionType.SUB_DOUBLE;
+				return InstructionType.SUB_DOUBLE;
+			default:
+				return InstructionType.NOP;
+		}
+	}
+
+	/**
+	 * Calculate the instruction type based on the operator, with the knowledge
+	 * that it deals with doubles.
+	 *
+	 * @param operator The operator we want to use.
+	 * @return The type of instruction we are generating.
+	 */
+	private InstructionType
+		instructionTypeDouble(ExprAssign.Operator operator) {
+		switch (operator) {
+			case ADD_ASSIGN:
+				return InstructionType.ADD_DOUBLE;
+			case DIV_ASSIGN:
+				return InstructionType.DIV_DOUBLE;
+			case MOD_ASSIGN:
+				return InstructionType.MOD_DOUBLE;
+			case MUL_ASSIGN:
+				return InstructionType.MUL_DOUBLE;
+			case SUB_ASSIGN:
+				return InstructionType.SUB_DOUBLE;
+			case ASSIGN:
+			default:
+				return InstructionType.NOP;
+		}
+	}
+
+	/**
+	 * Calculate the instruction type based on the operator, with the knowledge
+	 * that it deals with integers.
+	 *
+	 * @param node The node we are interested in.
+	 * @return The type of instruction we are generating.
+	 */
+	private InstructionType instructionTypeInt(ExprArithmetic node) {
+		switch (node.getOperator()) {
+			case ADD:
+				return InstructionType.ADD_INT;
+			case DEC_PREFIX, DEC_SUFFIX:
+				return InstructionType.SUB_INT;
+			case DIV:
+				return InstructionType.DIV_INT;
+			case INC_PREFIX, INC_SUFFIX:
+				return InstructionType.ADD_INT;
+			case MOD:
+				return InstructionType.MOD_INT;
+			case MUL:
+				return InstructionType.MUL_INT;
+			case SUB:
+				if (node.getChildren().size() == 1) {
+					return InstructionType.NEG_INT;
 				}
-				else {
-					return InstructionType.SUB_CHAR;
-				}
+				return InstructionType.SUB_INT;
+			default:
+				return InstructionType.NOP;
+		}
+	}
+
+	/**
+	 * Calculate the instruction type based on the operator, with the knowledge
+	 * that it deals with integers.
+	 *
+	 * @param operator The operator we want to use.
+	 * @return The type of instruction we are generating.
+	 */
+	private InstructionType instructionTypeInt(ExprAssign.Operator operator) {
+		switch (operator) {
+			case ADD_ASSIGN:
+				return InstructionType.ADD_INT;
+			case DIV_ASSIGN:
+				return InstructionType.DIV_INT;
+			case MOD_ASSIGN:
+				return InstructionType.MOD_INT;
+			case MUL_ASSIGN:
+				return InstructionType.MUL_INT;
+			case SUB_ASSIGN:
+				return InstructionType.SUB_INT;
+			case ASSIGN:
 			default:
 				return InstructionType.NOP;
 		}
@@ -626,7 +675,7 @@ public class InstructionGenerator implements ASTVisitor {
 	 *
 	 * @param node The ExprEquality or ExprRelation node.
 	 */
-	private void outputBooleanComparison(Node node) {
+	private void outputBooleanComparison(@NonNull Node node) {
 		/*
 		 * We reverse the order of child parsing so the order here makes sense.
 		 */
@@ -688,7 +737,7 @@ public class InstructionGenerator implements ASTVisitor {
 	 *
 	 * @param node The node to process.
 	 */
-	private void processBoolExpression(Node node) {
+	private void processBoolExpression(@NonNull Node node) {
 		this.processTree(node);
 		if (node instanceof ExprRelation relation) {
 			this.pushResultToStack(relation);
@@ -1121,8 +1170,8 @@ public class InstructionGenerator implements ASTVisitor {
 			numericType = this.getNumericBase(leftSide);
 		}
 
-		InstructionType instruction = this
-			.assignmentExpressionInstruction(node.getOperator(), numericType);
+		InstructionType instruction =
+			this.instructionType(node.getOperator(), numericType);
 
 		MemLocation first = new MemLocation(MemArea.STACK,
 			rightSide.getType().getBase().getCorrespondingClass());
@@ -1134,11 +1183,6 @@ public class InstructionGenerator implements ASTVisitor {
 		if (leftSide instanceof Identifier identifier) {
 			target =
 				new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
-		}
-		else if (leftSide instanceof FieldAccess field) {
-			Identifier id = (Identifier) field.getChildren().get(1);
-			target = new MemLocation(MemArea.VARIABLE, clazz, id.getName());
-			this.processTree(leftSide);
 		}
 		else if (leftSide instanceof ArrayAccess) {
 			target = new MemLocation(MemArea.ARRAY, clazz);
@@ -1259,12 +1303,6 @@ public class InstructionGenerator implements ASTVisitor {
 		}
 
 		this.emitLabel(end);
-	}
-
-	@Override
-	public void visit(FieldAccess node) {
-		// TODO Auto-generated method stub
-		// Push the field access to the stack to be read or written to
 	}
 
 	@Override

@@ -457,10 +457,6 @@ public class ScriptRuntime {
 				this.intMath(i, (a, b) -> a / b);
 				this.programCounter++;
 				break;
-			case FIELD_ACCESS:
-				// TODO implement
-				this.programCounter++;
-				break;
 			case HALT:
 				this.halt();
 				break;
@@ -715,8 +711,6 @@ public class ScriptRuntime {
 				return this.symbolTable.get(from.value());
 			case ARRAY:
 				// TODO read array from stack, access index
-			case MEMBER:
-				// TODO read object from stack. access member
 			default:
 				ScriptRuntime.log.warn(
 					SafeResourceLoader.getString("UNKNOWN_MEMORY_AREA",

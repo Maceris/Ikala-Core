@@ -235,19 +235,16 @@ primary
 arrayAccess_LHS_General
 	:	literal
 	|	LPAREN expression RPAREN
-	|	fieldAccess
 	|	methodInvocation
 	;
 
 primary_extension
-	:	fieldAccess_extension
-	|	arrayAccess_extension
+	:	arrayAccess_extension
 	|	methodInvocation_extension
 	;
 
 primary_extension_access
-	:	fieldAccess_extension
-	|	methodInvocation_extension
+	:	methodInvocation_extension
 	;
 
 primary_LHS
@@ -262,14 +259,6 @@ primary_LHS_access
 	:	literal
 	|	LPAREN expression RPAREN
 	|	methodInvocation_LHS
-	;
-
-fieldAccess
-	:	primary DOT Identifier
-	;
-
-fieldAccess_extension
-	:	DOT Identifier
 	;
 
 arrayAccess
@@ -314,7 +303,6 @@ assignment
 
 leftHandSide
 	:	Identifier
-	|	fieldAccess
 	|	arrayAccess
 	;
 

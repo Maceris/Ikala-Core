@@ -135,16 +135,6 @@ public enum InstructionType {
 	 */
 	DIV_INT,
 	/**
-	 * Access a field of an object.
-	 * 
-	 * <br>
-	 * <br>
-	 * <b>Input 1:</b> The location of the object.<br>
-	 * <b>Input 2:</b> The string name of the field.<br>
-	 * <b>Output:</b> The value of the field.
-	 */
-	FIELD_ACCESS,
-	/**
 	 * Stops the program.
 	 *
 	 * <br>

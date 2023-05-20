@@ -9,7 +9,6 @@ import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprAssign;
 import com.ikalagaming.scripting.ast.ExprTernary;
-import com.ikalagaming.scripting.ast.FieldAccess;
 import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
@@ -293,12 +292,6 @@ public class TypePreprocessor implements ASTVisitor {
 		TypePreprocessor.log.warn(SafeResourceLoader
 			.getString("NON_MATCHING_TYPES", ScriptManager.getResourceBundle()),
 			ifTrue, ifFalse);
-	}
-
-	@Override
-	public void visit(FieldAccess node) {
-		// Reset the field's type, in case we have a variable with that name
-		node.getChildren().get(1).setType(Type.unknownType());
 	}
 
 	@Override

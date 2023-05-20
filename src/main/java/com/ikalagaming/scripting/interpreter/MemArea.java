@@ -20,10 +20,6 @@ public enum MemArea {
 	 */
 	VARIABLE,
 	/**
-	 * A member of an object.
-	 */
-	MEMBER,
-	/**
 	 * A member in an array.
 	 */
 	ARRAY;

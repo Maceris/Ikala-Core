@@ -105,7 +105,6 @@ ternB = !bool ? 0.3 : 3;
 // Functions
 int funcResult = getInteger();
 funcResult = getArray()[funcResult];
-int xPos = getPosition().x;
 int complicatedFunc = getObject().getAnotherObject().callMethod();
 
 double[] arrayDoubles = getDoubleArray();

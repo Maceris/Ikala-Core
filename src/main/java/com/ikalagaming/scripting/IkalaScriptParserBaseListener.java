@@ -1,5 +1,4 @@
 package com.ikalagaming.scripting;
-
 // Generated from IkalaScriptParser.g4 by ANTLR 4.12.0
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -312,27 +311,6 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void enterExpressionStatement(
 		IkalaScriptParser.ExpressionStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterFieldAccess(IkalaScriptParser.FieldAccessContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterFieldAccess_extension(
-		IkalaScriptParser.FieldAccess_extensionContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -1158,27 +1136,6 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void exitExpressionStatement(
 		IkalaScriptParser.ExpressionStatementContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitFieldAccess(IkalaScriptParser.FieldAccessContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitFieldAccess_extension(
-		IkalaScriptParser.FieldAccess_extensionContext ctx) {}
 
 	/**
 	 * {@inheritDoc}

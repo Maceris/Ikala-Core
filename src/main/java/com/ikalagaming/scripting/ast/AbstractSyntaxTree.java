@@ -20,7 +20,6 @@ import com.ikalagaming.scripting.IkalaScriptParser.ContinueStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.DoStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.EqualityExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ExpressionContext;
-import com.ikalagaming.scripting.IkalaScriptParser.FieldAccessContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ForInitContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ForStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ForStatementNoShortIfContext;
@@ -220,14 +219,6 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node primaryExtension(Primary_extensionContext extension,
 		Node currentRoot) {
-		if (extension.fieldAccess_extension() != null) {
-			FieldAccess newNode = new FieldAccess();
-			newNode.setType(Type.unknownType());
-			newNode.addChild(currentRoot);
-			newNode.addChild(AbstractSyntaxTree.identifierNode(
-				extension.fieldAccess_extension().Identifier()));
-			return newNode;
-		}
 		if (extension.arrayAccess_extension() != null) {
 			ArrayAccess newNode = new ArrayAccess();
 
@@ -239,21 +230,7 @@ public class AbstractSyntaxTree {
 			Primary_extension_accessContext arrayLHS =
 				extension.arrayAccess_extension().primary_extension_access();
 
-			if (arrayLHS.fieldAccess_extension() != null) {
-				FieldAccess newNodeLHS = new FieldAccess();
-				newNodeLHS.setType(Type.unknownType());
-				// put the current root node on the far left of the tree
-				newNodeLHS.addChild(currentRoot);
-				newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(
-					arrayLHS.fieldAccess_extension().Identifier()));
-				/*
-				 * The root node is going to have one child, an array access,
-				 * which is indexing into a field, which belongs to whatever the
-				 * current leftNode is.
-				 */
-				newNode.addChild(newNodeLHS);
-			}
-			else if (arrayLHS.methodInvocation_extension() != null) {
+			if (arrayLHS.methodInvocation_extension() != null) {
 				Call newNodeLHS = new Call();
 				newNodeLHS.setType(Type.unknownType());
 				newNodeLHS.addChild(currentRoot);
@@ -436,9 +413,6 @@ public class AbstractSyntaxTree {
 			else if (lhs.expression() != null) {
 				result.addChild(AbstractSyntaxTree.process(lhs.expression()));
 			}
-			else if (lhs.fieldAccess() != null) {
-				result.addChild(AbstractSyntaxTree.process(lhs.fieldAccess()));
-			}
 			else if (lhs.methodInvocation() != null) {
 				result.addChild(
 					AbstractSyntaxTree.process(lhs.methodInvocation()));
@@ -470,9 +444,6 @@ public class AbstractSyntaxTree {
 		if (lhs.Identifier() != null) {
 			result
 				.addChild(AbstractSyntaxTree.identifierNode(lhs.Identifier()));
-		}
-		else if (lhs.fieldAccess() != null) {
-			result.addChild(AbstractSyntaxTree.process(lhs.fieldAccess()));
 		}
 		else if (lhs.arrayAccess() != null) {
 			result.addChild(AbstractSyntaxTree.process(lhs.arrayAccess()));
@@ -740,22 +711,6 @@ public class AbstractSyntaxTree {
 			.getString("UNKNOWN_EXPRESSION", ScriptManager.getResourceBundle()),
 			node.getText());
 		return null;
-	}
-
-	/**
-	 * Process a field access.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(FieldAccessContext node) {
-		FieldAccess result = new FieldAccess();
-		result.setType(Type.unknownType());
-
-		result.addChild(AbstractSyntaxTree.process(node.primary()));
-		result.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
-
-		return result;
 	}
 
 	/**
