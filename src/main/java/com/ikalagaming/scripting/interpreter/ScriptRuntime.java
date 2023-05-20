@@ -263,6 +263,31 @@ public class ScriptRuntime {
 	}
 
 	/**
+	 * Concatenate strings together. Automatically converts whatever is in the
+	 * arguments to strings.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void concatStrings(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemLocation secondLocation = i.secondLocation();
+
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+		final MemoryItem secondItem = this.loadValue(secondLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+
+		String first = firstItem.value().toString();
+		String second = secondItem.value().toString();
+
+		MemoryItem result = new MemoryItem(String.class, first + second);
+
+		this.storeValue(result, i.targetLocation());
+	}
+
+	/**
 	 * Compares the values of the given instruction as doubles using the
 	 * provided function.
 	 *
@@ -413,7 +438,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case CONCAT_STRING:
-				// TODO implement
+				this.concatStrings(i);
 				this.programCounter++;
 				break;
 			case DIV_CHAR:
@@ -548,6 +573,15 @@ public class ScriptRuntime {
 	private void halt() {
 		this.fatalError = true;
 		this.programCounter = this.instructions.size();
+	}
+
+	/**
+	 * Check if the program has terminated.
+	 *
+	 * @return Whether we have terminated the program.
+	 */
+	public boolean hasTerminated() {
+		return this.programCounter == this.instructions.size();
 	}
 
 	/**
