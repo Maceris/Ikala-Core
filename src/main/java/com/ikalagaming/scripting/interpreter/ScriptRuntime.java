@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
+import java.util.function.Function;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntPredicate;
 
@@ -534,27 +535,27 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case SET_EQ:
-				// TODO implement
+				this.set(i, cmp -> cmp == 0);
 				this.programCounter++;
 				break;
 			case SET_GE:
-				// TODO implement
+				this.set(i, cmp -> cmp >= 0);
 				this.programCounter++;
 				break;
 			case SET_GT:
-				// TODO implement
+				this.set(i, cmp -> cmp > 0);
 				this.programCounter++;
 				break;
 			case SET_LE:
-				// TODO implement
+				this.set(i, cmp -> cmp <= 0);
 				this.programCounter++;
 				break;
 			case SET_LT:
-				// TODO implement
+				this.set(i, cmp -> cmp < 0);
 				this.programCounter++;
 				break;
 			case SET_NE:
-				// TODO implement
+				this.set(i, cmp -> cmp != 0);
 				this.programCounter++;
 				break;
 			default:
@@ -719,6 +720,20 @@ public class ScriptRuntime {
 	private void move(@NonNull Instruction i) {
 		MemoryItem memory = this.loadValue(i.firstLocation());
 		this.storeValue(memory, i.targetLocation());
+	}
+
+	/**
+	 * Perform a set operation.
+	 *
+	 * @param instruction The instruction to extract a target location from.
+	 * @param operation The operation that takes the last comparison and outputs
+	 *            a boolean result.
+	 */
+	private void set(Instruction instruction,
+		Function<Integer, Boolean> operation) {
+		MemoryItem result =
+			new MemoryItem(Boolean.class, operation.apply(this.lastComparison));
+		this.storeValue(result, instruction.targetLocation());
 	}
 
 	/**
