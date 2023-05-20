@@ -1053,17 +1053,19 @@ public class InstructionGenerator implements ASTVisitor {
 
 		InstructionType type = this.instructionType(node);
 
-		MemLocation first =
-			this.calculateLocation(node.getChildren().get(0), clazz);
+		MemLocation first;
+
+		if (node.getChildren().size() > 1) {
+			first = this.calculateLocation(node.getChildren().get(0), clazz);
+		}
+		else {
+			first = new MemLocation(MemArea.STACK, clazz);
+		}
+
 		MemLocation second = null;
 		switch (node.getOperator()) {
 			case SUB:
 				if (node.getChildren().size() == 1) {
-					Node expr = node.getChildren().get(0);
-					if (expr instanceof ConstChar || expr instanceof ConstInt
-						|| expr instanceof ConstDouble) {
-						first = new MemLocation(MemArea.STACK, clazz);
-					}
 					// unary minus
 					break;
 				}
@@ -1077,7 +1079,6 @@ public class InstructionGenerator implements ASTVisitor {
 					node.getUnaryCount());
 				break;
 			default:
-				type = InstructionType.NOP;
 				break;
 		}
 

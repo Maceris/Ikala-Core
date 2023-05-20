@@ -118,9 +118,9 @@ public class TreeValidator implements ASTVisitor {
 			}
 		}
 		switch (node.getOperator()) {
-			case ADD, SUB:
+			case SUB:
 				break;
-			case DIV, MUL, MOD:
+			case ADD, DIV, MUL, MOD:
 				// Sets the flag if not
 				this.hasAtLeastTwoChildren(node);
 				break;
