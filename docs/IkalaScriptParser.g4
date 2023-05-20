@@ -81,9 +81,13 @@ blockStatements
 	;
 
 blockStatement
-	:	localVariableDeclaration
+	:	localVariableDeclarationStatement
 	|	statement
 	|	label
+	;
+
+localVariableDeclarationStatement
+	:	localVariableDeclaration SEMICOLON
 	;
 
 localVariableDeclaration
@@ -109,7 +113,8 @@ statementNoShortIf
 
 statementWithoutTrailingSubstatement
 	:	block
-	|	statementExpression
+	|	emptyStatement
+	|	expressionStatement
 	|	switchStatement
 	|	doStatement
 	|	breakStatement
@@ -128,6 +133,14 @@ labeledStatement
 
 labeledStatementNoShortIf
 	:	label statementNoShortIf
+	;
+
+emptyStatement
+	: SEMICOLON
+	;
+
+expressionStatement
+	:	statementExpression SEMICOLON 
 	;
 
 statementExpression
@@ -177,7 +190,7 @@ whileStatementNoShortIf
 	;
 
 doStatement
-	:	DO statement WHILE LPAREN expression RPAREN
+	:	DO statement WHILE LPAREN expression RPAREN SEMICOLON
 	;
 
 forStatement
@@ -198,19 +211,19 @@ statementExpressionList
 	;
 
 breakStatement
-	:	BREAK
+	:	BREAK SEMICOLON
 	;
 
 continueStatement
-	:	CONTINUE
+	:	CONTINUE SEMICOLON
 	;
 
 gotoStatement
-	:	GOTO Identifier
+	:	GOTO Identifier SEMICOLON
 	;
 
 exitStatement
-	:	EXIT
+	:	EXIT SEMICOLON
 	;
 
 // Expressions

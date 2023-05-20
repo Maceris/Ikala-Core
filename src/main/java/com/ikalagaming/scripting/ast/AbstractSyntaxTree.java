@@ -348,8 +348,10 @@ public class AbstractSyntaxTree {
 	 * @return The parsed version of the node.
 	 */
 	private static Node process(BlockStatementContext node) {
-		if (node.localVariableDeclaration() != null) {
-			return AbstractSyntaxTree.process(node.localVariableDeclaration());
+		if (node.localVariableDeclarationStatement() != null) {
+			return AbstractSyntaxTree
+				.process(node.localVariableDeclarationStatement()
+					.localVariableDeclaration());
 		}
 		if (node.statement() != null) {
 			return AbstractSyntaxTree.process(node.statement());
@@ -1382,8 +1384,9 @@ public class AbstractSyntaxTree {
 		if (node.block() != null) {
 			return AbstractSyntaxTree.process(node.block());
 		}
-		if (node.statementExpression() != null) {
-			return AbstractSyntaxTree.process(node.statementExpression());
+		if (node.expressionStatement() != null) {
+			return AbstractSyntaxTree
+				.process(node.expressionStatement().statementExpression());
 		}
 		if (node.switchStatement() != null) {
 			return AbstractSyntaxTree.process(node.switchStatement());

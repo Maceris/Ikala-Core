@@ -180,6 +180,13 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void enterDoStatement(IkalaScriptParser.DoStatementContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link IkalaScriptParser#emptyStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void enterEmptyStatement(IkalaScriptParser.EmptyStatementContext ctx);
+
+	/**
 	 * Enter a parse tree produced by
 	 * {@link IkalaScriptParser#equalityExpression}.
 	 *
@@ -201,6 +208,15 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void enterExpression(IkalaScriptParser.ExpressionContext ctx);
+
+	/**
+	 * Enter a parse tree produced by
+	 * {@link IkalaScriptParser#expressionStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void enterExpressionStatement(
+		IkalaScriptParser.ExpressionStatementContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#fieldAccess}.
@@ -319,6 +335,15 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 */
 	void enterLocalVariableDeclaration(
 		IkalaScriptParser.LocalVariableDeclarationContext ctx);
+
+	/**
+	 * Enter a parse tree produced by
+	 * {@link IkalaScriptParser#localVariableDeclarationStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void enterLocalVariableDeclarationStatement(
+		IkalaScriptParser.LocalVariableDeclarationStatementContext ctx);
 
 	/**
 	 * Enter a parse tree produced by
@@ -780,6 +805,13 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void exitDoStatement(IkalaScriptParser.DoStatementContext ctx);
 
 	/**
+	 * Exit a parse tree produced by {@link IkalaScriptParser#emptyStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void exitEmptyStatement(IkalaScriptParser.EmptyStatementContext ctx);
+
+	/**
 	 * Exit a parse tree produced by
 	 * {@link IkalaScriptParser#equalityExpression}.
 	 *
@@ -801,6 +833,15 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExpression(IkalaScriptParser.ExpressionContext ctx);
+
+	/**
+	 * Exit a parse tree produced by
+	 * {@link IkalaScriptParser#expressionStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void exitExpressionStatement(
+		IkalaScriptParser.ExpressionStatementContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#fieldAccess}.
@@ -918,6 +959,15 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 */
 	void exitLocalVariableDeclaration(
 		IkalaScriptParser.LocalVariableDeclarationContext ctx);
+
+	/**
+	 * Exit a parse tree produced by
+	 * {@link IkalaScriptParser#localVariableDeclarationStatement}.
+	 *
+	 * @param ctx the parse tree
+	 */
+	void exitLocalVariableDeclarationStatement(
+		IkalaScriptParser.LocalVariableDeclarationStatementContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#methodInvocation}.

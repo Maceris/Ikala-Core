@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * {@link IkalaScriptParserListener}, which can be extended to create a listener
  * which only needs to handle a subset of the available methods.
  */
+@SuppressWarnings("CheckReturnValue")
 public class IkalaScriptParserBaseListener
 	implements IkalaScriptParserListener {
 	/**
@@ -256,6 +257,17 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
+	public void
+		enterEmptyStatement(IkalaScriptParser.EmptyStatementContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
 	public void enterEqualityExpression(
 		IkalaScriptParser.EqualityExpressionContext ctx) {}
 
@@ -289,6 +301,17 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void enterExpression(IkalaScriptParser.ExpressionContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
+	public void enterExpressionStatement(
+		IkalaScriptParser.ExpressionStatementContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -448,6 +471,17 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void enterLocalVariableDeclaration(
 		IkalaScriptParser.LocalVariableDeclarationContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
+	public void enterLocalVariableDeclarationStatement(
+		IkalaScriptParser.LocalVariableDeclarationStatementContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -1070,6 +1104,17 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
+	public void
+		exitEmptyStatement(IkalaScriptParser.EmptyStatementContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
 	public void exitEqualityExpression(
 		IkalaScriptParser.EqualityExpressionContext ctx) {}
 
@@ -1102,6 +1147,17 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void exitExpression(IkalaScriptParser.ExpressionContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
+	public void exitExpressionStatement(
+		IkalaScriptParser.ExpressionStatementContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -1260,6 +1316,17 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void exitLocalVariableDeclaration(
 		IkalaScriptParser.LocalVariableDeclarationContext ctx) {}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
+	public void exitLocalVariableDeclarationStatement(
+		IkalaScriptParser.LocalVariableDeclarationStatementContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
