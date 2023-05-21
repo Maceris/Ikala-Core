@@ -406,6 +406,14 @@ public class ScriptRuntime {
 		this.storeValue(result, i.targetLocation());
 	}
 
+	private void call(Instruction i) {
+		// TODO implement
+
+		final MemArea objectLocation = i.firstLocation().area();
+		final String methodName = i.firstLocation().value().toString();
+		final int numParams = (Integer) i.secondLocation().value();
+	}
+
 	private void execute(Instruction i) {
 		switch (i.type()) {
 			case ADD_CHAR:
@@ -433,7 +441,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case CALL:
-				// TODO implement
+				call(i);
 				this.programCounter++;
 				break;
 			case CMP:
@@ -708,8 +716,6 @@ public class ScriptRuntime {
 					return ScriptRuntime.VOID_MEMORY;
 				}
 				return this.symbolTable.get(from.value());
-			case ARRAY:
-				// TODO read array from stack, access index
 			default:
 				ScriptRuntime.log.warn(
 					SafeResourceLoader.getString("UNKNOWN_MEMORY_AREA",

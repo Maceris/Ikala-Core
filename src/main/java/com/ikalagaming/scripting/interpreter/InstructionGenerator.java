@@ -3,7 +3,6 @@ package com.ikalagaming.scripting.interpreter;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.ArgumentList;
-import com.ikalagaming.scripting.ast.ArrayAccess;
 import com.ikalagaming.scripting.ast.Break;
 import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.Cast;
@@ -286,9 +285,6 @@ public class InstructionGenerator implements ASTVisitor {
 		if (node instanceof Identifier identifier) {
 			return new MemLocation(MemArea.VARIABLE, clazz,
 				identifier.getName());
-		}
-		if (node instanceof ArrayAccess) {
-			return new MemLocation(MemArea.ARRAY, clazz);
 		}
 		InstructionGenerator.log
 			.warn(SafeResourceLoader.getString("UNHANDLED_EXPRESSION_MEMBER",
@@ -946,12 +942,6 @@ public class InstructionGenerator implements ASTVisitor {
 	}
 
 	@Override
-	public void visit(ArrayAccess node) {
-		// TODO Auto-generated method stub
-		// Push the array access to the stack to be read or written to
-	}
-
-	@Override
 	public void visit(Break node) {
 		this.emitJump(InstructionType.JMP, this.breakLabel);
 	}
@@ -1105,14 +1095,8 @@ public class InstructionGenerator implements ASTVisitor {
 
 		InstructionType type = this.instructionType(node);
 
-		MemLocation first;
-
-		if (node.getChildren().size() > 1) {
-			first = this.calculateLocation(node.getChildren().get(0), clazz);
-		}
-		else {
-			first = new MemLocation(MemArea.STACK, clazz);
-		}
+		MemLocation first =
+			this.calculateLocation(node.getChildren().get(0), clazz);
 
 		MemLocation second = null;
 		switch (node.getOperator()) {
@@ -1176,8 +1160,16 @@ public class InstructionGenerator implements ASTVisitor {
 		InstructionType instruction =
 			this.instructionType(node.getOperator(), numericType);
 
-		MemLocation first = new MemLocation(MemArea.STACK,
-			rightSide.getType().getBase().getCorrespondingClass());
+		MemLocation first;
+		if (rightSide instanceof Identifier identifier) {
+			this.pushVarToStack(identifier);
+			first = new MemLocation(MemArea.STACK,
+				rightSide.getType().getBase().getCorrespondingClass());
+		}
+		else {
+			first = new MemLocation(MemArea.STACK,
+				rightSide.getType().getBase().getCorrespondingClass());
+		}
 
 		Class<?> clazz = node.getType().getBase().getCorrespondingClass();
 
@@ -1186,10 +1178,6 @@ public class InstructionGenerator implements ASTVisitor {
 		if (leftSide instanceof Identifier identifier) {
 			target =
 				new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
-		}
-		else if (leftSide instanceof ArrayAccess) {
-			target = new MemLocation(MemArea.ARRAY, clazz);
-			this.processTree(leftSide);
 		}
 		else {
 			// Impossible due to grammar.
@@ -1509,7 +1497,6 @@ public class InstructionGenerator implements ASTVisitor {
 			defaultValue = new MemLocation(MemArea.STACK, clazz);
 			if (rightSide instanceof ExprRelation relation) {
 				this.pushResultToStack(relation);
-
 			}
 			else if (rightSide instanceof ExprEquality equality) {
 				this.pushResultToStack(equality);

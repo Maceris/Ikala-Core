@@ -16,13 +16,6 @@ public interface ASTVisitor {
 	default void visit(ArgumentList node) {}
 
 	/**
-	 * Visit the ArrayAccess node and perform an operation.
-	 *
-	 * @param node The node we are visiting.
-	 */
-	default void visit(ArrayAccess node) {}
-
-	/**
 	 * Visit the Block node and perform an operation.
 	 *
 	 * @param node The node we are visiting.

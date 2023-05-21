@@ -4,7 +4,7 @@ char sampleChar;
 double sampleDouble;
 string sampleString;
 boolean sampleBoolean;
-
+java.lang.Boolean pathName;
 
 // Initializers
 int intInitializer = 4;
@@ -28,6 +28,7 @@ floatingPoint = -12.3 + 0.003;
 
 // Boolean expressions
 boolean bool = false || true;
+boolean bool2 = 1 > 2 || false;
 bool = true && false || true;
 bool = !true || (!true || !false);
 bool = true == false;
@@ -101,14 +102,9 @@ double ternB = bool ? 5.1 : 44.01;
 ternB = !bool ? 4 : 9.0;
 ternB = !bool ? 0.3 : 3;
 
-
 // Functions
 int funcResult = getInteger();
 int complicatedFunc = getObject().getAnotherObject().callMethod();
-
-double[] arrayDoubles = getDoubleArray();
-double actualDouble = arrayDoubles[0];
-arrayDoubles[1] = actualDouble;
 
 testParams1();
 testParams2("test");

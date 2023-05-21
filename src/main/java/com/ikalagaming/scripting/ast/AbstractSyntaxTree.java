@@ -2,7 +2,6 @@ package com.ikalagaming.scripting.ast;
 
 import com.ikalagaming.scripting.IkalaScriptParser.AdditiveExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArgumentListContext;
-import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccessContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.AssignmentContext;
 import com.ikalagaming.scripting.IkalaScriptParser.BlockContext;
@@ -251,9 +250,6 @@ public class AbstractSyntaxTree {
 		if (lhs.expression() != null) {
 			return AbstractSyntaxTree.process(lhs.expression());
 		}
-		if (lhs.arrayAccess() != null) {
-			return AbstractSyntaxTree.process(lhs.arrayAccess());
-		}
 		if (lhs.methodInvocation_LHS() != null) {
 			return AbstractSyntaxTree.process(lhs.methodInvocation_LHS());
 		}
@@ -311,26 +307,6 @@ public class AbstractSyntaxTree {
 	}
 
 	/**
-	 * Process an array access.
-	 *
-	 * @param node The context to parse.
-	 * @return The parsed version of the node.
-	 */
-	private static Node process(ArrayAccessContext node) {
-		ArrayAccess result = new ArrayAccess();
-
-		if (node.Identifier() != null) {
-			result
-				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
-		}
-
-		node.expression().stream().map(AbstractSyntaxTree::process)
-			.forEach(result::addChild);
-
-		return result;
-	}
-
-	/**
 	 * Process an assignment.
 	 *
 	 * @param node The context to parse.
@@ -343,9 +319,6 @@ public class AbstractSyntaxTree {
 		if (lhs.Identifier() != null) {
 			result
 				.addChild(AbstractSyntaxTree.identifierNode(lhs.Identifier()));
-		}
-		else if (lhs.arrayAccess() != null) {
-			result.addChild(AbstractSyntaxTree.process(lhs.arrayAccess()));
 		}
 		else {
 			AbstractSyntaxTree.log

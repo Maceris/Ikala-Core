@@ -25,13 +25,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void enterArgumentList(IkalaScriptParser.ArgumentListContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link IkalaScriptParser#arrayAccess}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterArrayAccess(IkalaScriptParser.ArrayAccessContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#arrayType}.
 	 *
 	 * @param ctx the parse tree
@@ -598,13 +591,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitArgumentList(IkalaScriptParser.ArgumentListContext ctx);
-
-	/**
-	 * Exit a parse tree produced by {@link IkalaScriptParser#arrayAccess}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitArrayAccess(IkalaScriptParser.ArrayAccessContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#arrayType}.

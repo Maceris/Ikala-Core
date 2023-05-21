@@ -42,16 +42,6 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
-	public void enterArrayAccess(IkalaScriptParser.ArrayAccessContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void enterArrayType(IkalaScriptParser.ArrayTypeContext ctx) {}
 
 	/**
@@ -815,16 +805,6 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void exitArgumentList(IkalaScriptParser.ArgumentListContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitArrayAccess(IkalaScriptParser.ArrayAccessContext ctx) {}
 
 	/**
 	 * {@inheritDoc}

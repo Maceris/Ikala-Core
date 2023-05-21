@@ -239,7 +239,6 @@ primary_extension
 primary_LHS
 	:	literal
 	|	LPAREN expression RPAREN
-	|	arrayAccess
 	|	methodInvocation_LHS
 	|	Identifier
 	;
@@ -248,10 +247,6 @@ primary_LHS_access
 	:	literal
 	|	LPAREN expression RPAREN
 	|	methodInvocation_LHS
-	;
-
-arrayAccess
-	:	Identifier (LBRACK expression RBRACK)+
 	;
 
 methodInvocation
@@ -282,7 +277,6 @@ assignment
 
 leftHandSide
 	:	Identifier
-	|	arrayAccess
 	;
 
 assignmentOperator

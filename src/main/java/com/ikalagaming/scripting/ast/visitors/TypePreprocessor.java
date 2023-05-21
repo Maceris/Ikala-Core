@@ -2,7 +2,6 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
-import com.ikalagaming.scripting.ast.ArrayAccess;
 import com.ikalagaming.scripting.ast.Block;
 import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.CompilationUnit;
@@ -88,13 +87,6 @@ public class TypePreprocessor implements ASTVisitor {
 		if (newContext) {
 			this.variableMaps.pop();
 		}
-	}
-
-	@Override
-	public void visit(ArrayAccess node) {
-		Type actual = node.getChildren().get(0).getType()
-			.dereference(node.getChildren().size() - 1);
-		node.setType(actual);
 	}
 
 	@Override

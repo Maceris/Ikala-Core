@@ -18,9 +18,5 @@ public enum MemArea {
 	/**
 	 * An item stored in a variable.
 	 */
-	VARIABLE,
-	/**
-	 * A member in an array.
-	 */
-	ARRAY;
+	VARIABLE;
 }
