@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
-import java.util.function.Function;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntPredicate;
 
@@ -846,10 +845,9 @@ public class ScriptRuntime {
 	 * @param operation The operation that takes the last comparison and outputs
 	 *            a boolean result.
 	 */
-	private void set(Instruction instruction,
-		Function<Integer, Boolean> operation) {
+	private void set(Instruction instruction, IntPredicate operation) {
 		MemoryItem result =
-			new MemoryItem(Boolean.class, operation.apply(this.lastComparison));
+			new MemoryItem(Boolean.class, operation.test(this.lastComparison));
 		this.storeValue(result, instruction.targetLocation());
 	}
 
