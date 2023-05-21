@@ -3,8 +3,6 @@ package com.ikalagaming.scripting.ast;
 import com.ikalagaming.scripting.IkalaScriptParser.AdditiveExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArgumentListContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccessContext;
-import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccess_LHSContext;
-import com.ikalagaming.scripting.IkalaScriptParser.ArrayAccess_LHS_GeneralContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ArrayTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.AssignmentContext;
 import com.ikalagaming.scripting.IkalaScriptParser.BlockContext;
@@ -44,9 +42,7 @@ import com.ikalagaming.scripting.IkalaScriptParser.PreDecrementExpressionContext
 import com.ikalagaming.scripting.IkalaScriptParser.PreIncrementExpressionContext;
 import com.ikalagaming.scripting.IkalaScriptParser.PrimaryContext;
 import com.ikalagaming.scripting.IkalaScriptParser.Primary_LHSContext;
-import com.ikalagaming.scripting.IkalaScriptParser.Primary_LHS_accessContext;
 import com.ikalagaming.scripting.IkalaScriptParser.Primary_extensionContext;
-import com.ikalagaming.scripting.IkalaScriptParser.Primary_extension_accessContext;
 import com.ikalagaming.scripting.IkalaScriptParser.PrimitiveTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.ReferenceTypeContext;
 import com.ikalagaming.scripting.IkalaScriptParser.RelationalExpressionContext;
@@ -70,6 +66,7 @@ import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -219,46 +216,6 @@ public class AbstractSyntaxTree {
 	 */
 	private static Node primaryExtension(Primary_extensionContext extension,
 		Node currentRoot) {
-		if (extension.arrayAccess_extension() != null) {
-			ArrayAccess newNode = new ArrayAccess();
-
-			if (extension.arrayAccess_extension().expression() != null) {
-				extension.arrayAccess_extension().expression().stream()
-					.map(AbstractSyntaxTree::process)
-					.forEach(newNode::addChild);
-			}
-			Primary_extension_accessContext arrayLHS =
-				extension.arrayAccess_extension().primary_extension_access();
-
-			if (arrayLHS.methodInvocation_extension() != null) {
-				Call newNodeLHS = new Call();
-				newNodeLHS.setType(Type.unknownType());
-				newNodeLHS.addChild(currentRoot);
-				newNodeLHS.setPrimary(true);
-
-				newNodeLHS.addChild(AbstractSyntaxTree.identifierNode(
-					arrayLHS.methodInvocation_extension().Identifier()));
-				if (arrayLHS.methodInvocation_extension()
-					.argumentList() != null) {
-					newNodeLHS.addChild(AbstractSyntaxTree.process(
-						arrayLHS.methodInvocation_extension().argumentList()));
-				}
-				/*
-				 * The root node is going to have one child, an array access,
-				 * which is indexing into the result of a method call, which is
-				 * a method on whatever the leftNode is.
-				 */
-				newNode.addChild(newNodeLHS);
-			}
-			else {
-				AbstractSyntaxTree.log.warn(
-					SafeResourceLoader.getString(
-						"UNKNOWN_PRIMARY_EXPRESSION_ACCESS",
-						ScriptManager.getResourceBundle()),
-					extension.getText());
-			}
-			return newNode;
-		}
 		if (extension.methodInvocation_extension() != null) {
 			Call newNode = new Call();
 			newNode.setType(Type.unknownType());
@@ -294,47 +251,8 @@ public class AbstractSyntaxTree {
 		if (lhs.expression() != null) {
 			return AbstractSyntaxTree.process(lhs.expression());
 		}
-		if (lhs.arrayAccess_LHS() != null) {
-			ArrayAccess_LHSContext array = lhs.arrayAccess_LHS();
-			Node leftNode = new ArrayAccess();
-
-			if (array.Identifier() != null) {
-				leftNode.addChild(
-					AbstractSyntaxTree.identifierNode(array.Identifier()));
-			}
-			else if (array.primary_LHS_access() != null) {
-				Primary_LHS_accessContext arrayLeft =
-					array.primary_LHS_access();
-				if (arrayLeft.literal() != null) {
-					leftNode.addChild(
-						AbstractSyntaxTree.process(arrayLeft.literal()));
-				}
-				else if (arrayLeft.expression() != null) {
-					leftNode.addChild(
-						AbstractSyntaxTree.process(arrayLeft.expression()));
-				}
-				else if (arrayLeft.methodInvocation_LHS() != null) {
-					leftNode.addChild(AbstractSyntaxTree
-						.process(arrayLeft.methodInvocation_LHS()));
-				}
-				else {
-					// Should be impossible unless the grammar changes
-					AbstractSyntaxTree.log.warn(
-						SafeResourceLoader.getString(
-							"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
-							ScriptManager.getResourceBundle()),
-						arrayLeft.getText());
-				}
-			}
-			else {
-				// Should be impossible unless the grammar changes
-				AbstractSyntaxTree.log.warn(SafeResourceLoader.getString(
-					"UNKNOWN_PRIMARY_LEFT_SIDE_ARRAY",
-					ScriptManager.getResourceBundle()), array.getText());
-			}
-			array.expression().stream().map(AbstractSyntaxTree::process)
-				.forEach(leftNode::addChild);
-			return leftNode;
+		if (lhs.arrayAccess() != null) {
+			return AbstractSyntaxTree.process(lhs.arrayAccess());
 		}
 		if (lhs.methodInvocation_LHS() != null) {
 			return AbstractSyntaxTree.process(lhs.methodInvocation_LHS());
@@ -404,25 +322,6 @@ public class AbstractSyntaxTree {
 		if (node.Identifier() != null) {
 			result
 				.addChild(AbstractSyntaxTree.identifierNode(node.Identifier()));
-		}
-		else if (node.arrayAccess_LHS_General() != null) {
-			ArrayAccess_LHS_GeneralContext lhs = node.arrayAccess_LHS_General();
-			if (lhs.literal() != null) {
-				result.addChild(AbstractSyntaxTree.process(lhs.literal()));
-			}
-			else if (lhs.expression() != null) {
-				result.addChild(AbstractSyntaxTree.process(lhs.expression()));
-			}
-			else if (lhs.methodInvocation() != null) {
-				result.addChild(
-					AbstractSyntaxTree.process(lhs.methodInvocation()));
-			}
-			else {
-				AbstractSyntaxTree.log.warn(
-					SafeResourceLoader.getString("UNKNOWN_ARRAY_LEFT_SIDE",
-						ScriptManager.getResourceBundle()),
-					lhs.getText());
-			}
 		}
 
 		node.expression().stream().map(AbstractSyntaxTree::process)
@@ -551,7 +450,8 @@ public class AbstractSyntaxTree {
 	 * @param parserOutput The root node of the output from the parser.
 	 * @return The root node of the abstract syntax tree.
 	 */
-	public static CompilationUnit process(CompilationUnitContext parserOutput) {
+	public static CompilationUnit
+		process(@NonNull CompilationUnitContext parserOutput) {
 		CompilationUnit root = new CompilationUnit();
 		root.setType(Type.voidType());
 

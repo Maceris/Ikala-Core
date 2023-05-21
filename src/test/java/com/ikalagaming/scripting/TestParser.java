@@ -34,10 +34,10 @@ class TestParser {
 			+ File.separatorChar + "scripting" + File.separatorChar;
 
 	/**
-	 * Tries to evaluate some lua code that prints text.
+	 * Loads the smoke suite and checks for validation errors.
 	 */
 	@Test
-	public void testPrinting() {
+	void testValidator() {
 		CharStream stream;
 		try {
 			stream = CharStreams
@@ -48,21 +48,35 @@ class TestParser {
 			return;
 		}
 
+		ParserErrorListener errorListener = new ParserErrorListener();
+
 		IkalaScriptLexer lexer = new IkalaScriptLexer(stream);
+		lexer.removeErrorListeners();
+		lexer.addErrorListener(errorListener);
 		TokenStream tokenStream = new BufferedTokenStream(lexer);
 		IkalaScriptParser parser = new IkalaScriptParser(tokenStream);
+		parser.removeErrorListeners();
+		parser.addErrorListener(errorListener);
 
 		CompilationUnitContext context = parser.compilationUnit();
+		if (errorListener.getErrorCount() > 0) {
+			Assertions.fail("There should be no errors parsing");
+		}
 
 		Assertions.assertEquals(0, parser.getNumberOfSyntaxErrors(),
 			"Parser should have no syntax errors");
 
 		CompilationUnit ast = AbstractSyntaxTree.process(context);
+		if (ast == null || ast.isInvalid()) {
+			Assertions.fail("There should be a valid syntax tree");
+		}
+
 		TypePreprocessor processor = new TypePreprocessor();
 		processor.processTreeTypes(ast);
+
 		TreeValidator validator = new TreeValidator();
-		Assertions
-			.assertTrue(validator.validate(ast), "Validation should pass");
+		Assertions.assertTrue(validator.validate(ast),
+			"Validation should pass");
 	}
 
 }

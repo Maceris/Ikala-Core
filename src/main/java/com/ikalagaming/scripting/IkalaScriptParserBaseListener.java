@@ -52,39 +52,6 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
-	public void enterArrayAccess_extension(
-		IkalaScriptParser.ArrayAccess_extensionContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void
-		enterArrayAccess_LHS(IkalaScriptParser.ArrayAccess_LHSContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterArrayAccess_LHS_General(
-		IkalaScriptParser.ArrayAccess_LHS_GeneralContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void enterArrayType(IkalaScriptParser.ArrayTypeContext ctx) {}
 
 	/**
@@ -599,17 +566,6 @@ public class IkalaScriptParserBaseListener
 	 * </p>
 	 */
 	@Override
-	public void enterPrimary_extension_access(
-		IkalaScriptParser.Primary_extension_accessContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void enterPrimary_LHS(IkalaScriptParser.Primary_LHSContext ctx) {}
 
 	/**
@@ -869,39 +825,6 @@ public class IkalaScriptParserBaseListener
 	 */
 	@Override
 	public void exitArrayAccess(IkalaScriptParser.ArrayAccessContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitArrayAccess_extension(
-		IkalaScriptParser.ArrayAccess_extensionContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void
-		exitArrayAccess_LHS(IkalaScriptParser.ArrayAccess_LHSContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitArrayAccess_LHS_General(
-		IkalaScriptParser.ArrayAccess_LHS_GeneralContext ctx) {}
 
 	/**
 	 * {@inheritDoc}
@@ -1414,17 +1337,6 @@ public class IkalaScriptParserBaseListener
 	@Override
 	public void
 		exitPrimary_extension(IkalaScriptParser.Primary_extensionContext ctx) {}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitPrimary_extension_access(
-		IkalaScriptParser.Primary_extension_accessContext ctx) {}
 
 	/**
 	 * {@inheritDoc}

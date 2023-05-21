@@ -287,6 +287,9 @@ public class InstructionGenerator implements ASTVisitor {
 			return new MemLocation(MemArea.VARIABLE, clazz,
 				identifier.getName());
 		}
+		if (node instanceof ArrayAccess) {
+			return new MemLocation(MemArea.ARRAY, clazz);
+		}
 		InstructionGenerator.log
 			.warn(SafeResourceLoader.getString("UNHANDLED_EXPRESSION_MEMBER",
 				ScriptManager.getResourceBundle()), node.toString());

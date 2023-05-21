@@ -104,11 +104,11 @@ ternB = !bool ? 0.3 : 3;
 
 // Functions
 int funcResult = getInteger();
-funcResult = getArray()[funcResult];
 int complicatedFunc = getObject().getAnotherObject().callMethod();
 
 double[] arrayDoubles = getDoubleArray();
 double actualDouble = arrayDoubles[0];
+arrayDoubles[1] = actualDouble;
 
 testParams1();
 testParams2("test");

@@ -7,6 +7,7 @@ import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
 
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 
 /**
  * Finds all the labels, notes them down in the type map.
@@ -22,13 +23,21 @@ public class LabelPass implements ASTVisitor {
 	 * Process the tree and update the type map (provided when this class was
 	 * constructed) with all the labels.
 	 *
-	 * @param root The root of the tree, should be a {@link CompilationUnit}
-	 *            when called externally, but we use the Node type for easy tree
-	 *            traversal.
+	 * @param root The root of the tree.
 	 */
-	public void processLabels(Node root) {
+	public void processLabels(@NonNull CompilationUnit root) {
+		this.processTree(root);
+	}
+
+	/**
+	 * Process the tree and update the type map (provided when this class was
+	 * constructed) with all the labels.
+	 *
+	 * @param root The node we are currently processing.
+	 */
+	private void processTree(Node root) {
 		if (!root.getChildren().isEmpty()) {
-			root.getChildren().forEach(this::processLabels);
+			root.getChildren().forEach(this::processTree);
 		}
 		root.process(this);
 	}

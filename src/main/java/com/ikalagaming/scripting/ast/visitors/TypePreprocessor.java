@@ -18,6 +18,7 @@ import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.scripting.ast.VarDeclarationList;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayDeque;
@@ -46,7 +47,7 @@ public class TypePreprocessor implements ASTVisitor {
 	 *
 	 * @param ast The tree to process.
 	 */
-	public void processTreeTypes(CompilationUnit ast) {
+	public void processTreeTypes(@NonNull CompilationUnit ast) {
 		VariableTypeMap variables = new VariableTypeMap();
 
 		this.variableMaps.push(variables);

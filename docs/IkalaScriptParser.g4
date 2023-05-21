@@ -232,25 +232,14 @@ primary
 	:	(primary_LHS) (primary_extension)*
 	;
 
-arrayAccess_LHS_General
-	:	literal
-	|	LPAREN expression RPAREN
-	|	methodInvocation
-	;
-
 primary_extension
-	:	arrayAccess_extension
-	|	methodInvocation_extension
-	;
-
-primary_extension_access
 	:	methodInvocation_extension
 	;
 
 primary_LHS
 	:	literal
 	|	LPAREN expression RPAREN
-	|	arrayAccess_LHS
+	|	arrayAccess
 	|	methodInvocation_LHS
 	|	Identifier
 	;
@@ -263,16 +252,6 @@ primary_LHS_access
 
 arrayAccess
 	:	Identifier (LBRACK expression RBRACK)+
-	|	arrayAccess_LHS_General (LBRACK expression RBRACK)+
-	;
-
-arrayAccess_extension
-	:	primary_extension_access (LBRACK expression RBRACK)+
-	;
-
-arrayAccess_LHS
-	:	Identifier (LBRACK expression RBRACK)+
-	|	primary_LHS_access (LBRACK expression RBRACK)+
 	;
 
 methodInvocation

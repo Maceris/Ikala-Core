@@ -17,7 +17,7 @@ import java.util.BitSet;
  * Handles proper logging of errors, tracks how many occurred over both lexing
  * and parsing. We want to use a new one of these each time if tracking error
  * counts is important.
- * 
+ *
  * @author Ches Burks
  *
  */
@@ -29,16 +29,6 @@ public class ParserErrorListener implements ANTLRErrorListener {
 	 */
 	@Getter
 	private int errorCount = 0;
-
-	@Override
-	public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-		int line, int charPositionInLine, String msg, RecognitionException e) {
-		log.warn(
-			SafeResourceLoader.getString("SYNTAX_ERROR",
-				ScriptManager.getResourceBundle()),
-			line, charPositionInLine, msg);
-		++errorCount;
-	}
 
 	@Override
 	public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex,
@@ -57,6 +47,16 @@ public class ParserErrorListener implements ANTLRErrorListener {
 	public void reportContextSensitivity(Parser recognizer, DFA dfa,
 		int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
 		// ignored
+	}
+
+	@Override
+	public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
+		int line, int charPositionInLine, String msg, RecognitionException e) {
+		ParserErrorListener.log.warn(
+			SafeResourceLoader.getString("SYNTAX_ERROR",
+				ScriptManager.getResourceBundle()),
+			line, charPositionInLine, msg);
+		++this.errorCount;
 	}
 
 }

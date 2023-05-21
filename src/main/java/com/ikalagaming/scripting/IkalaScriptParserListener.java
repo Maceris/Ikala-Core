@@ -32,31 +32,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void enterArrayAccess(IkalaScriptParser.ArrayAccessContext ctx);
 
 	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#arrayAccess_extension}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterArrayAccess_extension(
-		IkalaScriptParser.ArrayAccess_extensionContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link IkalaScriptParser#arrayAccess_LHS}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterArrayAccess_LHS(IkalaScriptParser.ArrayAccess_LHSContext ctx);
-
-	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#arrayAccess_LHS_General}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterArrayAccess_LHS_General(
-		IkalaScriptParser.ArrayAccess_LHS_GeneralContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#arrayType}.
 	 *
 	 * @param ctx the parse tree
@@ -431,15 +406,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	void enterPrimary_extension(IkalaScriptParser.Primary_extensionContext ctx);
 
 	/**
-	 * Enter a parse tree produced by
-	 * {@link IkalaScriptParser#primary_extension_access}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void enterPrimary_extension_access(
-		IkalaScriptParser.Primary_extension_accessContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link IkalaScriptParser#primary_LHS}.
 	 *
 	 * @param ctx the parse tree
@@ -639,31 +605,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitArrayAccess(IkalaScriptParser.ArrayAccessContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#arrayAccess_extension}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitArrayAccess_extension(
-		IkalaScriptParser.ArrayAccess_extensionContext ctx);
-
-	/**
-	 * Exit a parse tree produced by {@link IkalaScriptParser#arrayAccess_LHS}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitArrayAccess_LHS(IkalaScriptParser.ArrayAccess_LHSContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#arrayAccess_LHS_General}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitArrayAccess_LHS_General(
-		IkalaScriptParser.ArrayAccess_LHS_GeneralContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#arrayType}.
@@ -1036,15 +977,6 @@ public interface IkalaScriptParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitPrimary_extension(IkalaScriptParser.Primary_extensionContext ctx);
-
-	/**
-	 * Exit a parse tree produced by
-	 * {@link IkalaScriptParser#primary_extension_access}.
-	 *
-	 * @param ctx the parse tree
-	 */
-	void exitPrimary_extension_access(
-		IkalaScriptParser.Primary_extension_accessContext ctx);
 
 	/**
 	 * Exit a parse tree produced by {@link IkalaScriptParser#primary_LHS}.
