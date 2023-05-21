@@ -40,11 +40,9 @@ public class ConfigManager {
 	/**
 	 * Create an empty configuration to use if none is present.
 	 *
-	 * @param configName The name of the configuration, since a plugin might
-	 *            have multiple.
 	 * @return The configuration.
 	 */
-	private static PluginConfig emptyConfig(@NonNull String configName) {
+	private static PluginConfig emptyConfig() {
 		return new PluginConfig(new HashMap<>());
 	}
 
@@ -105,7 +103,7 @@ public class ConfigManager {
 				SafeResourceLoader.getString("CONFIG_MISSING_FROM_DISK",
 					PluginManager.getInstance().getResourceBundle()),
 				configName, pluginName);
-			PluginConfig cached = ConfigManager.emptyConfig(configName);
+			PluginConfig cached = ConfigManager.emptyConfig();
 			ConfigManager.configCache.put(cacheName, cached);
 			return cached;
 		}
@@ -124,9 +122,40 @@ public class ConfigManager {
 				.warn(SafeResourceLoader.getString("CONFIG_FILE_VANISHED",
 					PluginManager.getInstance().getResourceBundle()), e);
 		}
-		PluginConfig cached = ConfigManager.emptyConfig(configName);
+		PluginConfig cached = ConfigManager.emptyConfig();
 		ConfigManager.configCache.put(cacheName, cached);
 		return cached;
+	}
+
+	/**
+	 * Forcibly reload a configuration from disk, discarding any in-memory
+	 * changes.
+	 *
+	 * @param pluginName The plugin to load configuration for.
+	 * @return The default configuration for the given plugin.
+	 */
+	public static PluginConfig reloadConfig(@NonNull String pluginName) {
+		return ConfigManager.reloadConfig(pluginName,
+			ConfigManager.DEFAULT_NAME);
+	}
+
+	/**
+	 * Forcibly reload a configuration from disk, discarding any in-memory
+	 * changes.
+	 *
+	 * @param pluginName The plugin to load configuration for.
+	 * @param configName The configuration file to load. Should be of the format
+	 *            like "example.yml".
+	 * @return The associated configuration.
+	 */
+	public static PluginConfig reloadConfig(@NonNull String pluginName,
+		@NonNull String configName) {
+
+		final String cacheName =
+			ConfigManager.getCacheName(pluginName, configName);
+		ConfigManager.configCache.remove(cacheName);
+
+		return ConfigManager.loadConfig(pluginName, configName);
 	}
 
 	/**
