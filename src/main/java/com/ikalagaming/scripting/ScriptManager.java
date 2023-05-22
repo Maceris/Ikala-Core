@@ -3,6 +3,7 @@ package com.ikalagaming.scripting;
 import com.ikalagaming.localization.Localization;
 
 import lombok.Getter;
+import lombok.NonNull;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -31,11 +32,45 @@ public class ScriptManager {
 	private static ResourceBundle resourceBundle = ResourceBundle.getBundle(
 		"com.ikalagaming.scripting.Scripting", Localization.getLocale());
 
+	/**
+	 * List of classes that are registered.
+	 */
 	private static List<Class<?>> registeredClasses =
 		Collections.synchronizedList(new ArrayList<>());
 
-	private static Map<String, List<FunctionRegistration>> registeredMethods =
+	/**
+	 * Maps from class name to registrations.
+	 */
+	private static Map<String, List<FunctionRegistration>> classMethods =
 		Collections.synchronizedMap(new HashMap<>());
+
+	/**
+	 * A list of all methods that are registered for easy searching.
+	 */
+	private static Map<FunctionRegistration, Method> registeredMethods =
+		Collections.synchronizedMap(new HashMap<>());
+
+	/**
+	 * Fetch a list of registered methods with the given name and parameter
+	 * count.
+	 *
+	 * @param name The name of the method.
+	 * @param parameterCount The number of parameters.
+	 * @return A list containing all matching registered methods, which may be
+	 *         empty.
+	 */
+	public static List<Method> getMethods(@NonNull String name,
+		int parameterCount) {
+		List<Method> methods = new ArrayList<>();
+		for (var entry : ScriptManager.registeredMethods.entrySet()) {
+			if (!name.equals(entry.getKey().name())
+				|| (parameterCount != entry.getKey().parameterTypes().size())) {
+				continue;
+			}
+			methods.add(entry.getValue());
+		}
+		return methods;
+	}
 
 	/**
 	 * Register a class with the script engine, making all of its methods
@@ -61,9 +96,12 @@ public class ScriptManager {
 				|| Modifier.isInterface(modifiers)) {
 				continue;
 			}
-			funcs.add(FunctionRegistration.fromMethod(method));
+			FunctionRegistration registration =
+				FunctionRegistration.fromMethod(method);
+			funcs.add(registration);
+			ScriptManager.registeredMethods.put(registration, method);
 		}
-		ScriptManager.registeredMethods.put(clazz.getSimpleName(),
+		ScriptManager.classMethods.put(clazz.getSimpleName(),
 			List.copyOf(funcs));
 	}
 
@@ -78,7 +116,9 @@ public class ScriptManager {
 			return;
 		}
 		ScriptManager.registeredClasses.remove(clazz);
-		ScriptManager.registeredMethods.remove(clazz.getSimpleName());
+		ScriptManager.classMethods.get(clazz.getSimpleName())
+			.forEach(ScriptManager.registeredMethods::remove);
+		ScriptManager.classMethods.remove(clazz.getSimpleName());
 	}
 
 	/**

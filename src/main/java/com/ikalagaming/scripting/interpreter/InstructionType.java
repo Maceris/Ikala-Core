@@ -48,16 +48,6 @@ public enum InstructionType {
 	 */
 	AND,
 	/**
-	 * Dereference an array.
-	 * 
-	 * <br>
-	 * <br>
-	 * <b>Input 1:</b> The location of the array.<br>
-	 * <b>Input 2:</b> The integer index of the array.<br>
-	 * <b>Output:</b> The value in that position.
-	 */
-	ARRAY_ACCESS,
-	/**
 	 * Call a method. Parameters are stored on the stack. If this is a static
 	 * method, we use a memory location of IMMEDIATE. Otherwise the location
 	 * will reflect where we find the object to call a method on, whether that

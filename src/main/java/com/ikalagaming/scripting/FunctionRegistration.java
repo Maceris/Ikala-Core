@@ -1,8 +1,6 @@
 package com.ikalagaming.scripting;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.NonNull;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -13,12 +11,16 @@ import java.util.List;
 /**
  * Extra information needed to call a method.
  *
- * @author Ches Burks
+ * @param name The name of the method.
+ * @param parameterTypes The types of each parameter. Will be empty if there are
+ *            no parameters.
+ * @param returnType The type of the return value, will be Void if there is no
+ *            return.
  *
+ * @author Ches Burks
  */
-@Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-class FunctionRegistration {
+record FunctionRegistration(@NonNull String name,
+	@NonNull List<Class<?>> parameterTypes, @NonNull Class<?> returnType) {
 
 	/**
 	 * Convert a method to a registration object.
@@ -43,25 +45,5 @@ class FunctionRegistration {
 		return new FunctionRegistration(method.getName(), paramList,
 			method.getReturnType());
 	}
-
-	/**
-	 * The name of the method.
-	 *
-	 * @return The method name.
-	 */
-	private final String name;
-	/**
-	 * The types of each parameter.
-	 *
-	 * @return The type of each parameter.
-	 */
-	private final List<Class<?>> parameterTypes;
-
-	/**
-	 * The type of the return value, will be Void if there is no return.
-	 *
-	 * @return The return type.
-	 */
-	private final Class<?> returnType;
 
 }

@@ -9,7 +9,10 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +106,140 @@ public class ScriptRuntime {
 			new MemoryItem(Boolean.class, operation.apply(first, second));
 
 		this.storeValue(result, i.targetLocation());
+	}
+
+	/**
+	 * Handle method calls to java, both static and on objects.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void call(Instruction i) {
+		final MemArea objectLocation = i.firstLocation().area();
+		final String methodName = i.firstLocation().value().toString();
+		final int numParams = (Integer) i.secondLocation().value();
+
+		// All parameters come from the stack, might as well reuse this object
+		final MemLocation stackLocation =
+			new MemLocation(MemArea.STACK, Object.class);
+
+		/**
+		 * The object to invoke a method on.
+		 */
+		Object object = null;
+		/**
+		 * Methods that match the name and number of parameters.
+		 */
+		List<Method> options;
+		List<MemoryItem> parameters = new ArrayList<>();
+		for (int paramIndex = 0; paramIndex < numParams; ++paramIndex) {
+			parameters.add(this.loadValue(stackLocation));
+			if (this.fatalError) {
+				return;
+			}
+		}
+		if (objectLocation != MemArea.IMMEDIATE) {
+			final MemoryItem first = this.loadValue(i.firstLocation());
+
+			object = first.value();
+
+			Method[] methods = object.getClass().getMethods();
+
+			options = new ArrayList<>();
+
+			for (Method m : methods) {
+				if (m.getName().equals(methodName)
+					&& m.getParameterCount() == numParams) {
+					options.add(m);
+				}
+			}
+			if (options.isEmpty()) {
+				ScriptRuntime.log
+					.warn(SafeResourceLoader.getString("UNKNOWN_METHOD",
+						ScriptManager.getResourceBundle()), methodName);
+				this.halt();
+				return;
+			}
+		}
+		else {
+			options = ScriptManager.getMethods(methodName, numParams);
+		}
+
+		if (!this.call(options, parameters, object)) {
+			this.halt();
+		}
+	}
+
+	/**
+	 * Actually try to execute the call.
+	 *
+	 * @param options The potential options we have for method calls.
+	 * @param parameters The actual parameters we are trying to match.
+	 * @param target The object to invoke the method on, may be null for static
+	 *            methods.
+	 * @return Whether we successfully called a method.
+	 */
+	private boolean call(@NonNull List<Method> options,
+		@NonNull List<MemoryItem> parameters, Object target) {
+		if (options.isEmpty()) {
+			return false;
+		}
+		for (Method option : options) {
+			Class<?>[] params = option.getParameterTypes();
+			boolean viable = true;
+			for (int i = 0; i < params.length; ++i) {
+				Class<?> expectedType = params[i];
+				Class<?> actualType = parameters.get(i).type();
+				viable = this.canAssign(expectedType, actualType);
+				if (!viable) {
+					break;
+				}
+			}
+			if (!viable) {
+				continue;
+			}
+			Object[] actualParams = new Object[parameters.size()];
+			for (int i = 0; i < parameters.size(); ++i) {
+				actualParams[i] = parameters.get(i).value();
+			}
+			try {
+				Object result = option.invoke(target, actualParams);
+				if (result != null) {
+					this.stack.push(new MemoryItem(result));
+				}
+				return true;
+			}
+			catch (IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+				ScriptRuntime.log
+					.warn(
+						SafeResourceLoader.getString("METHOD_CALL_FAILED",
+							ScriptManager.getResourceBundle()),
+						option.getName());
+				return false;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Check if the expected parameter lines up with what we have for it. This
+	 * includes checks for primitives.
+	 *
+	 * @param expected The expected type.
+	 * @param actual The actual type we have.
+	 * @return Whether this is a reasonable match.
+	 */
+	private boolean canAssign(Class<?> expected, Class<?> actual) {
+		if (expected.isPrimitive()) {
+			return ((expected == int.class && actual == Integer.class)
+				|| (expected == double.class && actual == Double.class)
+				|| (expected == boolean.class && actual == Boolean.class)
+				|| (expected == char.class && actual == Character.class));
+		}
+		else if (!expected.isAssignableFrom(actual)) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -406,14 +543,6 @@ public class ScriptRuntime {
 		this.storeValue(result, i.targetLocation());
 	}
 
-	private void call(Instruction i) {
-		// TODO implement
-
-		final MemArea objectLocation = i.firstLocation().area();
-		final String methodName = i.firstLocation().value().toString();
-		final int numParams = (Integer) i.secondLocation().value();
-	}
-
 	private void execute(Instruction i) {
 		switch (i.type()) {
 			case ADD_CHAR:
@@ -432,16 +561,12 @@ public class ScriptRuntime {
 				this.boolLogic(i, (a, b) -> a && b);
 				this.programCounter++;
 				break;
-			case ARRAY_ACCESS:
-				// TODO implement
-				this.programCounter++;
-				break;
 			case CAST:
 				// TODO implement
 				this.programCounter++;
 				break;
 			case CALL:
-				call(i);
+				this.call(i);
 				this.programCounter++;
 				break;
 			case CMP:
@@ -533,7 +658,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case NOT:
-				// TODO implement
+				this.not(i);
 				this.programCounter++;
 				break;
 			case OR:
@@ -840,6 +965,30 @@ public class ScriptRuntime {
 		}
 
 		MemoryItem result = new MemoryItem(Integer.class, -firstNumber);
+
+		this.storeValue(result, i.targetLocation());
+	}
+
+	/**
+	 * A logical not.
+	 *
+	 * @param i The instruction we are executing.
+	 */
+	private void not(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+		this.checkType(firstLocation, Type.Base.BOOLEAN);
+		if (this.fatalError) {
+			return;
+		}
+
+		boolean value = (Boolean) firstItem.value();
+
+		MemoryItem result = new MemoryItem(Boolean.class, !value);
 
 		this.storeValue(result, i.targetLocation());
 	}

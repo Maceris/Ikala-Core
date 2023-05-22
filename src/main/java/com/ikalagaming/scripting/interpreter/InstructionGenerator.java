@@ -812,7 +812,7 @@ public class InstructionGenerator implements ASTVisitor {
 	/**
 	 * Process a tree recursively, with special handling for some cases such as
 	 * skipping children or processing in reverse order.
-	 * 
+	 *
 	 * @param node The node to start processing from.
 	 */
 	private void processTree(Node node) {
@@ -831,7 +831,12 @@ public class InstructionGenerator implements ASTVisitor {
 			|| node instanceof ArgumentList) {
 			// Reverse order
 			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
-				this.processTree(node.getChildren().get(i));
+				Node child = node.getChildren().get(i);
+				this.processTree(child);
+				if (child instanceof Identifier id) {
+					// more variable special handling
+					this.pushVarToStack(id);
+				}
 			}
 		}
 		else {
@@ -908,7 +913,7 @@ public class InstructionGenerator implements ASTVisitor {
 	/**
 	 * Push a variable to the stack based on the identifier node representing
 	 * the variable.
-	 * 
+	 *
 	 * @param node The node that contains the name of the variable we need on
 	 *            the stack.
 	 */
@@ -997,6 +1002,11 @@ public class InstructionGenerator implements ASTVisitor {
 				params = null;
 			}
 		}
+
+		if (params != null) {
+			this.processTree(params);
+		}
+
 		paramCount = new MemLocation(MemArea.IMMEDIATE, Integer.class,
 			params == null ? 0 : params.getChildren().size());
 
