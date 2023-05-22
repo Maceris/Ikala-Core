@@ -809,6 +809,12 @@ public class InstructionGenerator implements ASTVisitor {
 		return result;
 	}
 
+	/**
+	 * Process a tree recursively, with special handling for some cases such as
+	 * skipping children or processing in reverse order.
+	 * 
+	 * @param node The node to start processing from.
+	 */
 	private void processTree(Node node) {
 		if (node instanceof Call || node instanceof DoWhile
 			|| node instanceof ExprAssign || node instanceof ExprEquality
@@ -899,6 +905,13 @@ public class InstructionGenerator implements ASTVisitor {
 			new MemLocation(MemArea.STACK, Boolean.class)));
 	}
 
+	/**
+	 * Push a variable to the stack based on the identifier node representing
+	 * the variable.
+	 * 
+	 * @param node The node that contains the name of the variable we need on
+	 *            the stack.
+	 */
 	private void pushVarToStack(Identifier node) {
 		this.tempInstructions.add(new Instruction(InstructionType.MOV,
 			new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
