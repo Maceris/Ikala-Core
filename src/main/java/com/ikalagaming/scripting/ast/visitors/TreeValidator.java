@@ -150,6 +150,10 @@ public class TreeValidator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprLogic node) {
+		if (node.getType().anyOf(Base.VOID)) {
+			this.markInvalid(node, "INVALID_TYPE");
+			return;
+		}
 		if (!this.hasAtLeastOneChild(node)) {
 			return;
 		}

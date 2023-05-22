@@ -435,11 +435,13 @@ public class AbstractSyntaxTree {
 					AbstractSyntaxTree.process(parserOutput.blockStatement(i));
 				if (child == null) {
 					root.setInvalid(true);
+					AbstractSyntaxTree.log.warn(
+						SafeResourceLoader.getString("INVALID_BLOCK_STATEMENT",
+							ScriptManager.getResourceBundle()));
 					// Might as well immediately bail
 					return root;
 				}
 				root.addChild(child);
-
 			}
 		}
 		return root;
