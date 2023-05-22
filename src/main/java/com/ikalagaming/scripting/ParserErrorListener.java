@@ -14,9 +14,21 @@ import org.antlr.v4.runtime.dfa.DFA;
 import java.util.BitSet;
 
 /**
+ * <p>
  * Handles proper logging of errors, tracks how many occurred over both lexing
- * and parsing. We want to use a new one of these each time if tracking error
- * counts is important.
+ * and parsing.
+ * </p>
+ *
+ * <p>
+ * If parsing multiple scripts, you will want either a new error listener each
+ * time, or to reset the error count before each script, lest failures falsely
+ * carry over to the next script.
+ * </p>
+ *
+ * <p>
+ * On a similar note, this is also not thread safe, if parsing on multiple
+ * threads, you should use multiple instances.
+ * </p>
  *
  * @author Ches Burks
  *
@@ -26,6 +38,8 @@ public class ParserErrorListener implements ANTLRErrorListener {
 
 	/**
 	 * The number of errors that we have seen so far with this object.
+	 * 
+	 * @see #resetErrorCount()
 	 */
 	@Getter
 	private int errorCount = 0;
@@ -47,6 +61,14 @@ public class ParserErrorListener implements ANTLRErrorListener {
 	public void reportContextSensitivity(Parser recognizer, DFA dfa,
 		int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
 		// ignored
+	}
+
+	/**
+	 * Reset the error count so that we can reuse this for multiple parse
+	 * attempts.
+	 */
+	public void resetErrorCount() {
+		this.errorCount = 0;
 	}
 
 	@Override
