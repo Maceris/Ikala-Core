@@ -42,12 +42,106 @@ public class TypePreprocessor implements ASTVisitor {
 	private Deque<VariableTypeMap> variableMaps = new ArrayDeque<>();
 
 	/**
+	 * Calculate the types for addition, subtraction, division, multiplication.
+	 *
+	 * @param node The node we are processing.
+	 * @param firstType The type of the left node.
+	 * @param secondType The type of the right node.
+	 */
+	private void calculateFourFunctionType(ExprArithmetic node,
+		final Type firstType, final Type secondType) {
+		if (node.getChildren().size() < 2) {
+			node.setType(firstType);
+			return;
+		}
+		// invalid types
+		if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)
+			|| secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)) {
+			TypePreprocessor.log.warn(
+				SafeResourceLoader.getString("INVALID_TYPES",
+					ScriptManager.getResourceBundle()),
+				firstType.toString(), node.getOperator().getReadable(),
+				secondType.toString());
+			node.setType(Type.voidType());
+			return;
+		}
+
+		// Unknown
+		if (firstType.anyOf(Base.UNKNOWN) || secondType.anyOf(Base.UNKNOWN)) {
+			node.setType(Type.unknownType());
+			return;
+		}
+
+		// Same type
+		if (firstType.equals(secondType) || (firstType.anyOf(Base.DOUBLE)
+			&& secondType.anyOf(Base.CHAR, Base.INT))) {
+			node.setType(firstType);
+			return;
+		}
+		// different types
+		if (secondType.anyOf(Base.DOUBLE)
+			&& firstType.anyOf(Base.CHAR, Base.INT)) {
+			node.setType(secondType);
+			return;
+		}
+		if (firstType.anyOf(Base.INT) && secondType.anyOf(Base.CHAR)) {
+			node.setType(firstType);
+			return;
+		}
+		if (secondType.anyOf(Base.INT) && firstType.anyOf(Base.CHAR)) {
+			node.setType(secondType);
+			return;
+		}
+		TypePreprocessor.log.warn(
+			SafeResourceLoader.getString("INVALID_CAST",
+				ScriptManager.getResourceBundle()),
+			firstType.toString(), secondType.toString());
+		node.setType(Type.voidType());
+	}
+
+	/**
+	 * Calculate the types for modulus.
+	 *
+	 * @param node The node we are processing.
+	 * @param firstType The type of the left node.
+	 * @param secondType The type of the right node.
+	 */
+	private void calculateModulusType(ExprArithmetic node, final Type firstType,
+		final Type secondType) {
+		if (node.getChildren().size() < 2) {
+			TypePreprocessor.log
+				.warn(SafeResourceLoader.getString("MISSING_SECOND_CHILD",
+					ScriptManager.getResourceBundle()), this.toString());
+			node.setType(Type.voidType());
+			return;
+		}
+		if ((firstType.anyOf(Base.INT) && secondType.anyOf(Base.INT, Base.CHAR))
+			|| (firstType.anyOf(Base.DOUBLE)
+				&& secondType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR))
+			|| (firstType.anyOf(Base.CHAR) && secondType.anyOf(Base.CHAR))) {
+			node.setType(firstType);
+			return;
+		}
+		if (firstType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR)
+			&& secondType.anyOf(Base.DOUBLE)) {
+			node.setType(secondType);
+			return;
+		}
+		TypePreprocessor.log.warn(
+			SafeResourceLoader.getString("INVALID_CAST",
+				ScriptManager.getResourceBundle()),
+			firstType.toString(), secondType.toString());
+		node.setType(Type.voidType());
+	}
+
+	/**
 	 * Process the types for the tree. Intended for use only on the root node.
 	 *
 	 * @param ast The tree to process.
 	 */
 	public void processTreeTypes(@NonNull CompilationUnit ast) {
 		VariableTypeMap variables = new VariableTypeMap();
+		this.variableMaps.clear();
 
 		this.variableMaps.push(variables);
 		LabelPass labels = new LabelPass(variables);
@@ -100,6 +194,7 @@ public class TypePreprocessor implements ASTVisitor {
 			TypePreprocessor.log
 				.warn(SafeResourceLoader.getString("MISSING_FIRST_CHILD",
 					ScriptManager.getResourceBundle()), this.toString());
+			node.setType(Type.voidType());
 			return;
 		}
 		final Type firstType = node.getChildren().get(0).getType();
@@ -119,6 +214,7 @@ public class TypePreprocessor implements ASTVisitor {
 						SafeResourceLoader.getString("MISSING_SECOND_CHILD",
 							ScriptManager.getResourceBundle()),
 						this.toString());
+					node.setType(Type.voidType());
 					return;
 				}
 				// fallthrough
@@ -139,56 +235,8 @@ public class TypePreprocessor implements ASTVisitor {
 				}
 				// fallthrough
 			case SUB:
-				if (node.getChildren().size() < 2) {
-					node.setType(firstType);
-					break;
-				}
-				// invalid types
-				if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)
-					|| secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER,
-						Base.VOID)) {
-					TypePreprocessor.log.warn(
-						SafeResourceLoader.getString("INVALID_TYPES",
-							ScriptManager.getResourceBundle()),
-						firstType.toString(), node.getOperator().getReadable(),
-						secondType.toString());
-					return;
-				}
-
-				// Unknown
-				if (firstType.anyOf(Base.UNKNOWN)
-					|| secondType.anyOf(Base.UNKNOWN)) {
-					node.setType(Type.unknownType());
-					break;
-				}
-
-				// Same type
-				// different types
-				if (firstType.equals(secondType)
-					|| (firstType.anyOf(Base.DOUBLE)
-						&& secondType.anyOf(Base.CHAR, Base.INT))) {
-					node.setType(firstType);
-					break;
-				}
-				if (secondType.anyOf(Base.DOUBLE)
-					&& firstType.anyOf(Base.CHAR, Base.INT)) {
-					node.setType(secondType);
-					break;
-				}
-				if (firstType.anyOf(Base.INT) && secondType.anyOf(Base.CHAR)) {
-					node.setType(firstType);
-					break;
-				}
-				if (secondType.anyOf(Base.INT) && firstType.anyOf(Base.CHAR)) {
-					node.setType(secondType);
-					break;
-				}
-				TypePreprocessor.log.warn(
-					SafeResourceLoader.getString("INVALID_CAST",
-						ScriptManager.getResourceBundle()),
-					firstType.toString(), secondType.toString());
+				this.calculateFourFunctionType(node, firstType, secondType);
 				break;
-
 			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
 				if (firstType.anyOf(Base.INT, Base.CHAR, Base.DOUBLE,
 					Base.UNKNOWN)) {
@@ -199,40 +247,18 @@ public class TypePreprocessor implements ASTVisitor {
 						SafeResourceLoader.getString("INVALID_OPERATOR",
 							ScriptManager.getResourceBundle()),
 						node.getOperator().toString(), firstType.toString());
+					node.setType(Type.voidType());
 				}
 				break;
 			case MOD:
-				if (node.getChildren().size() < 2) {
-					TypePreprocessor.log.warn(
-						SafeResourceLoader.getString("MISSING_SECOND_CHILD",
-							ScriptManager.getResourceBundle()),
-						this.toString());
-					return;
-				}
-				if ((firstType.anyOf(Base.INT)
-					&& secondType.anyOf(Base.INT, Base.CHAR))
-					|| (firstType.anyOf(Base.DOUBLE)
-						&& secondType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR))
-					|| (firstType.anyOf(Base.CHAR)
-						&& secondType.anyOf(Base.CHAR))) {
-					node.setType(firstType);
-					break;
-				}
-				if (firstType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR)
-					&& secondType.anyOf(Base.DOUBLE)) {
-					node.setType(secondType);
-					break;
-				}
-				TypePreprocessor.log.warn(
-					SafeResourceLoader.getString("INVALID_CAST",
-						ScriptManager.getResourceBundle()),
-					firstType.toString(), secondType.toString());
+				this.calculateModulusType(node, firstType, secondType);
 				break;
 			default:
 				TypePreprocessor.log.warn(
 					SafeResourceLoader.getString("UNKNOWN_OPERATOR",
 						ScriptManager.getResourceBundle()),
 					node.getOperator().toString());
+				node.setType(Type.voidType());
 				break;
 		}
 	}
