@@ -11,6 +11,9 @@ import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
+import com.ikalagaming.scripting.ast.SwitchBlockGroup;
+import com.ikalagaming.scripting.ast.SwitchLabel;
+import com.ikalagaming.scripting.ast.SwitchStatement;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -194,6 +197,30 @@ public class TreeValidator implements ASTVisitor {
 				.warn(SafeResourceLoader.getString("INVALID_VARIABLE_USE",
 					ScriptManager.getResourceBundle()), node.getName());
 			this.valid = false;
+		}
+	}
+
+	@Override
+	public void visit(SwitchStatement node) {
+		Node block = node.getChildren().get(1);
+		int defaultCount = 0;
+		for (Node child : block.getChildren()) {
+			if (child instanceof SwitchBlockGroup) {
+				for (Node subchild : child.getChildren()) {
+					if (subchild instanceof SwitchLabel label
+						&& (label.isDefault())) {
+						++defaultCount;
+					}
+				}
+			}
+			else if (child instanceof SwitchLabel label
+				&& (label.isDefault())) {
+				++defaultCount;
+			}
+		}
+
+		if (defaultCount > 1) {
+			this.markInvalid(node, "MULTIPLE_DEFAULTS");
 		}
 	}
 
