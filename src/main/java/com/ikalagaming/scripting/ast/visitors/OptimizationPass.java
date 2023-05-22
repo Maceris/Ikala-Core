@@ -3,10 +3,12 @@ package com.ikalagaming.scripting.ast.visitors;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.CompilationUnit;
+import com.ikalagaming.scripting.ast.ConstBool;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
+import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.StatementList;
 import com.ikalagaming.scripting.ast.Type;
@@ -60,13 +62,16 @@ public class OptimizationPass implements ASTVisitor {
 				// replace the node
 				node.getChildren().set(i, this.simplify(expr));
 			}
-			if (child instanceof StatementList
+			else if (child instanceof StatementList
 				&& (child.getChildren().size() == 1)) {
 				/*
 				 * If a statement list has only 1 child, we replace the list
 				 * with its child. Essentially removing pointless nesting.
 				 */
 				node.getChildren().set(i, child.getChildren().get(0));
+			}
+			else if (child instanceof ExprLogic expr) {
+				node.getChildren().set(i, this.simplify(expr));
 			}
 		}
 		node.process(this);
@@ -110,6 +115,53 @@ public class OptimizationPass implements ASTVisitor {
 			return this.simplifyChar(node);
 		}
 
+		return node;
+	}
+
+	private Node simplify(ExprLogic node) {
+		if (node.getChildren().size() < 2) {
+			return node;
+		}
+
+		final Node left = node.getChildren().get(0);
+		final Node right = node.getChildren().get(1);
+
+		if (ExprLogic.Operator.AND.equals(node.getOperator())) {
+			return this.simplifyAnd(node, left, right);
+		}
+		else if (ExprLogic.Operator.OR.equals(node.getOperator())) {
+			return this.simplifyOr(node, left, right);
+		}
+		return node;
+	}
+
+	/**
+	 * Simplify an and expression. Removes pointless logic, and simplifies to a
+	 * constant if possible.
+	 *
+	 * @param node The logic node we are working on.
+	 * @param leftChild The left child.
+	 * @param rightChild The right child.
+	 * @return The node that should be in the place of the node parameter, which
+	 *         may just be the node unaltered.
+	 */
+	private Node simplifyAnd(ExprLogic node, Node leftChild, Node rightChild) {
+		if (leftChild instanceof ConstBool left && (!left.isValue())
+			|| rightChild instanceof ConstBool right && (!right.isValue())) {
+			// if either side of an && is false, the result is always false
+			ConstBool result = new ConstBool();
+			result.setValue(false);
+			result.setType(Type.primitive(Base.BOOLEAN));
+			return result;
+		}
+		if (leftChild instanceof ConstBool bool && (bool.isValue())) {
+			// true && ____
+			return rightChild;
+		}
+		if (rightChild instanceof ConstBool bool && (bool.isValue())) {
+			// ____ && true
+			return leftChild;
+		}
 		return node;
 	}
 
@@ -390,6 +442,36 @@ public class OptimizationPass implements ASTVisitor {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Simplify an or expression. Removes pointless logic, and simplifies to a
+	 * constant if possible.
+	 *
+	 * @param node The logic node we are working on.
+	 * @param leftChild The left child.
+	 * @param rightChild The right child.
+	 * @return The node that should be in the place of the node parameter, which
+	 *         may just be the node unaltered.
+	 */
+	private Node simplifyOr(ExprLogic node, Node leftChild, Node rightChild) {
+		if (leftChild instanceof ConstBool left && (left.isValue())
+			|| rightChild instanceof ConstBool right && (right.isValue())) {
+			// if either side of an || is true, the result is always true
+			ConstBool result = new ConstBool();
+			result.setValue(true);
+			result.setType(Type.primitive(Base.BOOLEAN));
+			return result;
+		}
+		if (leftChild instanceof ConstBool bool && (!bool.isValue())) {
+			// false || ____
+			return rightChild;
+		}
+		if (rightChild instanceof ConstBool bool && (!bool.isValue())) {
+			// ____ || false
+			return leftChild;
+		}
+		return node;
 	}
 
 }
