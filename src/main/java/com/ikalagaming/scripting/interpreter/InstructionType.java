@@ -67,7 +67,7 @@ public enum InstructionType {
 	 * <br>
 	 * <b>Input 1:</b> The location of the result to cast.<br>
 	 * <b>Input 2:</b> Ignored.<br>
-	 * <b>Output:</b> None.
+	 * <b>Output:</b> The type to cast to.
 	 */
 	CAST,
 	/**

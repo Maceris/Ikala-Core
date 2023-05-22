@@ -1019,15 +1019,18 @@ public class InstructionGenerator implements ASTVisitor {
 		Node expression = node.getChildren().get(0);
 
 		MemArea area;
-		if (expression instanceof Identifier) {
+		Object value = null;
+		if (expression instanceof Identifier id) {
 			area = MemArea.VARIABLE;
+			value = id.getName();
 		}
 		else {
 			area = MemArea.STACK;
 		}
+
 		this.tempInstructions.add(new Instruction(InstructionType.CAST,
 			new MemLocation(area,
-				expression.getType().getBase().getCorrespondingClass()),
+				expression.getType().getBase().getCorrespondingClass(), value),
 			null, new MemLocation(MemArea.STACK,
 				node.getType().getBase().getCorrespondingClass())));
 	}

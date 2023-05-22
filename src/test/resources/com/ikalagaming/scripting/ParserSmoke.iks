@@ -134,3 +134,13 @@ switch (x) {
 
 JUMP4:
 
+// Casting
+double castDouble = 1.0;
+int castInt = (int) castDouble;
+char castChar = (char) castDouble;
+castChar = (char) castInt;
+boolean castBool = (boolean) castInt;
+string castStr = (string) castDouble;
+castStr = (string) castInt;
+castStr = (string) castChar;
+castStr = (string) castBool;

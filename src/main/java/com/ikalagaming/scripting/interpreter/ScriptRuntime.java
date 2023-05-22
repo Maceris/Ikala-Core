@@ -243,6 +243,192 @@ public class ScriptRuntime {
 	}
 
 	/**
+	 * Handle a cast instruction.
+	 *
+	 * @param i The instruction to process.
+	 */
+	private void cast(Instruction i) {
+		final MemLocation firstLocation = i.firstLocation();
+
+		final MemoryItem firstItem = this.loadValue(firstLocation);
+
+		if (this.fatalError) {
+			return;
+		}
+
+		final Class<?> targetClass = i.targetLocation().type();
+
+		MemoryItem target = null;
+
+		if (targetClass == Integer.class) {
+			target = this.castToInt(firstItem.value());
+		}
+		else if (targetClass == Double.class) {
+			target = this.castToDouble(firstItem.value());
+		}
+		else if (targetClass == Character.class) {
+			target = this.castToChar(firstItem.value());
+		}
+		else if (targetClass == Boolean.class) {
+			target = this.castToBoolean(firstItem.value());
+		}
+		else if (targetClass == String.class) {
+			target =
+				new MemoryItem(Character.class, firstItem.value().toString());
+		}
+
+		if (target == null) {
+			ScriptRuntime.log
+				.warn(SafeResourceLoader.getString("INVALID_CAST_TYPE",
+					ScriptManager.getResourceBundle()), targetClass);
+			this.halt();
+			return;
+		}
+
+		MemLocation targetLocation =
+			new MemLocation(i.targetLocation().area(), targetClass);
+		this.storeValue(target, targetLocation);
+	}
+
+	/**
+	 * Handle casting to a boolean.
+	 *
+	 * @param o The object we are converting.
+	 * @return The memory item after a cast, or null if we could not handle it.
+	 */
+	private MemoryItem castToBoolean(Object o) {
+		boolean value;
+
+		if (o instanceof Integer integer) {
+			value = integer == 0;
+		}
+		else if (o instanceof Double doub) {
+			value = doub == 0;
+		}
+		else if (o instanceof Character character) {
+			value = character == 0;
+		}
+		else if (o instanceof Boolean bool) {
+			value = bool;
+		}
+		else if (o instanceof String str) {
+			value = str.isEmpty();
+		}
+		else {
+			return null;
+		}
+		return new MemoryItem(Boolean.class, value);
+	}
+
+	/**
+	 * Handle casting to a character.
+	 *
+	 * @param o The object we are converting.
+	 * @return The memory item after a cast, or null if we could not handle it.
+	 */
+	private MemoryItem castToChar(Object o) {
+		char value;
+
+		if (o instanceof Integer integer) {
+			int val = integer;
+			value = (char) val;
+		}
+		else if (o instanceof Double doub) {
+			double val = doub;
+			value = (char) val;
+		}
+		else if (o instanceof Character character) {
+			value = character;
+		}
+		else if (o instanceof Boolean bool) {
+			value = Boolean.TRUE.equals(bool) ? (char) 1 : (char) 0;
+		}
+		else if (o instanceof String str) {
+			try {
+				value = (char) Integer.parseInt(str);
+			}
+			catch (NumberFormatException ignored) {
+				value = 0;
+			}
+		}
+		else {
+			return null;
+		}
+		return new MemoryItem(Character.class, value);
+	}
+
+	/**
+	 * Handle casting to a double.
+	 *
+	 * @param o The object we are converting.
+	 * @return The memory item after a cast, or null if we could not handle it.
+	 */
+	private MemoryItem castToDouble(Object o) {
+		double value;
+
+		if (o instanceof Integer integer) {
+			value = integer;
+		}
+		else if (o instanceof Double doub) {
+			value = doub;
+		}
+		else if (o instanceof Character character) {
+			value = character;
+		}
+		else if (o instanceof Boolean bool) {
+			value = Boolean.TRUE.equals(bool) ? 1.0 : 0.0;
+		}
+		else if (o instanceof String str) {
+			try {
+				value = Double.parseDouble(str);
+			}
+			catch (NumberFormatException ignored) {
+				value = 0;
+			}
+		}
+		else {
+			return null;
+		}
+		return new MemoryItem(Double.class, value);
+	}
+
+	/**
+	 * Handle casting to a integer.
+	 *
+	 * @param o The object we are converting.
+	 * @return The memory item after a cast, or null if we could not handle it.
+	 */
+	private MemoryItem castToInt(Object o) {
+		int value;
+
+		if (o instanceof Integer integer) {
+			value = integer;
+		}
+		else if (o instanceof Double doub) {
+			double val = doub;
+			value = (int) val;
+		}
+		else if (o instanceof Character character) {
+			value = character;
+		}
+		else if (o instanceof Boolean bool) {
+			value = Boolean.TRUE.equals(bool) ? 1 : 0;
+		}
+		else if (o instanceof String str) {
+			try {
+				value = Integer.parseInt(str);
+			}
+			catch (NumberFormatException ignored) {
+				value = 0;
+			}
+		}
+		else {
+			return null;
+		}
+		return new MemoryItem(Integer.class, value);
+	}
+
+	/**
 	 * Deal with any kind of math operation on two integers.
 	 *
 	 * @param i The instruction.
@@ -562,7 +748,7 @@ public class ScriptRuntime {
 				this.programCounter++;
 				break;
 			case CAST:
-				// TODO implement
+				this.cast(i);
 				this.programCounter++;
 				break;
 			case CALL:
