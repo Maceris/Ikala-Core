@@ -47,6 +47,23 @@ class TestValidator {
 	}
 
 	/**
+	 * Validates that we can place blocks arbitrarily.
+	 */
+	@Test
+	void testBlocks() {
+		final String blockMess = """
+			{}
+			{{{{{}}}}}
+			{
+			  {}
+			  {{{}{}}{{{}}}}
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(blockMess),
+			"We should be able to have loose blocks");
+	}
+
+	/**
 	 * Check boolean declarations.
 	 */
 	@Test
@@ -188,6 +205,35 @@ class TestValidator {
 		final String recursive = "int x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
 			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Test the label logic.
+	 */
+	@Test
+	void testLabels() {
+		final String endLabel = """
+			END:
+			""";
+		Assertions.assertTrue(this.validateProgram(endLabel),
+			"We should be able to have a label at the end of the program");
+
+		final String labeledStatement = """
+			int x;
+			before:
+			x++;
+			""";
+		Assertions.assertTrue(this.validateProgram(labeledStatement),
+			"We should be able to have a label before a statement");
+
+		final String duplicated = """
+			duplicated:
+			int x;
+			duplicated:
+			x++;
+			""";
+		Assertions.assertFalse(this.validateProgram(duplicated),
+			"We should not be able to have duplicate labels");
 	}
 
 	/**
