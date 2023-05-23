@@ -11,6 +11,7 @@ import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.Identifier;
+import com.ikalagaming.scripting.ast.Label;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.SwitchLabel;
@@ -21,6 +22,9 @@ import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Perform validations on the tree. Things like basic type checking, or semantic
@@ -48,6 +52,31 @@ public class TreeValidator implements ASTVisitor {
 			this.check(child);
 		}
 		node.process(this);
+	}
+
+	/**
+	 * Check for duplicate labels.
+	 *
+	 * @param node The node we are working on.
+	 * @param names The label names that we have encountered so far. When
+	 *            calling this, please pass in a fresh list.
+	 */
+	private void checkLabels(Node node, List<String> names) {
+		if (!this.valid) {
+			return;
+		}
+		for (Node child : node.getChildren()) {
+			this.checkLabels(child, names);
+			if (!this.valid) {
+				return;
+			}
+		}
+		if (node instanceof Label label) {
+			if (names.contains(label.getName())) {
+				this.markInvalid(node, "DUPLICATE_LABEL");
+			}
+			names.add(label.getName());
+		}
 	}
 
 	/**
@@ -104,6 +133,7 @@ public class TreeValidator implements ASTVisitor {
 	public boolean validate(CompilationUnit ast) {
 		this.valid = true;
 		this.check(ast);
+		this.checkLabels(ast, new ArrayList<>());
 		return this.valid;
 	}
 
