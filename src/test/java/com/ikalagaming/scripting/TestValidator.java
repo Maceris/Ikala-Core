@@ -174,6 +174,51 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the goto label logic.
+	 */
+	@Test
+	void testGoto() {
+		final String endLabel = """
+			goto END;
+			END:
+			""";
+		Assertions.assertTrue(this.validateProgram(endLabel),
+			"We should be able to jump to a label at the end of the program");
+
+		final String labeledStatement = """
+			goto before;
+			int x;
+			before:
+			x++;
+			""";
+		Assertions.assertTrue(this.validateProgram(labeledStatement),
+			"We should be able to have a label before a statement");
+
+		final String moreComplex = """
+			// Vary up case a bit
+			goto afterFor;
+
+			for (;;) {
+			  inside_for:
+			  goto End;
+			}
+
+			afterFor:
+			goto inside_for;
+
+			End:
+			""";
+		Assertions.assertTrue(this.validateProgram(moreComplex),
+			"We should allow more complex jumps");
+
+		final String nonexistent = """
+			goto nonexistent;
+			""";
+		Assertions.assertFalse(this.validateProgram(nonexistent),
+			"We should not be able to goto a label that does not exist");
+	}
+
+	/**
 	 * Check integer declarations.
 	 */
 	@Test
