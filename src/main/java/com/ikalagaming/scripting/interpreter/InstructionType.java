@@ -52,7 +52,7 @@ public enum InstructionType {
 	 * method, we use a memory location of IMMEDIATE. Otherwise the location
 	 * will reflect where we find the object to call a method on, whether that
 	 * be the stack or a variable.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> The location of the object and name of the method.<br>
@@ -62,7 +62,7 @@ public enum InstructionType {
 	CALL,
 	/**
 	 * Cast one primitive to another and place it onto the stack.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> The location of the result to cast.<br>
@@ -236,7 +236,7 @@ public enum InstructionType {
 	MOD_INT,
 	/**
 	 * Copy one value to another location.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> The value to copy.<br>
@@ -276,7 +276,7 @@ public enum InstructionType {
 	MUL_INT,
 	/**
 	 * Negate the sign of a character.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> An character value.<br>
@@ -286,7 +286,7 @@ public enum InstructionType {
 	NEG_CHAR,
 	/**
 	 * Negate the sign of an integer.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> An integer value.<br>
@@ -296,7 +296,7 @@ public enum InstructionType {
 	NEG_INT,
 	/**
 	 * Negate the sign of a double.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> A double value.<br>
@@ -306,7 +306,7 @@ public enum InstructionType {
 	NEG_DOUBLE,
 	/**
 	 * Does nothing.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> Ignored.<br>
@@ -316,7 +316,7 @@ public enum InstructionType {
 	NOP,
 	/**
 	 * Logical negation.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> A boolean value.<br>
@@ -326,7 +326,7 @@ public enum InstructionType {
 	NOT,
 	/**
 	 * Logical or.
-	 * 
+	 *
 	 * <br>
 	 * <br>
 	 * <b>Input 1:</b> A boolean value.<br>

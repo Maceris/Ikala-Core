@@ -1222,6 +1222,9 @@ public class AbstractSyntaxTree {
 			return AbstractSyntaxTree
 				.process(node.expressionStatement().statementExpression());
 		}
+		if (node.emptyStatement() != null) {
+			return new EmptyStatement();
+		}
 		if (node.switchStatement() != null) {
 			return AbstractSyntaxTree.process(node.switchStatement());
 		}

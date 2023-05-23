@@ -174,6 +174,30 @@ class TestValidator {
 	}
 
 	/**
+	 * Check for empty statements.
+	 */
+	@Test
+	void testEmptyStatement() {
+		final String single = ";";
+		Assertions.assertTrue(this.validateProgram(single),
+			"We should allow empty statements");
+
+		final String several = """
+			;{
+			  ;
+			}
+			;
+			{
+			  ;;;
+			  {;}
+			  ;;;
+			;}
+			""";
+		Assertions.assertTrue(this.validateProgram(several),
+			"We should allow empty statements in arbitrary places");
+	}
+
+	/**
 	 * Test the goto label logic.
 	 */
 	@Test

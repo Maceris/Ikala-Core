@@ -107,6 +107,13 @@ public interface ASTVisitor {
 	default void visit(DoWhile node) {}
 
 	/**
+	 * Visit the EmptyStatement node and perform an operation.
+	 *
+	 * @param node The node we are visiting.
+	 */
+	default void visit(EmptyStatement node) {}
+
+	/**
 	 * Visit the Exit node and perform an operation.
 	 *
 	 * @param node The node we are visiting.

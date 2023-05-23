@@ -8,6 +8,7 @@ import com.ikalagaming.scripting.ast.ConstBool;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
+import com.ikalagaming.scripting.ast.EmptyStatement;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
@@ -67,6 +68,7 @@ public class OptimizationPass implements ASTVisitor {
 	 * @param node The node we are processing.
 	 */
 	private void processTree(Node node) {
+		node.getChildren().removeIf(EmptyStatement.class::isInstance);
 		for (int i = 0; i < node.getChildren().size(); ++i) {
 			Node child = node.getChildren().get(i);
 			this.processTree(child);
