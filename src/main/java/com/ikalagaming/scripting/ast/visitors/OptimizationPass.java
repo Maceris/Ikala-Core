@@ -2,6 +2,7 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
+import com.ikalagaming.scripting.ast.Cast;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstBool;
 import com.ikalagaming.scripting.ast.ConstChar;
@@ -15,6 +16,7 @@ import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.StatementList;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.extern.slf4j.Slf4j;
@@ -550,6 +552,33 @@ public class OptimizationPass implements ASTVisitor {
 			return leftChild;
 		}
 		return node;
+	}
+
+	/**
+	 * Add in automatic casts to larger numerical types.
+	 */
+	@Override
+	public void visit(VarDeclaration node) {
+		if (node.getChildren().size() < 2) {
+			return;
+		}
+		final Node firstChild = node.getChildren().get(0);
+		final Node secondChild = node.getChildren().get(1);
+
+		if (firstChild.getType().getDimensions() > 0
+			|| secondChild.getType().getDimensions() > 0) {
+			return;
+		}
+
+		if ((firstChild.getType().anyOf(Base.INT)
+			&& secondChild.getType().anyOf(Base.CHAR))
+			|| (firstChild.getType().anyOf(Base.DOUBLE)
+				&& secondChild.getType().anyOf(Base.CHAR, Base.INT))) {
+			Cast cast = new Cast();
+			cast.setType(firstChild.getType());
+			cast.addChild(secondChild);
+			node.getChildren().set(1, cast);
+		}
 	}
 
 }
