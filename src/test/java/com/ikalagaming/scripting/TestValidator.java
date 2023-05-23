@@ -47,6 +47,184 @@ class TestValidator {
 	}
 
 	/**
+	 * Check boolean declarations.
+	 */
+	@Test
+	void testBooleanDeclaration() {
+		final String minimum = "boolean x;";
+		Assertions.assertTrue(this.validateProgram(minimum),
+			"Construction of plain boolean declaration should work");
+
+		final String trueCase = "boolean x = true;";
+		Assertions.assertTrue(this.validateProgram(trueCase),
+			"Construction of boolean using true should work");
+
+		final String falseCase = "boolean x = false;";
+		Assertions.assertTrue(this.validateProgram(falseCase),
+			"Construction of boolean using false should work");
+
+		final String implicitString = "boolean x = \"test\";";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Construction of boolean using string should not work");
+
+		final String implicitChar = "boolean x = 'a';";
+		Assertions.assertFalse(this.validateProgram(implicitChar),
+			"Construction of boolean using char should not work");
+
+		final String implicitInt = "boolean x = 1;";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Construction of boolean using int should not work");
+
+		final String implicitDouble = "boolean x = 1.0;";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Construction of boolean using double should not work");
+
+		final String implicitNull = "boolean x = null;";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Construction of boolean using null should not work");
+
+		final String recursive = "boolean x = x;";
+		Assertions.assertFalse(this.validateProgram(recursive),
+			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Check character declarations.
+	 */
+	@Test
+	void testCharDeclaration() {
+		final String minimum = "char x;";
+		Assertions.assertTrue(this.validateProgram(minimum),
+			"Construction of plain char declaration should work");
+
+		final String letter = "char x = 'a';";
+		Assertions.assertTrue(this.validateProgram(letter),
+			"Construction of char using char should work");
+
+		final String implicitString = "char x = \"test\";";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Construction of char using string should not work");
+
+		final String implicitInt = "char x = 1;";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Construction of char using integer should not work");
+
+		final String implicitDouble = "char x = 3.0;";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Construction of char using double should not work");
+
+		final String implicitNull = "char x = null;";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Construction of char using null should not work");
+
+		final String recursive = "char x = x;";
+		Assertions.assertFalse(this.validateProgram(recursive),
+			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Check double declarations.
+	 */
+	@Test
+	void testDoubleDeclaration() {
+		final String minimum = "double x;";
+		Assertions.assertTrue(this.validateProgram(minimum),
+			"Construction of plain double declaration should work");
+
+		final String implicitChar = "double x = 'a';";
+		Assertions.assertTrue(this.validateProgram(implicitChar),
+			"Construction of double using char should work");
+
+		final String implicitInt = "double x = 1;";
+		Assertions.assertTrue(this.validateProgram(implicitInt),
+			"Construction of double using int should work");
+
+		final String number = "double x = 1.34;";
+		Assertions.assertTrue(this.validateProgram(number),
+			"Construction of double using double should work");
+
+		final String implicitString = "double x = \"test\";";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Construction of double using string should not work");
+
+		final String implicitNull = "double x = null;";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Construction of double using null should not work");
+
+		final String recursive = "double x = x;";
+		Assertions.assertFalse(this.validateProgram(recursive),
+			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Check integer declarations.
+	 */
+	@Test
+	void testIntDeclaration() {
+		final String minimum = "int x;";
+		Assertions.assertTrue(this.validateProgram(minimum),
+			"Construction of plain int declaration should work");
+
+		final String implicitChar = "int x = 'a';";
+		Assertions.assertTrue(this.validateProgram(implicitChar),
+			"Construction of int using char should work");
+
+		final String number = "int x = 1;";
+		Assertions.assertTrue(this.validateProgram(number),
+			"Construction of int using int should work");
+
+		final String implicitDouble = "int x = 1.0;";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Construction of int using double should not work");
+
+		final String implicitString = "int x = \"test\";";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Construction of int using string should not work");
+
+		final String implicitNull = "int x = null;";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Construction of int using null should not work");
+
+		final String recursive = "int x = x;";
+		Assertions.assertFalse(this.validateProgram(recursive),
+			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Check string declarations.
+	 */
+	@Test
+	void testStringDeclaration() {
+		final String minimum = "string x;";
+		Assertions.assertTrue(this.validateProgram(minimum),
+			"Construction of plain string declaration should work");
+
+		final String string = "string x = \"test\";";
+		Assertions.assertTrue(this.validateProgram(string),
+			"Construction of string using string should work");
+
+		final String implicitNull = "string x = null;";
+		Assertions.assertTrue(this.validateProgram(implicitNull),
+			"Construction of string using null should work");
+
+		final String implicitChar = "string x = 'a';";
+		Assertions.assertFalse(this.validateProgram(implicitChar),
+			"Construction of string using char should not work");
+
+		final String implicitInt = "string x = 1;";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Construction of string using int should not work");
+
+		final String implicitDouble = "string x = 1.0;";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Construction of string using double should not work");
+
+		final String recursive = "string x = x;";
+		Assertions.assertFalse(this.validateProgram(recursive),
+			"Initialization by self-reference should not work");
+	}
+
+	/**
 	 * Validates that we can only have 1 default label in a switch statement.
 	 */
 	@Test
@@ -94,7 +272,6 @@ class TestValidator {
 			""";
 		Assertions.assertFalse(this.validateProgram(twoDefaults),
 			"Two defaults should fail");
-
 	}
 
 	/**

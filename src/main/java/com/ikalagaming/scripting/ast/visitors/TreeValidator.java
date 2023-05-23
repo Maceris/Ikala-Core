@@ -9,12 +9,14 @@ import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
+import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.SwitchLabel;
 import com.ikalagaming.scripting.ast.SwitchStatement;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
@@ -31,8 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 public class TreeValidator implements ASTVisitor {
 
 	private static final String INVALID_FIRST_CHILD = "INVALID_FIRST_CHILD";
-
 	private static final String INVALID_SECOND_CHILD = "INVALID_SECOND_CHILD";
+	private static final String INVALID_TYPE = "INVALID_TYPE";
+
 	private boolean valid;
 
 	/**
@@ -106,6 +109,10 @@ public class TreeValidator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprArithmetic node) {
+		if (node.getType().anyOf(Base.VOID)) {
+			this.markInvalid(node, TreeValidator.INVALID_TYPE);
+			return;
+		}
 		if (!this.hasAtLeastOneChild(node)) {
 			return;
 		}
@@ -151,7 +158,7 @@ public class TreeValidator implements ASTVisitor {
 	@Override
 	public void visit(ExprLogic node) {
 		if (node.getType().anyOf(Base.VOID)) {
-			this.markInvalid(node, "INVALID_TYPE");
+			this.markInvalid(node, TreeValidator.INVALID_TYPE);
 			return;
 		}
 		if (!this.hasAtLeastOneChild(node)) {
@@ -195,6 +202,13 @@ public class TreeValidator implements ASTVisitor {
 	}
 
 	@Override
+	public void visit(ExprTernary node) {
+		if (node.getType().anyOf(Base.VOID)) {
+			this.markInvalid(node, TreeValidator.INVALID_TYPE);
+		}
+	}
+
+	@Override
 	public void visit(Identifier node) {
 		if (node.getType().anyOf(Base.VOID)) {
 			TreeValidator.log
@@ -228,4 +242,36 @@ public class TreeValidator implements ASTVisitor {
 		}
 	}
 
+	@Override
+	public void visit(VarDeclaration node) {
+		if (node.getChildren().size() < 2) {
+			return;
+		}
+		final String DOWNCASTING = "IMPLICIT_DOWNCASTING";
+		final String INVALID_CAST = "INVALID_CAST_DECLARATION";
+		final Node firstChild = node.getChildren().get(0);
+		final Node secondChild = node.getChildren().get(1);
+
+		if ((firstChild.getType().anyOf(Base.CHAR)
+			&& secondChild.getType().anyOf(Base.INT, Base.DOUBLE))
+			|| (firstChild.getType().anyOf(Base.INT)
+				&& secondChild.getType().anyOf(Base.DOUBLE))) {
+			this.markInvalid(node, DOWNCASTING);
+			return;
+		}
+		if (firstChild.getType().anyOf(Base.BOOLEAN) && secondChild.getType()
+			.anyOf(Base.CHAR, Base.DOUBLE, Base.INT, Base.STRING, Base.VOID)) {
+			this.markInvalid(node, INVALID_CAST);
+		}
+		if (firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
+			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING,
+				Base.VOID)) {
+			this.markInvalid(node, INVALID_CAST);
+		}
+		if (firstChild.getType().anyOf(Base.STRING) && secondChild.getType()
+			.anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE, Base.INT)) {
+			this.markInvalid(node, INVALID_CAST);
+		}
+
+	}
 }

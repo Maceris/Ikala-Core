@@ -311,6 +311,7 @@ public class TypePreprocessor implements ASTVisitor {
 		TypePreprocessor.log.warn(SafeResourceLoader
 			.getString("NON_MATCHING_TYPES", ScriptManager.getResourceBundle()),
 			ifTrue, ifFalse);
+		node.setType(Type.voidType());
 	}
 
 	@Override
