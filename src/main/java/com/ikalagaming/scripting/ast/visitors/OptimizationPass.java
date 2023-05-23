@@ -9,6 +9,8 @@ import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
+import com.ikalagaming.scripting.ast.ExprRelation;
+import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.StatementList;
 import com.ikalagaming.scripting.ast.Type;
@@ -34,6 +36,19 @@ public class OptimizationPass implements ASTVisitor {
 	 * Used for localization.
 	 */
 	private static final String INVALID_OPERATOR = "INVALID_OPERATOR";
+
+	/**
+	 * Return a constant boolean based on the value.
+	 *
+	 * @param value The value of the boolean.
+	 * @return A node representing said value.
+	 */
+	private ConstBool getBool(boolean value) {
+		ConstBool result = new ConstBool();
+		result.setValue(value);
+		result.setType(Type.primitive(Base.BOOLEAN));
+		return result;
+	}
 
 	/**
 	 * Optimize the syntax tree.
@@ -71,6 +86,9 @@ public class OptimizationPass implements ASTVisitor {
 				node.getChildren().set(i, child.getChildren().get(0));
 			}
 			else if (child instanceof ExprLogic expr) {
+				node.getChildren().set(i, this.simplify(expr));
+			}
+			else if (child instanceof ExprRelation expr) {
 				node.getChildren().set(i, this.simplify(expr));
 			}
 		}
@@ -118,6 +136,12 @@ public class OptimizationPass implements ASTVisitor {
 		return node;
 	}
 
+	/**
+	 * Simplify a logical expression if we can.
+	 *
+	 * @param node The node we are processing.
+	 * @return The resulting node, which might be the same node.
+	 */
 	private Node simplify(ExprLogic node) {
 		if (node.getChildren().size() < 2) {
 			return node;
@@ -136,6 +160,66 @@ public class OptimizationPass implements ASTVisitor {
 	}
 
 	/**
+	 * Simplify a relation expression if we can. Comparing a variable with
+	 * itself, and comparing constants of the same type.
+	 *
+	 * @param node The node we are processing.
+	 * @return The resulting node, which might be the same node.
+	 */
+	private Node simplify(ExprRelation node) {
+
+		final Node firstChild = node.getChildren().get(0);
+		final Node secondChild = node.getChildren().get(1);
+
+		if (firstChild instanceof Identifier firstID
+			&& secondChild instanceof Identifier secondID) {
+			if (firstID.getName().equals(secondID.getName())) {
+				switch (node.getOperator()) {
+					case GT, LT:
+						return this.getBool(false);
+					case GTE, LTE:
+						return this.getBool(false);
+					default:
+						return node;
+				}
+			}
+			return node;
+		}
+
+		double comparison = Double.NaN;
+
+		if (firstChild instanceof ConstChar firstChar
+			&& secondChild instanceof ConstChar secondChar) {
+			comparison =
+				((double) secondChar.getValue()) - firstChar.getValue();
+		}
+		else if (firstChild instanceof ConstInt firstInt
+			&& secondChild instanceof ConstInt secondInt) {
+			comparison = ((double) secondInt.getValue()) - firstInt.getValue();
+		}
+		else if (firstChild instanceof ConstDouble firstDouble
+			&& secondChild instanceof ConstDouble secondDouble) {
+			comparison = secondDouble.getValue() - firstDouble.getValue();
+		}
+
+		if (Double.isNaN(comparison)) {
+			return node;
+		}
+
+		switch (node.getOperator()) {
+			case GT:
+				return this.getBool(comparison > 0);
+			case GTE:
+				return this.getBool(comparison >= 0);
+			case LT:
+				return this.getBool(comparison < 0);
+			case LTE:
+				return this.getBool(comparison <= 0);
+		}
+		return node;
+	}
+
+	/**
 	 * Simplify an and expression. Removes pointless logic, and simplifies to a
 	 * constant if possible.
 	 *
@@ -149,10 +233,7 @@ public class OptimizationPass implements ASTVisitor {
 		if (leftChild instanceof ConstBool left && (!left.isValue())
 			|| rightChild instanceof ConstBool right && (!right.isValue())) {
 			// if either side of an && is false, the result is always false
-			ConstBool result = new ConstBool();
-			result.setValue(false);
-			result.setType(Type.primitive(Base.BOOLEAN));
-			return result;
+			return this.getBool(false);
 		}
 		if (leftChild instanceof ConstBool bool && (bool.isValue())) {
 			// true && ____
@@ -458,10 +539,7 @@ public class OptimizationPass implements ASTVisitor {
 		if (leftChild instanceof ConstBool left && (left.isValue())
 			|| rightChild instanceof ConstBool right && (right.isValue())) {
 			// if either side of an || is true, the result is always true
-			ConstBool result = new ConstBool();
-			result.setValue(true);
-			result.setType(Type.primitive(Base.BOOLEAN));
-			return result;
+			return this.getBool(true);
 		}
 		if (leftChild instanceof ConstBool bool && (!bool.isValue())) {
 			// false || ____
