@@ -269,7 +269,7 @@ class TestValidator {
 
 		final String elseIf = """
 			int x = 4;
-			if (x >= 4) {
+			if (x == 4) {
 
 			} else if (x < 4) {
 
