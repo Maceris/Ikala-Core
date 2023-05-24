@@ -11,6 +11,7 @@ import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.Identifier;
+import com.ikalagaming.scripting.ast.If;
 import com.ikalagaming.scripting.ast.Label;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
@@ -233,6 +234,12 @@ public class TreeValidator implements ASTVisitor {
 
 	@Override
 	public void visit(ExprTernary node) {
+		final Node expression = node.getChildren().get(0);
+
+		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+			this.markInvalid(expression, TreeValidator.INVALID_FIRST_CHILD);
+			return;
+		}
 		if (node.getType().anyOf(Base.VOID)) {
 			this.markInvalid(node, TreeValidator.INVALID_TYPE);
 		}
@@ -245,6 +252,14 @@ public class TreeValidator implements ASTVisitor {
 				.warn(SafeResourceLoader.getString("INVALID_VARIABLE_USE",
 					ScriptManager.getResourceBundle()), node.getName());
 			this.valid = false;
+		}
+	}
+
+	@Override
+	public void visit(If node) {
+		final Node expression = node.getChildren().get(0);
+		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+			this.markInvalid(expression, "CONDITIONAL_NOT_BOOLEAN");
 		}
 	}
 

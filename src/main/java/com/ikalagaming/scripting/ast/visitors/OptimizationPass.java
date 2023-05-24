@@ -12,6 +12,7 @@ import com.ikalagaming.scripting.ast.EmptyStatement;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
+import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.StatementList;
@@ -554,6 +555,36 @@ public class OptimizationPass implements ASTVisitor {
 			return leftChild;
 		}
 		return node;
+	}
+
+	@Override
+	public void visit(ExprTernary node) {
+		if (!node.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT)) {
+			return;
+		}
+
+		if (node.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
+			final Node firstChild = node.getChildren().get(1);
+			final Node secondChild = node.getChildren().get(2);
+
+			if (!firstChild.getType().getBase()
+				.equals(node.getType().getBase())) {
+
+				Cast cast = new Cast();
+				cast.setType(node.getType());
+				cast.addChild(firstChild);
+				node.getChildren().set(1, cast);
+			}
+			else if (!secondChild.getType().getBase()
+				.equals(node.getType().getBase())) {
+
+				Cast cast = new Cast();
+				cast.setType(node.getType());
+				cast.addChild(secondChild);
+				node.getChildren().set(2, cast);
+			}
+			// All the same type
+		}
 	}
 
 	/**

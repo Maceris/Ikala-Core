@@ -243,6 +243,82 @@ class TestValidator {
 	}
 
 	/**
+	 * Test if statements.
+	 */
+	@Test
+	void testIfStatement() {
+		final String standard = """
+			int x = 4;
+			if (x >= 4) {
+
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(standard),
+			"If statements should work");
+
+		final String oneElse = """
+			int x = 4;
+			if (x >= 4) {
+
+			} else {
+
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(oneElse),
+			"If statements with one else should work");
+
+		final String elseIf = """
+			int x = 4;
+			if (x >= 4) {
+
+			} else if (x < 4) {
+
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(elseIf),
+			"If statements with an else if should work");
+
+		final String elseIfElse = """
+			int x = 4;
+			if (x >= 4) {
+
+			} else if (x < 4) {
+
+			} else {
+
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(elseIfElse),
+			"If statements with an else if and else should work");
+
+		final String withBooleanVar = """
+			boolean x = true;
+			if (x) {
+
+			} else {
+
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(withBooleanVar),
+			"If statements with with a boolean variable should work");
+
+		final String notBoolean = """
+			int x = 4;
+			if (x) {
+
+			} else if (x < 4) {
+
+			} else {
+
+			}
+			""";
+		Assertions.assertFalse(this.validateProgram(notBoolean),
+			"If statements with without a boolean should not work");
+
+		// extraneous else clauses is caught by the parser itself
+	}
+
+	/**
 	 * Check integer declarations.
 	 */
 	@Test
@@ -387,6 +463,67 @@ class TestValidator {
 			""";
 		Assertions.assertFalse(this.validateProgram(twoDefaults),
 			"Two defaults should fail");
+	}
+
+	/**
+	 * Test the ternary operator.
+	 */
+	@Test
+	void testTernary() {
+		final String usingVariable = """
+			boolean cond = true;
+			int x = cond ? 1 : 4;
+			""";
+		Assertions.assertTrue(this.validateProgram(usingVariable),
+			"Ternary operators should work with boolean variables");
+		final String hardcoded = """
+			double x = true ? 1.0 : 4.3;
+			""";
+		Assertions.assertTrue(this.validateProgram(hardcoded),
+			"Ternary operators should work with boolean constants");
+
+		final String relationals = """
+			double x = 4.45;
+			// It's testing types, don't @ me
+			boolean y = x <= 500 ? true : false;
+			""";
+		Assertions.assertTrue(this.validateProgram(relationals),
+			"Ternary operators should work with relational operators");
+
+		final String equality = """
+			int x = 45;
+			double y = x != 46 ? 4.1 : 2.1;
+			""";
+		Assertions.assertTrue(this.validateProgram(equality),
+			"Ternary operators should work with equality operators");
+
+		final String differentValidTypes1 = """
+			int x = 45;
+			double y = x != 46 ? 4.1 : 2;
+			""";
+		Assertions.assertTrue(this.validateProgram(differentValidTypes1),
+			"Ternary operators should work with reasonable casting");
+
+		final String differentValidTypes2 = """
+			int x = 45;
+			double y = x != 46 ? 4 : 0.2;
+			""";
+		Assertions.assertTrue(this.validateProgram(differentValidTypes2),
+			"Ternary operators should work with reasonable casting");
+
+		final String differentInvalidTypes1 = """
+			int x = 45;
+			int y = x != 46 ? 4 : true;
+			""";
+		Assertions.assertFalse(this.validateProgram(differentInvalidTypes1),
+			"Ternary operators should not work with unreasonable types");
+
+		final String differentInvalidTypes2 = """
+			int x = 45;
+			int y = x != 46 ? false : 4.667;
+			""";
+		Assertions.assertFalse(this.validateProgram(differentInvalidTypes2),
+			"Ternary operators should not work with unreasonable types");
 	}
 
 	/**
