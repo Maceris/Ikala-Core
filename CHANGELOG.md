@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated build system to gradle
 - Change the main threads classloader to be able to read from plugin jars
 - Allow registering of classes with the scripting engine to expose methods
+- Synchronized singleton access methods
 
 ### Removed
 - Task manager

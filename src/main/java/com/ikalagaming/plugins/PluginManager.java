@@ -88,6 +88,7 @@ public class PluginManager {
 	 *
 	 * @see #getInstance()
 	 */
+	@Synchronized
 	public static void destoryInstance() {
 		if (PluginManager.instance == null) {
 			return;
@@ -105,6 +106,7 @@ public class PluginManager {
 	 * @return The static instance of the Plugin Manager.
 	 * @see PluginManager#destoryInstance()
 	 */
+	@Synchronized
 	public static PluginManager getInstance() {
 		if (PluginManager.instance == null) {
 			PluginManager.instance =

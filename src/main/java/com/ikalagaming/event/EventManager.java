@@ -4,6 +4,7 @@ import com.ikalagaming.localization.Localization;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.Getter;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -40,6 +41,7 @@ public class EventManager {
 	 *
 	 * @see EventManager#getInstance()
 	 */
+	@Synchronized
 	public static void destoryInstance() {
 		if (EventManager.instance == null) {
 			return;
@@ -57,6 +59,7 @@ public class EventManager {
 	 * @return the static instance of the Event Manager
 	 * @see EventManager#destoryInstance()
 	 */
+	@Synchronized
 	public static EventManager getInstance() {
 		if (EventManager.instance == null) {
 			EventManager.instance = new EventManager();
