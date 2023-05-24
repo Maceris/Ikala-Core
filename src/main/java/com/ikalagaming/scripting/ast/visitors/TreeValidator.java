@@ -17,6 +17,7 @@ import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.SwitchLabel;
 import com.ikalagaming.scripting.ast.SwitchStatement;
+import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.scripting.ast.VarDeclaration;
 import com.ikalagaming.util.SafeResourceLoader;
@@ -78,6 +79,31 @@ public class TreeValidator implements ASTVisitor {
 			}
 			names.add(label.getName());
 		}
+	}
+
+	/**
+	 * Fetch the list of labels from a switch body. This is not recursive, we
+	 * are not interested in any nested statements.
+	 *
+	 * @param switchBody The body of the switch statement.
+	 * @return The labels in the body.
+	 */
+	private List<SwitchLabel> getSwitchLabels(Node switchBody) {
+		List<SwitchLabel> result = new ArrayList<>();
+
+		for (Node child : switchBody.getChildren()) {
+			if (child instanceof SwitchBlockGroup) {
+				for (Node subchild : child.getChildren()) {
+					if (subchild instanceof SwitchLabel label) {
+						result.add(label);
+					}
+				}
+			}
+			else if (child instanceof SwitchLabel label) {
+				result.add(label);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -265,26 +291,26 @@ public class TreeValidator implements ASTVisitor {
 
 	@Override
 	public void visit(SwitchStatement node) {
+		Type expressionType = node.getChildren().get(0).getType();
 		Node block = node.getChildren().get(1);
 		int defaultCount = 0;
-		for (Node child : block.getChildren()) {
-			if (child instanceof SwitchBlockGroup) {
-				for (Node subchild : child.getChildren()) {
-					if (subchild instanceof SwitchLabel label
-						&& (label.isDefault())) {
-						++defaultCount;
-					}
-				}
-			}
-			else if (child instanceof SwitchLabel label
-				&& (label.isDefault())) {
+
+		List<SwitchLabel> labels = this.getSwitchLabels(block);
+
+		for (SwitchLabel label : labels) {
+			if (label.isDefault()) {
 				++defaultCount;
+			}
+			if (!label.isDefault() && !label.getChildren().get(0).getType()
+				.equals(expressionType)) {
+				this.markInvalid(label, "SWITCH_TYPE_MISMATCH");
 			}
 		}
 
 		if (defaultCount > 1) {
 			this.markInvalid(node, "MULTIPLE_DEFAULTS");
 		}
+
 	}
 
 	@Override
