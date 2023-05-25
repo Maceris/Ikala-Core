@@ -6,6 +6,7 @@ import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
+import com.ikalagaming.scripting.ast.DoWhile;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
@@ -39,6 +40,8 @@ import java.util.List;
 @Slf4j
 public class TreeValidator implements ASTVisitor {
 
+	private static final String CONDITIONAL_NOT_BOOLEAN =
+		"CONDITIONAL_NOT_BOOLEAN";
 	private static final String INVALID_FIRST_CHILD = "INVALID_FIRST_CHILD";
 	private static final String INVALID_SECOND_CHILD = "INVALID_SECOND_CHILD";
 	private static final String INVALID_TYPE = "INVALID_TYPE";
@@ -166,6 +169,14 @@ public class TreeValidator implements ASTVisitor {
 	}
 
 	@Override
+	public void visit(DoWhile node) {
+		final Node expression = node.getChildren().get(1);
+		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+			this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
+		}
+	}
+
+	@Override
 	public void visit(ExprArithmetic node) {
 		if (node.getType().anyOf(Base.VOID)) {
 			this.markInvalid(node, TreeValidator.INVALID_TYPE);
@@ -286,7 +297,7 @@ public class TreeValidator implements ASTVisitor {
 	public void visit(If node) {
 		final Node expression = node.getChildren().get(0);
 		if (!expression.getType().anyOf(Base.BOOLEAN)) {
-			this.markInvalid(expression, "CONDITIONAL_NOT_BOOLEAN");
+			this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
 		}
 	}
 
@@ -351,7 +362,7 @@ public class TreeValidator implements ASTVisitor {
 	public void visit(While node) {
 		final Node expression = node.getChildren().get(0);
 		if (!expression.getType().anyOf(Base.BOOLEAN)) {
-			this.markInvalid(expression, "CONDITIONAL_NOT_BOOLEAN");
+			this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
 		}
 	}
 }

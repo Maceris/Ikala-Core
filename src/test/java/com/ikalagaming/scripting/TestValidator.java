@@ -174,6 +174,183 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the while statement for equality expressions.
+	 */
+	@Test
+	void testDoWhileEquality() {
+		final String equalityExpression1 = """
+			do {
+				break;
+			}
+			while(1 == 2);
+			""";
+		Assertions.assertTrue(this.validateProgram(equalityExpression1),
+			"Do while should work with an equality expression");
+
+		final String equalityExpression2 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(1 == x);
+			""";
+		Assertions.assertTrue(this.validateProgram(equalityExpression2),
+			"Do while should work with an equality expression");
+
+		final String equalityExpression3 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(x != 1);
+			""";
+		Assertions.assertTrue(this.validateProgram(equalityExpression3),
+			"Do while should work with an equality expression");
+
+		final String equalityExpression4 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(x != x);
+			""";
+		Assertions.assertTrue(this.validateProgram(equalityExpression4),
+			"Do while should work with an equality expression");
+	}
+
+	/**
+	 * Test the while statement with logical expressions.
+	 */
+	@Test
+	void testDoWhileLogical() {
+		final String logicalExpression1 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(x <= 3 || 3 > x);
+			""";
+		Assertions.assertTrue(this.validateProgram(logicalExpression1),
+			"Do while should work with a logical expression");
+
+		final String logicalExpression2 = """
+			boolean x = true;
+			do {
+				break;
+			}
+			while(x && 1 > 3);
+			""";
+		Assertions.assertTrue(this.validateProgram(logicalExpression2),
+			"Do while should work with a logical expression");
+
+		final String logicalExpression3 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(!(x <= x || x > x));
+			""";
+		Assertions.assertTrue(this.validateProgram(logicalExpression3),
+			"Do while should work with a logical expression");
+	}
+
+	/**
+	 * Test the while statement with negative cases.
+	 */
+	@Test
+	void testDoWhileNegative() {
+		final String integer = """
+			do {
+				break;
+			}
+			while(1);
+			""";
+		Assertions.assertFalse(this.validateProgram(integer),
+			"Do while should not work with an integer");
+
+		final String character = """
+			do {
+				break;
+			}
+			while('y');
+			""";
+		Assertions.assertFalse(this.validateProgram(character),
+			"Do while should not work with a character");
+
+		final String string = """
+			do {
+				break;
+			}
+			while("true");
+			""";
+		Assertions.assertFalse(this.validateProgram(string),
+			"Do while should not work with a string");
+
+		final String nullValue = """
+			do {
+				break;
+			}
+			while(null);
+			""";
+		Assertions.assertFalse(this.validateProgram(nullValue),
+			"Do while should not work with a null");
+
+		final String numericExpression = """
+			do {
+				break;
+			}
+			while(1 + 2);
+			""";
+		Assertions.assertFalse(this.validateProgram(numericExpression),
+			"Do while should not work with a numeric expression");
+	}
+
+	/**
+	 * Test the while statement with relational expressions.
+	 */
+	@Test
+	void testDoWhileRelation() {
+		final String relationExpression1 = """
+			do {
+				break;
+			}
+			while(3 < 2);
+			""";
+		Assertions.assertTrue(this.validateProgram(relationExpression1),
+			"Do while should work with an relational expression");
+
+		final String relationExpression2 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(x > 1);
+			""";
+		Assertions.assertTrue(this.validateProgram(relationExpression2),
+			"Do while should work with an relational expression");
+
+		final String relationExpression3 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(3 <= x);
+			""";
+		Assertions.assertTrue(this.validateProgram(relationExpression3),
+			"Do while should work with an relational expression");
+
+		final String relationExpression4 = """
+			int x = 1;
+			do {
+				break;
+			}
+			while(x <= x);
+			""";
+		Assertions.assertTrue(this.validateProgram(relationExpression4),
+			"Do while should work with an relational expression");
+	}
+
+	/**
 	 * Check for empty statements.
 	 */
 	@Test
@@ -533,7 +710,7 @@ class TestValidator {
 	void testWhileEquality() {
 		final String equalityExpression1 = """
 			while(1 == 2) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(equalityExpression1),
@@ -542,7 +719,7 @@ class TestValidator {
 		final String equalityExpression2 = """
 			int x = 1;
 			while(1 == x) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(equalityExpression2),
@@ -551,7 +728,7 @@ class TestValidator {
 		final String equalityExpression3 = """
 			int x = 1;
 			while(x != 1) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(equalityExpression3),
@@ -560,7 +737,7 @@ class TestValidator {
 		final String equalityExpression4 = """
 			int x = 1;
 			while(x != x) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(equalityExpression4),
@@ -575,7 +752,7 @@ class TestValidator {
 		final String logicalExpression1 = """
 			int x = 1;
 			while(x <= 3 || 3 > x) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(logicalExpression1),
@@ -584,7 +761,7 @@ class TestValidator {
 		final String logicalExpression2 = """
 			boolean x = true;
 			while(x && 1 > 3) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(logicalExpression2),
@@ -593,7 +770,7 @@ class TestValidator {
 		final String logicalExpression3 = """
 			int x = 1;
 			while(!(x <= x || x > x)) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(logicalExpression3),
@@ -608,7 +785,7 @@ class TestValidator {
 	void testWhileNegative() {
 		final String integer = """
 			while(1) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertFalse(this.validateProgram(integer),
@@ -616,7 +793,7 @@ class TestValidator {
 
 		final String character = """
 			while('y') {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertFalse(this.validateProgram(character),
@@ -624,7 +801,7 @@ class TestValidator {
 
 		final String string = """
 			while("true") {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertFalse(this.validateProgram(string),
@@ -632,7 +809,7 @@ class TestValidator {
 
 		final String nullValue = """
 			while(null) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertFalse(this.validateProgram(nullValue),
@@ -640,7 +817,7 @@ class TestValidator {
 
 		final String numericExpression = """
 			while(1 + 2) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertFalse(this.validateProgram(numericExpression),
@@ -654,7 +831,7 @@ class TestValidator {
 	void testWhileRelation() {
 		final String relationExpression1 = """
 			while(3 < 2) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(relationExpression1),
@@ -663,7 +840,7 @@ class TestValidator {
 		final String relationExpression2 = """
 			int x = 1;
 			while(x > 1) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(relationExpression2),
@@ -672,7 +849,7 @@ class TestValidator {
 		final String relationExpression3 = """
 			int x = 1;
 			while(3 <= x) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(relationExpression3),
@@ -681,12 +858,11 @@ class TestValidator {
 		final String relationExpression4 = """
 			int x = 1;
 			while(x <= x) {
-			break;
+				break;
 			}
 			""";
 		Assertions.assertTrue(this.validateProgram(relationExpression4),
 			"While should work with an relational expression");
-
 	}
 
 	/**
