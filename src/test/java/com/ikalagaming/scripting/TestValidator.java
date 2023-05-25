@@ -106,6 +106,82 @@ class TestValidator {
 	}
 
 	/**
+	 * Test break statements.
+	 */
+	@Test
+	void testBreak() {
+		final String outsideLoop = "break;";
+		Assertions.assertFalse(this.validateProgram(outsideLoop),
+			"We should not be able to break outside a loop");
+
+		final String loop = """
+			for(;;) {
+				break;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(loop),
+			"We should be able to break from a loop");
+
+		final String loopNested = """
+			while (true) {
+				for(;;) {
+					break;
+				}
+				break;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(loopNested),
+			"We should be able to break in a nested loop");
+
+		final String loopNestedInSwitch = """
+			int x = 55;
+			switch (x) {
+				case 45:
+					while (true) {
+						for(;;) {
+							break;
+						}
+						break;
+					}
+					break;
+				default:
+					break;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(loopNestedInSwitch),
+			"We should be able to break in a loop in a switch");
+
+		final String switchNormal = """
+			int i = 1;
+			switch (i) {
+				case 1:
+					break;
+				case 2:
+				default:
+					i = 100;
+					break;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(switchNormal),
+			"We should be able to break in a switch");
+
+		final String switchInLoop = """
+			for (int i = 0; i <= 10; ++i) {
+				switch (i) {
+					case 1:
+						break;
+					case 2:
+					default:
+						i = 100;
+						break;
+				}
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(switchInLoop),
+			"We should be able to break in a switch in a loop");
+	}
+
+	/**
 	 * Check character declarations.
 	 */
 	@Test
@@ -137,6 +213,82 @@ class TestValidator {
 		final String recursive = "char x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
 			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Test continue statements.
+	 */
+	@Test
+	void testContinue() {
+		final String outsideLoop = "continue;";
+		Assertions.assertFalse(this.validateProgram(outsideLoop),
+			"We should not be able to continue outside a loop");
+
+		final String loop = """
+			for(;false;) {
+				continue;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(loop),
+			"We should be able to continue from a loop");
+
+		final String loopNested = """
+			while (false) {
+				for(;false;) {
+					continue;
+				}
+				continue;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(loopNested),
+			"We should be able to continue in a nested loop");
+
+		final String loopNestedInSwitch = """
+			int x = 55;
+			switch (x) {
+				case 45:
+					while (false) {
+						for(;false;) {
+							continue;
+						}
+						continue;
+					}
+					break;
+				default:
+					break;
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(loopNestedInSwitch),
+			"We should be able to continue in a loop in a switch");
+
+		final String switchNormal = """
+			int i = 1;
+			switch (i) {
+				case 1:
+					continue;
+				case 2:
+				default:
+					i = 100;
+					break;
+			}
+			""";
+		Assertions.assertFalse(this.validateProgram(switchNormal),
+			"We should not be able to continue in a switch");
+
+		final String switchInLoop = """
+			for (int i = 0; i <= 10; ++i) {
+				switch (i) {
+					case 1:
+						continue;
+					case 2:
+					default:
+						i = 100;
+						break;
+				}
+			}
+			""";
+		Assertions.assertTrue(this.validateProgram(switchInLoop),
+			"We should be able to continue in a switch in a loop");
 	}
 
 	/**

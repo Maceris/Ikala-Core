@@ -2,10 +2,12 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
+import com.ikalagaming.scripting.ast.Break;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
+import com.ikalagaming.scripting.ast.Continue;
 import com.ikalagaming.scripting.ast.DoWhile;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
@@ -50,13 +52,40 @@ public class TreeValidator implements ASTVisitor {
 	private boolean valid;
 
 	/**
+	 * Positive if we are inside a loop, and should be allowed to have a break
+	 * or continue.
+	 */
+	private int loopDepth;
+
+	/**
+	 * Positive if we are inside a switch.
+	 */
+	private int switchDepth;
+
+	/**
 	 * Recursively process the tree from the leaves up.
 	 *
 	 * @param node The node we are checking.
 	 */
 	private void check(Node node) {
 		for (Node child : node.getChildren()) {
+			boolean inLoop = node instanceof DoWhile || node instanceof ForLoop
+				|| node instanceof While;
+			boolean inSwitch = node instanceof SwitchStatement;
+
+			if (inLoop) {
+				this.loopDepth++;
+			}
+			if (inSwitch) {
+				this.switchDepth++;
+			}
 			this.check(child);
+			if (inLoop) {
+				this.loopDepth--;
+			}
+			if (inSwitch) {
+				this.switchDepth--;
+			}
 		}
 		node.process(this);
 	}
@@ -167,6 +196,20 @@ public class TreeValidator implements ASTVisitor {
 		this.check(ast);
 		this.checkLabels(ast, new ArrayList<>());
 		return this.valid;
+	}
+
+	@Override
+	public void visit(Break node) {
+		if (this.loopDepth == 0 && this.switchDepth == 0) {
+			this.markInvalid(node, "BREAK_OUTSIDE_LOOP");
+		}
+	}
+
+	@Override
+	public void visit(Continue node) {
+		if (this.loopDepth == 0) {
+			this.markInvalid(node, "CONTINUE_OUTSIDE_LOOP");
+		}
 	}
 
 	@Override
