@@ -32,7 +32,7 @@ public class IkalaScriptCompiler {
 	 * @param input The input stream.
 	 * @return The corresponding runtime.
 	 */
-	public Optional<ScriptRuntime> parse(CharStream input) {
+	public static Optional<ScriptRuntime> parse(CharStream input) {
 		// Generate parse tree
 		ParserErrorListener errorListener = new ParserErrorListener();
 
@@ -81,5 +81,13 @@ public class IkalaScriptCompiler {
 		ScriptRuntime runtime = new ScriptRuntime(instructions);
 
 		return Optional.of(runtime);
+	}
+
+	/**
+	 * Private constructor so that this class is not instantiated.
+	 */
+	private IkalaScriptCompiler() {
+		throw new UnsupportedOperationException(
+			"This utility class should not be instantiated");
 	}
 }
