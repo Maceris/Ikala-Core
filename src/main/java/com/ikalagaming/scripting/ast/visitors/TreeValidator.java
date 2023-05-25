@@ -11,6 +11,7 @@ import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
+import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.If;
 import com.ikalagaming.scripting.ast.Label;
@@ -280,6 +281,21 @@ public class TreeValidator implements ASTVisitor {
 		}
 		if (node.getType().anyOf(Base.VOID)) {
 			this.markInvalid(node, TreeValidator.INVALID_TYPE);
+		}
+	}
+
+	@Override
+	public void visit(ForLoop node) {
+		if (node.isCondition()) {
+			int conditionalIndex = 0;
+			if (node.isInitializer()) {
+				++conditionalIndex;
+			}
+			final Node expression = node.getChildren().get(conditionalIndex);
+			if (!expression.getType().anyOf(Base.BOOLEAN)) {
+				this.markInvalid(expression,
+					TreeValidator.CONDITIONAL_NOT_BOOLEAN);
+			}
 		}
 	}
 

@@ -375,6 +375,35 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the for statement only works with boolean conditionals.
+	 */
+	@Test
+	void testForExpressions() {
+		final String[] negativeCases =
+			{"1", "'c'", "\"true\"", "4.2", "null", "43 % 1"};
+
+		for (String negativeCase : negativeCases) {
+			final String equalityExpression1 =
+				String.format("for (;%s;){break;}", negativeCase);
+			Assertions.assertFalse(this.validateProgram(equalityExpression1),
+				String.format(
+					"For conditional should only accept a boolean, but accepted %s",
+					negativeCase));
+		}
+		final String[] positiveCases =
+			{"true", "false", "1  >= 3", "true || x < 3 && x <= 5", ""};
+
+		for (String positiveCase : positiveCases) {
+			final String equalityExpression1 =
+				String.format("int x = 4; for (;%s;){break;}", positiveCase);
+			Assertions.assertTrue(this.validateProgram(equalityExpression1),
+				String.format(
+					"For conditional should accept a boolean, but did not accept %s",
+					positiveCase));
+		}
+	}
+
+	/**
 	 * Test the goto label logic.
 	 */
 	@Test
