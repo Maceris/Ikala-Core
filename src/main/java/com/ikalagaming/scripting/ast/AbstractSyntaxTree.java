@@ -812,7 +812,9 @@ public class AbstractSyntaxTree {
 		}
 		if (node.StringLiteral() != null) {
 			ConstString result = new ConstString();
-			result.setValue(node.StringLiteral().getText());
+			String includingQuotes = node.StringLiteral().getText();
+			result.setValue(
+				includingQuotes.substring(1, includingQuotes.length() - 1));
 			result.setType(Type.primitive(Base.STRING));
 			return result;
 		}
