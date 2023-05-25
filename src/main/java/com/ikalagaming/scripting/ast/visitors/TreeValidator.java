@@ -20,6 +20,7 @@ import com.ikalagaming.scripting.ast.SwitchStatement;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.scripting.ast.VarDeclaration;
+import com.ikalagaming.scripting.ast.While;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
@@ -344,5 +345,13 @@ public class TreeValidator implements ASTVisitor {
 			this.markInvalid(node, INVALID_CAST);
 		}
 
+	}
+
+	@Override
+	public void visit(While node) {
+		final Node expression = node.getChildren().get(0);
+		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+			this.markInvalid(expression, "CONDITIONAL_NOT_BOOLEAN");
+		}
 	}
 }
