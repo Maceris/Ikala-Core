@@ -722,12 +722,28 @@ public class InstructionGenerator implements ASTVisitor {
 	 */
 	public List<Instruction> process(@NonNull CompilationUnit ast) {
 		this.tempInstructions = new LinkedList<>();
-
 		this.processTree(ast);
 
 		// generate temporary instructions
 
 		return this.processJumps();
+	}
+
+	/**
+	 * Process an argument list's children in reverse order, pushing identifiers
+	 * to the stack so they can be passed to methods.
+	 *
+	 * @param node The argument list.
+	 */
+	private void processArgumentList(Node node) {
+		for (int i = node.getChildren().size() - 1; i >= 0; --i) {
+			Node child = node.getChildren().get(i);
+			if (child instanceof Identifier id) {
+				// more variable special handling
+				this.pushVarToStack(id);
+			}
+			this.processTree(child);
+		}
 	}
 
 	/**
@@ -743,6 +759,25 @@ public class InstructionGenerator implements ASTVisitor {
 		}
 		else if (node instanceof ExprEquality equality) {
 			this.pushResultToStack(equality);
+		}
+	}
+
+	/**
+	 * Process an arithmetic expression's children in reverse order, skipping
+	 * identifiers and constants since the handler deals with direct variable
+	 * access.
+	 *
+	 * @param node The arithmetic node.
+	 */
+	private void processExprArithmetic(Node node) {
+		for (int i = node.getChildren().size() - 1; i >= 0; --i) {
+			Node child = node.getChildren().get(i);
+			if (child instanceof Identifier || child instanceof ConstChar
+				|| child instanceof ConstInt || child instanceof ConstDouble) {
+				// Arithmetic expressions handle direct access
+				continue;
+			}
+			this.processTree(child);
 		}
 	}
 
@@ -816,28 +851,17 @@ public class InstructionGenerator implements ASTVisitor {
 	 * @param node The node to start processing from.
 	 */
 	private void processTree(Node node) {
-		if (node instanceof Call || node instanceof DoWhile
-			|| node instanceof ExprAssign || node instanceof ExprEquality
-			|| node instanceof ExprRelation || node instanceof ExprTernary
-			|| node instanceof ForLoop || node instanceof Goto
-			|| node instanceof If || node instanceof SwitchStatement
-			|| node instanceof VarDeclaration || node instanceof While) {
+		if (this.shouldSkipChildren(node)) {
 			/*
 			 * Skip processing children because the visitor handles processing
 			 * them, or they should be skipped.
 			 */
 		}
-		else if (node instanceof ExprArithmetic
-			|| node instanceof ArgumentList) {
-			// Reverse order
-			for (int i = node.getChildren().size() - 1; i >= 0; --i) {
-				Node child = node.getChildren().get(i);
-				this.processTree(child);
-				if (child instanceof Identifier id) {
-					// more variable special handling
-					this.pushVarToStack(id);
-				}
-			}
+		else if (node instanceof ExprArithmetic) {
+			this.processExprArithmetic(node);
+		}
+		else if (node instanceof ArgumentList) {
+			this.processArgumentList(node);
 		}
 		else {
 			// Forward order
@@ -922,6 +946,26 @@ public class InstructionGenerator implements ASTVisitor {
 			new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
 			null, new MemLocation(MemArea.STACK,
 				node.getType().getBase().getCorrespondingClass())));
+	}
+
+	/**
+	 * Check if we should skip processing of children while processing the tree,
+	 * based on the type of node.
+	 *
+	 * @param candidate The node we are looking at.
+	 * @return Whether we should process the children of this node.
+	 */
+	private boolean shouldSkipChildren(Node candidate) {
+		return candidate instanceof Call || candidate instanceof DoWhile
+			|| candidate instanceof ExprAssign
+			|| candidate instanceof ExprEquality
+			|| candidate instanceof ExprLogic
+			|| candidate instanceof ExprRelation
+			|| candidate instanceof ExprTernary || candidate instanceof ForLoop
+			|| candidate instanceof Goto || candidate instanceof If
+			|| candidate instanceof SwitchStatement
+			|| candidate instanceof VarDeclaration
+			|| candidate instanceof While;
 	}
 
 	/**
