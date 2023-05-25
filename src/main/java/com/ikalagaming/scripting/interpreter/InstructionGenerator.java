@@ -773,7 +773,8 @@ public class InstructionGenerator implements ASTVisitor {
 		for (int i = node.getChildren().size() - 1; i >= 0; --i) {
 			Node child = node.getChildren().get(i);
 			if (child instanceof Identifier || child instanceof ConstChar
-				|| child instanceof ConstInt || child instanceof ConstDouble) {
+				|| child instanceof ConstInt || child instanceof ConstDouble
+				|| child instanceof ConstString) {
 				// Arithmetic expressions handle direct access
 				continue;
 			}
@@ -1297,7 +1298,7 @@ public class InstructionGenerator implements ASTVisitor {
 				.add(new Instruction(InstructionType.NOT, first, null, target));
 			return;
 		}
-		Node right = node.getChildren().get(0);
+		Node right = node.getChildren().get(1);
 
 		// We want to pop the left side first, so we have to push it last
 		this.processBoolExpression(right);
