@@ -82,6 +82,14 @@ class TestValidator {
 		Assertions.assertTrue(this.validateProgram(falseCase),
 			"Assignment to boolean using false should work");
 
+		final String otherBoolean = """
+			boolean x = true;
+			boolean y;
+			y = x;
+			""";
+		Assertions.assertTrue(this.validateProgram(otherBoolean),
+			"Assignment to boolean using another boolean should work");
+
 		final String implicitString = """
 			boolean x;
 			x = "true";
@@ -259,6 +267,63 @@ class TestValidator {
 	}
 
 	/**
+	 * Check character assignments.
+	 */
+	@Test
+	void testCharAssignment() {
+		final String letter = """
+			char x;
+			x = 'a';
+			""";
+		Assertions.assertTrue(this.validateProgram(letter),
+			"Assignment to char using char should work");
+
+		final String otherChar = """
+			char x = 'x';
+			char y;
+			y = x;
+			""";
+		Assertions.assertTrue(this.validateProgram(otherChar),
+			"Assignment to char using char using another char should work");
+
+		final String implicitString = """
+			char x;
+			x = "test";
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Assignment to char using string should not work");
+
+		final String implicitInt = """
+			char x;
+			x = 5;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Assignment to char using integer should not work");
+
+		final String implicitDouble = """
+			char x;
+			x = 3.14;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Assignment to char using double should not work");
+
+		final String implicitNull = """
+			char x;
+			x = null;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Assignment to char using null should not work");
+
+		final String implicitObject = """
+			Random obj;
+			char x;
+			x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Assignment to char using object should not work");
+	}
+
+	/**
 	 * Check character declarations.
 	 */
 	@Test
@@ -373,6 +438,55 @@ class TestValidator {
 			""";
 		Assertions.assertTrue(this.validateProgram(switchInLoop),
 			"We should be able to continue in a switch in a loop");
+	}
+
+	/**
+	 * Check double assignments.
+	 */
+	@Test
+	void testDoubleAssignment() {
+		final String implicitChar = """
+			double x;
+			x = 'b';
+			""";
+		Assertions.assertTrue(this.validateProgram(implicitChar),
+			"Assignment to double using char should work");
+
+		final String implicitInt = """
+			double x;
+			x = 4;
+			""";
+		Assertions.assertTrue(this.validateProgram(implicitInt),
+			"Assignment to double using int should work");
+
+		final String number = """
+			double x;
+			x = 7.340;
+			""";
+		Assertions.assertTrue(this.validateProgram(number),
+			"Assignment to double using double should work");
+
+		final String implicitString = """
+			double x;
+			x = "4.21";
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Assignment to double using string should not work");
+
+		final String implicitNull = """
+			double x;
+			x = null;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Assignment to double using null should not work");
+
+		final String implicitObject = """
+			Random obj;
+			double x;
+			x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Assignment to double using object should not work");
 	}
 
 	/**
@@ -768,6 +882,55 @@ class TestValidator {
 	}
 
 	/**
+	 * Check integer assignments.
+	 */
+	@Test
+	void testIntAssignment() {
+		final String implicitChar = """
+			int x;
+			x = 'f';
+			""";
+		Assertions.assertTrue(this.validateProgram(implicitChar),
+			"Assignment to int using char should work");
+
+		final String number = """
+			int x;
+			x = 4;
+			""";
+		Assertions.assertTrue(this.validateProgram(number),
+			"Assignment to int using int should work");
+
+		final String implicitDouble = """
+			int x;
+			x = 6.6;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Assignment to int using double should not work");
+
+		final String implicitString = """
+			int x;
+			x = "456";
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Assignment to int using string should not work");
+
+		final String implicitNull = """
+			int x;
+			x = null;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Assignment to int using null should not work");
+
+		final String implicitObject = """
+			Random obj;
+			int x;
+			x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Assignment to int using object should not work");
+	}
+
+	/**
 	 * Check integer declarations.
 	 */
 	@Test
@@ -835,6 +998,55 @@ class TestValidator {
 			""";
 		Assertions.assertFalse(this.validateProgram(duplicated),
 			"We should not be able to have duplicate labels");
+	}
+
+	/**
+	 * Check string assignments.
+	 */
+	@Test
+	void testStringAssignment() {
+		final String string = """
+			string x;
+			x = "test";
+			""";
+		Assertions.assertTrue(this.validateProgram(string),
+			"Construction of string using string should work");
+
+		final String implicitNull = """
+			string x;
+			x = null;
+			""";
+		Assertions.assertTrue(this.validateProgram(implicitNull),
+			"Construction of string using null should work");
+
+		final String implicitChar = """
+			string x;
+			x = 'y';
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitChar),
+			"Construction of string using char should not work");
+
+		final String implicitInt = """
+			string x;
+			x = 8;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Construction of string using int should not work");
+
+		final String implicitDouble = """
+			string x;
+			x = 4.1;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Construction of string using double should not work");
+
+		final String implicitObject = """
+			Random obj;
+			string x;
+			x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Construction of string using object should not work");
 	}
 
 	/**
