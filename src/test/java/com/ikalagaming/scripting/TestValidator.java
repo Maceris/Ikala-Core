@@ -1001,6 +1001,60 @@ class TestValidator {
 	}
 
 	/**
+	 * Check object declaration.
+	 */
+	@Test
+	void testObjectDeclaration() {
+		final String minimum = "Random obj;";
+		Assertions.assertTrue(this.validateProgram(minimum),
+			"Declaration of object");
+
+		final String sameType = """
+			Random obj1 = null;
+			Random obj2 = obj1;
+			""";
+		Assertions.assertTrue(this.validateProgram(sameType),
+			"Construction of object using another of the same type should work");
+
+		final String differentType = """
+			Random obj1;
+			Another obj2 = obj1;
+			""";
+		Assertions.assertFalse(this.validateProgram(differentType),
+			"Construction of object using another of different type should not work");
+
+		final String implicitChar = """
+			Example object = 'd';
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitChar),
+			"Construction of object using char should not work");
+
+		final String implicitInt = """
+			Example object = 1;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Construction of object using int should not work");
+
+		final String implicitDouble = """
+			Example object = 5.21;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Construction of object using double should not work");
+
+		final String implicitBoolean = """
+			Example object = false;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitBoolean),
+			"Construction of object using boolean should not work");
+
+		final String implicitString = """
+			Example object = "test";
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Construction of object using string should not work");
+	}
+
+	/**
 	 * Check string assignments.
 	 */
 	@Test

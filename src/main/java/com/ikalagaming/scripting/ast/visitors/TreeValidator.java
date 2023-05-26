@@ -49,6 +49,8 @@ public class TreeValidator implements ASTVisitor {
 	private static final String INVALID_FIRST_CHILD = "INVALID_FIRST_CHILD";
 	private static final String INVALID_SECOND_CHILD = "INVALID_SECOND_CHILD";
 	private static final String INVALID_TYPE = "INVALID_TYPE";
+	private static final String DOWNCASTING = "IMPLICIT_DOWNCASTING";
+	private static final String INVALID_CAST = "INVALID_CAST_DECLARATION";
 
 	private boolean valid;
 
@@ -113,6 +115,60 @@ public class TreeValidator implements ASTVisitor {
 				this.markInvalid(node, "DUPLICATE_LABEL");
 			}
 			names.add(label.getName());
+		}
+	}
+
+	/**
+	 * Check types for assignment or declarations.
+	 *
+	 * @param node The root node.
+	 * @param firstChild The first child.
+	 * @param secondChild The second child.
+	 */
+	private void checkMoveTypes(Node node, final Node firstChild,
+		final Node secondChild) {
+		if ((firstChild.getType().anyOf(Base.CHAR)
+			&& secondChild.getType().anyOf(Base.INT, Base.DOUBLE))
+			|| (firstChild.getType().anyOf(Base.INT)
+				&& secondChild.getType().anyOf(Base.DOUBLE))) {
+			this.markInvalid(node, TreeValidator.DOWNCASTING);
+			return;
+		}
+		if ((firstChild.getType().anyOf(Base.BOOLEAN)
+			&& secondChild.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT,
+				Base.STRING, Base.VOID, Base.IDENTIFIER))
+			|| (firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
+				&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING,
+					Base.VOID, Base.IDENTIFIER))
+			|| (firstChild.getType().anyOf(Base.STRING)
+				&& secondChild.getType().anyOf(Base.BOOLEAN, Base.CHAR,
+					Base.DOUBLE, Base.INT, Base.IDENTIFIER))) {
+			this.markInvalid(node, TreeValidator.INVALID_CAST);
+			return;
+		}
+		this.checkMoveTypesIdentifier(node, firstChild, secondChild);
+	}
+
+	/**
+	 * Check types for assignment or declarations, relating to identifiers.
+	 *
+	 * @param node The root node.
+	 * @param firstChild The first child.
+	 * @param secondChild The second child.
+	 */
+	private void checkMoveTypesIdentifier(Node node, final Node firstChild,
+		final Node secondChild) {
+		if (firstChild.getType().anyOf(Base.IDENTIFIER)) {
+			if (secondChild.getType().anyOf(Base.IDENTIFIER)
+				&& !firstChild.getType().getValue()
+					.equals(secondChild.getType().getValue())) {
+				this.markInvalid(node, TreeValidator.INVALID_CAST);
+				return;
+			}
+			if (secondChild.getType().anyOf(Base.BOOLEAN, Base.CHAR,
+				Base.DOUBLE, Base.INT, Base.STRING)) {
+				this.markInvalid(node, TreeValidator.INVALID_CAST);
+			}
 		}
 	}
 
@@ -275,33 +331,10 @@ public class TreeValidator implements ASTVisitor {
 			return;
 		}
 
-		final String DOWNCASTING = "IMPLICIT_DOWNCASTING";
-		final String INVALID_CAST = "INVALID_CAST_DECLARATION";
 		final Node firstChild = node.getChildren().get(0);
 		final Node secondChild = node.getChildren().get(1);
 
-		if ((firstChild.getType().anyOf(Base.CHAR)
-			&& secondChild.getType().anyOf(Base.INT, Base.DOUBLE))
-			|| (firstChild.getType().anyOf(Base.INT)
-				&& secondChild.getType().anyOf(Base.DOUBLE))) {
-			this.markInvalid(node, DOWNCASTING);
-			return;
-		}
-		if (firstChild.getType().anyOf(Base.BOOLEAN)
-			&& secondChild.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT,
-				Base.STRING, Base.VOID, Base.IDENTIFIER)) {
-			this.markInvalid(node, INVALID_CAST);
-		}
-		if (firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
-			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING, Base.VOID,
-				Base.IDENTIFIER)) {
-			this.markInvalid(node, INVALID_CAST);
-		}
-		if (firstChild.getType().anyOf(Base.STRING)
-			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE,
-				Base.INT, Base.IDENTIFIER)) {
-			this.markInvalid(node, INVALID_CAST);
-		}
+		this.checkMoveTypes(node, firstChild, secondChild);
 	}
 
 	@Override
@@ -425,33 +458,10 @@ public class TreeValidator implements ASTVisitor {
 		if (node.getChildren().size() < 2) {
 			return;
 		}
-		final String DOWNCASTING = "IMPLICIT_DOWNCASTING";
-		final String INVALID_CAST = "INVALID_CAST_DECLARATION";
 		final Node firstChild = node.getChildren().get(0);
 		final Node secondChild = node.getChildren().get(1);
 
-		if ((firstChild.getType().anyOf(Base.CHAR)
-			&& secondChild.getType().anyOf(Base.INT, Base.DOUBLE))
-			|| (firstChild.getType().anyOf(Base.INT)
-				&& secondChild.getType().anyOf(Base.DOUBLE))) {
-			this.markInvalid(node, DOWNCASTING);
-			return;
-		}
-		if (firstChild.getType().anyOf(Base.BOOLEAN)
-			&& secondChild.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT,
-				Base.STRING, Base.VOID, Base.IDENTIFIER)) {
-			this.markInvalid(node, INVALID_CAST);
-		}
-		if (firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
-			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING, Base.VOID,
-				Base.IDENTIFIER)) {
-			this.markInvalid(node, INVALID_CAST);
-		}
-		if (firstChild.getType().anyOf(Base.STRING)
-			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE,
-				Base.INT, Base.IDENTIFIER)) {
-			this.markInvalid(node, INVALID_CAST);
-		}
+		this.checkMoveTypes(node, firstChild, secondChild);
 	}
 
 	@Override
