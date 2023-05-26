@@ -72,14 +72,6 @@ public class DebugMethods {
 	 */
 	public static void TEST_checkValues(String string, int integer, double doub,
 		TestObject o) {
-
-		if (o == null) {
-			System.out.printf("%s %d %.4f, (null)\n", string, integer, doub);
-		}
-		else {
-			System.out.printf("%s %d %.4f, (%s %d %.4f)\n", string, integer,
-				doub, o.getString(), o.getInteger(), o.getDoub());
-		}
 		if (string == null || !string.equals(DebugMethods.TEST_getString())
 			|| (integer != DebugMethods.TEST_getInt())
 			|| (doub != DebugMethods.TEST_getDouble())) {
@@ -94,7 +86,6 @@ public class DebugMethods {
 			return;
 		}
 		DebugMethods.checkValuesMatched = true;
-
 	}
 
 	/**
