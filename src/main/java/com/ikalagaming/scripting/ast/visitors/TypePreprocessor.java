@@ -160,7 +160,8 @@ public class TypePreprocessor implements ASTVisitor {
 			(root instanceof Block || root instanceof ForLoop);
 
 		if (newContext) {
-			this.variableMaps.push(this.variableMaps.peek().clone());
+			this.variableMaps
+				.push(new VariableTypeMap(this.variableMaps.peek()));
 		}
 
 		if (!root.getChildren().isEmpty()) {

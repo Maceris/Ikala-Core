@@ -25,16 +25,23 @@ class VariableTypeMap {
 	/**
 	 * The actual backing map.
 	 */
-	private Map<String, Type> map = new HashMap<>();
+	private Map<String, Type> map;
 
 	/**
-	 * Clones the map and returns the result.
+	 * Create a new empty type map.
 	 */
-	@Override
-	public VariableTypeMap clone() {
-		VariableTypeMap result = new VariableTypeMap();
-		result.map.putAll(this.map);
-		return result;
+	public VariableTypeMap() {
+		this.map = new HashMap<>();
+	}
+
+	/**
+	 * Create a new map, copying all the values from an existing map.
+	 *
+	 * @param toCopy The map to clone.
+	 */
+	public VariableTypeMap(VariableTypeMap toCopy) {
+		this.map = new HashMap<>();
+		this.map.putAll(toCopy.map);
 	}
 
 	/**
@@ -65,12 +72,12 @@ class VariableTypeMap {
 	 * @param type The type of the variable.
 	 */
 	public void put(@NonNull String variable, @NonNull Type type) {
-		if (this.map.containsKey(variable)) {
+		this.map.computeIfPresent(variable, (key, current) -> {
 			VariableTypeMap.log
 				.warn(SafeResourceLoader.getString("VARIABLE_ALREADY_DEFINED",
 					ScriptManager.getResourceBundle()), variable);
-			this.map.put(variable, VariableTypeMap.DEFAULT);
-		}
+			return VariableTypeMap.DEFAULT;
+		});
 		this.map.put(variable, type);
 	}
 
