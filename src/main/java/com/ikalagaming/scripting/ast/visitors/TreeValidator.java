@@ -215,7 +215,7 @@ public class TreeValidator implements ASTVisitor {
 	@Override
 	public void visit(DoWhile node) {
 		final Node expression = node.getChildren().get(1);
-		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+		if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
 			this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
 		}
 	}
@@ -335,7 +335,7 @@ public class TreeValidator implements ASTVisitor {
 				++conditionalIndex;
 			}
 			final Node expression = node.getChildren().get(conditionalIndex);
-			if (!expression.getType().anyOf(Base.BOOLEAN)) {
+			if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
 				this.markInvalid(expression,
 					TreeValidator.CONDITIONAL_NOT_BOOLEAN);
 			}
@@ -355,7 +355,7 @@ public class TreeValidator implements ASTVisitor {
 	@Override
 	public void visit(If node) {
 		final Node expression = node.getChildren().get(0);
-		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+		if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
 			this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
 		}
 	}
@@ -420,7 +420,7 @@ public class TreeValidator implements ASTVisitor {
 	@Override
 	public void visit(While node) {
 		final Node expression = node.getChildren().get(0);
-		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+		if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
 			this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
 		}
 	}
