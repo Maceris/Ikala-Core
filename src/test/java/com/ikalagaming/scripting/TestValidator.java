@@ -64,6 +64,69 @@ class TestValidator {
 	}
 
 	/**
+	 * Check boolean assignments.
+	 */
+	@Test
+	void testBooleanAssignment() {
+		final String trueCase = """
+			boolean x;
+			x = true;
+			""";
+		Assertions.assertTrue(this.validateProgram(trueCase),
+			"Assignment to boolean using true should work");
+
+		final String falseCase = """
+			boolean x;
+			x = false;
+			""";
+		Assertions.assertTrue(this.validateProgram(falseCase),
+			"Assignment to boolean using false should work");
+
+		final String implicitString = """
+			boolean x;
+			x = "true";
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Assignment to boolean using string should not work");
+
+		final String implicitChar = """
+			boolean x;
+			x = 'f';
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitChar),
+			"Assignment to boolean using char should not work");
+
+		final String implicitInt = """
+			boolean x;
+			x = 0;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Assignment to boolean using int should not work");
+
+		final String implicitDouble = """
+			boolean x;
+			x = 1.0;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Assignment to boolean using double should not work");
+
+		final String implicitObject = """
+			Random obj;
+			boolean x;
+			x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Assignment to boolean using object should not work");
+
+		final String implicitNull = """
+			boolean x;
+			x = null;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitNull),
+			"Assignment to boolean using null should not work");
+	}
+
+	/**
 	 * Check boolean declarations.
 	 */
 	@Test
@@ -79,6 +142,13 @@ class TestValidator {
 		final String falseCase = "boolean x = false;";
 		Assertions.assertTrue(this.validateProgram(falseCase),
 			"Construction of boolean using false should work");
+
+		final String otherBoolean = """
+			boolean x = false;
+			boolean y = x;
+			""";
+		Assertions.assertTrue(this.validateProgram(otherBoolean),
+			"Construction of boolean using another boolean should work");
 
 		final String implicitString = "boolean x = \"test\";";
 		Assertions.assertFalse(this.validateProgram(implicitString),
@@ -99,6 +169,13 @@ class TestValidator {
 		final String implicitNull = "boolean x = null;";
 		Assertions.assertFalse(this.validateProgram(implicitNull),
 			"Construction of boolean using null should not work");
+
+		final String implicitObject = """
+			Random obj;
+			boolean x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Construction of boolean using object should not work");
 
 		final String recursive = "boolean x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
@@ -210,6 +287,13 @@ class TestValidator {
 		Assertions.assertFalse(this.validateProgram(implicitNull),
 			"Construction of char using null should not work");
 
+		final String implicitObject = """
+			Random obj;
+			char x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Construction of char using object should not work");
+
 		final String recursive = "char x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
 			"Initialization by self-reference should not work");
@@ -319,6 +403,13 @@ class TestValidator {
 		final String implicitNull = "double x = null;";
 		Assertions.assertFalse(this.validateProgram(implicitNull),
 			"Construction of double using null should not work");
+
+		final String implicitObject = """
+			Random obj;
+			double x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Construction of double using object should not work");
 
 		final String recursive = "double x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
@@ -705,6 +796,13 @@ class TestValidator {
 		Assertions.assertFalse(this.validateProgram(implicitNull),
 			"Construction of int using null should not work");
 
+		final String implicitObject = """
+			Random obj;
+			int x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Construction of int using object should not work");
+
 		final String recursive = "int x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
 			"Initialization by self-reference should not work");
@@ -767,6 +865,13 @@ class TestValidator {
 		final String implicitDouble = "string x = 1.0;";
 		Assertions.assertFalse(this.validateProgram(implicitDouble),
 			"Construction of string using double should not work");
+
+		final String implicitObject = """
+			Random obj;
+			string x = obj;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitObject),
+			"Construction of string using object should not work");
 
 		final String recursive = "string x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),

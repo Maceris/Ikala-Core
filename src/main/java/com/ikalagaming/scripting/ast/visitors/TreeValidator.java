@@ -10,6 +10,7 @@ import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.Continue;
 import com.ikalagaming.scripting.ast.DoWhile;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
+import com.ikalagaming.scripting.ast.ExprAssign;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
@@ -269,6 +270,41 @@ public class TreeValidator implements ASTVisitor {
 	}
 
 	@Override
+	public void visit(ExprAssign node) {
+		if (node.getChildren().size() < 2) {
+			return;
+		}
+
+		final String DOWNCASTING = "IMPLICIT_DOWNCASTING";
+		final String INVALID_CAST = "INVALID_CAST_DECLARATION";
+		final Node firstChild = node.getChildren().get(0);
+		final Node secondChild = node.getChildren().get(1);
+
+		if ((firstChild.getType().anyOf(Base.CHAR)
+			&& secondChild.getType().anyOf(Base.INT, Base.DOUBLE))
+			|| (firstChild.getType().anyOf(Base.INT)
+				&& secondChild.getType().anyOf(Base.DOUBLE))) {
+			this.markInvalid(node, DOWNCASTING);
+			return;
+		}
+		if (firstChild.getType().anyOf(Base.BOOLEAN)
+			&& secondChild.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT,
+				Base.STRING, Base.VOID, Base.IDENTIFIER)) {
+			this.markInvalid(node, INVALID_CAST);
+		}
+		if (firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
+			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING, Base.VOID,
+				Base.IDENTIFIER)) {
+			this.markInvalid(node, INVALID_CAST);
+		}
+		if (firstChild.getType().anyOf(Base.STRING)
+			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE,
+				Base.INT, Base.IDENTIFIER)) {
+			this.markInvalid(node, INVALID_CAST);
+		}
+	}
+
+	@Override
 	public void visit(ExprLogic node) {
 		if (node.getType().anyOf(Base.VOID)) {
 			this.markInvalid(node, TreeValidator.INVALID_TYPE);
@@ -401,20 +437,21 @@ public class TreeValidator implements ASTVisitor {
 			this.markInvalid(node, DOWNCASTING);
 			return;
 		}
-		if (firstChild.getType().anyOf(Base.BOOLEAN) && secondChild.getType()
-			.anyOf(Base.CHAR, Base.DOUBLE, Base.INT, Base.STRING, Base.VOID)) {
+		if (firstChild.getType().anyOf(Base.BOOLEAN)
+			&& secondChild.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT,
+				Base.STRING, Base.VOID, Base.IDENTIFIER)) {
 			this.markInvalid(node, INVALID_CAST);
 		}
 		if (firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
-			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING,
-				Base.VOID)) {
+			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.STRING, Base.VOID,
+				Base.IDENTIFIER)) {
 			this.markInvalid(node, INVALID_CAST);
 		}
-		if (firstChild.getType().anyOf(Base.STRING) && secondChild.getType()
-			.anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE, Base.INT)) {
+		if (firstChild.getType().anyOf(Base.STRING)
+			&& secondChild.getType().anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE,
+				Base.INT, Base.IDENTIFIER)) {
 			this.markInvalid(node, INVALID_CAST);
 		}
-
 	}
 
 	@Override
