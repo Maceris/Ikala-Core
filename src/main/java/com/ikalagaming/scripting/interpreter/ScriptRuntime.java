@@ -99,8 +99,21 @@ public class ScriptRuntime {
 			return;
 		}
 
-		boolean first = (Boolean) firstItem.value();
-		boolean second = (Boolean) secondItem.value();
+		boolean first;
+		boolean second;
+
+		try {
+			first = (Boolean) firstItem.value();
+			second = (Boolean) secondItem.value();
+		}
+		catch (ClassCastException e) {
+			ScriptRuntime.log.warn(
+				SafeResourceLoader.getString("CAST_FAILED",
+					ScriptManager.getResourceBundle()),
+				firstItem.getClass(), Boolean.class);
+			this.halt();
+			return;
+		}
 
 		MemoryItem result =
 			new MemoryItem(Boolean.class, operation.apply(first, second));

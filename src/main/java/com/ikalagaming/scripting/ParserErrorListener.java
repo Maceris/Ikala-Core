@@ -38,7 +38,7 @@ public class ParserErrorListener implements ANTLRErrorListener {
 
 	/**
 	 * The number of errors that we have seen so far with this object.
-	 * 
+	 *
 	 * @see #resetErrorCount()
 	 */
 	@Getter
