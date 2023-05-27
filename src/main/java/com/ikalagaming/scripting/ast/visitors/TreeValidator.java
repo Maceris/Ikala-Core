@@ -402,6 +402,7 @@ public class TreeValidator implements ASTVisitor {
 			this.markInvalid(expression, TreeValidator.INVALID_FIRST_CHILD);
 			return;
 		}
+
 		if (node.getType().anyOf(Base.VOID)) {
 			this.markInvalid(node, TreeValidator.INVALID_TYPE);
 		}

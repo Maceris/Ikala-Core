@@ -135,6 +135,47 @@ public class TypePreprocessor implements ASTVisitor {
 	}
 
 	/**
+	 * Calculate the result of a ternary operator if the types are numeric.
+	 *
+	 * @param node The ternary node to update.
+	 * @param ifTrue The value to use if true.
+	 * @param ifFalse The value to use if false.
+	 * @return Whether we have identified the type.
+	 */
+	private boolean handleTernaryNumeric(ExprTernary node, Type ifTrue,
+		Type ifFalse) {
+		if (ifTrue.anyOf(Base.CHAR, Base.INT, Base.DOUBLE, Base.UNKNOWN)
+			&& ifFalse.anyOf(Base.CHAR, Base.INT, Base.DOUBLE, Base.UNKNOWN)) {
+			// go with the broadest type
+			if (ifTrue.anyOf(Base.DOUBLE)) {
+				node.setType(ifTrue);
+				return true;
+			}
+			if (ifFalse.anyOf(Base.DOUBLE)) {
+				node.setType(ifFalse);
+				return true;
+			}
+			if (ifTrue.anyOf(Base.INT)) {
+				node.setType(ifTrue);
+				return true;
+			}
+			if (ifFalse.anyOf(Base.INT)) {
+				node.setType(ifFalse);
+				return true;
+			}
+			if (ifTrue.anyOf(Base.CHAR)) {
+				node.setType(ifTrue);
+				return true;
+			}
+			if (ifFalse.anyOf(Base.CHAR)) {
+				node.setType(ifFalse);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Process the types for the tree. Intended for use only on the root node.
 	 *
 	 * @param ast The tree to process.
@@ -280,33 +321,40 @@ public class TypePreprocessor implements ASTVisitor {
 		}
 
 		// Both numeric
-		if (ifTrue.anyOf(Base.CHAR, Base.INT, Base.DOUBLE, Base.UNKNOWN)
-			&& ifFalse.anyOf(Base.CHAR, Base.INT, Base.DOUBLE, Base.UNKNOWN)) {
-			// go with the broadest type
-			if (ifTrue.anyOf(Base.DOUBLE)) {
-				node.setType(ifTrue);
-				return;
-			}
-			if (ifFalse.anyOf(Base.DOUBLE)) {
-				node.setType(ifFalse);
-				return;
-			}
-			if (ifTrue.anyOf(Base.INT)) {
-				node.setType(ifTrue);
-				return;
-			}
-			if (ifFalse.anyOf(Base.INT)) {
-				node.setType(ifFalse);
-				return;
-			}
-			if (ifTrue.anyOf(Base.CHAR)) {
-				node.setType(ifTrue);
-				return;
-			}
-			if (ifFalse.anyOf(Base.CHAR)) {
-				node.setType(ifFalse);
-				return;
-			}
+		if (this.handleTernaryNumeric(node, ifTrue, ifFalse)) {
+			return;
+		}
+
+		if (ifTrue.anyOf(Base.BOOLEAN)
+			&& ifFalse.anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
+			node.setType(ifTrue);
+			return;
+		}
+		if (ifTrue.anyOf(Base.BOOLEAN, Base.UNKNOWN)
+			&& ifFalse.anyOf(Base.BOOLEAN)) {
+			node.setType(ifFalse);
+			return;
+		}
+
+		if (ifTrue.anyOf(Base.STRING)
+			&& ifFalse.anyOf(Base.STRING, Base.UNKNOWN, Base.VOID)) {
+			node.setType(ifTrue);
+			return;
+		}
+		if (ifTrue.anyOf(Base.STRING, Base.UNKNOWN, Base.VOID)
+			&& ifFalse.anyOf(Base.STRING)) {
+			node.setType(ifFalse);
+			return;
+		}
+
+		if (ifTrue.anyOf(Base.UNKNOWN) || ifFalse.anyOf(Base.UNKNOWN)) {
+			node.setType(Type.unknownType());
+			return;
+		}
+
+		if (ifTrue.anyOf(Base.VOID) || ifFalse.anyOf(Base.VOID)) {
+			node.setType(Type.voidType());
+			return;
 		}
 
 		TypePreprocessor.log.warn(SafeResourceLoader

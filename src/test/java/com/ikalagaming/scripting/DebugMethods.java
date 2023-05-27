@@ -107,6 +107,15 @@ public class DebugMethods {
 	}
 
 	/**
+	 * Fetches a static character.
+	 *
+	 * @return The character.
+	 */
+	public static char TEST_getChar() {
+		return 'a';
+	}
+
+	/**
 	 * Fetches a static double.
 	 *
 	 * @return The double.

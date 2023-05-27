@@ -1341,33 +1341,66 @@ class TestValidator {
 		Assertions.assertTrue(this.validateProgram(equality),
 			"Ternary operators should work with equality operators");
 
-		final String differentValidTypes1 = """
-			int x = 45;
-			double y = x != 46 ? 4.1 : 2;
-			""";
-		Assertions.assertTrue(this.validateProgram(differentValidTypes1),
-			"Ternary operators should work with reasonable casting");
+	}
 
-		final String differentValidTypes2 = """
-			int x = 45;
-			double y = x != 46 ? 4 : 0.2;
-			""";
-		Assertions.assertTrue(this.validateProgram(differentValidTypes2),
-			"Ternary operators should work with reasonable casting");
+	/**
+	 * Check exhaustive type casting with the ternary operator.
+	 *
+	 * @param type The target type.
+	 * @param valid Values that are valid for that type.
+	 * @param invalid Values that are invalid for that type.
+	 */
+	private void testTernary(@NonNull String type, @NonNull String[] valid,
+		@NonNull String[] invalid) {
 
-		final String differentInvalidTypes1 = """
-			int x = 45;
-			int y = x != 46 ? 4 : true;
-			""";
-		Assertions.assertFalse(this.validateProgram(differentInvalidTypes1),
-			"Ternary operators should not work with unreasonable types");
+		// Both valid
+		for (String left : valid) {
+			for (String right : valid) {
+				if (left.equals(right) && left.equals("null")) {
+					continue;
+				}
+				final String first =
+					String.format("%s x = true ? %s : %s;", type, left, right);
+				Assertions.assertTrue(this.validateProgram(first),
+					String.format(
+						"We should be able to use %s and %s for %s ternary cases",
+						left, right, type));
+			}
+		}
 
-		final String differentInvalidTypes2 = """
-			int x = 45;
-			int y = x != 46 ? false : 4.667;
-			""";
-		Assertions.assertFalse(this.validateProgram(differentInvalidTypes2),
-			"Ternary operators should not work with unreasonable types");
+		// Mix of valid and invalid
+		for (String ok : valid) {
+			for (String nok : invalid) {
+				if (ok.endsWith("()") && nok.equals("null")) {
+					continue;
+				}
+				final String first =
+					String.format("%s x = true ? %s : %s;", type, ok, nok);
+				Assertions.assertFalse(this.validateProgram(first),
+					String.format(
+						"We should not be able to use %s and %s for %s ternary cases",
+						ok, nok, type));
+
+				final String second =
+					String.format("%s x = true ? %s : %s;", type, nok, ok);
+				Assertions.assertFalse(this.validateProgram(second),
+					String.format(
+						"We should not be able to use %s and %s for %s ternary cases",
+						nok, ok, type));
+			}
+		}
+
+		// Both invalid
+		for (String left : invalid) {
+			for (String right : invalid) {
+				final String first =
+					String.format("%s x = true ? %s : %s;", type, left, right);
+				Assertions.assertFalse(this.validateProgram(first),
+					String.format(
+						"We should not be able to use %s and %s for %s ternary cases",
+						left, right, type));
+			}
+		}
 	}
 
 	/**
@@ -1419,6 +1452,35 @@ class TestValidator {
 				"We should not be able to use a constant " + type
 					+ " in ternary operators condition");
 		}
+	}
+
+	/**
+	 * Validates ternary types.
+	 */
+	@Test
+	void testTernaryTypes() {
+		final String[] booleanPositive = {"true", "TEST_getBoolean()"};
+		final String[] booleanNegative =
+			{"'c'", "4", "4.1", "\"test\"", "null"};
+		this.testTernary("boolean", booleanPositive, booleanNegative);
+
+		final String[] charPositive = {"'c'", "TEST_getChar()"};
+		final String[] charNegative = {"true", "4", "4.1", "\"test\"", "null"};
+		this.testTernary("char", charPositive, charNegative);
+
+		final String[] intPositive = {"'b'", "1", "TEST_getInt()"};
+		final String[] intNegative = {"true", "4.1", "\"test\"", "null"};
+		this.testTernary("int", intPositive, intNegative);
+
+		final String[] doublePositive = {"'b'", "1", "3.0", "TEST_getDouble()"};
+		final String[] doubleNegative = {"true", "\"test\"", "null"};
+		this.testTernary("double", doublePositive, doubleNegative);
+
+		final String[] stringPositive =
+			{"\"test\"", "null", "TEST_getString()"};
+		final String[] stringNegative = {"true", "'b'", "1", "3.0"};
+		this.testTernary("string", stringPositive, stringNegative);
+
 	}
 
 	/**
