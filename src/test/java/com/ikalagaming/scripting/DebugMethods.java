@@ -26,15 +26,24 @@ public class DebugMethods {
 		/**
 		 * An integer value.
 		 */
-		int integer;
+		private int integer;
 		/**
 		 * A double value.
 		 */
-		double doub;
+		private double doub;
 		/**
 		 * A string value.
 		 */
-		String string;
+		private String string;
+
+		/**
+		 * Used to test trivial method chaining.
+		 *
+		 * @return A reference to itself.
+		 */
+		TestObject getSelf() {
+			return this;
+		}
 	}
 
 	/**

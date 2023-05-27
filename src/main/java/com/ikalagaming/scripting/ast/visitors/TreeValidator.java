@@ -3,6 +3,7 @@ package com.ikalagaming.scripting.ast.visitors;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.Break;
+import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstChar;
 import com.ikalagaming.scripting.ast.ConstDouble;
@@ -259,6 +260,16 @@ public class TreeValidator implements ASTVisitor {
 	public void visit(Break node) {
 		if (this.loopDepth == 0 && this.switchDepth == 0) {
 			this.markInvalid(node, "BREAK_OUTSIDE_LOOP");
+		}
+	}
+
+	@Override
+	public void visit(Call node) {
+		if (node.isPrimary()) {
+			Node expression = node.getChildren().get(0);
+			if (!expression.getType().anyOf(Base.IDENTIFIER, Base.UNKNOWN)) {
+				this.markInvalid(expression, "INVALID_METHOD_CALL");
+			}
 		}
 	}
 

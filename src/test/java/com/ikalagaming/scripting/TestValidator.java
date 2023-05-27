@@ -1001,13 +1001,128 @@ class TestValidator {
 	}
 
 	/**
+	 * Validates method calls.
+	 */
+	@Test
+	void testMethods() {
+		ScriptManager.registerClass(DebugMethods.class);
+
+		final String methodChain = """
+			TestObject object = TEST_getObject();
+			object.getSelf().getSelf().getSelf();
+			""";
+		Assertions.assertTrue(this.validateProgram(methodChain),
+			"We should be able to call static and instance methods");
+
+		final String ternaryCall = """
+			Object x = TEST_getObject(), y = TEST_getObject();
+			int z = 3;
+			(z > 2 ? x : y).getSelf();
+			""";
+		Assertions.assertTrue(this.validateProgram(ternaryCall),
+			"We should be able to call methods on objects from a ternary");
+
+		final String charCall = """
+			char x = 'e';
+			x.toString();
+			""";
+		Assertions.assertFalse(this.validateProgram(charCall),
+			"We should not be able to call methods on characters");
+
+		final String intCall = """
+			int x = 1;
+			x.toString();
+			""";
+		Assertions.assertFalse(this.validateProgram(intCall),
+			"We should not be able to call methods on integers");
+
+		final String doubleCall = """
+			double x = 3.12;
+			x.toString();
+			""";
+		Assertions.assertFalse(this.validateProgram(doubleCall),
+			"We should not be able to call methods on doubles");
+
+		final String booleanCall = """
+			boolean x = true;
+			x.toString();
+			""";
+		Assertions.assertFalse(this.validateProgram(booleanCall),
+			"We should not be able to call methods on booleans");
+
+		final String stringCall = """
+			string x = "test";
+			x.toString();
+			""";
+		Assertions.assertFalse(this.validateProgram(stringCall),
+			"We should not be able to call methods on strings");
+	}
+
+	/**
+	 * Check object assignment.
+	 */
+	@Test
+	void testObjectAssignment() {
+		final String sameType = """
+			Random obj1;
+			Random obj2;
+			obj2 = obj1;
+			""";
+		Assertions.assertTrue(this.validateProgram(sameType),
+			"Assignment to object using another of the same type should work");
+
+		final String differentType = """
+			Random obj1;
+			Another obj2;
+			obj2 = obj1;
+			""";
+		Assertions.assertFalse(this.validateProgram(differentType),
+			"Assignment to object using another of different type should not work");
+
+		final String implicitChar = """
+			Example object;
+			object = 'a';
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitChar),
+			"Assignment to object using char should not work");
+
+		final String implicitInt = """
+			Example object;
+			object = 1;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitInt),
+			"Assignment to object using int should not work");
+
+		final String implicitDouble = """
+			Example object;
+			object = 5.21;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitDouble),
+			"Assignment to object using double should not work");
+
+		final String implicitBoolean = """
+			Example object;
+			object = false;
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitBoolean),
+			"Assignment to object using boolean should not work");
+
+		final String implicitString = """
+			Example object;
+			object = "test";
+			""";
+		Assertions.assertFalse(this.validateProgram(implicitString),
+			"Assignment to object using string should not work");
+	}
+
+	/**
 	 * Check object declaration.
 	 */
 	@Test
 	void testObjectDeclaration() {
 		final String minimum = "Random obj;";
 		Assertions.assertTrue(this.validateProgram(minimum),
-			"Declaration of object");
+			"Declaration of object should work");
 
 		final String sameType = """
 			Random obj1 = null;
