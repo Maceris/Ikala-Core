@@ -1249,6 +1249,24 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the relational expressions.
+	 */
+	@Test
+	void testRelational() {
+		final String[] valid = {"1", "-2", "'a'", "4.1", "-4.1", "1 + 2",
+			"(9 % 5)", "TEST_getInt()"};
+
+		final String[] invalid = {"\"test\"", "null", "true"};
+
+		final String[] operators = {"<", "<=", ">", ">="};
+
+		for (String operator : operators) {
+			this.testBinaryOperator("boolean x = %s " + operator + " %s;",
+				valid, invalid);
+		}
+	}
+
+	/**
 	 * Check string assignments.
 	 */
 	@Test
