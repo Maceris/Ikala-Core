@@ -47,6 +47,49 @@ class TestValidator {
 	}
 
 	/**
+	 * Check exhaustive type casting with an arbitrary binary operator.
+	 *
+	 * @param format What to pass in to the string formatter to insert two
+	 *            string values.
+	 * @param valid Values that are valid for that type.
+	 * @param invalid Values that are invalid for that type.
+	 */
+	private void testBinaryOperator(@NonNull String format,
+		@NonNull String[] valid, @NonNull String[] invalid) {
+
+		// Both valid
+		for (String left : valid) {
+			for (String right : valid) {
+				final String program = String.format(format, left, right);
+				Assertions.assertTrue(this.validateProgram(program),
+					String.format("We should be able to do %s", program));
+			}
+		}
+
+		// Mix of valid and invalid
+		for (String ok : valid) {
+			for (String nok : invalid) {
+				final String first = String.format(format, ok, nok);
+				Assertions.assertFalse(this.validateProgram(first),
+					String.format("We should not be able to do %s", first));
+
+				final String second = String.format(format, nok, ok);
+				Assertions.assertFalse(this.validateProgram(second),
+					String.format("We should not be able to do %s", first));
+			}
+		}
+
+		// Both invalid
+		for (String left : invalid) {
+			for (String right : invalid) {
+				final String first = String.format(format, left, right);
+				Assertions.assertFalse(this.validateProgram(first),
+					String.format("We should not be able to do %s", first));
+			}
+		}
+	}
+
+	/**
 	 * Validates that we can place blocks arbitrarily.
 	 */
 	@Test
@@ -362,6 +405,24 @@ class TestValidator {
 		final String recursive = "char x = x;";
 		Assertions.assertFalse(this.validateProgram(recursive),
 			"Initialization by self-reference should not work");
+	}
+
+	/**
+	 * Test the conditional expressions.
+	 */
+	@Test
+	void testConditional() {
+		final String formatOr = "boolean x = %s || %s;";
+
+		final String[] valid = {"true", "false", "1 < 2", "(3 >= 6)", "0 != 3",
+			"4 == 4", "(3 < 1 || 3 >= 1)", "(!(3 < 1) && 3 >= 1)",
+			"TEST_getBoolean()"};
+		final String[] invalid = {"'c'", "4", "4.1", "\"test\"", "null"};
+
+		this.testBinaryOperator(formatOr, valid, invalid);
+
+		final String formatAnd = "boolean x = %s && %s;";
+		this.testBinaryOperator(formatAnd, valid, invalid);
 	}
 
 	/**
@@ -1340,7 +1401,6 @@ class TestValidator {
 			""";
 		Assertions.assertTrue(this.validateProgram(equality),
 			"Ternary operators should work with equality operators");
-
 	}
 
 	/**
