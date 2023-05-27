@@ -1371,6 +1371,57 @@ class TestValidator {
 	}
 
 	/**
+	 * Validates ternary conditionals.
+	 */
+	@Test
+	void testTernaryConditional() {
+		final String plainBool = """
+			int x = true ? 3 : 5;
+			""";
+		Assertions.assertTrue(this.validateProgram(plainBool),
+			"We should be able to use a boolean for ternary operators condition");
+
+		final String boolVar = """
+			boolean b = false;
+			int x = b ? 5 : 6;
+			""";
+		Assertions.assertTrue(this.validateProgram(boolVar),
+			"We should be able to use a boolean variable for ternary operators condition");
+
+		final String nestedTernary = """
+			int x = 5;
+			int y = (x < 4 ? false : true) ? 5 : 6;
+			""";
+		Assertions.assertTrue(this.validateProgram(nestedTernary),
+			"We should be able to use a ternary in ternary operators condition");
+
+		final String methodCall = """
+			int y = TEST_getBoolean() ? 5 : 6;
+			""";
+		Assertions.assertTrue(this.validateProgram(methodCall),
+			"We should be able to use a method call in ternary operators condition");
+
+		final String[] invalidTypes = {"'t'", "5", "5.2", "\"true\"", "null"};
+
+		for (String type : invalidTypes) {
+			final String invalid = String.format("int x = %s ? 2 : 1;", type);
+			Assertions.assertFalse(this.validateProgram(invalid),
+				"We should not be able to use a constant " + type
+					+ " in ternary operators condition");
+		}
+
+		final String[] invalidObjects = {"char x = 'c';", "int x = 346;",
+			"double x = 0.01;", "string x = \"true\";", "TestObj x = null;"};
+
+		for (String type : invalidObjects) {
+			final String invalid = String.format("%s int x = x ? 0 : 3;", type);
+			Assertions.assertFalse(this.validateProgram(invalid),
+				"We should not be able to use a constant " + type
+					+ " in ternary operators condition");
+		}
+	}
+
+	/**
 	 * Test the while statement for equality expressions.
 	 */
 	@Test

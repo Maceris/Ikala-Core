@@ -98,6 +98,15 @@ public class DebugMethods {
 	}
 
 	/**
+	 * Fetches a static boolean.
+	 *
+	 * @return The boolean.
+	 */
+	public static boolean TEST_getBoolean() {
+		return true;
+	}
+
+	/**
 	 * Fetches a static double.
 	 *
 	 * @return The double.

@@ -398,7 +398,7 @@ public class TreeValidator implements ASTVisitor {
 	public void visit(ExprTernary node) {
 		final Node expression = node.getChildren().get(0);
 
-		if (!expression.getType().anyOf(Base.BOOLEAN)) {
+		if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
 			this.markInvalid(expression, TreeValidator.INVALID_FIRST_CHILD);
 			return;
 		}
