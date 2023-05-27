@@ -793,6 +793,24 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the equality expressions.
+	 */
+	@Test
+	void testEquality() {
+		final String formatEq = "boolean x = %s == %s;";
+
+		final String[] valid = {"true", "false", "1 < 2", "(3 >= 6)",
+			"(0 != 3)", "(4 == 4)", "(3 < 1 || 3 >= 1)", "(!(3 < 1) && 3 >= 1)",
+			"TEST_getBoolean()", "'c'", "4", "4.1", "\"test\"", "null"};
+		final String[] invalid = {};
+
+		this.testBinaryOperator(formatEq, valid, invalid);
+
+		final String formatNeq = "boolean x = %s != %s;";
+		this.testBinaryOperator(formatNeq, valid, invalid);
+	}
+
+	/**
 	 * Test the for statement only works with boolean conditionals.
 	 */
 	@Test
