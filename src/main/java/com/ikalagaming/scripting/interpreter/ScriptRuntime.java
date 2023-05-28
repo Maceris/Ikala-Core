@@ -911,9 +911,10 @@ public class ScriptRuntime {
 	}
 
 	/**
-	 * Stop running the program.
+	 * Stop running the program. Should only be called internally and by the
+	 * script runner.
 	 */
-	private void halt() {
+	public void halt() {
 		this.fatalError = true;
 		this.programCounter = this.instructions.size();
 	}

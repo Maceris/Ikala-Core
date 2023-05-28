@@ -1,10 +1,18 @@
 package com.ikalagaming.scripting;
 
 import com.ikalagaming.localization.Localization;
+import com.ikalagaming.scripting.interpreter.ScriptRuntime;
+import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -12,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -20,6 +29,7 @@ import java.util.ResourceBundle;
  * @author Ches Burks
  *
  */
+@Slf4j
 public class ScriptManager {
 
 	/**
@@ -49,6 +59,11 @@ public class ScriptManager {
 	 */
 	private static Map<FunctionRegistration, Method> registeredMethods =
 		Collections.synchronizedMap(new HashMap<>());
+
+	/**
+	 * Runs scripts on a different thread.
+	 */
+	private static ScriptRunner runner;
 
 	/**
 	 * Fetch a list of registered methods with the given name and parameter
@@ -103,6 +118,65 @@ public class ScriptManager {
 		}
 		ScriptManager.classMethods.put(clazz.getSimpleName(),
 			List.copyOf(funcs));
+	}
+
+	/**
+	 * Actually run the script. Will start up a new thread if one does not
+	 * exist.
+	 * 
+	 * @param stream The stream to pass to the lexer.
+	 * @return Whether we actually got back a program.
+	 */
+	@Synchronized
+	private static boolean runScript(@NonNull CharStream stream) {
+		if (ScriptManager.runner == null) {
+			ScriptManager.runner = new ScriptRunner();
+			ScriptManager.runner.start();
+
+		}
+		Optional<ScriptRuntime> maybeScript = IkalaScriptCompiler.parse(stream);
+		if (maybeScript.isEmpty()) {
+			return false;
+		}
+		ScriptManager.runner.runScript(maybeScript.get());
+		return true;
+	}
+
+	/**
+	 * Execute a script as as string.
+	 *
+	 * @param script The file containing the script.
+	 * @return Whether we successfully parsed and started to run the script.
+	 */
+	@Synchronized
+	public static boolean runScript(@NonNull File script) {
+		if (!script.exists() || !script.canRead()) {
+			return false;
+		}
+
+		CharStream stream;
+		try {
+			stream = CharStreams.fromPath(script.toPath());
+		}
+		catch (IOException e) {
+			ScriptManager.log.warn(
+				SafeResourceLoader.getString("FILE_READ_ERROR",
+					ScriptManager.getResourceBundle()),
+				script.getAbsolutePath());
+			return false;
+		}
+		return ScriptManager.runScript(stream);
+	}
+
+	/**
+	 * Execute a script as as string.
+	 *
+	 * @param script The script to execute.
+	 * @return Whether we successfully parsed and started to run the script.
+	 */
+	public static boolean runScript(@NonNull String script) {
+		CharStream stream = CharStreams.fromString(script);
+		return ScriptManager.runScript(stream);
 	}
 
 	/**
