@@ -88,6 +88,46 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the unary arithmetic increment and decrement expressions.
+	 */
+	@Test
+	void testArithmeticUnary() {
+		final String[] validChar = {"a"};
+		final String[] invalidChar =
+			{"'x'", "TEST_getChar()", "\"test\"", "null", "true"};
+
+		final String[] validInt = {"a", "b"};
+		final String[] invalidInt = {"1", "-2", "'a'", "1 + 2", "TEST_getInt()",
+			"\"test\"", "null", "true"};
+
+		final String[] validDouble = {"a", "b", "c"};
+		final String[] invalidDouble = {"1", "-2", "'a'", "4.1", "-4.1",
+			"1 + 2", "(9 % 5)", "TEST_getDouble()", "\"test\"", "null", "true"};
+
+		final String[] operators = {"--", "++"};
+		for (String operator : operators) {
+			this.testUnaryOperator("char a; char x = " + operator + "(%s);",
+				validChar, invalidChar);
+			this.testUnaryOperator("char a; char x = (%s)" + operator + ";",
+				validChar, invalidChar);
+
+			this.testUnaryOperator(
+				"char a; int b; int x = " + operator + "(%s);", validInt,
+				invalidInt);
+			this.testUnaryOperator(
+				"char a; int b; int x = (%s)" + operator + ";", validInt,
+				invalidInt);
+
+			this.testUnaryOperator(
+				"char a; int b; double c; double x = " + operator + "(%s);",
+				validDouble, invalidDouble);
+			this.testUnaryOperator(
+				"char a; int b; double c; double x = (%s)" + operator + ";",
+				validDouble, invalidDouble);
+		}
+	}
+
+	/**
 	 * Check exhaustive type casting with an arbitrary binary operator.
 	 *
 	 * @param format What to pass in to the string formatter to insert two

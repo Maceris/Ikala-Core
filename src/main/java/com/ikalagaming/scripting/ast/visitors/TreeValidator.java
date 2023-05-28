@@ -5,9 +5,6 @@ import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.Break;
 import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.CompilationUnit;
-import com.ikalagaming.scripting.ast.ConstChar;
-import com.ikalagaming.scripting.ast.ConstDouble;
-import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.Continue;
 import com.ikalagaming.scripting.ast.DoWhile;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
@@ -316,9 +313,25 @@ public class TreeValidator implements ASTVisitor {
 				this.hasAtLeastTwoChildren(node);
 				break;
 			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-				if (firstChild instanceof ConstChar
-					|| firstChild instanceof ConstDouble
-					|| firstChild instanceof ConstInt) {
+				if (firstChild instanceof Identifier id
+					&& id.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
+					// Fine
+				}
+				else if (firstChild instanceof ExprArithmetic arith) {
+					switch (arith.getOperator()) {
+						case SUB, ADD, DIV, MUL, MOD:
+							TreeValidator.log.warn(
+								SafeResourceLoader.getString("INVALID_OPERATOR",
+									ScriptManager.getResourceBundle()),
+								node.getOperator().toString(),
+								firstChild.getClass().getSimpleName());
+							this.valid = false;
+							break;
+						case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+						default:
+					}
+				}
+				else {
 					TreeValidator.log.warn(
 						SafeResourceLoader.getString("INVALID_OPERATOR",
 							ScriptManager.getResourceBundle()),
