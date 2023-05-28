@@ -1267,6 +1267,35 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the arithmetic expressions.
+	 */
+	@Test
+	void testArithmetic() {
+		final String[] validChar = {"'a'", "'x'", "TEST_getChar()", "a"};
+
+		final String[] validInt =
+			{"1", "-2", "'a'", "1 + 2", "TEST_getInt()", "a", "b"};
+
+		final String[] validDouble = {"1", "-2", "'a'", "4.1", "-4.1", "1 + 2",
+			"(9 % 5)", "TEST_getDouble()", "a", "b", "c"};
+
+		final String[] invalid = {"\"test\"", "null", "true"};
+
+		final String[] operators = {"+", "-", "*", "/", "%%"};
+
+		for (String operator : operators) {
+			this.testBinaryOperator("char a; char x = %s " + operator + " %s;",
+				validChar, invalid);
+			this.testBinaryOperator(
+				"char a; int b; int x = %s " + operator + " %s;", validInt,
+				invalid);
+			this.testBinaryOperator(
+				"char a; int b; double c; double x = %s " + operator + " %s;",
+				validDouble, invalid);
+		}
+	}
+
+	/**
 	 * Check string assignments.
 	 */
 	@Test

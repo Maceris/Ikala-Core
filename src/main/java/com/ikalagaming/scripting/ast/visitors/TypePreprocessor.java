@@ -55,8 +55,10 @@ public class TypePreprocessor implements ASTVisitor {
 			return;
 		}
 		// invalid types
-		if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)
-			|| secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID)) {
+		if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID,
+			Base.STRING)
+			|| secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID,
+				Base.STRING)) {
 			TypePreprocessor.log.warn(
 				SafeResourceLoader.getString("INVALID_TYPES",
 					ScriptManager.getResourceBundle()),
@@ -89,41 +91,6 @@ public class TypePreprocessor implements ASTVisitor {
 			return;
 		}
 		if (secondType.anyOf(Base.INT) && firstType.anyOf(Base.CHAR)) {
-			node.setType(secondType);
-			return;
-		}
-		TypePreprocessor.log.warn(
-			SafeResourceLoader.getString("INVALID_CAST",
-				ScriptManager.getResourceBundle()),
-			firstType.toString(), secondType.toString());
-		node.setType(Type.voidType());
-	}
-
-	/**
-	 * Calculate the types for modulus.
-	 *
-	 * @param node The node we are processing.
-	 * @param firstType The type of the left node.
-	 * @param secondType The type of the right node.
-	 */
-	private void calculateModulusType(ExprArithmetic node, final Type firstType,
-		final Type secondType) {
-		if (node.getChildren().size() < 2) {
-			TypePreprocessor.log
-				.warn(SafeResourceLoader.getString("MISSING_SECOND_CHILD",
-					ScriptManager.getResourceBundle()), this.toString());
-			node.setType(Type.voidType());
-			return;
-		}
-		if ((firstType.anyOf(Base.INT) && secondType.anyOf(Base.INT, Base.CHAR))
-			|| (firstType.anyOf(Base.DOUBLE)
-				&& secondType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR))
-			|| (firstType.anyOf(Base.CHAR) && secondType.anyOf(Base.CHAR))) {
-			node.setType(firstType);
-			return;
-		}
-		if (firstType.anyOf(Base.INT, Base.DOUBLE, Base.CHAR)
-			&& secondType.anyOf(Base.DOUBLE)) {
 			node.setType(secondType);
 			return;
 		}
@@ -276,7 +243,7 @@ public class TypePreprocessor implements ASTVisitor {
 					return;
 				}
 				// fallthrough
-			case SUB:
+			case SUB, MOD:
 				this.calculateFourFunctionType(node, firstType, secondType);
 				break;
 			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
@@ -291,9 +258,6 @@ public class TypePreprocessor implements ASTVisitor {
 						node.getOperator().toString(), firstType.toString());
 					node.setType(Type.voidType());
 				}
-				break;
-			case MOD:
-				this.calculateModulusType(node, firstType, secondType);
 				break;
 			default:
 				TypePreprocessor.log.warn(
