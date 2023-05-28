@@ -47,6 +47,47 @@ class TestValidator {
 	}
 
 	/**
+	 * Test the arithmetic expressions.
+	 */
+	@Test
+	void testArithmetic() {
+		final String[] validChar = {"'a'", "'x'", "TEST_getChar()", "a"};
+
+		final String[] validInt =
+			{"1", "-2", "'a'", "1 + 2", "TEST_getInt()", "a", "b"};
+
+		final String[] validDouble = {"1", "-2", "'a'", "4.1", "-4.1", "1 + 2",
+			"(9 % 5)", "TEST_getDouble()", "a", "b", "c"};
+
+		final String[] invalid = {"\"test\"", "null", "true"};
+
+		final String[] operators = {"+", "-", "*", "/", "%%"};
+
+		for (String operator : operators) {
+			this.testBinaryOperator("char a; char x = %s " + operator + " %s;",
+				validChar, invalid);
+			this.testBinaryOperator(
+				"char a; int b; int x = %s " + operator + " %s;", validInt,
+				invalid);
+			this.testBinaryOperator(
+				"char a; int b; double c; double x = %s " + operator + " %s;",
+				validDouble, invalid);
+		}
+
+		final String[] prefix = {"-", "+"};
+		for (String operator : prefix) {
+			this.testUnaryOperator("char a; char x = " + operator + "(%s);",
+				validChar, invalid);
+			this.testUnaryOperator(
+				"char a; int b; int x = " + operator + "(%s);", validInt,
+				invalid);
+			this.testUnaryOperator(
+				"char a; int b; double c; double x = " + operator + "(%s);",
+				validDouble, invalid);
+		}
+	}
+
+	/**
 	 * Check exhaustive type casting with an arbitrary binary operator.
 	 *
 	 * @param format What to pass in to the string formatter to insert two
@@ -82,9 +123,9 @@ class TestValidator {
 		// Both invalid
 		for (String left : invalid) {
 			for (String right : invalid) {
-				final String first = String.format(format, left, right);
-				Assertions.assertFalse(this.validateProgram(first),
-					String.format("We should not be able to do %s", first));
+				final String program = String.format(format, left, right);
+				Assertions.assertFalse(this.validateProgram(program),
+					String.format("We should not be able to do %s", program));
 			}
 		}
 	}
@@ -423,6 +464,9 @@ class TestValidator {
 
 		final String formatAnd = "boolean x = %s && %s;";
 		this.testBinaryOperator(formatAnd, valid, invalid);
+
+		final String formatNot = "boolean x = !%s;";
+		this.testUnaryOperator(formatNot, valid, invalid);
 	}
 
 	/**
@@ -1267,35 +1311,6 @@ class TestValidator {
 	}
 
 	/**
-	 * Test the arithmetic expressions.
-	 */
-	@Test
-	void testArithmetic() {
-		final String[] validChar = {"'a'", "'x'", "TEST_getChar()", "a"};
-
-		final String[] validInt =
-			{"1", "-2", "'a'", "1 + 2", "TEST_getInt()", "a", "b"};
-
-		final String[] validDouble = {"1", "-2", "'a'", "4.1", "-4.1", "1 + 2",
-			"(9 % 5)", "TEST_getDouble()", "a", "b", "c"};
-
-		final String[] invalid = {"\"test\"", "null", "true"};
-
-		final String[] operators = {"+", "-", "*", "/", "%%"};
-
-		for (String operator : operators) {
-			this.testBinaryOperator("char a; char x = %s " + operator + " %s;",
-				validChar, invalid);
-			this.testBinaryOperator(
-				"char a; int b; int x = %s " + operator + " %s;", validInt,
-				invalid);
-			this.testBinaryOperator(
-				"char a; int b; double c; double x = %s " + operator + " %s;",
-				validDouble, invalid);
-		}
-	}
-
-	/**
 	 * Check string assignments.
 	 */
 	@Test
@@ -1606,6 +1621,29 @@ class TestValidator {
 		final String[] stringNegative = {"true", "'b'", "1", "3.0"};
 		this.testTernary("string", stringPositive, stringNegative);
 
+	}
+
+	/**
+	 * Check exhaustive type casting with an arbitrary unary operator.
+	 *
+	 * @param format What to pass in to the string formatter to insert one
+	 *            string value.
+	 * @param valid Values that are valid for that type.
+	 * @param invalid Values that are invalid for that type.
+	 */
+	private void testUnaryOperator(@NonNull String format,
+		@NonNull String[] valid, @NonNull String[] invalid) {
+		for (String left : valid) {
+			final String program = String.format(format, left);
+			Assertions.assertTrue(this.validateProgram(program),
+				String.format("We should be able to do %s", program));
+		}
+
+		for (String left : invalid) {
+			final String program = String.format(format, left);
+			Assertions.assertFalse(this.validateProgram(program),
+				String.format("We should not be able to do %s", program));
+		}
 	}
 
 	/**
