@@ -116,6 +116,23 @@ public class OptimizationPass implements ASTVisitor {
 		final Node firstChild = node.getChildren().get(0);
 		final Node secondChild = node.getChildren().get(1);
 
+		// Implicit casts
+		if (!firstChild.getType().getBase().equals(node.getType().getBase())) {
+			Cast cast = new Cast();
+			cast.setType(node.getType());
+			cast.addChild(firstChild);
+			node.getChildren().set(0, cast);
+			return node;
+		}
+		if (!secondChild.getType().getBase().equals(node.getType().getBase())) {
+			Cast cast = new Cast();
+			cast.setType(node.getType());
+			cast.addChild(secondChild);
+			node.getChildren().set(1, cast);
+			return node;
+		}
+
+		// Constant optimizations
 		if (firstChild.getType().anyOf(Base.UNKNOWN)
 			|| secondChild.getType().anyOf(Base.UNKNOWN)
 			|| !((firstChild instanceof ConstInt

@@ -42,7 +42,7 @@ public class ExprArithmetic extends Node {
 		/**
 		 * Modulus, or remainder, of dividing the first number by the second.
 		 */
-		MOD("%"),
+		MOD("%%"),
 		/**
 		 * A unary prefix increment.
 		 */
