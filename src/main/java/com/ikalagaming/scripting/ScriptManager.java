@@ -88,6 +88,32 @@ public class ScriptManager {
 	}
 
 	/**
+	 * Halt the given script execution without a specific tag.
+	 *
+	 * This is intended to be called internally by the script runtime itself.
+	 *
+	 * @param runtime The runtime that is supposed to halt.
+	 * @see #resume()
+	 */
+	public static void halt(@NonNull ScriptRuntime runtime) {
+		ScriptManager.runner.requestHalt(runtime);
+	}
+
+	/**
+	 * Halt the given script execution using the supplied tag.
+	 *
+	 * This is intended to be called internally by the script runtime itself.
+	 *
+	 * @param runtime The runtime that is supposed to halt.
+	 * @param tag The tag that will be used to resume the script.
+	 * @see #resume(String)
+	 */
+	public static void halt(@NonNull ScriptRuntime runtime,
+		@NonNull String tag) {
+		ScriptManager.runner.requestHalt(runtime, tag);
+	}
+
+	/**
 	 * Register a class with the script engine, making all of its methods
 	 * available for use. If the class is already registered, this will not do
 	 * anything. <br>
@@ -121,9 +147,28 @@ public class ScriptManager {
 	}
 
 	/**
+	 * Resume any scripts that were halted without a specific tag.
+	 *
+	 * @see #halt(ScriptRuntime)
+	 */
+	public static void resume() {
+		ScriptManager.runner.requestResume();
+	}
+
+	/**
+	 * Resume any scripts that were halted using the supplied tag.
+	 *
+	 * @param tag The tag to resume.
+	 * @see #halt(ScriptRuntime, String)
+	 */
+	public static void resume(@NonNull String tag) {
+		ScriptManager.runner.requestResume(tag);
+	}
+
+	/**
 	 * Actually run the script. Will start up a new thread if one does not
 	 * exist.
-	 * 
+	 *
 	 * @param stream The stream to pass to the lexer.
 	 * @return Whether we actually got back a program.
 	 */
