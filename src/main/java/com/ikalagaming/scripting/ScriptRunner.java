@@ -214,8 +214,9 @@ class ScriptRunner extends Thread {
 			}
 			catch (Exception e) {
 				script.halt();
-				ScriptRunner.log.warn(SafeResourceLoader.getString(
-					"EXCEPTION_IN_RUNTIME", ScriptManager.getResourceBundle()));
+				ScriptRunner.log
+					.warn(SafeResourceLoader.getString("EXCEPTION_IN_RUNTIME",
+						ScriptManager.getResourceBundle()), e);
 			}
 		}
 		this.scripts.removeIf(ScriptRuntime::hasTerminated);
