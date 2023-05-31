@@ -40,7 +40,7 @@ class ScriptRunner extends Thread {
 	/**
 	 * Tracks requests to halt scripts.
 	 */
-	private Map<ScriptRuntime, String> haltRequests;
+	private Map<ScriptRuntime, String> yieldRequests;
 
 	/**
 	 * Tracks requests to resume scripts.
@@ -53,7 +53,6 @@ class ScriptRunner extends Thread {
 	private Map<ScriptRuntime, String> haltedScripts;
 
 	private boolean running;
-	private boolean hasScripts;
 
 	/**
 	 * Used to handle synchronization and waiting for events
@@ -66,10 +65,9 @@ class ScriptRunner extends Thread {
 	public ScriptRunner() {
 		this.setName("ScriptRunner");
 		this.scripts = new ArrayList<>();
-		this.haltRequests = Collections.synchronizedMap(new HashMap<>());
+		this.yieldRequests = Collections.synchronizedMap(new HashMap<>());
 		this.resumeRequests = Collections.synchronizedList(new ArrayList<>());
 		this.haltedScripts = new HashMap<>();
-		this.hasScripts = false;
 		this.running = true;
 		this.syncObject = new Object();
 	}
@@ -79,40 +77,11 @@ class ScriptRunner extends Thread {
 	 */
 	@Synchronized
 	private void haltScripts() {
-		for (var entry : haltRequests.entrySet()) {
+		for (var entry : yieldRequests.entrySet()) {
 			this.haltedScripts.put(entry.getKey(), entry.getValue());
 			this.scripts.remove(entry.getKey());
 		}
-		if (this.scripts.isEmpty()) {
-			this.hasScripts = false;
-		}
-	}
-
-	/**
-	 * Request that we halt the given script without a tag. These will be
-	 * resumed by {@link #requestResume()}.
-	 *
-	 * @param runtime The runtime to halt.
-	 * @see #requestHalt(ScriptRuntime, String)
-	 * @see #requestResume()
-	 */
-	@Synchronized
-	public void requestHalt(@NonNull ScriptRuntime runtime) {
-		this.haltRequests.put(runtime, ScriptRunner.DEFAULT_TAG);
-	}
-
-	/**
-	 * Request that we halt the given script, we resume using the same tag.
-	 *
-	 * @param runtime The runtime to halt.
-	 * @param tag The tag that will be used to resume.
-	 * @see #requestHalt(ScriptRuntime)
-	 * @see #requestResume(String)
-	 */
-	@Synchronized
-	public void requestHalt(@NonNull ScriptRuntime runtime,
-		@NonNull String tag) {
-		this.haltRequests.put(runtime, tag);
+		this.yieldRequests.clear();
 	}
 
 	/**
@@ -121,6 +90,7 @@ class ScriptRunner extends Thread {
 	@Synchronized
 	public void requestResume() {
 		this.resumeRequests.add(ScriptRunner.DEFAULT_TAG);
+		this.wakeUp();
 	}
 
 	/**
@@ -131,6 +101,34 @@ class ScriptRunner extends Thread {
 	@Synchronized
 	public void requestResume(@NonNull String tag) {
 		this.resumeRequests.add(tag);
+		this.wakeUp();
+	}
+
+	/**
+	 * Request that we halt the given script without a tag. These will be
+	 * resumed by {@link #requestResume()}.
+	 *
+	 * @param runtime The runtime to halt.
+	 * @see #requestYield(ScriptRuntime, String)
+	 * @see #requestResume()
+	 */
+	@Synchronized
+	public void requestYield(@NonNull ScriptRuntime runtime) {
+		this.yieldRequests.put(runtime, ScriptRunner.DEFAULT_TAG);
+	}
+
+	/**
+	 * Request that we halt the given script, we resume using the same tag.
+	 *
+	 * @param runtime The runtime to halt.
+	 * @param tag The tag that will be used to resume.
+	 * @see #requestYield(ScriptRuntime)
+	 * @see #requestResume(String)
+	 */
+	@Synchronized
+	public void requestYield(@NonNull ScriptRuntime runtime,
+		@NonNull String tag) {
+		this.yieldRequests.put(runtime, tag);
 	}
 
 	/**
@@ -147,10 +145,6 @@ class ScriptRunner extends Thread {
 			toResume.forEach(this.haltedScripts::remove);
 		}
 		this.resumeRequests.clear();
-		if (!this.scripts.isEmpty()) {
-			this.hasScripts = true;
-			this.wakeUp();
-		}
 	}
 
 	/**
@@ -160,7 +154,7 @@ class ScriptRunner extends Thread {
 	@Override
 	public void run() {
 		while (this.running) {
-			while (!this.hasScripts) {
+			while (this.scripts.isEmpty()) {
 				synchronized (this.syncObject) {
 					try {
 						// block this thread until an item is added
@@ -178,8 +172,9 @@ class ScriptRunner extends Thread {
 				if (!this.running) {
 					break;
 				}
+				this.resumeScripts();
 			}
-			if (this.hasScripts) {
+			if (!this.scripts.isEmpty()) {
 				this.stepScripts();
 			}
 			this.haltScripts();
@@ -197,7 +192,6 @@ class ScriptRunner extends Thread {
 	@Synchronized
 	public void runScript(@NonNull ScriptRuntime script) {
 		this.scripts.add(script);
-		this.hasScripts = true;
 		this.wakeUp();
 	}
 
@@ -220,7 +214,6 @@ class ScriptRunner extends Thread {
 			}
 		}
 		this.scripts.removeIf(ScriptRuntime::hasTerminated);
-		this.hasScripts = !this.scripts.isEmpty();
 	}
 
 	/**
@@ -228,7 +221,6 @@ class ScriptRunner extends Thread {
 	 * shutting down the thread.
 	 */
 	public void terminate() {
-		this.hasScripts = false;
 		this.running = false;
 		this.wakeUp();
 	}

@@ -10,6 +10,7 @@ import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.AllPluginsEnabled;
 import com.ikalagaming.plugins.events.PluginCommandSent;
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
@@ -428,6 +429,7 @@ public class Launcher {
 	 * Shut down all the main systems, unloads everything.
 	 */
 	private static void shutdown() {
+		ScriptManager.shutdown();
 		PluginManager.destoryInstance();
 		EventManager.destoryInstance();
 		Launcher.bundle = null;

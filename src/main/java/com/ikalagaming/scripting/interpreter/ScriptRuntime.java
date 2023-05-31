@@ -83,7 +83,6 @@ public class ScriptRuntime {
 	 * @param operation The operation to perform on the two booleans.
 	 */
 	private void boolLogic(Instruction i, BinaryOperator<Boolean> operation) {
-
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
 
@@ -150,6 +149,12 @@ public class ScriptRuntime {
 				return;
 			}
 		}
+
+		if (this.reservedMethods(objectLocation, methodName, numParams,
+			parameters)) {
+			return;
+		}
+
 		if (objectLocation != MemArea.IMMEDIATE) {
 			final MemoryItem first = this.loadValue(i.firstLocation());
 
@@ -178,6 +183,9 @@ public class ScriptRuntime {
 		}
 
 		if (!this.call(options, parameters, object)) {
+			ScriptRuntime.log.warn(SafeResourceLoader
+				.getString("UNKNOWN_METHOD", ScriptManager.getResourceBundle()),
+				methodName);
 			this.halt();
 		}
 	}
@@ -684,7 +692,6 @@ public class ScriptRuntime {
 	 * @param operation The operation to perform on the two numbers.
 	 */
 	private void doubleMath(Instruction i, DoubleBinaryOperator operation) {
-
 		final MemLocation firstLocation = i.firstLocation();
 		final MemLocation secondLocation = i.secondLocation();
 
@@ -1191,6 +1198,42 @@ public class ScriptRuntime {
 		MemoryItem result = new MemoryItem(Boolean.class, !value);
 
 		this.storeValue(result, i.targetLocation());
+	}
+
+	/**
+	 * Check for reserved methods that require special handling.
+	 *
+	 * @param objectLocation The memory area that the object we might be calling
+	 *            methods on is located.
+	 * @param methodName The name of the method.
+	 * @param numParams The number of parameters.
+	 * @param parameters The actual list of parameters to be passed.
+	 * @return Whether we should stop executing methods. False if we didn't
+	 *         match a reserved method and should keep looking.
+	 */
+	private boolean reservedMethods(final MemArea objectLocation,
+		final String methodName, final int numParams,
+		List<MemoryItem> parameters) {
+		if (objectLocation == MemArea.IMMEDIATE && methodName.equals("yield")
+			&& numParams < 2) {
+			// Reserved method name
+			if (numParams == 1) {
+				Object tag = parameters.get(0).value();
+				if (!(tag instanceof String)) {
+					ScriptRuntime.log
+						.warn(SafeResourceLoader.getString("YIELD_PARAMETER",
+							ScriptManager.getResourceBundle()), methodName);
+					this.halt();
+					return true;
+				}
+				ScriptManager.yieldScript(this, (String) tag);
+			}
+			else {
+				ScriptManager.yieldScript(this);
+			}
+			return true;
+		}
+		return false;
 	}
 
 	/**

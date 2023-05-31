@@ -88,32 +88,6 @@ public class ScriptManager {
 	}
 
 	/**
-	 * Halt the given script execution without a specific tag.
-	 *
-	 * This is intended to be called internally by the script runtime itself.
-	 *
-	 * @param runtime The runtime that is supposed to halt.
-	 * @see #resume()
-	 */
-	public static void halt(@NonNull ScriptRuntime runtime) {
-		ScriptManager.runner.requestHalt(runtime);
-	}
-
-	/**
-	 * Halt the given script execution using the supplied tag.
-	 *
-	 * This is intended to be called internally by the script runtime itself.
-	 *
-	 * @param runtime The runtime that is supposed to halt.
-	 * @param tag The tag that will be used to resume the script.
-	 * @see #resume(String)
-	 */
-	public static void halt(@NonNull ScriptRuntime runtime,
-		@NonNull String tag) {
-		ScriptManager.runner.requestHalt(runtime, tag);
-	}
-
-	/**
 	 * Register a class with the script engine, making all of its methods
 	 * available for use. If the class is already registered, this will not do
 	 * anything. <br>
@@ -149,7 +123,7 @@ public class ScriptManager {
 	/**
 	 * Resume any scripts that were halted without a specific tag.
 	 *
-	 * @see #halt(ScriptRuntime)
+	 * @see #yieldScript(ScriptRuntime)
 	 */
 	public static void resume() {
 		ScriptManager.runner.requestResume();
@@ -159,7 +133,7 @@ public class ScriptManager {
 	 * Resume any scripts that were halted using the supplied tag.
 	 *
 	 * @param tag The tag to resume.
-	 * @see #halt(ScriptRuntime, String)
+	 * @see #yieldScript(ScriptRuntime, String)
 	 */
 	public static void resume(@NonNull String tag) {
 		ScriptManager.runner.requestResume(tag);
@@ -177,7 +151,6 @@ public class ScriptManager {
 		if (ScriptManager.runner == null) {
 			ScriptManager.runner = new ScriptRunner();
 			ScriptManager.runner.start();
-
 		}
 		Optional<ScriptRuntime> maybeScript = IkalaScriptCompiler.parse(stream);
 		if (maybeScript.isEmpty()) {
@@ -225,6 +198,16 @@ public class ScriptManager {
 	}
 
 	/**
+	 * Stop executing scripts, shut down the runner thread. This should be
+	 * called while the program is shutting down.
+	 */
+	public static void shutdown() {
+		if (ScriptManager.runner != null) {
+			ScriptManager.runner.terminate();
+		}
+	}
+
+	/**
 	 * Unregister a class from the script engine. <br>
 	 * If the class is not registered, this will not do anything.
 	 *
@@ -238,6 +221,32 @@ public class ScriptManager {
 		ScriptManager.classMethods.get(clazz.getSimpleName())
 			.forEach(ScriptManager.registeredMethods::remove);
 		ScriptManager.classMethods.remove(clazz.getSimpleName());
+	}
+
+	/**
+	 * Yield the given script execution without a specific tag.
+	 *
+	 * This is intended to be called internally by the script runtime itself.
+	 *
+	 * @param runtime The runtime that is supposed to halt.
+	 * @see #resume()
+	 */
+	public static void yieldScript(@NonNull ScriptRuntime runtime) {
+		ScriptManager.runner.requestYield(runtime);
+	}
+
+	/**
+	 * Yield the given script execution using the supplied tag.
+	 *
+	 * This is intended to be called internally by the script runtime itself.
+	 *
+	 * @param runtime The runtime that is supposed to halt.
+	 * @param tag The tag that will be used to resume the script.
+	 * @see #resume(String)
+	 */
+	public static void yieldScript(@NonNull ScriptRuntime runtime,
+		@NonNull String tag) {
+		ScriptManager.runner.requestYield(runtime, tag);
 	}
 
 	/**
