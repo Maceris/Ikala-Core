@@ -294,6 +294,7 @@ public class Launcher {
 				input = br.readLine();
 			}
 			catch (InterruptedException | IOException e) {
+				Thread.currentThread().interrupt();
 				return;
 			}
 			PluginCommandSent event;
@@ -420,7 +421,11 @@ public class Launcher {
 			PluginFolder.createFolder(plugin);
 			for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType
 				.values()) {
-				PluginFolder.createResourceFolder(plugin, resourceType);
+				if (!PluginFolder.createResourceFolder(plugin, resourceType)) {
+					log.warn(SafeResourceLoader.getStringFormatted(
+						"ERROR_CREATE_RESOURCE_FOLDER", Launcher.bundle,
+						resourceType.name()));
+				}
 			}
 		}
 	}

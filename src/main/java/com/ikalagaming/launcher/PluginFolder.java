@@ -62,8 +62,9 @@ public class PluginFolder {
 	 *
 	 * @param pluginName The name of the plugin we are creating for.
 	 * @param type The type of resource we want a folder for.
+	 * @return Whether we succeeded in creating the folder.
 	 */
-	public static void createResourceFolder(@NonNull final String pluginName,
+	public static boolean createResourceFolder(@NonNull final String pluginName,
 		@NonNull ResourceType type) {
 		PluginFolder.createFolder(pluginName);
 		// should start with File.separator
@@ -83,7 +84,7 @@ public class PluginFolder {
 				break;
 		}
 
-		FileUtils.createFolder(
+		return FileUtils.createFolder(
 			PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,
 			pluginName + folderName);
 	}
