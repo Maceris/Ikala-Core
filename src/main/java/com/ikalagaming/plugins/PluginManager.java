@@ -576,7 +576,7 @@ public class PluginManager {
 	 * @return an optional containing the plugin info, or an empty optional on
 	 *         failure.
 	 */
-	public Optional<PluginInfo> extractPluginInfo(@NonNull final File jar) {
+	protected Optional<PluginInfo> extractPluginInfo(@NonNull final File jar) {
 		ZipEntry config;
 
 		final String fileName = jar.getName();
