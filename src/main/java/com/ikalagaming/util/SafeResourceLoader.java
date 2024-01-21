@@ -3,6 +3,7 @@ package com.ikalagaming.util;
 import com.ikalagaming.localization.Localization;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.helpers.MessageFormatter;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,9 +22,7 @@ import java.util.ResourceBundle;
 public class SafeResourceLoader {
 
 	/**
-	 * The arguments are used to replace any "{}" in the string, intended only
-	 * for use in creating messages for exceptions. Strings for logging should
-	 * not use this method, as it is inefficient.
+	 * The arguments are used to replace any "{}" in the string.
 	 * 
 	 * Intended for when we need to log a string, and also throw an exception
 	 * with the same message.
@@ -34,11 +33,7 @@ public class SafeResourceLoader {
 	 * @see #getStringFormatted(String, ResourceBundle, String...)
 	 */
 	public static String format(String message, String... args) {
-		String temp = message;
-		for (String arg : args) {
-			temp = temp.replaceFirst("\\{\\}", arg);
-		}
-		return temp;
+		return MessageFormatter.arrayFormat(message, args).getMessage();
 	}
 
 	/**
@@ -200,13 +195,13 @@ public class SafeResourceLoader {
 	}
 
 	private static void logClassCastException(String name, String bundle) {
-		SafeResourceLoader.log.warn("The " + name + " key from the " + bundle
-			+ " bundle is not a string ");
+		SafeResourceLoader.log.warn(
+			"The {} key from the {} bundle is not a string", name, bundle);
 	}
 
 	private static void logMissingResource(String name, String bundle) {
-		SafeResourceLoader.log.warn(
-			"Missing the " + name + " key from the " + bundle + " bundle");
+		SafeResourceLoader.log.warn("Missing the {} key from the {} bundle",
+			name, bundle);
 	}
 
 	/**
