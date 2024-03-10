@@ -10,12 +10,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Tests for the Plugin Manager.
@@ -23,13 +33,13 @@ import java.util.stream.Collectors;
  * @author Ches Burks
  *
  */
-public class TestPluginManager {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class TestPluginManager {
 
-	/**
-	 * Tracks the callback method being hit.
-	 */
-	private boolean callbackExecuted = false;
-	private Object callbackSync = new Object();
+	@Mock
+	private EventManager eventManager;
+	private PluginManager pluginManager;
 
 	/**
 	 * The resources folder where the test jars are located.
@@ -61,65 +71,40 @@ public class TestPluginManager {
 	 * Tear down after each test, shutting down the framework.
 	 */
 	@AfterEach
-	public void afterTest() {
+	void afterTest() {
 		PluginManager.destoryInstance();
-		EventManager.destoryInstance();
 	}
 
 	/**
 	 * Set up before each test, initializing the framework.
 	 */
 	@BeforeEach
-	public void beforeTest() {
-		EventManager.getInstance();
-		PluginManager.getInstance();
-	}
-
-	/**
-	 * A method that records itself being called.
-	 *
-	 * @param args Ignored.
-	 */
-	public void commandCallback(String args[]) {
-		synchronized (this.callbackSync) {
-			this.callbackExecuted = true;
-		}
-	}
-
-	/**
-	 * Used to check if {@link #commandCallback(String[])} was executed.
-	 *
-	 * @return True if the callback was run, false if not.
-	 */
-	private boolean isCallbackExecuted() {
-		synchronized (this.callbackSync) {
-			return this.callbackExecuted;
-		}
+	void beforeTest() {
+		pluginManager = PluginManager.getInstance(eventManager);
 	}
 
 	/**
 	 * Clears all plugin commands and checks that they're gone.
 	 */
 	@Test
-	public void testCommandClearing() {
-		PluginManager manager = PluginManager.getInstance();
-
+	void testCommandClearing() {
 		List<String> commands = Arrays
 			.asList("COMMAND_ENABLE", "COMMAND_DISABLE", "COMMAND_DISABLE",
 				"COMMAND_LOAD", "COMMAND_UNLOAD", "COMMAND_RELOAD",
 				"COMMAND_LIST_PLUGINS", "COMMAND_HELP")
-			.stream().map(cmd -> SafeResourceLoader.getString(cmd,
-				manager.getResourceBundle()))
+			.stream()
+			.map(cmd -> SafeResourceLoader.getString(cmd,
+				pluginManager.getResourceBundle()))
 			.collect(Collectors.toList());
 
-		Assertions
-			.assertTrue(commands.stream().map(manager::isCommandRegistered)
+		Assertions.assertTrue(
+			commands.stream().map(pluginManager::isCommandRegistered)
 				.allMatch(value -> true == value));
 
-		manager.clearCommands();
+		pluginManager.clearCommands();
 
-		Assertions
-			.assertTrue(commands.stream().map(manager::isCommandRegistered)
+		Assertions.assertTrue(
+			commands.stream().map(pluginManager::isCommandRegistered)
 				.allMatch(value -> false == value));
 	}
 
@@ -127,29 +112,19 @@ public class TestPluginManager {
 	 * Test that command registration and unregistration works.
 	 */
 	@Test
-	public void testCommandRegistration() {
-		PluginManager manager = PluginManager.getInstance();
-		final String COMMAND = "TestCommand";
+	void testCommandRegistration() {
+		final String commandName = "TestCommand";
 
-		manager.registerCommand(COMMAND, this::commandCallback, "UnitTests");
-		Assertions.assertTrue(manager.isCommandRegistered(COMMAND));
+		Consumer<List<String>> callback = foo -> {
+		};
 
-		new PluginCommandSent(COMMAND).fire();
+		pluginManager.registerCommand(commandName, callback, "UnitTests");
 
-		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
-			.until(this::isCallbackExecuted);
-		manager.unregisterCommand(COMMAND);
-		synchronized (this.callbackSync) {
-			this.callbackExecuted = false;
-		}
+		Assertions.assertTrue(pluginManager.isCommandRegistered(commandName));
 
-		EventAssert.listenFor(PluginCommandSent.class);
-		new PluginCommandSent(COMMAND).fire();
+		pluginManager.unregisterCommand(commandName);
 
-		Awaitility.await().atMost(1000, TimeUnit.MILLISECONDS)
-			.until(() -> EventAssert.wasFired(PluginCommandSent.class));
-
-		Assertions.assertFalse(this.callbackExecuted);
+		Assertions.assertFalse(pluginManager.isCommandRegistered(commandName));
 	}
 
 	/**
@@ -157,39 +132,45 @@ public class TestPluginManager {
 	 * plugin.
 	 */
 	@Test
-	public void testLifecycle() {
-		PluginManager manager = PluginManager.getInstance();
+	void testLifecycle() {
 		final String pluginName = "TestStandalone";
 
-		manager.setEnableOnLoad(false);
-		Assertions.assertFalse(manager.isEnableOnLoad());
+		pluginManager.setEnableOnLoad(false);
+		Assertions.assertFalse(pluginManager.isEnableOnLoad());
 
-		Assertions
-			.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+		Assertions.assertTrue(
+			pluginManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
 
 		String loadedMessage =
 			String.format("Plugin '%s' should be loaded.", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), loadedMessage);
+		Assertions.assertTrue(pluginManager.isLoaded(pluginName),
+			loadedMessage);
 
-		Assertions.assertTrue(manager.enable(pluginName));
+		Assertions.assertTrue(pluginManager.enable(pluginName));
 
 		String enabledMessage =
 			String.format("Plugin '%s' should be enabled", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), loadedMessage);
-		Assertions.assertTrue(manager.isEnabled(pluginName), enabledMessage);
+		Assertions.assertTrue(pluginManager.isLoaded(pluginName),
+			loadedMessage);
+		Assertions.assertTrue(pluginManager.isEnabled(pluginName),
+			enabledMessage);
 
-		Assertions.assertTrue(manager.disable(pluginName));
+		Assertions.assertTrue(pluginManager.disable(pluginName));
 
 		String disabledMessage =
 			String.format("Plugin '%s' should not be enabled", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), loadedMessage);
-		Assertions.assertFalse(manager.isEnabled(pluginName), disabledMessage);
+		Assertions.assertTrue(pluginManager.isLoaded(pluginName),
+			loadedMessage);
+		Assertions.assertFalse(pluginManager.isEnabled(pluginName),
+			disabledMessage);
 
 		String unloadedMessage =
 			String.format("Plugin '%s' should not be loaded.", pluginName);
-		Assertions.assertTrue(manager.unloadPlugin(pluginName));
-		Assertions.assertFalse(manager.isLoaded(pluginName), unloadedMessage);
-		Assertions.assertFalse(manager.isEnabled(pluginName), disabledMessage);
+		Assertions.assertTrue(pluginManager.unloadPlugin(pluginName));
+		Assertions.assertFalse(pluginManager.isLoaded(pluginName),
+			unloadedMessage);
+		Assertions.assertFalse(pluginManager.isEnabled(pluginName),
+			disabledMessage);
 	}
 
 	/**
@@ -198,28 +179,29 @@ public class TestPluginManager {
 	 * location that unit tests don't support.
 	 */
 	@Test
-	public void testLifecycleCommands() {
-		PluginManager manager = PluginManager.getInstance();
+	void testLifecycleCommands() {
 		final String pluginName = "TestStandalone";
 
-		manager.setEnableOnLoad(false);
+		var realManager = new PluginManager(EventManager.getInstance());
+
+		realManager.setEnableOnLoad(false);
 
 		String enable = SafeResourceLoader.getString("COMMAND_ENABLE",
-			manager.getResourceBundle());
+			realManager.getResourceBundle());
 		String disable = SafeResourceLoader.getString("COMMAND_DISABLE",
-			manager.getResourceBundle());
+			realManager.getResourceBundle());
 		String unload = SafeResourceLoader.getString("COMMAND_UNLOAD",
-			manager.getResourceBundle());
+			realManager.getResourceBundle());
 
-		final String[] args = {pluginName};
-		Assertions
-			.assertTrue(manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+		final List<String> args = List.of(pluginName);
+		Assertions.assertTrue(
+			realManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
 
 		EventAssert.listenFor(PluginCommandSent.class);
 
 		String loadedMessage =
 			String.format("Plugin '%s' should be loaded.", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), loadedMessage);
+		Assertions.assertTrue(realManager.isLoaded(pluginName), loadedMessage);
 
 		EventAssert.resetFireCount(PluginCommandSent.class);
 		new PluginCommandSent(enable, args).fire();
@@ -228,8 +210,9 @@ public class TestPluginManager {
 
 		String enabledMessage =
 			String.format("Plugin '%s' should be enabled", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), loadedMessage);
-		Assertions.assertTrue(manager.isEnabled(pluginName), enabledMessage);
+		Assertions.assertTrue(realManager.isLoaded(pluginName), loadedMessage);
+		Assertions.assertTrue(realManager.isEnabled(pluginName),
+			enabledMessage);
 
 		EventAssert.resetFireCount(PluginCommandSent.class);
 		new PluginCommandSent(disable, args).fire();
@@ -238,8 +221,9 @@ public class TestPluginManager {
 
 		String disabledMessage =
 			String.format("Plugin '%s' should not be enabled", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), loadedMessage);
-		Assertions.assertFalse(manager.isEnabled(pluginName), disabledMessage);
+		Assertions.assertTrue(realManager.isLoaded(pluginName), loadedMessage);
+		Assertions.assertFalse(realManager.isEnabled(pluginName),
+			disabledMessage);
 
 		EventAssert.resetFireCount(PluginCommandSent.class);
 		new PluginCommandSent(unload, args).fire();
@@ -248,8 +232,11 @@ public class TestPluginManager {
 
 		String unloadedMessage =
 			String.format("Plugin '%s' should not be loaded.", pluginName);
-		Assertions.assertFalse(manager.isLoaded(pluginName), unloadedMessage);
-		Assertions.assertFalse(manager.isEnabled(pluginName), disabledMessage);
+		Assertions.assertFalse(realManager.isLoaded(pluginName),
+			unloadedMessage);
+		Assertions.assertFalse(realManager.isEnabled(pluginName),
+			disabledMessage);
+		EventManager.destoryInstance();
 	}
 
 	/**
@@ -257,20 +244,19 @@ public class TestPluginManager {
 	 * loaded or were skipped correctly.
 	 */
 	@Test
-	public void testLoadingPlugins() {
-		PluginManager manager = PluginManager.getInstance();
-		manager.loadAllPlugins(this.TEST_JAR_FOLDER);
+	void testLoadingPlugins() {
+		pluginManager.loadAllPlugins(this.TEST_JAR_FOLDER);
 
 		for (String name : this.VALID_PLUGINS) {
 			String message =
 				String.format("Plugin '%s' should have been loaded.", name);
-			Assertions.assertTrue(manager.isLoaded(name), message);
+			Assertions.assertTrue(pluginManager.isLoaded(name), message);
 		}
 
 		for (String name : this.INVALID_PLUGINS) {
 			String message =
 				String.format("Plugin '%s' should not have been loaded.", name);
-			Assertions.assertFalse(manager.isLoaded(name), message);
+			Assertions.assertFalse(pluginManager.isLoaded(name), message);
 		}
 	}
 
@@ -278,17 +264,16 @@ public class TestPluginManager {
 	 * Tests the ability to load a set of plugins by name.
 	 */
 	@Test
-	public void testLoadingPluginSubset() {
-		PluginManager manager = PluginManager.getInstance();
+	void testLoadingPluginSubset() {
 		List<String> toLoad = Arrays.asList("TestComplexChainA",
 			"TestComplexChainB", "TestComplexChainC", "TestComplexChainD");
 
-		manager.loadPlugins(this.TEST_JAR_FOLDER, toLoad);
+		pluginManager.loadPlugins(this.TEST_JAR_FOLDER, toLoad);
 
 		for (String name : toLoad) {
 			String message =
 				String.format("Plugin '%s' should have been loaded.", name);
-			Assertions.assertTrue(manager.isLoaded(name), message);
+			Assertions.assertTrue(pluginManager.isLoaded(name), message);
 		}
 	}
 
@@ -296,62 +281,67 @@ public class TestPluginManager {
 	 * Tests that loading a single plugin works.
 	 */
 	@Test
-	public void testLoadPlugin() {
-		PluginManager manager = PluginManager.getInstance();
+	void testLoadPlugin() {
 		final String pluginName = "TestStandalone";
 
-		manager.loadPlugin(this.TEST_JAR_FOLDER, pluginName);
+		pluginManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName);
 
 		String message =
 			String.format("Plugin '%s' should have been loaded.", pluginName);
-		Assertions.assertTrue(manager.isLoaded(pluginName), message);
+		Assertions.assertTrue(pluginManager.isLoaded(pluginName), message);
 	}
 
 	/**
 	 * Test the semantic version comparison.
+	 * 
+	 * @param firstVersion The first version to use in comparison.
+	 * @param secondVersion The second version to use in comparison.
+	 * @param expectedResult How the first version should compare to the second.
 	 */
-	@Test
-	public void testVersionComparison() {
+	@ParameterizedTest
+	@MethodSource("versionProvider")
+	void testVersionComparison(final String firstVersion,
+		final String secondVersion, final VersionComparison expectedResult) {
+
 		// lower versions
-		int compareResult = PluginManager.compareVersions("1.0.0-rc.1+build.1",
-			"1.3.7+build.2.b8f12d7");
-		boolean newer = PluginManager.isNewerVersion("1.0.0-rc.1+build.1",
-			"1.3.7+build.2.b8f12d7");
-		Assertions.assertTrue(compareResult < 0);
-		Assertions.assertFalse(newer);
+		int comparison =
+			PluginManager.compareVersions(firstVersion, secondVersion);
+		boolean newer =
+			PluginManager.isNewerVersion(firstVersion, secondVersion);
 
-		compareResult = PluginManager.compareVersions("2.3.4-rc.1", "2.3.4");
-		newer = PluginManager.isNewerVersion("2.3.4-rc.1", "2.3.4");
-		Assertions.assertTrue(compareResult < 0);
-		Assertions.assertFalse(newer);
+		var resultMatches = switch (expectedResult) {
+			case EQUAL -> comparison == 0;
+			case NEWER -> comparison > 0;
+			case OLDER -> comparison < 0;
+		};
 
-		// equal versions
-		compareResult = PluginManager.compareVersions("3.0.0", "3.0.0");
-		newer = PluginManager.isNewerVersion("3.0.0", "3.0.0");
-		Assertions.assertEquals(0, compareResult);
-		Assertions.assertFalse(newer);
-		compareResult =
-			PluginManager.compareVersions("1.0.0-beta", "1.0.0-beta");
-		newer = PluginManager.isNewerVersion("1.0.0-beta", "1.0.0-beta");
-		Assertions.assertEquals(0, compareResult);
-		Assertions.assertFalse(newer);
-		compareResult = PluginManager.compareVersions("1.0.0-rc.1+build.1",
-			"1.0.0-rc.1+build.2");
-		newer = PluginManager.isNewerVersion("1.0.0-rc.1+build.1",
-			"1.0.0-rc.1+build.2");
-		Assertions.assertEquals(0, compareResult);
-		Assertions.assertFalse(newer);
+		var newerMatches = switch (expectedResult) {
+			case NEWER -> newer;
+			case EQUAL, OLDER -> !newer;
+		};
 
-		// greater versions
-		compareResult = PluginManager.compareVersions("3.0.0", "2.5.3");
-		newer = PluginManager.isNewerVersion("3.0.0", "2.5.3");
-		Assertions.assertTrue(compareResult > 0);
-		Assertions.assertTrue(newer);
-		compareResult = PluginManager.compareVersions("1.3.7+build.2.b8f12d7",
-			"1.0.0-rc.1+build.1");
-		newer = PluginManager.isNewerVersion("1.3.7+build.2.b8f12d7",
-			"1.0.0-rc.1+build.1");
-		Assertions.assertTrue(compareResult > 0);
-		Assertions.assertTrue(newer);
+		Assertions.assertTrue(resultMatches);
+		Assertions.assertTrue(newerMatches);
+
+	}
+
+	private static Stream<Arguments> versionProvider() {
+		return Stream.of(
+			Arguments.of("1.0.0-rc.1+build.1", "1.3.7+build.2.b8f12d7",
+				VersionComparison.OLDER),
+			Arguments.of("2.3.4-rc.1", "2.3.4", VersionComparison.OLDER),
+			Arguments.of("3.0.0", "3.0.0", VersionComparison.EQUAL),
+			Arguments.of("1.0.0-beta", "1.0.0-beta", VersionComparison.EQUAL),
+			Arguments.of("1.0.0-rc.1+build.1", "1.0.0-rc.1+build.2",
+				VersionComparison.EQUAL),
+			Arguments.of("3.0.0", "2.5.3", VersionComparison.NEWER),
+			Arguments.of("1.3.7+build.2.b8f12d7", "1.0.0-rc.1+build.1",
+				VersionComparison.NEWER));
+	}
+
+	private static enum VersionComparison {
+		NEWER,
+		EQUAL,
+		OLDER;
 	}
 }

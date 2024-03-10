@@ -25,7 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -75,7 +74,8 @@ public class PluginManager {
 	 */
 	public static final int compareVersions(final String first,
 		final String second) {
-		return Version.valueOf(first).compareTo(Version.valueOf(second));
+		return Version.parse(first)
+			.compareToIgnoreBuildMetadata(Version.parse(second));
 	}
 
 	/**
@@ -116,6 +116,24 @@ public class PluginManager {
 	}
 
 	/**
+	 * Returns the static instance of the plugin manager. Since there should
+	 * only be one of these, having a static instance is fine and any class can
+	 * get the instance which all other classes should share. If there is no
+	 * instance yet, one will be created.
+	 *
+	 * @param eventManager The event manager to use.
+	 * @return The static instance of the Plugin Manager.
+	 * @see PluginManager#destoryInstance()
+	 */
+	@Synchronized
+	public static PluginManager getInstance(EventManager eventManager) {
+		if (PluginManager.instance == null) {
+			PluginManager.instance = new PluginManager(eventManager);
+		}
+		return PluginManager.instance;
+	}
+
+	/**
 	 * Returns true if the first string is a strictly newer version than the
 	 * second, where both are semantic version strings.
 	 *
@@ -131,7 +149,7 @@ public class PluginManager {
 	 */
 	public static final boolean isNewerVersion(final String toCheck,
 		final String existing) {
-		return Version.valueOf(toCheck).greaterThan(Version.valueOf(existing));
+		return Version.parse(toCheck).isHigherThan(Version.parse(existing));
 	}
 
 	private Object commandLock = new Object();
@@ -139,7 +157,7 @@ public class PluginManager {
 	/**
 	 * A list of all of the commands registered. This list is sorted.
 	 */
-	private ArrayList<PluginCommand> commands;
+	private List<PluginCommand> commands;
 
 	/**
 	 * If the jar is run from command line. If true we do things like storing
@@ -183,7 +201,7 @@ public class PluginManager {
 
 	/**
 	 * The class loader that replaces the threads class loader.
-	 * 
+	 *
 	 * @return The common class loader for plugins.
 	 */
 	@Getter
@@ -208,24 +226,27 @@ public class PluginManager {
 	@Getter
 	private ResourceBundle resourceBundle;
 
+	private EventManager eventManager;
+
 	/**
 	 * Constructs a new {@link PluginManager} and initializes variables.
 	 *
-	 * @param evtManager The event manager to use for the plugin system
+	 * @param eventManager The event manager to use for the plugin system
 	 */
-	public PluginManager(@NonNull EventManager evtManager) {
+	public PluginManager(@NonNull EventManager eventManager) {
 		this.enableOnLoad = true;
 		this.commandLine = false;
+		this.eventManager = eventManager;
 		this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
 		this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
 		this.resourceBundle = ResourceBundle.getBundle(
 			"com.ikalagaming.plugins.PluginManager", Localization.getLocale());
-		this.commandListener = new PluginCommandListener();
+		this.commandListener = new PluginCommandListener(this);
 
 		this.commands = new ArrayList<>();
 
 		this.registerCommands();
-		EventManager.getInstance().registerEventListeners(this.commandListener);
+		this.eventManager.registerEventListeners(this.commandListener);
 
 	}
 
@@ -296,20 +317,20 @@ public class PluginManager {
 		return PluginState.DEPS_SATISFIED;
 	}
 
-	private void cbDisable(String[] args) {
-		if (args.length < 1) {
+	private void callbackDisable(@NonNull List<String> args) {
+		if (args.isEmpty()) {
 			this.alertMissingArgs();
 			return;
 		}
-		this.disable(args[0]);
+		this.disable(args.get(0));
 	}
 
-	private void cbEnable(String[] args) {
-		if (args.length < 1) {
+	private void callbackEnable(@NonNull List<String> args) {
+		if (args.isEmpty()) {
 			this.alertMissingArgs();
 			return;
 		}
-		this.enable(args[0]);
+		this.enable(args.get(0));
 	}
 
 	/**
@@ -317,17 +338,14 @@ public class PluginManager {
 	 *
 	 * @param args Ignored.
 	 */
-	void cbHelp(String[] args) {
+	void callbackHelp(List<String> args) {
 		PluginManager.log.info(
 			SafeResourceLoader.getString("HELP_TEXT", this.resourceBundle));
 
-		int longestCmdLength = 0;
-		for (PluginCommand cmd : this.commands) {
-			int length = cmd.getCommand().length();
-			if (length > longestCmdLength) {
-				longestCmdLength = length;
-			}
-		}
+		int longestCmdLength =
+			this.commands.stream().map(PluginCommand::getCommand)
+				.map(String::length).mapToInt(i -> i).max().orElse(0);
+
 		for (PluginCommand cmd : this.commands) {
 			StringBuilder sb = new StringBuilder();
 			final int padding = longestCmdLength - cmd.getCommand().length();
@@ -345,23 +363,24 @@ public class PluginManager {
 		}
 	}
 
-	private void cbLoad(String[] args) {
-		if (args.length < 1) {
+	private void callbackLoad(@NonNull List<String> args) {
+		if (args.isEmpty()) {
 			this.alertMissingArgs();
 			return;
 		}
 		this.loadPlugins(
 			System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH,
-			Arrays.asList(args));
+			args);
 	}
 
-	private void cbPrintPlugins(@SuppressWarnings("unused") String[] args) {
+	private void
+		callbackPrintPlugins(@SuppressWarnings("unused") List<String> args) {
 		Map<String, Plugin> loadedPlugins = this.getLoadedPlugins();
 
 		ArrayList<String> names = new ArrayList<>(loadedPlugins.keySet());
 		Collections.sort(names);
 
-		for (String name : names) {
+		loadedPlugins.keySet().stream().sorted().forEach(name -> {
 			StringBuilder sb = new StringBuilder();
 			sb.append(name);
 			sb.append(" (");
@@ -372,23 +391,23 @@ public class PluginManager {
 			 * to console and we want command line interaction.
 			 */
 			System.out.println(sb.toString());// NOSONAR
-		}
+		});
 	}
 
-	private void cbReload(String[] args) {
-		if (args.length < 1) {
+	private void callbackReload(@NonNull List<String> args) {
+		if (args.isEmpty()) {
 			this.alertMissingArgs();
 			return;
 		}
-		this.reload(args[0]);
+		this.reload(args.get(0));
 	}
 
-	private void cbUnload(String[] args) {
-		if (args.length < 1) {
+	private void callbackUnload(@NonNull List<String> args) {
+		if (args.isEmpty()) {
 			this.alertMissingArgs();
 			return;
 		}
-		this.unloadPlugin(args[0]);
+		this.unloadPlugin(args.get(0));
 	}
 
 	/**
@@ -677,30 +696,6 @@ public class PluginManager {
 			cmds.add(pc);
 		}
 		return cmds;
-	}
-
-	/**
-	 * Returns the index of the given string if it exists. If it is not in the
-	 * array, returns -1.
-	 *
-	 * @param s the string to look for
-	 * @return the index of the string
-	 */
-	@Synchronized("commandLock")
-	private int getIndexOfCommand(String s) {
-		int i;
-		boolean found = false;
-
-		for (i = 0; i < this.commands.size(); ++i) {
-			if (this.commands.get(i).getCommand().equalsIgnoreCase(s)) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			i = -1;
-		}
-		return i;
 	}
 
 	/**
@@ -995,8 +990,8 @@ public class PluginManager {
 		List<File> skipped, Map<File, PluginClassLoader> loaders) {
 		this.sharedClassLoader =
 			new SharedClassLoader(this, this.getClass().getClassLoader());
-		Thread.currentThread().setContextClassLoader(sharedClassLoader);
-		EventManager.getInstance().setThreadClassloader(sharedClassLoader);
+		Thread.currentThread().setContextClassLoader(this.sharedClassLoader);
+		this.eventManager.setThreadClassloader(this.sharedClassLoader);
 
 		for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
 			PluginInfo info = entry.getValue();
@@ -1022,7 +1017,7 @@ public class PluginManager {
 
 			PluginClassLoader loader = null;
 			try {
-				loader = new PluginClassLoader(this, sharedClassLoader,
+				loader = new PluginClassLoader(this, this.sharedClassLoader,
 					entry.getKey());
 			}
 			catch (MalformedURLException e) {
@@ -1392,7 +1387,7 @@ public class PluginManager {
 			this.unloadPlugin(pluginName);
 		}
 		for (Listener l : plugin.getListeners()) {
-			EventManager.getInstance().registerEventListeners(l);
+			this.eventManager.registerEventListeners(l);
 		}
 		String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS",
 			this.resourceBundle);
@@ -1540,7 +1535,7 @@ public class PluginManager {
 	 */
 	@Synchronized("commandLock")
 	public boolean registerCommand(@NonNull final String command,
-		@NonNull Consumer<String[]> callback, @NonNull String owner) {
+		@NonNull Consumer<List<String>> callback, @NonNull String owner) {
 		if (this.isCommandRegistered(command)) {
 			String msg = SafeResourceLoader.getString(
 				"COMMAND_ALREADY_REGISTERED", this.getResourceBundle());
@@ -1567,27 +1562,27 @@ public class PluginManager {
 	private void registerCommands() {
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_ENABLE", this.resourceBundle),
-			this::cbEnable, PluginManager.PLUGIN_NAME);
+			this::callbackEnable, PluginManager.PLUGIN_NAME);
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_DISABLE",
 				this.resourceBundle),
-			this::cbDisable, PluginManager.PLUGIN_NAME);
+			this::callbackDisable, PluginManager.PLUGIN_NAME);
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_LOAD", this.resourceBundle),
-			this::cbLoad, PluginManager.PLUGIN_NAME);
+			this::callbackLoad, PluginManager.PLUGIN_NAME);
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_UNLOAD", this.resourceBundle),
-			this::cbUnload, PluginManager.PLUGIN_NAME);
+			this::callbackUnload, PluginManager.PLUGIN_NAME);
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_RELOAD", this.resourceBundle),
-			this::cbReload, PluginManager.PLUGIN_NAME);
+			this::callbackReload, PluginManager.PLUGIN_NAME);
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_LIST_PLUGINS",
 				this.resourceBundle),
-			this::cbPrintPlugins, PluginManager.PLUGIN_NAME);
+			this::callbackPrintPlugins, PluginManager.PLUGIN_NAME);
 		this.registerCommand(
 			SafeResourceLoader.getString("COMMAND_HELP", this.resourceBundle),
-			this::cbHelp, PluginManager.PLUGIN_NAME);
+			this::callbackHelp, PluginManager.PLUGIN_NAME);
 	}
 
 	/**
@@ -1657,8 +1652,7 @@ public class PluginManager {
 	}
 
 	private void shutdown() {
-		EventManager.getInstance()
-			.unregisterEventListeners(this.commandListener);
+		this.eventManager.unregisterEventListeners(this.commandListener);
 
 		synchronized (this.pluginLock) {
 			List<String> toUnload =
@@ -1783,7 +1777,7 @@ public class PluginManager {
 		new PluginUnloaded(toUnload).fire();
 
 		for (Listener l : plugin.getListeners()) {
-			EventManager.getInstance().unregisterEventListeners(l);
+			this.eventManager.unregisterEventListeners(l);
 		}
 		String unreg = SafeResourceLoader
 			.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle);
@@ -1807,12 +1801,9 @@ public class PluginManager {
 		boolean found = false;
 
 		if (this.isCommandRegistered(command)) {
+			this.commands
+				.removeIf(cmd -> command.equalsIgnoreCase(cmd.getCommand()));
 
-			while (this.isCommandRegistered(command)) {
-				// just in case there are multiple
-				int index = this.getIndexOfCommand(command);
-				this.commands.remove(index);
-			}
 			String msg = SafeResourceLoader.getString("UNREGISTERED_COMMAND",
 				this.getResourceBundle());
 			log.debug(msg, command);

@@ -2,7 +2,11 @@ package com.ikalagaming.plugins.events;
 
 import com.ikalagaming.event.Event;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
+
+import java.util.List;
 
 /**
  * A command was sent.
@@ -11,6 +15,7 @@ import lombok.Getter;
  *
  */
 @Getter
+@AllArgsConstructor
 public class PluginCommandSent extends Event {
 
 	/**
@@ -19,6 +24,7 @@ public class PluginCommandSent extends Event {
 	 * @return The command that was sent.
 	 */
 	@SuppressWarnings("javadoc")
+	@NonNull
 	private final String command;
 
 	/**
@@ -27,56 +33,25 @@ public class PluginCommandSent extends Event {
 	 * @return The commands arguments.
 	 */
 	@SuppressWarnings("javadoc")
-	private final String[] arguments;
+	@NonNull
+	private final List<String> arguments;
 
 	/**
-	 * Creates a new {@link PluginCommandSent} with the supplied parameters.
+	 * Creates a new {@link PluginCommandSent} with no arguments.
 	 *
-	 * @param command the command
+	 * @param command The command that was sent.
 	 */
-	public PluginCommandSent(String command) {
-		this(command, null);
+	public PluginCommandSent(@NonNull String command) {
+		this(command, List.of());
 	}
 
 	/**
-	 * Creates a new {@link PluginCommandSent} with the supplied parameters. If
-	 * the arguments list is null, it will be created from the command, if the
-	 * command has multiple parts.
+	 * Returns true if there are any arguments.
 	 *
-	 * @param command the command
-	 * @param args arguments for the command
-	 */
-	public PluginCommandSent(String command, String[] args) {
-		String[] parts = command.trim().split("\\s+");
-		this.command = parts[0];
-		String[] argumentArray = args;
-		if (argumentArray == null) {
-			if (parts.length > 1) {
-				argumentArray = new String[parts.length - 1];
-				System.arraycopy(parts, 1, argumentArray, 0, parts.length - 1);
-			}
-			else {
-				// so it is not null
-				argumentArray = new String[0];
-			}
-		}
-		this.arguments = argumentArray;
-	}
-
-	/**
-	 * Returns true if arguments exist, or false if the arguments list is null
-	 * or empty.
-	 *
-	 * @return true if there are arguments
+	 * @return Whether there are arguments.
 	 */
 	public boolean hasArguments() {
-		if (this.arguments == null) {
-			return false;
-		}
-		else if (this.arguments.length > 0) {
-			return true;
-		}
-		return false;
+		return !arguments.isEmpty();
 	}
 
 }

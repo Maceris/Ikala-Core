@@ -305,7 +305,7 @@ public class Launcher {
 			else {
 				String[] cmdArgs = new String[parts.length - 1];
 				System.arraycopy(parts, 1, cmdArgs, 0, cmdArgs.length);
-				event = new PluginCommandSent(parts[0], cmdArgs);
+				event = new PluginCommandSent(parts[0], Arrays.asList(cmdArgs));
 			}
 			event.fire();
 		}

@@ -3,6 +3,7 @@ package com.ikalagaming.plugins;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -22,7 +23,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 	 * @return The callback function for the command.
 	 */
 	@SuppressWarnings("javadoc")
-	private final Consumer<String[]> callback;
+	private final Consumer<List<String>> callback;
 
 	/**
 	 * The command registered.

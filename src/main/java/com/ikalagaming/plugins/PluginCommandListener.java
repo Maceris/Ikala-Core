@@ -4,6 +4,8 @@ import com.ikalagaming.event.EventHandler;
 import com.ikalagaming.event.Listener;
 import com.ikalagaming.plugins.events.PluginCommandSent;
 
+import lombok.RequiredArgsConstructor;
+
 import java.util.List;
 
 /**
@@ -12,7 +14,10 @@ import java.util.List;
  * @author Ches Burks
  *
  */
+@RequiredArgsConstructor
 class PluginCommandListener implements Listener {
+
+	private final PluginManager manager;
 
 	/**
 	 * Handles processing of Plugin Commands.
@@ -21,11 +26,10 @@ class PluginCommandListener implements Listener {
 	 */
 	@EventHandler
 	public void onPluginCommand(PluginCommandSent event) {
-		List<PluginCommand> commands =
-			PluginManager.getInstance().getCommands();
+		List<PluginCommand> commands = manager.getCommands();
 		if (commands.stream()
 			.noneMatch(cmd -> event.getCommand().equals(cmd.getCommand()))) {
-			PluginManager.getInstance().cbHelp(null);
+			manager.callbackHelp(null);
 		}
 
 		commands.stream()
