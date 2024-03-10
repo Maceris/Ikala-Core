@@ -41,7 +41,7 @@ dependencies {
 	implementation "com.github.zafarkhaja:java-semver:${jsemverVersion}"
 	implementation "org.apache.logging.log4j:log4j-api:${log4jAPIVersion}"
 	implementation "org.apache.logging.log4j:log4j-core:${log4jCoreVersion}"
-	implementation "org.apache.logging.log4j:log4j-slf4j-impl:${log4jSlf4jVersion}"
+	implementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4jSlf4jVersion}"
 	implementation "org.luaj:luaj-jse:${luaJVersion}"
 	implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 	implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
