@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added logging for issues with creating resource folders
 - Included Mockito for testing
+- Added auto-formatter and code cleanup tool to the build process to enforce standards
 
 ### Changed
 - Updated resource loader to use SLF4j string formatting

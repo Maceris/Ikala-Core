@@ -528,7 +528,7 @@ public class ScriptRuntime {
                     firstItem,
                     secondItem,
                     (a, b) -> {
-                        final double TOLERANCE = 0.00001;
+                        final double TOLERANCE = 0.000_01;
                         if (Math.abs(a - b) < TOLERANCE) {
                             this.lastComparison = 0;
                         } else if (a < b) {
@@ -1134,7 +1134,7 @@ public class ScriptRuntime {
             final String methodName,
             final int numParams,
             List<MemoryItem> parameters) {
-        if (objectLocation == MemArea.IMMEDIATE && methodName.equals("yield") && numParams < 2) {
+        if (objectLocation == MemArea.IMMEDIATE && "yield".equals(methodName) && numParams < 2) {
             // Reserved method name
             if (numParams == 1) {
                 Object tag = parameters.get(0).value();

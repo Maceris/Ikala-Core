@@ -1712,7 +1712,7 @@ class TestValidator {
         // Both valid
         for (String left : valid) {
             for (String right : valid) {
-                if (left.equals(right) && left.equals("null")) {
+                if (left.equals(right) && "null".equals(left)) {
                     continue;
                 }
                 final String first = String.format("%s x = true ? %s : %s;", type, left, right);
@@ -1727,7 +1727,7 @@ class TestValidator {
         // Mix of valid and invalid
         for (String ok : valid) {
             for (String nok : invalid) {
-                if (ok.endsWith("()") && nok.equals("null")) {
+                if (ok.endsWith("()") && "null".equals(nok)) {
                     continue;
                 }
                 final String first = String.format("%s x = true ? %s : %s;", type, ok, nok);

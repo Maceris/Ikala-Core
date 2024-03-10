@@ -122,9 +122,12 @@ spotless {
 			include '**/*.java'
 			exclude '**/build/**', '**/build-*/**'
 		}
-		//cleanthat().sourceCompatibility('17')
-		//	.addMutator('SafeAndConsensual')
-		//	.includeDraft(false)
+		cleanthat().sourceCompatibility('17')
+			.addMutator('SafeAndConsensual')
+			.addMutator('SafeButNotConsensual')
+			.addMutator('SafeButControversial')
+			.excludeMutator('AvoidInlineConditionals')
+			.includeDraft(false)
 		googleJavaFormat('1.21.0').aosp()
 		// eclipse('4.27').configFile('formatting.xml')
 		toggleOffOn()

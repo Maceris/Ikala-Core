@@ -105,7 +105,7 @@ class TestPluginManager {
     @Test
     void testCommandClearing() {
         List<String> commands =
-                Arrays.asList(
+                Stream.of(
                                 "COMMAND_ENABLE",
                                 "COMMAND_DISABLE",
                                 "COMMAND_DISABLE",
@@ -114,7 +114,6 @@ class TestPluginManager {
                                 "COMMAND_RELOAD",
                                 "COMMAND_LIST_PLUGINS",
                                 "COMMAND_HELP")
-                        .stream()
                         .map(
                                 cmd ->
                                         SafeResourceLoader.getString(

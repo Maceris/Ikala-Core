@@ -65,7 +65,7 @@ public class NameRegistry {
             return false; // invalid name
         }
         // when objects are deleted, unregister their id
-        final int dashPos = fullName.lastIndexOf("-");
+        final int dashPos = fullName.lastIndexOf('-');
         if (dashPos == -1) {
             return false; // invalid name
         }
@@ -207,7 +207,7 @@ public class NameRegistry {
             return false; // invalid name
         }
         // when objects are deleted, unregister their id
-        final int dashPos = fullName.lastIndexOf("-");
+        final int dashPos = fullName.lastIndexOf('-');
         if (dashPos == -1) {
             return false; // invalid name
         }

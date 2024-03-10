@@ -796,7 +796,7 @@ public class PluginManager {
     public void loadAllPlugins(@NonNull String folder) {
         File pluginFolder = null;
         Optional<File> folderMaybe = this.plGetFolder(folder);
-        if (!folderMaybe.isPresent()) {
+        if (folderMaybe.isEmpty()) {
             String warning =
                     SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle);
             log.warn(warning, folder);
@@ -820,7 +820,7 @@ public class PluginManager {
     @Synchronized("pluginLock")
     public boolean loadPlugin(@NonNull String path, @NonNull String pluginName) {
         Optional<File> folderMaybe = this.plGetFolder(path);
-        if (!folderMaybe.isPresent()) {
+        if (folderMaybe.isEmpty()) {
             return false;
         }
         File pluginFolder = folderMaybe.get();
@@ -859,7 +859,7 @@ public class PluginManager {
     @Synchronized("pluginLock")
     public void loadPlugins(@NonNull String path, @NonNull List<String> pluginNames) {
         Optional<File> folderMaybe = this.plGetFolder(path);
-        if (!folderMaybe.isPresent()) {
+        if (folderMaybe.isEmpty()) {
             return;
         }
         if (pluginNames.isEmpty()) {

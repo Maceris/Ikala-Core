@@ -149,7 +149,7 @@ public class PluginFolder {
                         PluginFolder.getFolderForPlugin(pluginName)
                                 + File.separator
                                 + Constants.PLUGIN_VERSION_FILE);
-        if (!file.isPresent() || !file.get().exists()) {
+        if (file.isEmpty() || !file.get().exists()) {
             return version;
         }
 

@@ -1189,8 +1189,8 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
         }
 
-        if (node.getOperator().equals(Operator.DEC_PREFIX)
-                || node.getOperator().equals(Operator.INC_PREFIX)) {
+        if (Operator.DEC_PREFIX.equals(node.getOperator())
+                || Operator.INC_PREFIX.equals(node.getOperator())) {
             this.tempInstructions.add(new Instruction(type, first, second, first));
             if (!node.isIgnoreResult()) {
                 // Copy the post-increment value onto the stack
@@ -1201,8 +1201,8 @@ public class InstructionGenerator implements ASTVisitor {
                                 null,
                                 new MemLocation(MemArea.STACK, clazz)));
             }
-        } else if (node.getOperator().equals(Operator.DEC_SUFFIX)
-                || node.getOperator().equals(Operator.INC_SUFFIX)) {
+        } else if (Operator.DEC_SUFFIX.equals(node.getOperator())
+                || Operator.INC_SUFFIX.equals(node.getOperator())) {
             if (!node.isIgnoreResult()) {
                 // Push the pre-increment value onto the stack
                 this.tempInstructions.add(

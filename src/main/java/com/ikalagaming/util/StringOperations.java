@@ -18,7 +18,7 @@ public class StringOperations {
      */
     public static int countOccurances(@NonNull String toSearch, char toFind) {
         int count = 0;
-        if (toSearch.length() == 0) {
+        if (toSearch.isEmpty()) {
             return count;
         }
         int i;
@@ -39,7 +39,7 @@ public class StringOperations {
      * @return how many times the substring appears in the string
      */
     public static int countOccurances(@NonNull String toSearch, @NonNull String toFind) {
-        if (toSearch.length() == 0) {
+        if (toSearch.isEmpty()) {
             return 0;
         }
         if (!toSearch.contains(toFind)) {
