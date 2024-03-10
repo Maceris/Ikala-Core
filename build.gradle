@@ -112,7 +112,7 @@ tasks.named('jar') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-tasks.named('build') {
+tasks.named('check') {
 	dependsOn spotlessApply
 }
 
