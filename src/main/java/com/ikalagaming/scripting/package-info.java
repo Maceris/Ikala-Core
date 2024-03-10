@@ -1,4 +1,2 @@
-/**
- * Scripting support for the engine.
- */
+/** Scripting support for the engine. */
 package com.ikalagaming.scripting;

@@ -5,12 +5,11 @@ import lombok.Getter;
 
 /**
  * An event created for unit tests.
- * 
- * @author Ches Burks
  *
+ * @author Ches Burks
  */
 @AllArgsConstructor
 @Getter
 public class CustomEvent extends Event {
-	private final String testString;
+    private final String testString;
 }

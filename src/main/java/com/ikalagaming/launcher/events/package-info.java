@@ -1,4 +1,2 @@
-/**
- * Events relating to the launcher.
- */
+/** Events relating to the launcher. */
 package com.ikalagaming.launcher.events;

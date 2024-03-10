@@ -12,29 +12,26 @@ import java.util.List;
  * The event listener for the plugin command system.
  *
  * @author Ches Burks
- *
  */
 @RequiredArgsConstructor
 class PluginCommandListener implements Listener {
 
-	private final PluginManager manager;
+    private final PluginManager manager;
 
-	/**
-	 * Handles processing of Plugin Commands.
-	 *
-	 * @param event The plugin command that was sent.
-	 */
-	@EventHandler
-	public void onPluginCommand(PluginCommandSent event) {
-		List<PluginCommand> commands = manager.getCommands();
-		if (commands.stream()
-			.noneMatch(cmd -> event.getCommand().equals(cmd.getCommand()))) {
-			manager.callbackHelp(null);
-		}
+    /**
+     * Handles processing of Plugin Commands.
+     *
+     * @param event The plugin command that was sent.
+     */
+    @EventHandler
+    public void onPluginCommand(PluginCommandSent event) {
+        List<PluginCommand> commands = manager.getCommands();
+        if (commands.stream().noneMatch(cmd -> event.getCommand().equals(cmd.getCommand()))) {
+            manager.callbackHelp(null);
+        }
 
-		commands.stream()
-			.filter(cmd -> event.getCommand().equals(cmd.getCommand()))
-			.forEach(cmd -> cmd.getCallback().accept(event.getArguments()));
-	}
-
+        commands.stream()
+                .filter(cmd -> event.getCommand().equals(cmd.getCommand()))
+                .forEach(cmd -> cmd.getCallback().accept(event.getArguments()));
+    }
 }

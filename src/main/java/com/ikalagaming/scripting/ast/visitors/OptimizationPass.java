@@ -27,608 +27,567 @@ import lombok.extern.slf4j.Slf4j;
  * Optimize some of the tree.
  *
  * @author Ches Burks
- *
  */
 @Slf4j
 public class OptimizationPass implements ASTVisitor {
 
-	/**
-	 * Used for localization.
-	 */
-	private static final String INVALID_CONSTANT = "INVALID_CONSTANT";
-	/**
-	 * Used for localization.
-	 */
-	private static final String INVALID_OPERATOR = "INVALID_OPERATOR";
+    /** Used for localization. */
+    private static final String INVALID_CONSTANT = "INVALID_CONSTANT";
 
-	/**
-	 * Return a constant boolean based on the value.
-	 *
-	 * @param value The value of the boolean.
-	 * @return A node representing said value.
-	 */
-	private ConstBool getBool(boolean value) {
-		ConstBool result = new ConstBool();
-		result.setValue(value);
-		result.setType(Type.primitive(Base.BOOLEAN));
-		return result;
-	}
+    /** Used for localization. */
+    private static final String INVALID_OPERATOR = "INVALID_OPERATOR";
 
-	/**
-	 * Optimize the syntax tree.
-	 *
-	 * @param ast The tree to validate.
-	 */
-	public void optimize(CompilationUnit ast) {
-		this.processTree(ast);
-	}
+    /**
+     * Return a constant boolean based on the value.
+     *
+     * @param value The value of the boolean.
+     * @return A node representing said value.
+     */
+    private ConstBool getBool(boolean value) {
+        ConstBool result = new ConstBool();
+        result.setValue(value);
+        result.setType(Type.primitive(Base.BOOLEAN));
+        return result;
+    }
 
-	/**
-	 * Process the tree recursively.
-	 *
-	 * @param node The node we are processing.
-	 */
-	private void processTree(Node node) {
-		node.getChildren().removeIf(EmptyStatement.class::isInstance);
-		for (int i = 0; i < node.getChildren().size(); ++i) {
-			Node child = node.getChildren().get(i);
-			this.processTree(child);
-			if (child instanceof ExprArithmetic expr) {
-				/*
-				 * We might need to replace this node with a constant after
-				 * processing the children. This will recursively calculate
-				 * constant expressions and allows final variable replacements.
-				 */
-				// replace the node
-				node.getChildren().set(i, this.simplify(expr));
-			}
-			else if (child instanceof StatementList
-				&& (child.getChildren().size() == 1)) {
-				/*
-				 * If a statement list has only 1 child, we replace the list
-				 * with its child. Essentially removing pointless nesting.
-				 */
-				node.getChildren().set(i, child.getChildren().get(0));
-			}
-			else if (child instanceof ExprLogic expr) {
-				node.getChildren().set(i, this.simplify(expr));
-			}
-			else if (child instanceof ExprRelation expr) {
-				node.getChildren().set(i, this.simplify(expr));
-			}
-		}
-		node.process(this);
-	}
+    /**
+     * Optimize the syntax tree.
+     *
+     * @param ast The tree to validate.
+     */
+    public void optimize(CompilationUnit ast) {
+        this.processTree(ast);
+    }
 
-	/**
-	 * Simplify an arithmetic expression, into a constant if its children are
-	 * also constants.
-	 *
-	 * @param node The node we are simplifying.
-	 * @return The resulting node, which might be the same node if it's not a
-	 *         constant expression.
-	 */
-	private Node simplify(ExprArithmetic node) {
-		if (node.getChildren().size() == 1) {
-			return node;
-		}
+    /**
+     * Process the tree recursively.
+     *
+     * @param node The node we are processing.
+     */
+    private void processTree(Node node) {
+        node.getChildren().removeIf(EmptyStatement.class::isInstance);
+        for (int i = 0; i < node.getChildren().size(); ++i) {
+            Node child = node.getChildren().get(i);
+            this.processTree(child);
+            if (child instanceof ExprArithmetic expr) {
+                /*
+                 * We might need to replace this node with a constant after
+                 * processing the children. This will recursively calculate
+                 * constant expressions and allows final variable replacements.
+                 */
+                // replace the node
+                node.getChildren().set(i, this.simplify(expr));
+            } else if (child instanceof StatementList && (child.getChildren().size() == 1)) {
+                /*
+                 * If a statement list has only 1 child, we replace the list
+                 * with its child. Essentially removing pointless nesting.
+                 */
+                node.getChildren().set(i, child.getChildren().get(0));
+            } else if (child instanceof ExprLogic expr) {
+                node.getChildren().set(i, this.simplify(expr));
+            } else if (child instanceof ExprRelation expr) {
+                node.getChildren().set(i, this.simplify(expr));
+            }
+        }
+        node.process(this);
+    }
 
-		final Node firstChild = node.getChildren().get(0);
-		final Node secondChild = node.getChildren().get(1);
+    /**
+     * Simplify an arithmetic expression, into a constant if its children are also constants.
+     *
+     * @param node The node we are simplifying.
+     * @return The resulting node, which might be the same node if it's not a constant expression.
+     */
+    private Node simplify(ExprArithmetic node) {
+        if (node.getChildren().size() == 1) {
+            return node;
+        }
 
-		// Implicit casts
-		if (!firstChild.getType().getBase().equals(node.getType().getBase())) {
-			Cast cast = new Cast();
-			cast.setType(node.getType());
-			cast.addChild(firstChild);
-			node.getChildren().set(0, cast);
-			return node;
-		}
-		if (!secondChild.getType().getBase().equals(node.getType().getBase())) {
-			Cast cast = new Cast();
-			cast.setType(node.getType());
-			cast.addChild(secondChild);
-			node.getChildren().set(1, cast);
-			return node;
-		}
+        final Node firstChild = node.getChildren().get(0);
+        final Node secondChild = node.getChildren().get(1);
 
-		// Constant optimizations
-		if (firstChild.getType().anyOf(Base.UNKNOWN)
-			|| secondChild.getType().anyOf(Base.UNKNOWN)
-			|| !((firstChild instanceof ConstInt
-				|| firstChild instanceof ConstDouble
-				|| firstChild instanceof ConstChar)
-				&& (secondChild instanceof ConstInt
-					|| secondChild instanceof ConstDouble
-					|| secondChild instanceof ConstChar))) {
-			// Bail if it's not the case that both children are constants
-			return node;
-		}
+        // Implicit casts
+        if (!firstChild.getType().getBase().equals(node.getType().getBase())) {
+            Cast cast = new Cast();
+            cast.setType(node.getType());
+            cast.addChild(firstChild);
+            node.getChildren().set(0, cast);
+            return node;
+        }
+        if (!secondChild.getType().getBase().equals(node.getType().getBase())) {
+            Cast cast = new Cast();
+            cast.setType(node.getType());
+            cast.addChild(secondChild);
+            node.getChildren().set(1, cast);
+            return node;
+        }
 
-		if (node.getType().anyOf(Base.INT)) {
-			return this.simplifyInt(node);
-		}
-		if (node.getType().anyOf(Base.DOUBLE)) {
-			return this.simplifyDouble(node);
-		}
-		if (node.getType().anyOf(Base.CHAR)) {
-			return this.simplifyChar(node);
-		}
+        // Constant optimizations
+        if (firstChild.getType().anyOf(Base.UNKNOWN)
+                || secondChild.getType().anyOf(Base.UNKNOWN)
+                || !((firstChild instanceof ConstInt
+                                || firstChild instanceof ConstDouble
+                                || firstChild instanceof ConstChar)
+                        && (secondChild instanceof ConstInt
+                                || secondChild instanceof ConstDouble
+                                || secondChild instanceof ConstChar))) {
+            // Bail if it's not the case that both children are constants
+            return node;
+        }
 
-		return node;
-	}
+        if (node.getType().anyOf(Base.INT)) {
+            return this.simplifyInt(node);
+        }
+        if (node.getType().anyOf(Base.DOUBLE)) {
+            return this.simplifyDouble(node);
+        }
+        if (node.getType().anyOf(Base.CHAR)) {
+            return this.simplifyChar(node);
+        }
 
-	/**
-	 * Simplify a logical expression if we can.
-	 *
-	 * @param node The node we are processing.
-	 * @return The resulting node, which might be the same node.
-	 */
-	private Node simplify(ExprLogic node) {
-		if (node.getChildren().size() < 2) {
-			return node;
-		}
+        return node;
+    }
 
-		final Node left = node.getChildren().get(0);
-		final Node right = node.getChildren().get(1);
+    /**
+     * Simplify a logical expression if we can.
+     *
+     * @param node The node we are processing.
+     * @return The resulting node, which might be the same node.
+     */
+    private Node simplify(ExprLogic node) {
+        if (node.getChildren().size() < 2) {
+            return node;
+        }
 
-		if (ExprLogic.Operator.AND.equals(node.getOperator())) {
-			return this.simplifyAnd(node, left, right);
-		}
-		else if (ExprLogic.Operator.OR.equals(node.getOperator())) {
-			return this.simplifyOr(node, left, right);
-		}
-		return node;
-	}
+        final Node left = node.getChildren().get(0);
+        final Node right = node.getChildren().get(1);
 
-	/**
-	 * Simplify a relation expression if we can. Comparing a variable with
-	 * itself, and comparing constants of the same type.
-	 *
-	 * @param node The node we are processing.
-	 * @return The resulting node, which might be the same node.
-	 */
-	private Node simplify(ExprRelation node) {
+        if (ExprLogic.Operator.AND.equals(node.getOperator())) {
+            return this.simplifyAnd(node, left, right);
+        } else if (ExprLogic.Operator.OR.equals(node.getOperator())) {
+            return this.simplifyOr(node, left, right);
+        }
+        return node;
+    }
 
-		final Node firstChild = node.getChildren().get(0);
-		final Node secondChild = node.getChildren().get(1);
+    /**
+     * Simplify a relation expression if we can. Comparing a variable with itself, and comparing
+     * constants of the same type.
+     *
+     * @param node The node we are processing.
+     * @return The resulting node, which might be the same node.
+     */
+    private Node simplify(ExprRelation node) {
 
-		if (firstChild instanceof Identifier firstID
-			&& secondChild instanceof Identifier secondID) {
-			if (firstID.getName().equals(secondID.getName())) {
-				switch (node.getOperator()) {
-					case GT, LT:
-						return this.getBool(false);
-					case GTE, LTE:
-						return this.getBool(false);
-					default:
-						return node;
-				}
-			}
-			return node;
-		}
+        final Node firstChild = node.getChildren().get(0);
+        final Node secondChild = node.getChildren().get(1);
 
-		double comparison = Double.NaN;
+        if (firstChild instanceof Identifier firstID
+                && secondChild instanceof Identifier secondID) {
+            if (firstID.getName().equals(secondID.getName())) {
+                switch (node.getOperator()) {
+                    case GT, LT:
+                        return this.getBool(false);
+                    case GTE, LTE:
+                        return this.getBool(false);
+                    default:
+                        return node;
+                }
+            }
+            return node;
+        }
 
-		if (firstChild instanceof ConstChar firstChar
-			&& secondChild instanceof ConstChar secondChar) {
-			comparison =
-				((double) secondChar.getValue()) - firstChar.getValue();
-		}
-		else if (firstChild instanceof ConstInt firstInt
-			&& secondChild instanceof ConstInt secondInt) {
-			comparison = ((double) secondInt.getValue()) - firstInt.getValue();
-		}
-		else if (firstChild instanceof ConstDouble firstDouble
-			&& secondChild instanceof ConstDouble secondDouble) {
-			comparison = secondDouble.getValue() - firstDouble.getValue();
-		}
+        double comparison = Double.NaN;
 
-		if (Double.isNaN(comparison)) {
-			return node;
-		}
+        if (firstChild instanceof ConstChar firstChar
+                && secondChild instanceof ConstChar secondChar) {
+            comparison = ((double) secondChar.getValue()) - firstChar.getValue();
+        } else if (firstChild instanceof ConstInt firstInt
+                && secondChild instanceof ConstInt secondInt) {
+            comparison = ((double) secondInt.getValue()) - firstInt.getValue();
+        } else if (firstChild instanceof ConstDouble firstDouble
+                && secondChild instanceof ConstDouble secondDouble) {
+            comparison = secondDouble.getValue() - firstDouble.getValue();
+        }
 
-		switch (node.getOperator()) {
-			case GT:
-				return this.getBool(comparison > 0);
-			case GTE:
-				return this.getBool(comparison >= 0);
-			case LT:
-				return this.getBool(comparison < 0);
-			case LTE:
-				return this.getBool(comparison <= 0);
-		}
-		return node;
-	}
+        if (Double.isNaN(comparison)) {
+            return node;
+        }
 
-	/**
-	 * Simplify an and expression. Removes pointless logic, and simplifies to a
-	 * constant if possible.
-	 *
-	 * @param node The logic node we are working on.
-	 * @param leftChild The left child.
-	 * @param rightChild The right child.
-	 * @return The node that should be in the place of the node parameter, which
-	 *         may just be the node unaltered.
-	 */
-	private Node simplifyAnd(ExprLogic node, Node leftChild, Node rightChild) {
-		if (leftChild instanceof ConstBool left && (!left.isValue())
-			|| rightChild instanceof ConstBool right && (!right.isValue())) {
-			// if either side of an && is false, the result is always false
-			return this.getBool(false);
-		}
-		if (leftChild instanceof ConstBool bool && (bool.isValue())) {
-			// true && ____
-			return rightChild;
-		}
-		if (rightChild instanceof ConstBool bool && (bool.isValue())) {
-			// ____ && true
-			return leftChild;
-		}
-		return node;
-	}
+        switch (node.getOperator()) {
+            case GT:
+                return this.getBool(comparison > 0);
+            case GTE:
+                return this.getBool(comparison >= 0);
+            case LT:
+                return this.getBool(comparison < 0);
+            case LTE:
+                return this.getBool(comparison <= 0);
+        }
+        return node;
+    }
 
-	/**
-	 * Simplify a char expression.
-	 *
-	 * @param node The node we are simplifying.
-	 * @return The resulting value.
-	 */
-	private Node simplifyChar(ExprArithmetic node) {
-		final Node firstChild = node.getChildren().get(0);
-		final Node secondChild = node.getChildren().get(1);
+    /**
+     * Simplify an and expression. Removes pointless logic, and simplifies to a constant if
+     * possible.
+     *
+     * @param node The logic node we are working on.
+     * @param leftChild The left child.
+     * @param rightChild The right child.
+     * @return The node that should be in the place of the node parameter, which may just be the
+     *     node unaltered.
+     */
+    private Node simplifyAnd(ExprLogic node, Node leftChild, Node rightChild) {
+        if (leftChild instanceof ConstBool left && (!left.isValue())
+                || rightChild instanceof ConstBool right && (!right.isValue())) {
+            // if either side of an && is false, the result is always false
+            return this.getBool(false);
+        }
+        if (leftChild instanceof ConstBool bool && (bool.isValue())) {
+            // true && ____
+            return rightChild;
+        }
+        if (rightChild instanceof ConstBool bool && (bool.isValue())) {
+            // ____ && true
+            return leftChild;
+        }
+        return node;
+    }
 
-		char firstValue;
-		char secondValue;
+    /**
+     * Simplify a char expression.
+     *
+     * @param node The node we are simplifying.
+     * @return The resulting value.
+     */
+    private Node simplifyChar(ExprArithmetic node) {
+        final Node firstChild = node.getChildren().get(0);
+        final Node secondChild = node.getChildren().get(1);
 
-		if (firstChild instanceof ConstInt convertedFirst) {
-			int value = convertedFirst.getValue();
-			// Good luck
-			firstValue = (char) value;
-		}
-		else if (firstChild instanceof ConstDouble convertedFirst) {
-			double value = convertedFirst.getValue();
-			// Good luck
-			firstValue = (char) value;
-		}
-		else if (firstChild instanceof ConstChar convertedFirst) {
-			char value = convertedFirst.getValue();
-			// Already a char
-			firstValue = value;
-		}
-		else {
-			OptimizationPass.log.warn(
-				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
-					ScriptManager.getResourceBundle()),
-				firstChild.toString());
-			return node;
-		}
+        char firstValue;
+        char secondValue;
 
-		if (secondChild instanceof ConstInt convertedSecond) {
-			int value = convertedSecond.getValue();
-			// Good luck
-			secondValue = (char) value;
-		}
-		else if (secondChild instanceof ConstDouble convertedSecond) {
-			double value = convertedSecond.getValue();
-			// Good luck
-			secondValue = (char) value;
-		}
-		else if (secondChild instanceof ConstChar convertedSecond) {
-			char value = convertedSecond.getValue();
-			// Already a char
-			secondValue = value;
-		}
-		else {
-			OptimizationPass.log.warn(
-				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
-					ScriptManager.getResourceBundle()),
-				secondChild.toString());
-			return node;
-		}
+        if (firstChild instanceof ConstInt convertedFirst) {
+            int value = convertedFirst.getValue();
+            // Good luck
+            firstValue = (char) value;
+        } else if (firstChild instanceof ConstDouble convertedFirst) {
+            double value = convertedFirst.getValue();
+            // Good luck
+            firstValue = (char) value;
+        } else if (firstChild instanceof ConstChar convertedFirst) {
+            char value = convertedFirst.getValue();
+            // Already a char
+            firstValue = value;
+        } else {
+            OptimizationPass.log.warn(
+                    SafeResourceLoader.getString(
+                            OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
+                    firstChild.toString());
+            return node;
+        }
 
-		ConstChar result = new ConstChar();
-		result.setType(Type.primitive(Base.CHAR));
+        if (secondChild instanceof ConstInt convertedSecond) {
+            int value = convertedSecond.getValue();
+            // Good luck
+            secondValue = (char) value;
+        } else if (secondChild instanceof ConstDouble convertedSecond) {
+            double value = convertedSecond.getValue();
+            // Good luck
+            secondValue = (char) value;
+        } else if (secondChild instanceof ConstChar convertedSecond) {
+            char value = convertedSecond.getValue();
+            // Already a char
+            secondValue = value;
+        } else {
+            OptimizationPass.log.warn(
+                    SafeResourceLoader.getString(
+                            OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
+                    secondChild.toString());
+            return node;
+        }
 
-		switch (node.getOperator()) {
-			case ADD:
-				result.setValue((char) (firstValue + secondValue));
-				break;
-			case DIV:
-				result.setValue((char) (firstValue / secondValue));
-				break;
-			case MOD:
-				result.setValue((char) (firstValue % secondValue));
-				break;
-			case MUL:
-				result.setValue((char) (firstValue * secondValue));
-				break;
-			case SUB:
-				result.setValue((char) (firstValue - secondValue));
-				break;
-			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-			default:
-				// Can't happen, but let's cover it anyway
-				OptimizationPass.log.warn(
-					SafeResourceLoader.getString(
-						OptimizationPass.INVALID_OPERATOR,
-						ScriptManager.getResourceBundle()),
-					node.getOperator().toString(),
-					firstChild.getClass().getSimpleName());
-				return node;
-		}
+        ConstChar result = new ConstChar();
+        result.setType(Type.primitive(Base.CHAR));
 
-		return result;
-	}
+        switch (node.getOperator()) {
+            case ADD:
+                result.setValue((char) (firstValue + secondValue));
+                break;
+            case DIV:
+                result.setValue((char) (firstValue / secondValue));
+                break;
+            case MOD:
+                result.setValue((char) (firstValue % secondValue));
+                break;
+            case MUL:
+                result.setValue((char) (firstValue * secondValue));
+                break;
+            case SUB:
+                result.setValue((char) (firstValue - secondValue));
+                break;
+            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+            default:
+                // Can't happen, but let's cover it anyway
+                OptimizationPass.log.warn(
+                        SafeResourceLoader.getString(
+                                OptimizationPass.INVALID_OPERATOR,
+                                ScriptManager.getResourceBundle()),
+                        node.getOperator().toString(),
+                        firstChild.getClass().getSimpleName());
+                return node;
+        }
 
-	/**
-	 * Simplify a double expression.
-	 *
-	 * @param node The node we are simplifying.
-	 * @return The resulting value.
-	 */
-	private Node simplifyDouble(ExprArithmetic node) {
-		final Node firstChild = node.getChildren().get(0);
-		final Node secondChild = node.getChildren().get(1);
+        return result;
+    }
 
-		double firstValue;
-		double secondValue;
+    /**
+     * Simplify a double expression.
+     *
+     * @param node The node we are simplifying.
+     * @return The resulting value.
+     */
+    private Node simplifyDouble(ExprArithmetic node) {
+        final Node firstChild = node.getChildren().get(0);
+        final Node secondChild = node.getChildren().get(1);
 
-		if (firstChild instanceof ConstInt convertedFirst) {
-			int value = convertedFirst.getValue();
-			// Fits fine
-			firstValue = value;
-		}
-		else if (firstChild instanceof ConstDouble convertedFirst) {
-			double value = convertedFirst.getValue();
-			// Already a double
-			firstValue = value;
-		}
-		else if (firstChild instanceof ConstChar convertedFirst) {
-			char value = convertedFirst.getValue();
-			// Fits fine
-			firstValue = value;
-		}
-		else {
-			OptimizationPass.log.warn(
-				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
-					ScriptManager.getResourceBundle()),
-				firstChild.toString());
-			return node;
-		}
+        double firstValue;
+        double secondValue;
 
-		if (secondChild instanceof ConstInt convertedSecond) {
-			int value = convertedSecond.getValue();
-			// Fits fine
-			secondValue = value;
-		}
-		else if (secondChild instanceof ConstDouble convertedSecond) {
-			double value = convertedSecond.getValue();
-			// Already a double
-			secondValue = value;
-		}
-		else if (secondChild instanceof ConstChar convertedSecond) {
-			char value = convertedSecond.getValue();
-			// Fits fine
-			secondValue = value;
-		}
-		else {
-			OptimizationPass.log.warn(
-				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
-					ScriptManager.getResourceBundle()),
-				secondChild.toString());
-			return node;
-		}
+        if (firstChild instanceof ConstInt convertedFirst) {
+            int value = convertedFirst.getValue();
+            // Fits fine
+            firstValue = value;
+        } else if (firstChild instanceof ConstDouble convertedFirst) {
+            double value = convertedFirst.getValue();
+            // Already a double
+            firstValue = value;
+        } else if (firstChild instanceof ConstChar convertedFirst) {
+            char value = convertedFirst.getValue();
+            // Fits fine
+            firstValue = value;
+        } else {
+            OptimizationPass.log.warn(
+                    SafeResourceLoader.getString(
+                            OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
+                    firstChild.toString());
+            return node;
+        }
 
-		ConstDouble result = new ConstDouble();
-		result.setType(Type.primitive(Base.DOUBLE));
+        if (secondChild instanceof ConstInt convertedSecond) {
+            int value = convertedSecond.getValue();
+            // Fits fine
+            secondValue = value;
+        } else if (secondChild instanceof ConstDouble convertedSecond) {
+            double value = convertedSecond.getValue();
+            // Already a double
+            secondValue = value;
+        } else if (secondChild instanceof ConstChar convertedSecond) {
+            char value = convertedSecond.getValue();
+            // Fits fine
+            secondValue = value;
+        } else {
+            OptimizationPass.log.warn(
+                    SafeResourceLoader.getString(
+                            OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
+                    secondChild.toString());
+            return node;
+        }
 
-		switch (node.getOperator()) {
-			case ADD:
-				result.setValue(firstValue + secondValue);
-				break;
-			case DIV:
-				result.setValue(firstValue / secondValue);
-				break;
-			case MOD:
-				result.setValue(firstValue % secondValue);
-				break;
-			case MUL:
-				result.setValue(firstValue * secondValue);
-				break;
-			case SUB:
-				result.setValue(firstValue - secondValue);
-				break;
-			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-			default:
-				// Can't happen, but let's cover it anyway
-				OptimizationPass.log.warn(
-					SafeResourceLoader.getString(
-						OptimizationPass.INVALID_OPERATOR,
-						ScriptManager.getResourceBundle()),
-					node.getOperator().toString(),
-					firstChild.getClass().getSimpleName());
-				return node;
-		}
+        ConstDouble result = new ConstDouble();
+        result.setType(Type.primitive(Base.DOUBLE));
 
-		return result;
-	}
+        switch (node.getOperator()) {
+            case ADD:
+                result.setValue(firstValue + secondValue);
+                break;
+            case DIV:
+                result.setValue(firstValue / secondValue);
+                break;
+            case MOD:
+                result.setValue(firstValue % secondValue);
+                break;
+            case MUL:
+                result.setValue(firstValue * secondValue);
+                break;
+            case SUB:
+                result.setValue(firstValue - secondValue);
+                break;
+            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+            default:
+                // Can't happen, but let's cover it anyway
+                OptimizationPass.log.warn(
+                        SafeResourceLoader.getString(
+                                OptimizationPass.INVALID_OPERATOR,
+                                ScriptManager.getResourceBundle()),
+                        node.getOperator().toString(),
+                        firstChild.getClass().getSimpleName());
+                return node;
+        }
 
-	/**
-	 * Simplify an integer expression.
-	 *
-	 * @param node The node we are simplifying.
-	 * @return The resulting value.
-	 */
-	private Node simplifyInt(ExprArithmetic node) {
-		final Node firstChild = node.getChildren().get(0);
-		final Node secondChild = node.getChildren().get(1);
+        return result;
+    }
 
-		int firstValue;
-		int secondValue;
+    /**
+     * Simplify an integer expression.
+     *
+     * @param node The node we are simplifying.
+     * @return The resulting value.
+     */
+    private Node simplifyInt(ExprArithmetic node) {
+        final Node firstChild = node.getChildren().get(0);
+        final Node secondChild = node.getChildren().get(1);
 
-		if (firstChild instanceof ConstInt convertedFirst) {
-			int value = convertedFirst.getValue();
-			// Already an int
-			firstValue = value;
-		}
-		else if (firstChild instanceof ConstDouble convertedFirst) {
-			double value = convertedFirst.getValue();
-			// Truncate
-			firstValue = (int) value;
-		}
-		else if (firstChild instanceof ConstChar convertedFirst) {
-			char value = convertedFirst.getValue();
-			// Fits fine
-			firstValue = value;
-		}
-		else {
-			OptimizationPass.log.warn(
-				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
-					ScriptManager.getResourceBundle()),
-				firstChild.toString());
-			return node;
-		}
+        int firstValue;
+        int secondValue;
 
-		if (secondChild instanceof ConstInt convertedSecond) {
-			int value = convertedSecond.getValue();
-			// Already an int
-			secondValue = value;
-		}
-		else if (secondChild instanceof ConstDouble convertedSecond) {
-			double value = convertedSecond.getValue();
-			// Truncate
-			secondValue = (int) value;
-		}
-		else if (secondChild instanceof ConstChar convertedSecond) {
-			char value = convertedSecond.getValue();
-			// Fits fine
-			secondValue = value;
-		}
-		else {
-			OptimizationPass.log.warn(
-				SafeResourceLoader.getString(OptimizationPass.INVALID_CONSTANT,
-					ScriptManager.getResourceBundle()),
-				secondChild.toString());
-			return node;
-		}
+        if (firstChild instanceof ConstInt convertedFirst) {
+            int value = convertedFirst.getValue();
+            // Already an int
+            firstValue = value;
+        } else if (firstChild instanceof ConstDouble convertedFirst) {
+            double value = convertedFirst.getValue();
+            // Truncate
+            firstValue = (int) value;
+        } else if (firstChild instanceof ConstChar convertedFirst) {
+            char value = convertedFirst.getValue();
+            // Fits fine
+            firstValue = value;
+        } else {
+            OptimizationPass.log.warn(
+                    SafeResourceLoader.getString(
+                            OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
+                    firstChild.toString());
+            return node;
+        }
 
-		ConstInt result = new ConstInt();
-		result.setType(Type.primitive(Base.INT));
+        if (secondChild instanceof ConstInt convertedSecond) {
+            int value = convertedSecond.getValue();
+            // Already an int
+            secondValue = value;
+        } else if (secondChild instanceof ConstDouble convertedSecond) {
+            double value = convertedSecond.getValue();
+            // Truncate
+            secondValue = (int) value;
+        } else if (secondChild instanceof ConstChar convertedSecond) {
+            char value = convertedSecond.getValue();
+            // Fits fine
+            secondValue = value;
+        } else {
+            OptimizationPass.log.warn(
+                    SafeResourceLoader.getString(
+                            OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
+                    secondChild.toString());
+            return node;
+        }
 
-		switch (node.getOperator()) {
-			case ADD:
-				result.setValue(firstValue + secondValue);
-				break;
-			case DIV:
-				result.setValue(firstValue / secondValue);
-				break;
-			case MOD:
-				result.setValue(firstValue % secondValue);
-				break;
-			case MUL:
-				result.setValue(firstValue * secondValue);
-				break;
-			case SUB:
-				result.setValue(firstValue - secondValue);
-				break;
-			case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-			default:
-				// Can't happen, but let's cover it anyway
-				OptimizationPass.log.warn(
-					SafeResourceLoader.getString(
-						OptimizationPass.INVALID_OPERATOR,
-						ScriptManager.getResourceBundle()),
-					node.getOperator().toString(),
-					firstChild.getClass().getSimpleName());
-				return node;
-		}
+        ConstInt result = new ConstInt();
+        result.setType(Type.primitive(Base.INT));
 
-		return result;
-	}
+        switch (node.getOperator()) {
+            case ADD:
+                result.setValue(firstValue + secondValue);
+                break;
+            case DIV:
+                result.setValue(firstValue / secondValue);
+                break;
+            case MOD:
+                result.setValue(firstValue % secondValue);
+                break;
+            case MUL:
+                result.setValue(firstValue * secondValue);
+                break;
+            case SUB:
+                result.setValue(firstValue - secondValue);
+                break;
+            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+            default:
+                // Can't happen, but let's cover it anyway
+                OptimizationPass.log.warn(
+                        SafeResourceLoader.getString(
+                                OptimizationPass.INVALID_OPERATOR,
+                                ScriptManager.getResourceBundle()),
+                        node.getOperator().toString(),
+                        firstChild.getClass().getSimpleName());
+                return node;
+        }
 
-	/**
-	 * Simplify an or expression. Removes pointless logic, and simplifies to a
-	 * constant if possible.
-	 *
-	 * @param node The logic node we are working on.
-	 * @param leftChild The left child.
-	 * @param rightChild The right child.
-	 * @return The node that should be in the place of the node parameter, which
-	 *         may just be the node unaltered.
-	 */
-	private Node simplifyOr(ExprLogic node, Node leftChild, Node rightChild) {
-		if (leftChild instanceof ConstBool left && (left.isValue())
-			|| rightChild instanceof ConstBool right && (right.isValue())) {
-			// if either side of an || is true, the result is always true
-			return this.getBool(true);
-		}
-		if (leftChild instanceof ConstBool bool && (!bool.isValue())) {
-			// false || ____
-			return rightChild;
-		}
-		if (rightChild instanceof ConstBool bool && (!bool.isValue())) {
-			// ____ || false
-			return leftChild;
-		}
-		return node;
-	}
+        return result;
+    }
 
-	@Override
-	public void visit(ExprTernary node) {
-		if (!node.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT)) {
-			return;
-		}
+    /**
+     * Simplify an or expression. Removes pointless logic, and simplifies to a constant if possible.
+     *
+     * @param node The logic node we are working on.
+     * @param leftChild The left child.
+     * @param rightChild The right child.
+     * @return The node that should be in the place of the node parameter, which may just be the
+     *     node unaltered.
+     */
+    private Node simplifyOr(ExprLogic node, Node leftChild, Node rightChild) {
+        if (leftChild instanceof ConstBool left && (left.isValue())
+                || rightChild instanceof ConstBool right && (right.isValue())) {
+            // if either side of an || is true, the result is always true
+            return this.getBool(true);
+        }
+        if (leftChild instanceof ConstBool bool && (!bool.isValue())) {
+            // false || ____
+            return rightChild;
+        }
+        if (rightChild instanceof ConstBool bool && (!bool.isValue())) {
+            // ____ || false
+            return leftChild;
+        }
+        return node;
+    }
 
-		if (node.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
-			final Node firstChild = node.getChildren().get(1);
-			final Node secondChild = node.getChildren().get(2);
+    @Override
+    public void visit(ExprTernary node) {
+        if (!node.getType().anyOf(Base.CHAR, Base.DOUBLE, Base.INT)) {
+            return;
+        }
 
-			if (!firstChild.getType().getBase()
-				.equals(node.getType().getBase())) {
+        if (node.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
+            final Node firstChild = node.getChildren().get(1);
+            final Node secondChild = node.getChildren().get(2);
 
-				Cast cast = new Cast();
-				cast.setType(node.getType());
-				cast.addChild(firstChild);
-				node.getChildren().set(1, cast);
-			}
-			else if (!secondChild.getType().getBase()
-				.equals(node.getType().getBase())) {
+            if (!firstChild.getType().getBase().equals(node.getType().getBase())) {
 
-				Cast cast = new Cast();
-				cast.setType(node.getType());
-				cast.addChild(secondChild);
-				node.getChildren().set(2, cast);
-			}
-			// All the same type
-		}
-	}
+                Cast cast = new Cast();
+                cast.setType(node.getType());
+                cast.addChild(firstChild);
+                node.getChildren().set(1, cast);
+            } else if (!secondChild.getType().getBase().equals(node.getType().getBase())) {
 
-	/**
-	 * Add in automatic casts to larger numerical types.
-	 */
-	@Override
-	public void visit(VarDeclaration node) {
-		if (node.getChildren().size() < 2) {
-			return;
-		}
-		final Node firstChild = node.getChildren().get(0);
-		final Node secondChild = node.getChildren().get(1);
+                Cast cast = new Cast();
+                cast.setType(node.getType());
+                cast.addChild(secondChild);
+                node.getChildren().set(2, cast);
+            }
+            // All the same type
+        }
+    }
 
-		if (firstChild.getType().getDimensions() > 0
-			|| secondChild.getType().getDimensions() > 0) {
-			return;
-		}
+    /** Add in automatic casts to larger numerical types. */
+    @Override
+    public void visit(VarDeclaration node) {
+        if (node.getChildren().size() < 2) {
+            return;
+        }
+        final Node firstChild = node.getChildren().get(0);
+        final Node secondChild = node.getChildren().get(1);
 
-		if ((firstChild.getType().anyOf(Base.INT)
-			&& secondChild.getType().anyOf(Base.CHAR))
-			|| (firstChild.getType().anyOf(Base.DOUBLE)
-				&& secondChild.getType().anyOf(Base.CHAR, Base.INT))) {
-			Cast cast = new Cast();
-			cast.setType(firstChild.getType());
-			cast.addChild(secondChild);
-			node.getChildren().set(1, cast);
-		}
-	}
+        if (firstChild.getType().getDimensions() > 0 || secondChild.getType().getDimensions() > 0) {
+            return;
+        }
 
+        if ((firstChild.getType().anyOf(Base.INT) && secondChild.getType().anyOf(Base.CHAR))
+                || (firstChild.getType().anyOf(Base.DOUBLE)
+                        && secondChild.getType().anyOf(Base.CHAR, Base.INT))) {
+            Cast cast = new Cast();
+            cast.setType(firstChild.getType());
+            cast.addChild(secondChild);
+            node.getChildren().set(1, cast);
+        }
+    }
 }
