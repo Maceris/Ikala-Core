@@ -99,7 +99,7 @@ public class AbstractSyntaxTree {
             final String error =
                     SafeResourceLoader.getString(
                             "UNKNOWN_NON_NUMERIC_TYPE", ScriptManager.getResourceBundle());
-            AbstractSyntaxTree.log.warn(error, node.getText());
+            log.warn(error, node.getText());
             throw new IllegalArgumentException(SafeResourceLoader.format(error, node.getText()));
         }
 
@@ -116,7 +116,7 @@ public class AbstractSyntaxTree {
                 SafeResourceLoader.getString(
                         "UNKNOWN_PRIMITIVE_TYPE", ScriptManager.getResourceBundle());
 
-        AbstractSyntaxTree.log.warn(error, node.getText());
+        log.warn(error, node.getText());
         throw new IllegalArgumentException(SafeResourceLoader.format(error, node.getText()));
     }
 
@@ -150,7 +150,7 @@ public class AbstractSyntaxTree {
             if (arrayType.Identifier() != null) {
                 return Type.identifierArray(arrayType.Identifier().getText(), dims);
             }
-            AbstractSyntaxTree.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "UNKNOWN_ARRAY_TYPE", ScriptManager.getResourceBundle()),
                     arrayType.getText());
@@ -158,7 +158,7 @@ public class AbstractSyntaxTree {
         final String error =
                 SafeResourceLoader.getString(
                         "UNKNOWN_REFERENCE_TYPE", ScriptManager.getResourceBundle());
-        AbstractSyntaxTree.log.warn(error, node.getText());
+        log.warn(error, node.getText());
         throw new IllegalArgumentException(SafeResourceLoader.format(error, node.getText()));
     }
 
@@ -176,7 +176,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.getType(node.referenceType());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNOWN_TYPE_STATEMENT", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -223,7 +223,7 @@ public class AbstractSyntaxTree {
             return newNode;
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNOWN_PRIMARY_EXTENSION", ScriptManager.getResourceBundle()),
                 extension.getText());
@@ -251,7 +251,7 @@ public class AbstractSyntaxTree {
         }
 
         // Should be impossible unless the grammar changes
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNOWN_PRIMARY_EXPRESSION", ScriptManager.getResourceBundle()),
                 lhs.getText());
@@ -275,7 +275,7 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprArithmetic.Operator.SUB);
             } else {
                 // Should be impossible unless the grammar changes
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_ADDITIVE_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -307,7 +307,7 @@ public class AbstractSyntaxTree {
         if (lhs.Identifier() != null) {
             result.addChild(AbstractSyntaxTree.identifierNode(lhs.Identifier()));
         } else {
-            AbstractSyntaxTree.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "UNKNOWN_ASSIGN_LEFT_SIDE", ScriptManager.getResourceBundle()),
                     lhs.getText());
@@ -355,7 +355,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.label());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNOWN_BLOCK_STATEMENT", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -392,7 +392,7 @@ public class AbstractSyntaxTree {
             result.setType(AbstractSyntaxTree.getType(node.referenceType()));
             result.addChild(AbstractSyntaxTree.process(node.unaryExpressionNotPlusMinus()));
         } else {
-            AbstractSyntaxTree.log.warn(
+            log.warn(
                     SafeResourceLoader.getString("UNKNOWN_CAST", ScriptManager.getResourceBundle()),
                     node.getText());
             return null;
@@ -416,7 +416,7 @@ public class AbstractSyntaxTree {
                 Node child = AbstractSyntaxTree.process(parserOutput.blockStatement(i));
                 if (child == null) {
                     root.setInvalid(true);
-                    AbstractSyntaxTree.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "INVALID_BLOCK_STATEMENT", ScriptManager.getResourceBundle()));
                     // Might as well immediately bail
@@ -526,7 +526,7 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprEquality.Operator.NOT_EQUAL);
             } else {
                 // Should be impossible unless the grammar changes
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -552,7 +552,7 @@ public class AbstractSyntaxTree {
         if (node.conditionalExpression() != null) {
             return AbstractSyntaxTree.process(node.conditionalExpression());
         }
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNOWN_EXPRESSION", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -572,7 +572,7 @@ public class AbstractSyntaxTree {
         if (node.localVariableDeclaration() != null) {
             return AbstractSyntaxTree.process(node.localVariableDeclaration());
         }
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString("UNKNOWN_FOR_INIT", ScriptManager.getResourceBundle()),
                 node.getText());
         return null;
@@ -743,7 +743,7 @@ public class AbstractSyntaxTree {
             try {
                 result.setValue(Integer.parseInt(node.IntegerLiteral().getText()));
             } catch (NumberFormatException e) {
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "INVALID_INT", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -756,7 +756,7 @@ public class AbstractSyntaxTree {
             try {
                 result.setValue(Double.parseDouble(node.FloatingPointLiteral().getText()));
             } catch (NumberFormatException e) {
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "INVALID_FLOAT", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -786,7 +786,7 @@ public class AbstractSyntaxTree {
         if (node.NullLiteral() != null) {
             return new ConstNull();
         }
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString("UNKNOWN_CONSTANT", ScriptManager.getResourceBundle()),
                 node.getText());
         return null;
@@ -883,7 +883,7 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprArithmetic.Operator.MOD);
             } else {
                 // Should be impossible unless the grammar changes
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_MULTIPLICATIVE_OPERATOR",
                                 ScriptManager.getResourceBundle()),
@@ -1038,7 +1038,7 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprRelation.Operator.GTE);
             } else {
                 // Should be impossible unless the grammar changes
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_RELATIONAL_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -1077,7 +1077,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.forStatement());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1110,7 +1110,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.methodInvocation());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNOWN_STATEMENT_EXPRESSION", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1155,7 +1155,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.forStatementNoShortIf());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1199,7 +1199,7 @@ public class AbstractSyntaxTree {
             return result;
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1295,7 +1295,7 @@ public class AbstractSyntaxTree {
             if (node.SUB() != null) {
                 result.setOperator(ExprArithmetic.Operator.SUB);
             } else {
-                AbstractSyntaxTree.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
                                 ScriptManager.getResourceBundle()),
@@ -1308,7 +1308,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.unaryExpressionNotPlusMinus());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
                         ScriptManager.getResourceBundle()),
@@ -1334,7 +1334,7 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.castExpression());
         }
 
-        AbstractSyntaxTree.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
                         ScriptManager.getResourceBundle()),

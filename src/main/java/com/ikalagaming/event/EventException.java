@@ -10,7 +10,7 @@ public class EventException extends Exception {
 
     /** Constructs a new {@link EventException} with no cause. */
     public EventException() {
-        this.cause = null;
+        cause = null;
     }
 
     /**
@@ -20,7 +20,7 @@ public class EventException extends Exception {
      */
     public EventException(String message) {
         super(message);
-        this.cause = null;
+        cause = null;
     }
 
     /**
@@ -29,7 +29,7 @@ public class EventException extends Exception {
      * @param throwable The throwable that was thrown
      */
     public EventException(Throwable throwable) {
-        this.cause = throwable;
+        cause = throwable;
     }
 
     /**
@@ -50,6 +50,6 @@ public class EventException extends Exception {
      */
     @Override
     public synchronized Throwable getCause() {
-        return this.cause;
+        return cause;
     }
 }

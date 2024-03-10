@@ -51,9 +51,9 @@ class PluginDetails {
 
     /** Dereference and clean up all information, pending removal of the associated plugin. */
     void dispose() {
-        this.classLoader.dispose();
-        this.info = null;
-        this.plugin = null;
-        this.state = PluginState.PENDING_REMOVAL;
+        classLoader.dispose();
+        info = null;
+        plugin = null;
+        state = PluginState.PENDING_REMOVAL;
     }
 }

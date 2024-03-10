@@ -159,7 +159,7 @@ public class ScriptManager {
         try {
             stream = CharStreams.fromPath(script.toPath());
         } catch (IOException e) {
-            ScriptManager.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "FILE_READ_ERROR", ScriptManager.getResourceBundle()),
                     script.getAbsolutePath());

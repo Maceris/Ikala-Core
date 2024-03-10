@@ -63,7 +63,7 @@ public class Engine {
         Engine.registeredClasses.add(clazz);
         ScriptEngine engine = Engine.getLuaEngine();
         engine.put(clazz.getSimpleName(), clazz);
-        Engine.log.debug(
+        log.debug(
                 SafeResourceLoader.getString("REGISTERED_CLASS", ScriptManager.getResourceBundle()),
                 clazz.getSimpleName());
     }
@@ -80,7 +80,7 @@ public class Engine {
         }
         ScriptEngine engine = Engine.getLuaEngine();
         engine.put(clazz.getSimpleName(), null);
-        Engine.log.debug(
+        log.debug(
                 SafeResourceLoader.getString(
                         "UNREGISTERED_CLASS", ScriptManager.getResourceBundle()),
                 clazz.getSimpleName());

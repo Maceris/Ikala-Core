@@ -20,19 +20,19 @@ public class NameRegistry {
 
     /** Create a new, empty, name registry. */
     public NameRegistry() {
-        this.registeredNames = new HashMap<>();
-        this.mapLock = new ReentrantLock();
+        registeredNames = new HashMap<>();
+        mapLock = new ReentrantLock();
     }
 
     /** Removes all names and mappings from the registry. */
     public void clear() {
-        this.mapLock.lock();
+        mapLock.lock();
         try {
-            for (String name : this.registeredNames.keySet()) {
+            for (String name : registeredNames.keySet()) {
                 this.clear(name);
             }
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
     }
 
@@ -42,14 +42,14 @@ public class NameRegistry {
      * @param baseName the string that IDs are registered for
      */
     public void clear(final String baseName) {
-        this.mapLock.lock();
+        mapLock.lock();
         try {
-            if (this.registeredNames.containsKey(baseName)) {
-                this.registeredNames.get(baseName).clear();
-                this.registeredNames.remove(baseName);
+            if (registeredNames.containsKey(baseName)) {
+                registeredNames.get(baseName).clear();
+                registeredNames.remove(baseName);
             }
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
     }
 
@@ -86,11 +86,11 @@ public class NameRegistry {
         }
 
         boolean doesContain = false;
-        this.mapLock.lock();
+        mapLock.lock();
         try {
-            doesContain = this.registeredNames.get(name).contains(id);
+            doesContain = registeredNames.get(name).contains(id);
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
         return doesContain;
     }
@@ -109,22 +109,22 @@ public class NameRegistry {
      */
     public int getNextID(final String baseName) {
         boolean doesContain = false;
-        this.mapLock.lock();
+        mapLock.lock();
         try {
-            doesContain = this.registeredNames.containsKey(baseName);
+            doesContain = registeredNames.containsKey(baseName);
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
         if (!doesContain) {
             return 0;
         }
         int smallest = 0;
 
-        this.mapLock.lock();
+        mapLock.lock();
         try {
-            smallest = this.registeredNames.get(baseName).getSmallestUnusedInt();
+            smallest = registeredNames.get(baseName).getSmallestUnusedInt();
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
         return smallest;
     }
@@ -153,39 +153,39 @@ public class NameRegistry {
 
         boolean doesContain = false;
 
-        this.mapLock.lock();
+        mapLock.lock();
         try {
-            doesContain = this.registeredNames.containsKey(baseName);
+            doesContain = registeredNames.containsKey(baseName);
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
         if (doesContain) {
-            this.mapLock.lock();
+            mapLock.lock();
             try {
-                tree = this.registeredNames.get(baseName);
+                tree = registeredNames.get(baseName);
                 addition = tree.getSmallestUnusedInt();
             } finally {
-                this.mapLock.unlock();
+                mapLock.unlock();
             }
         } else {
             tree = new IntegerTree();
             addition = 0;
-            this.mapLock.lock();
+            mapLock.lock();
             try {
-                this.registeredNames.put(baseName, tree);
+                registeredNames.put(baseName, tree);
 
             } finally {
-                this.mapLock.unlock();
+                mapLock.unlock();
             }
         }
 
-        this.mapLock.lock();
+        mapLock.lock();
         try {
             tree.insert(addition);
         } catch (DuplicateEntry e) {
             e.printStackTrace();
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
 
         ret.append("-").append(addition);
@@ -227,15 +227,15 @@ public class NameRegistry {
             return false;
         }
 
-        this.mapLock.lock();
+        mapLock.lock();
         try {
             IntegerTree nameTree;
-            nameTree = this.registeredNames.get(name);
+            nameTree = registeredNames.get(name);
             if (nameTree != null) {
                 nameTree.remove(id);
             }
         } finally {
-            this.mapLock.unlock();
+            mapLock.unlock();
         }
 
         return true;

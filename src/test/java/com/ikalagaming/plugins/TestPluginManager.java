@@ -1,5 +1,8 @@
 package com.ikalagaming.plugins;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.ikalagaming.event.EventAssert;
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.plugins.events.PluginCommandSent;
@@ -7,7 +10,6 @@ import com.ikalagaming.util.SafeResourceLoader;
 
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -120,14 +122,14 @@ class TestPluginManager {
                                                 cmd, pluginManager.getResourceBundle()))
                         .collect(Collectors.toList());
 
-        Assertions.assertTrue(
+        assertTrue(
                 commands.stream()
                         .map(pluginManager::isCommandRegistered)
                         .allMatch(value -> true == value));
 
         pluginManager.clearCommands();
 
-        Assertions.assertTrue(
+        assertTrue(
                 commands.stream()
                         .map(pluginManager::isCommandRegistered)
                         .allMatch(value -> false == value));
@@ -142,11 +144,11 @@ class TestPluginManager {
 
         pluginManager.registerCommand(commandName, callback, "UnitTests");
 
-        Assertions.assertTrue(pluginManager.isCommandRegistered(commandName));
+        assertTrue(pluginManager.isCommandRegistered(commandName));
 
         pluginManager.unregisterCommand(commandName);
 
-        Assertions.assertFalse(pluginManager.isCommandRegistered(commandName));
+        assertFalse(pluginManager.isCommandRegistered(commandName));
     }
 
     /** Tests the lifecycle of loading, enabling, disabling, and unloading a plugin. */
@@ -155,29 +157,29 @@ class TestPluginManager {
         final String pluginName = "TestStandalone";
 
         pluginManager.setEnableOnLoad(false);
-        Assertions.assertFalse(pluginManager.isEnableOnLoad());
+        assertFalse(pluginManager.isEnableOnLoad());
 
-        Assertions.assertTrue(pluginManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+        assertTrue(pluginManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
 
         String loadedMessage = String.format("Plugin '%s' should be loaded.", pluginName);
-        Assertions.assertTrue(pluginManager.isLoaded(pluginName), loadedMessage);
+        assertTrue(pluginManager.isLoaded(pluginName), loadedMessage);
 
-        Assertions.assertTrue(pluginManager.enable(pluginName));
+        assertTrue(pluginManager.enable(pluginName));
 
         String enabledMessage = String.format("Plugin '%s' should be enabled", pluginName);
-        Assertions.assertTrue(pluginManager.isLoaded(pluginName), loadedMessage);
-        Assertions.assertTrue(pluginManager.isEnabled(pluginName), enabledMessage);
+        assertTrue(pluginManager.isLoaded(pluginName), loadedMessage);
+        assertTrue(pluginManager.isEnabled(pluginName), enabledMessage);
 
-        Assertions.assertTrue(pluginManager.disable(pluginName));
+        assertTrue(pluginManager.disable(pluginName));
 
         String disabledMessage = String.format("Plugin '%s' should not be enabled", pluginName);
-        Assertions.assertTrue(pluginManager.isLoaded(pluginName), loadedMessage);
-        Assertions.assertFalse(pluginManager.isEnabled(pluginName), disabledMessage);
+        assertTrue(pluginManager.isLoaded(pluginName), loadedMessage);
+        assertFalse(pluginManager.isEnabled(pluginName), disabledMessage);
 
         String unloadedMessage = String.format("Plugin '%s' should not be loaded.", pluginName);
-        Assertions.assertTrue(pluginManager.unloadPlugin(pluginName));
-        Assertions.assertFalse(pluginManager.isLoaded(pluginName), unloadedMessage);
-        Assertions.assertFalse(pluginManager.isEnabled(pluginName), disabledMessage);
+        assertTrue(pluginManager.unloadPlugin(pluginName));
+        assertFalse(pluginManager.isLoaded(pluginName), unloadedMessage);
+        assertFalse(pluginManager.isEnabled(pluginName), disabledMessage);
     }
 
     /**
@@ -200,12 +202,12 @@ class TestPluginManager {
                 SafeResourceLoader.getString("COMMAND_UNLOAD", realManager.getResourceBundle());
 
         final List<String> args = List.of(pluginName);
-        Assertions.assertTrue(realManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
+        assertTrue(realManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName));
 
         EventAssert.listenFor(PluginCommandSent.class);
 
         String loadedMessage = String.format("Plugin '%s' should be loaded.", pluginName);
-        Assertions.assertTrue(realManager.isLoaded(pluginName), loadedMessage);
+        assertTrue(realManager.isLoaded(pluginName), loadedMessage);
 
         EventAssert.resetFireCount(PluginCommandSent.class);
         new PluginCommandSent(enable, args).fire();
@@ -214,8 +216,8 @@ class TestPluginManager {
                 .until(() -> EventAssert.wasFired(PluginCommandSent.class));
 
         String enabledMessage = String.format("Plugin '%s' should be enabled", pluginName);
-        Assertions.assertTrue(realManager.isLoaded(pluginName), loadedMessage);
-        Assertions.assertTrue(realManager.isEnabled(pluginName), enabledMessage);
+        assertTrue(realManager.isLoaded(pluginName), loadedMessage);
+        assertTrue(realManager.isEnabled(pluginName), enabledMessage);
 
         EventAssert.resetFireCount(PluginCommandSent.class);
         new PluginCommandSent(disable, args).fire();
@@ -224,8 +226,8 @@ class TestPluginManager {
                 .until(() -> EventAssert.wasFired(PluginCommandSent.class));
 
         String disabledMessage = String.format("Plugin '%s' should not be enabled", pluginName);
-        Assertions.assertTrue(realManager.isLoaded(pluginName), loadedMessage);
-        Assertions.assertFalse(realManager.isEnabled(pluginName), disabledMessage);
+        assertTrue(realManager.isLoaded(pluginName), loadedMessage);
+        assertFalse(realManager.isEnabled(pluginName), disabledMessage);
 
         EventAssert.resetFireCount(PluginCommandSent.class);
         new PluginCommandSent(unload, args).fire();
@@ -234,8 +236,8 @@ class TestPluginManager {
                 .until(() -> EventAssert.wasFired(PluginCommandSent.class));
 
         String unloadedMessage = String.format("Plugin '%s' should not be loaded.", pluginName);
-        Assertions.assertFalse(realManager.isLoaded(pluginName), unloadedMessage);
-        Assertions.assertFalse(realManager.isEnabled(pluginName), disabledMessage);
+        assertFalse(realManager.isLoaded(pluginName), unloadedMessage);
+        assertFalse(realManager.isEnabled(pluginName), disabledMessage);
         EventManager.destoryInstance();
     }
 
@@ -249,12 +251,12 @@ class TestPluginManager {
 
         for (String name : this.VALID_PLUGINS) {
             String message = String.format("Plugin '%s' should have been loaded.", name);
-            Assertions.assertTrue(pluginManager.isLoaded(name), message);
+            assertTrue(pluginManager.isLoaded(name), message);
         }
 
         for (String name : this.INVALID_PLUGINS) {
             String message = String.format("Plugin '%s' should not have been loaded.", name);
-            Assertions.assertFalse(pluginManager.isLoaded(name), message);
+            assertFalse(pluginManager.isLoaded(name), message);
         }
     }
 
@@ -272,7 +274,7 @@ class TestPluginManager {
 
         for (String name : toLoad) {
             String message = String.format("Plugin '%s' should have been loaded.", name);
-            Assertions.assertTrue(pluginManager.isLoaded(name), message);
+            assertTrue(pluginManager.isLoaded(name), message);
         }
     }
 
@@ -284,7 +286,7 @@ class TestPluginManager {
         pluginManager.loadPlugin(this.TEST_JAR_FOLDER, pluginName);
 
         String message = String.format("Plugin '%s' should have been loaded.", pluginName);
-        Assertions.assertTrue(pluginManager.isLoaded(pluginName), message);
+        assertTrue(pluginManager.isLoaded(pluginName), message);
     }
 
     /**
@@ -318,8 +320,8 @@ class TestPluginManager {
                     case EQUAL, OLDER -> !newer;
                 };
 
-        Assertions.assertTrue(resultMatches);
-        Assertions.assertTrue(newerMatches);
+        assertTrue(resultMatches);
+        assertTrue(newerMatches);
     }
 
     private static Stream<Arguments> versionProvider() {

@@ -9,6 +9,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -122,7 +123,7 @@ public class PluginInfo {
     @Getter
     private List<String> softDependencies = new ArrayList<>();
 
-    private Version version = Version.valueOf("0.0.0");
+    private Version version = Version.parse("0.0.0");
 
     /**
      * Returns a plugin description loaded by the given InputStream, from a Yaml file. The tags that
@@ -134,7 +135,7 @@ public class PluginInfo {
     public PluginInfo(@NonNull final InputStream stream) throws InvalidDescriptionException {
 
         Yaml yaml = new Yaml();
-        this.loadMap(this.asMap(yaml.load(stream)));
+        loadMap(asMap(yaml.load(stream)));
     }
 
     /**
@@ -159,10 +160,10 @@ public class PluginInfo {
      */
     private void extractRequiredFields(Map<?, ?> map) throws InvalidDescriptionException {
         try {
-            this.name = map.get("name").toString();
-            if (!this.name.matches(PluginInfo.NAME_REGEX)) {
+            name = map.get("name").toString();
+            if (!name.matches(PluginInfo.NAME_REGEX)) {
                 throw new InvalidDescriptionException(
-                        "name '" + this.name + "' contains invalid characters.");
+                        "name '" + name + "' contains invalid characters.");
             }
         } catch (NullPointerException ex) {
             throw new InvalidDescriptionException("name is not defined", ex);
@@ -171,7 +172,7 @@ public class PluginInfo {
         }
 
         try {
-            this.version = Version.valueOf((String) map.get("version"));
+            version = Version.parse((String) map.get("version"));
         } catch (NullPointerException ex) {
             throw new InvalidDescriptionException("version is not defined", ex);
         } catch (ClassCastException ex) {
@@ -183,7 +184,7 @@ public class PluginInfo {
         }
 
         try {
-            this.mainClass = map.get("main-class").toString();
+            mainClass = map.get("main-class").toString();
         } catch (NullPointerException ex) {
             throw new InvalidDescriptionException("main class is not defined", ex);
         } catch (ClassCastException ex) {
@@ -198,7 +199,7 @@ public class PluginInfo {
      * @return the full name
      */
     public String getFullName() {
-        return this.name + "-" + this.version;
+        return name + "-" + version;
     }
 
     /**
@@ -209,7 +210,12 @@ public class PluginInfo {
      * @return the version of the plugin
      */
     public String getVersion() {
-        return this.version.getNormalVersion();
+        return String.format(
+                Locale.ROOT,
+                "%d.%d.%d",
+                version.majorVersion(),
+                version.minorVersion(),
+                version.patchVersion());
     }
 
     /**
@@ -219,19 +225,19 @@ public class PluginInfo {
      * @throws InvalidDescriptionException If the plugin info is not valid.
      */
     private void loadMap(Map<?, ?> map) throws InvalidDescriptionException {
-        this.extractRequiredFields(map);
+        extractRequiredFields(map);
 
-        this.dependencies = PluginInfo.makePluginNameList(map, "dependencies");
-        this.softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies");
+        dependencies = PluginInfo.makePluginNameList(map, "dependencies");
+        softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies");
 
         if (map.get("description") != null) {
-            this.description = map.get("description").toString();
+            description = map.get("description").toString();
         }
 
         if (map.get("authors") != null) {
             try {
                 for (Object o : (Iterable<?>) map.get("authors")) {
-                    this.authors.add(o.toString());
+                    authors.add(o.toString());
                 }
             } catch (ClassCastException ex) {
                 throw new InvalidDescriptionException("authors are of the wrong type", ex);

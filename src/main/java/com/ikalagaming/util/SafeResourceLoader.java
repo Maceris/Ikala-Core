@@ -174,11 +174,11 @@ public class SafeResourceLoader {
     }
 
     private static void logClassCastException(String name, String bundle) {
-        SafeResourceLoader.log.warn("The {} key from the {} bundle is not a string", name, bundle);
+        log.warn("The {} key from the {} bundle is not a string", name, bundle);
     }
 
     private static void logMissingResource(String name, String bundle) {
-        SafeResourceLoader.log.warn("Missing the {} key from the {} bundle", name, bundle);
+        log.warn("Missing the {} key from the {} bundle", name, bundle);
     }
 
     /** Private constructor so that this class is not instantiated. */

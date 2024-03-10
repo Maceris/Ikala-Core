@@ -8,7 +8,7 @@ public class InvalidOperation extends Exception {
 
     /** Constructs a new {@link InvalidOperation} with no cause. */
     public InvalidOperation() {
-        this.theCause = null;
+        theCause = null;
     }
 
     /**
@@ -18,7 +18,7 @@ public class InvalidOperation extends Exception {
      */
     public InvalidOperation(String message) {
         super(message);
-        this.theCause = null;
+        theCause = null;
     }
 
     /**
@@ -27,7 +27,7 @@ public class InvalidOperation extends Exception {
      * @param throwable The throwable that was thrown
      */
     public InvalidOperation(Throwable throwable) {
-        this.theCause = throwable;
+        theCause = throwable;
     }
 
     /**
@@ -38,7 +38,7 @@ public class InvalidOperation extends Exception {
      */
     public InvalidOperation(Throwable cause, String message) {
         super(message);
-        this.theCause = cause;
+        theCause = cause;
     }
 
     /**
@@ -48,6 +48,6 @@ public class InvalidOperation extends Exception {
      */
     @Override
     public synchronized Throwable getCause() {
-        return this.theCause;
+        return theCause;
     }
 }

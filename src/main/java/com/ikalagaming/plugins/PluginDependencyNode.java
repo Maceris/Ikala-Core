@@ -48,7 +48,7 @@ class PluginDependencyNode {
      */
     public PluginDependencyNode(String name) {
         this.name = name;
-        this.children = new ArrayList<>();
+        children = new ArrayList<>();
     }
 
     /**
@@ -59,7 +59,7 @@ class PluginDependencyNode {
      */
     public void addChild(String childName) {
         PluginDependencyNode child = new PluginDependencyNode(childName);
-        this.children.add(child);
+        children.add(child);
         child.setParent(this);
     }
 }

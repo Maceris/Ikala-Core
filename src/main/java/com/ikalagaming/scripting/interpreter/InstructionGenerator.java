@@ -116,7 +116,7 @@ public class InstructionGenerator implements ASTVisitor {
                     type = InstructionType.NOP;
                     break;
             }
-            this.emitJump(type, targetLabel);
+            emitJump(type, targetLabel);
             return;
         }
         if (expression instanceof ExprEquality equality) {
@@ -132,7 +132,7 @@ public class InstructionGenerator implements ASTVisitor {
                     type = InstructionType.NOP;
                     break;
             }
-            this.emitJump(type, targetLabel);
+            emitJump(type, targetLabel);
             return;
         }
         if (expression instanceof ExprLogic
@@ -142,17 +142,17 @@ public class InstructionGenerator implements ASTVisitor {
             // Boolean values
 
             // Convert the resulting boolean value to a flag, clean the stack
-            this.tempInstructions.add(
+            tempInstructions.add(
                     new Instruction(
                             InstructionType.CMP,
                             new MemLocation(MemArea.STACK, Boolean.class),
                             new MemLocation(MemArea.IMMEDIATE, Boolean.class, true),
                             null));
 
-            this.emitJump(InstructionType.JNE, targetLabel);
+            emitJump(InstructionType.JNE, targetLabel);
             return;
         }
-        InstructionGenerator.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNEXPECTED_EXPRESSION", ScriptManager.getResourceBundle()),
                 expression.toString());
@@ -196,7 +196,7 @@ public class InstructionGenerator implements ASTVisitor {
                     type = InstructionType.JMP;
                     break;
             }
-            this.emitJump(type, targetLabel);
+            emitJump(type, targetLabel);
             return;
         }
         if (expression instanceof ExprEquality equality) {
@@ -212,7 +212,7 @@ public class InstructionGenerator implements ASTVisitor {
                     type = InstructionType.JMP;
                     break;
             }
-            this.emitJump(type, targetLabel);
+            emitJump(type, targetLabel);
             return;
         }
         if (expression instanceof ExprLogic
@@ -221,17 +221,17 @@ public class InstructionGenerator implements ASTVisitor {
             // Boolean values
 
             // Convert the resulting boolean value to a flag, clean the stack
-            this.tempInstructions.add(
+            tempInstructions.add(
                     new Instruction(
                             InstructionType.CMP,
                             new MemLocation(MemArea.STACK, Boolean.class),
                             new MemLocation(MemArea.IMMEDIATE, Boolean.class, true),
                             null));
 
-            this.emitJump(InstructionType.JEQ, targetLabel);
+            emitJump(InstructionType.JEQ, targetLabel);
             return;
         }
-        InstructionGenerator.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNEXPECTED_EXPRESSION", ScriptManager.getResourceBundle()),
                 expression.toString());
@@ -266,7 +266,7 @@ public class InstructionGenerator implements ASTVisitor {
         if (node instanceof Identifier identifier) {
             return new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
         }
-        InstructionGenerator.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNHANDLED_EXPRESSION_MEMBER", ScriptManager.getResourceBundle()),
                 node.toString());
@@ -286,7 +286,7 @@ public class InstructionGenerator implements ASTVisitor {
                 return br.getChildren().isEmpty();
             }
             // recurse
-            if (this.containsBreak(child)) {
+            if (containsBreak(child)) {
                 return true;
             }
         }
@@ -300,7 +300,7 @@ public class InstructionGenerator implements ASTVisitor {
      * @param target The name of the target label.
      */
     private void emitJump(@NonNull final InstructionType type, @NonNull final String target) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         type,
                         new MemLocation(MemArea.IMMEDIATE, String.class, target),
@@ -315,7 +315,7 @@ public class InstructionGenerator implements ASTVisitor {
      * @see #getNextLabelName()
      */
     private void emitLabel(@NonNull final String label) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.NOP,
                         new MemLocation(MemArea.IMMEDIATE, String.class, label),
@@ -343,7 +343,7 @@ public class InstructionGenerator implements ASTVisitor {
             if (!(child instanceof SwitchBlockGroup)) {
                 continue;
             }
-            final String sharedLabel = this.getNextLabelName();
+            final String sharedLabel = getNextLabelName();
 
             // Just used to store the label name in the target table
             Label fakeLabel = new Label();
@@ -356,8 +356,8 @@ public class InstructionGenerator implements ASTVisitor {
                         defaultLabel = sharedLabel;
                     } else {
                         Node labelExpression = label.getChildren().get(0);
-                        this.processTree(labelExpression);
-                        this.tempInstructions.add(
+                        processTree(labelExpression);
+                        tempInstructions.add(
                                 new Instruction(
                                         InstructionType.CMP,
                                         new MemLocation(
@@ -369,7 +369,7 @@ public class InstructionGenerator implements ASTVisitor {
                                         new MemLocation(
                                                 MemArea.VARIABLE, String.class, expressionResult),
                                         null));
-                        this.emitJump(InstructionType.JEQ, sharedLabel);
+                        emitJump(InstructionType.JEQ, sharedLabel);
                     }
                 } else {
                     // block statement
@@ -387,7 +387,7 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The name for the next valid label.
      */
     private String getNextLabelName() {
-        return String.format(".L%d", this.nextLabel++);
+        return String.format(".L%d", nextLabel++);
     }
 
     /**
@@ -397,7 +397,7 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The name for the next valid variable name.
      */
     private String getNextVariableName() {
-        return String.format("$%d", this.nextVariable++);
+        return String.format("$%d", nextVariable++);
     }
 
     /**
@@ -417,7 +417,7 @@ public class InstructionGenerator implements ASTVisitor {
             case BOOLEAN, IDENTIFIER, LABEL, VOID:
             default:
                 // Fallback, but the tree verification should(tm) prevent this
-                InstructionGenerator.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "INVALID_ARITHMETIC_TYPE", ScriptManager.getResourceBundle()),
                         node.getType().toString());
@@ -475,7 +475,7 @@ public class InstructionGenerator implements ASTVisitor {
         if (numericType == Character.class) {
             return this.instructionTypeChar(operator);
         }
-        InstructionGenerator.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "UNKNONW_ASSIGN_OPERATOR", ScriptManager.getResourceBundle()),
                 operator.toString());
@@ -663,9 +663,9 @@ public class InstructionGenerator implements ASTVisitor {
         Node left = node.getChildren().get(0);
         Node right = node.getChildren().get(1);
 
-        this.processBoolExpression(right);
+        processBoolExpression(right);
 
-        this.processBoolExpression(left);
+        processBoolExpression(left);
 
         /*
          * We reverse the order of child parsing so the order here makes sense.
@@ -696,7 +696,7 @@ public class InstructionGenerator implements ASTVisitor {
                             MemArea.STACK, left.getType().getBase().getCorrespondingClass());
         }
 
-        this.tempInstructions.add(new Instruction(InstructionType.CMP, first, second, null));
+        tempInstructions.add(new Instruction(InstructionType.CMP, first, second, null));
     }
 
     /**
@@ -706,12 +706,12 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The list of instructions corresponding to the tree.
      */
     public List<Instruction> process(@NonNull CompilationUnit ast) {
-        this.tempInstructions = new LinkedList<>();
-        this.processTree(ast);
+        tempInstructions = new LinkedList<>();
+        processTree(ast);
 
         // generate temporary instructions
 
-        return this.processJumps();
+        return processJumps();
     }
 
     /**
@@ -725,9 +725,9 @@ public class InstructionGenerator implements ASTVisitor {
             Node child = node.getChildren().get(i);
             if (child instanceof Identifier id) {
                 // more variable special handling
-                this.pushVarToStack(id);
+                pushVarToStack(id);
             }
-            this.processTree(child);
+            processTree(child);
         }
     }
 
@@ -738,7 +738,7 @@ public class InstructionGenerator implements ASTVisitor {
      * @param node The node to process.
      */
     private void processBoolExpression(@NonNull Node node) {
-        this.processTree(node);
+        processTree(node);
         if (node instanceof ExprRelation relation) {
             this.pushResultToStack(relation);
         } else if (node instanceof ExprEquality equality) {
@@ -763,7 +763,7 @@ public class InstructionGenerator implements ASTVisitor {
                 // Arithmetic expressions handle direct access
                 continue;
             }
-            this.processTree(child);
+            processTree(child);
         }
     }
 
@@ -781,7 +781,7 @@ public class InstructionGenerator implements ASTVisitor {
         List<String> currentLabels = new ArrayList<>();
         /** The actual instruction number we are on, ignoring labels. */
         int instructionCount = 0;
-        for (Instruction i : this.tempInstructions) {
+        for (Instruction i : tempInstructions) {
             if (i.type() == InstructionType.NOP) {
                 // Label
                 currentLabels.add((String) i.firstLocation().value());
@@ -841,19 +841,19 @@ public class InstructionGenerator implements ASTVisitor {
      * @param node The node to start processing from.
      */
     private void processTree(Node node) {
-        if (this.shouldSkipChildren(node)) {
+        if (shouldSkipChildren(node)) {
             /*
              * Skip processing children because the visitor handles processing
              * them, or they should be skipped.
              */
         } else if (node instanceof ExprArithmetic) {
-            this.processExprArithmetic(node);
+            processExprArithmetic(node);
         } else if (node instanceof ArgumentList) {
-            this.processArgumentList(node);
+            processArgumentList(node);
         } else {
             // Forward order
             for (Node child : node.getChildren()) {
-                this.processTree(child);
+                processTree(child);
             }
         }
         node.process(this);
@@ -876,13 +876,13 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
             default:
                 type = InstructionType.NOP;
-                InstructionGenerator.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
                 break;
         }
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(type, null, null, new MemLocation(MemArea.STACK, Boolean.class)));
     }
 
@@ -909,13 +909,13 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
             default:
                 type = InstructionType.NOP;
-                InstructionGenerator.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_RELATIONAL_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
                 break;
         }
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(type, null, null, new MemLocation(MemArea.STACK, Boolean.class)));
     }
 
@@ -925,7 +925,7 @@ public class InstructionGenerator implements ASTVisitor {
      * @param node The node that contains the name of the variable we need on the stack.
      */
     private void pushVarToStack(Identifier node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
@@ -966,28 +966,28 @@ public class InstructionGenerator implements ASTVisitor {
      * @param expressionResult The name of the variable where the expression result is stored.
      */
     private void switchBody(Node body, List<Node> targetTable, String expressionResult) {
-        String defaultLabel = this.generateSwitchJumpTable(body, targetTable, expressionResult);
+        String defaultLabel = generateSwitchJumpTable(body, targetTable, expressionResult);
         /** Used for all trailing labels. */
-        final String endLabel = this.getNextLabelName();
+        final String endLabel = getNextLabelName();
         for (Node child : body.getChildren()) {
             if (child instanceof SwitchLabel label) {
                 if (label.isDefault()) {
                     defaultLabel = endLabel;
                 } else {
                     Node labelExpression = label.getChildren().get(0);
-                    this.processTree(labelExpression);
-                    this.emitJump(InstructionType.JEQ, endLabel);
+                    processTree(labelExpression);
+                    emitJump(InstructionType.JEQ, endLabel);
                 }
             }
         }
         if (defaultLabel != null) {
-            this.emitJump(InstructionType.JMP, defaultLabel);
+            emitJump(InstructionType.JMP, defaultLabel);
         }
     }
 
     @Override
     public void visit(Break node) {
-        this.emitJump(InstructionType.JMP, this.breakLabel);
+        emitJump(InstructionType.JMP, breakLabel);
     }
 
     @Override
@@ -1002,9 +1002,9 @@ public class InstructionGenerator implements ASTVisitor {
             Identifier name = (Identifier) node.getChildren().get(1);
             String methodName = name.getName();
             if (targetObject instanceof Identifier id) {
-                this.pushVarToStack(id);
+                pushVarToStack(id);
             } else {
-                this.processTree(targetObject);
+                processTree(targetObject);
             }
             object = new MemLocation(MemArea.STACK, String.class, methodName);
 
@@ -1025,7 +1025,7 @@ public class InstructionGenerator implements ASTVisitor {
         }
 
         if (params != null) {
-            this.processTree(params);
+            processTree(params);
         }
 
         paramCount =
@@ -1034,7 +1034,7 @@ public class InstructionGenerator implements ASTVisitor {
                         Integer.class,
                         params == null ? 0 : params.getChildren().size());
 
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.CALL,
                         object,
@@ -1055,7 +1055,7 @@ public class InstructionGenerator implements ASTVisitor {
             area = MemArea.STACK;
         }
 
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.CAST,
                         new MemLocation(
@@ -1069,7 +1069,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(ConstBool node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.IMMEDIATE, Boolean.class, node.isValue()),
@@ -1079,7 +1079,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(ConstChar node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.IMMEDIATE, Character.class, node.getValue()),
@@ -1089,7 +1089,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(ConstDouble node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.IMMEDIATE, Double.class, node.getValue()),
@@ -1099,7 +1099,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(ConstInt node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.IMMEDIATE, Integer.class, node.getValue()),
@@ -1109,7 +1109,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(ConstNull node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.IMMEDIATE, Object.class, null),
@@ -1119,7 +1119,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(ConstString node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(MemArea.IMMEDIATE, String.class, node.getValue()),
@@ -1129,7 +1129,7 @@ public class InstructionGenerator implements ASTVisitor {
 
     @Override
     public void visit(Continue node) {
-        this.emitJump(InstructionType.JMP, this.continueLabel);
+        emitJump(InstructionType.JMP, continueLabel);
     }
 
     @Override
@@ -1137,39 +1137,39 @@ public class InstructionGenerator implements ASTVisitor {
         Node body = node.getChildren().get(0);
         Node conditional = node.getChildren().get(1);
 
-        final String topOfLoopLabel = this.getNextLabelName();
-        final String conditionLabel = this.getNextLabelName();
-        this.continueLabel = conditionLabel;
+        final String topOfLoopLabel = getNextLabelName();
+        final String conditionLabel = getNextLabelName();
+        continueLabel = conditionLabel;
 
-        final boolean containsBreak = this.containsBreak(body);
+        final boolean containsBreak = containsBreak(body);
         if (containsBreak) {
-            this.breakLabel = this.getNextLabelName();
+            breakLabel = getNextLabelName();
         }
 
-        this.emitLabel(topOfLoopLabel);
+        emitLabel(topOfLoopLabel);
 
-        this.processTree(body);
+        processTree(body);
 
-        this.processTree(conditional);
-        this.calculateJump(conditional, topOfLoopLabel);
+        processTree(conditional);
+        calculateJump(conditional, topOfLoopLabel);
 
         if (containsBreak) {
-            this.emitLabel(this.breakLabel);
+            emitLabel(breakLabel);
         }
     }
 
     @Override
     public void visit(Exit node) {
-        this.tempInstructions.add(new Instruction(InstructionType.HALT, null, null, null));
+        tempInstructions.add(new Instruction(InstructionType.HALT, null, null, null));
     }
 
     @Override
     public void visit(ExprArithmetic node) {
-        Class<?> clazz = this.getNumericBase(node);
+        Class<?> clazz = getNumericBase(node);
 
         InstructionType type = this.instructionType(node);
 
-        MemLocation first = this.calculateLocation(node.getChildren().get(0), clazz);
+        MemLocation first = calculateLocation(node.getChildren().get(0), clazz);
 
         MemLocation second = null;
         switch (node.getOperator()) {
@@ -1180,7 +1180,7 @@ public class InstructionGenerator implements ASTVisitor {
                 }
                 // fall through
             case ADD, DIV, MOD, MUL:
-                second = this.calculateLocation(node.getChildren().get(1), clazz);
+                second = calculateLocation(node.getChildren().get(1), clazz);
                 break;
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
                 second = new MemLocation(MemArea.IMMEDIATE, clazz, node.getUnaryCount());
@@ -1191,10 +1191,10 @@ public class InstructionGenerator implements ASTVisitor {
 
         if (Operator.DEC_PREFIX.equals(node.getOperator())
                 || Operator.INC_PREFIX.equals(node.getOperator())) {
-            this.tempInstructions.add(new Instruction(type, first, second, first));
+            tempInstructions.add(new Instruction(type, first, second, first));
             if (!node.isIgnoreResult()) {
                 // Copy the post-increment value onto the stack
-                this.tempInstructions.add(
+                tempInstructions.add(
                         new Instruction(
                                 InstructionType.MOV,
                                 first,
@@ -1205,7 +1205,7 @@ public class InstructionGenerator implements ASTVisitor {
                 || Operator.INC_SUFFIX.equals(node.getOperator())) {
             if (!node.isIgnoreResult()) {
                 // Push the pre-increment value onto the stack
-                this.tempInstructions.add(
+                tempInstructions.add(
                         new Instruction(
                                 InstructionType.MOV,
                                 first,
@@ -1213,10 +1213,10 @@ public class InstructionGenerator implements ASTVisitor {
                                 new MemLocation(MemArea.STACK, clazz)));
             }
             // Update the value by however much, in place
-            this.tempInstructions.add(new Instruction(type, first, second, first));
+            tempInstructions.add(new Instruction(type, first, second, first));
         } else {
             // Normal binary operator
-            this.tempInstructions.add(
+            tempInstructions.add(
                     new Instruction(type, first, second, new MemLocation(MemArea.STACK, clazz)));
         }
     }
@@ -1225,18 +1225,18 @@ public class InstructionGenerator implements ASTVisitor {
     public void visit(ExprAssign node) {
         final Node leftSide = node.getChildren().get(0);
         final Node rightSide = node.getChildren().get(1);
-        this.processBoolExpression(rightSide);
+        processBoolExpression(rightSide);
 
         Class<?> numericType = null;
         if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
-            numericType = this.getNumericBase(leftSide);
+            numericType = getNumericBase(leftSide);
         }
 
         InstructionType instruction = this.instructionType(node.getOperator(), numericType);
 
         MemLocation first;
         if (rightSide instanceof Identifier identifier) {
-            this.pushVarToStack(identifier);
+            pushVarToStack(identifier);
             first =
                     new MemLocation(
                             MemArea.STACK, rightSide.getType().getBase().getCorrespondingClass());
@@ -1254,7 +1254,7 @@ public class InstructionGenerator implements ASTVisitor {
             target = new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
         } else {
             // Impossible due to grammar.
-            InstructionGenerator.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "UNKNOWN_ASSIGN_LEFT_SIDE", ScriptManager.getResourceBundle()),
                     leftSide.toString());
@@ -1268,12 +1268,12 @@ public class InstructionGenerator implements ASTVisitor {
             second = new MemLocation(target.area(), target.type(), target.value());
         }
 
-        this.tempInstructions.add(new Instruction(instruction, first, second, target));
+        tempInstructions.add(new Instruction(instruction, first, second, target));
     }
 
     @Override
     public void visit(ExprEquality node) {
-        this.outputBooleanComparison(node);
+        outputBooleanComparison(node);
     }
 
     @Override
@@ -1289,17 +1289,17 @@ public class InstructionGenerator implements ASTVisitor {
         }
 
         if (node.getOperator() == ExprLogic.Operator.NOT) {
-            this.processBoolExpression(left);
+            processBoolExpression(left);
 
-            this.tempInstructions.add(new Instruction(InstructionType.NOT, first, null, target));
+            tempInstructions.add(new Instruction(InstructionType.NOT, first, null, target));
             return;
         }
         Node right = node.getChildren().get(1);
 
         // We want to pop the left side first, so we have to push it last
-        this.processBoolExpression(right);
+        processBoolExpression(right);
 
-        this.processBoolExpression(left);
+        processBoolExpression(left);
 
         InstructionType type = InstructionType.NOP;
         switch (node.getOperator()) {
@@ -1314,14 +1314,14 @@ public class InstructionGenerator implements ASTVisitor {
                 // Already handled
                 break;
         }
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         type, first, new MemLocation(MemArea.STACK, Boolean.class), target));
     }
 
     @Override
     public void visit(ExprRelation node) {
-        this.outputBooleanComparison(node);
+        outputBooleanComparison(node);
     }
 
     @Override
@@ -1330,18 +1330,18 @@ public class InstructionGenerator implements ASTVisitor {
         Node ifTrue = node.getChildren().get(1);
         Node ifFalse = node.getChildren().get(2);
 
-        final String end = this.getNextLabelName();
+        final String end = getNextLabelName();
 
         if (conditional instanceof Identifier id) {
-            this.pushVarToStack(id);
+            pushVarToStack(id);
         } else {
-            this.processTree(conditional);
+            processTree(conditional);
         }
 
-        String falseLabel = this.getNextLabelName();
+        String falseLabel = getNextLabelName();
         // If not condition, goto else, otherwise we fall through to if
-        this.calculateInvertedJump(conditional, falseLabel);
-        this.processTree(ifTrue);
+        calculateInvertedJump(conditional, falseLabel);
+        processTree(ifTrue);
 
         if (ifTrue instanceof ExprRelation relation) {
             this.pushResultToStack(relation);
@@ -1349,16 +1349,16 @@ public class InstructionGenerator implements ASTVisitor {
             this.pushResultToStack(equality);
         }
 
-        this.emitJump(InstructionType.JMP, end);
-        this.emitLabel(falseLabel);
-        this.processTree(ifFalse);
+        emitJump(InstructionType.JMP, end);
+        emitLabel(falseLabel);
+        processTree(ifFalse);
         if (ifFalse instanceof ExprRelation relation) {
             this.pushResultToStack(relation);
         } else if (ifFalse instanceof ExprEquality equality) {
             this.pushResultToStack(equality);
         }
 
-        this.emitLabel(end);
+        emitLabel(end);
     }
 
     @Override
@@ -1386,41 +1386,41 @@ public class InstructionGenerator implements ASTVisitor {
         }
         Node body = node.getChildren().get(position);
 
-        final String topOfLoopLabel = this.getNextLabelName();
-        final String conditionLabel = this.getNextLabelName();
+        final String topOfLoopLabel = getNextLabelName();
+        final String conditionLabel = getNextLabelName();
 
-        final boolean containsBreak = this.containsBreak(body);
+        final boolean containsBreak = containsBreak(body);
         if (containsBreak) {
-            this.breakLabel = this.getNextLabelName();
+            breakLabel = getNextLabelName();
         }
 
-        this.continueLabel = conditionLabel;
+        continueLabel = conditionLabel;
 
         if (init != null) {
-            this.processTree(init);
+            processTree(init);
         }
-        this.emitJump(InstructionType.JMP, conditionLabel);
-        this.emitLabel(topOfLoopLabel);
-        this.processTree(body);
+        emitJump(InstructionType.JMP, conditionLabel);
+        emitLabel(topOfLoopLabel);
+        processTree(body);
         if (update != null) {
-            this.processTree(update);
+            processTree(update);
         }
-        this.emitLabel(conditionLabel);
+        emitLabel(conditionLabel);
         if (condition != null) {
-            this.processTree(condition);
-            this.calculateJump(condition, topOfLoopLabel);
+            processTree(condition);
+            calculateJump(condition, topOfLoopLabel);
         } else {
-            this.emitJump(InstructionType.JMP, topOfLoopLabel);
+            emitJump(InstructionType.JMP, topOfLoopLabel);
         }
         if (containsBreak) {
-            this.emitLabel(this.breakLabel);
+            emitLabel(breakLabel);
         }
     }
 
     @Override
     public void visit(Goto node) {
         Identifier target = (Identifier) node.getChildren().get(0);
-        this.emitJump(InstructionType.JMP, target.getName());
+        emitJump(InstructionType.JMP, target.getName());
     }
 
     @Override
@@ -1429,32 +1429,32 @@ public class InstructionGenerator implements ASTVisitor {
         Node ifPart = node.getChildren().get(1);
         final boolean containsElse = node.getChildren().size() > 2;
 
-        final String end = this.getNextLabelName();
+        final String end = getNextLabelName();
 
         if (conditional instanceof Identifier id) {
-            this.pushVarToStack(id);
+            pushVarToStack(id);
         } else {
-            this.processTree(conditional);
+            processTree(conditional);
         }
         if (containsElse) {
             Node elsePart = node.getChildren().get(2);
-            String elseLabel = this.getNextLabelName();
+            String elseLabel = getNextLabelName();
             // If not condition, goto else, otherwise we fall through to if
-            this.calculateInvertedJump(conditional, elseLabel);
-            this.processTree(ifPart);
-            this.emitJump(InstructionType.JMP, end);
-            this.emitLabel(elseLabel);
-            this.processTree(elsePart);
+            calculateInvertedJump(conditional, elseLabel);
+            processTree(ifPart);
+            emitJump(InstructionType.JMP, end);
+            emitLabel(elseLabel);
+            processTree(elsePart);
         } else {
-            this.calculateInvertedJump(conditional, end);
-            this.processTree(ifPart);
+            calculateInvertedJump(conditional, end);
+            processTree(ifPart);
         }
-        this.emitLabel(end);
+        emitLabel(end);
     }
 
     @Override
     public void visit(Label node) {
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.NOP,
                         new MemLocation(MemArea.IMMEDIATE, String.class, node.getName()),
@@ -1467,11 +1467,11 @@ public class InstructionGenerator implements ASTVisitor {
         Node expression = node.getChildren().get(0);
         Node body = node.getChildren().get(1);
 
-        final String expressionResult = this.getNextVariableName();
+        final String expressionResult = getNextVariableName();
 
-        final boolean containsBreak = this.containsBreak(body);
+        final boolean containsBreak = containsBreak(body);
         if (containsBreak) {
-            this.breakLabel = this.getNextLabelName();
+            breakLabel = getNextLabelName();
         }
 
         /*
@@ -1480,11 +1480,11 @@ public class InstructionGenerator implements ASTVisitor {
          * the stack.
          */
         if (expression instanceof Identifier id) {
-            this.pushVarToStack(id);
+            pushVarToStack(id);
         } else {
-            this.processTree(expression);
+            processTree(expression);
         }
-        this.tempInstructions.add(
+        tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
                         new MemLocation(
@@ -1500,20 +1500,20 @@ public class InstructionGenerator implements ASTVisitor {
          */
         List<Node> targetTable = new ArrayList<>();
 
-        this.switchBody(body, targetTable, expressionResult);
+        switchBody(body, targetTable, expressionResult);
 
         // Then emit targets and contents
 
         for (Node child : targetTable) {
             if (child instanceof Label label) {
-                this.emitLabel(label.getName());
+                emitLabel(label.getName());
             } else {
-                this.processTree(child);
+                processTree(child);
             }
         }
 
         if (containsBreak) {
-            this.emitLabel(this.breakLabel);
+            emitLabel(breakLabel);
         }
     }
 
@@ -1546,7 +1546,7 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
             case LABEL, VOID:
             default:
-                InstructionGenerator.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
                         node.getType().getBase());
@@ -1558,7 +1558,7 @@ public class InstructionGenerator implements ASTVisitor {
 
         if (node.getChildren().size() > 1) {
             Node rightSide = node.getChildren().get(1);
-            this.processTree(rightSide);
+            processTree(rightSide);
             defaultValue = new MemLocation(MemArea.STACK, clazz);
             if (rightSide instanceof ExprRelation relation) {
                 this.pushResultToStack(relation);
@@ -1580,7 +1580,7 @@ public class InstructionGenerator implements ASTVisitor {
         } else {
             defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, null);
         }
-        this.tempInstructions.add(new Instruction(InstructionType.MOV, defaultValue, null, target));
+        tempInstructions.add(new Instruction(InstructionType.MOV, defaultValue, null, target));
     }
 
     @Override
@@ -1588,26 +1588,26 @@ public class InstructionGenerator implements ASTVisitor {
         Node conditional = node.getChildren().get(0);
         Node body = node.getChildren().get(1);
 
-        final String topOfLoopLabel = this.getNextLabelName();
-        final String conditionLabel = this.getNextLabelName();
-        this.continueLabel = conditionLabel;
+        final String topOfLoopLabel = getNextLabelName();
+        final String conditionLabel = getNextLabelName();
+        continueLabel = conditionLabel;
 
-        final boolean containsBreak = this.containsBreak(body);
+        final boolean containsBreak = containsBreak(body);
         if (containsBreak) {
-            this.breakLabel = this.getNextLabelName();
+            breakLabel = getNextLabelName();
         }
 
-        this.emitJump(InstructionType.JMP, conditionLabel);
-        this.emitLabel(topOfLoopLabel);
+        emitJump(InstructionType.JMP, conditionLabel);
+        emitLabel(topOfLoopLabel);
 
-        this.processTree(body);
+        processTree(body);
 
-        this.emitLabel(conditionLabel);
-        this.processTree(conditional);
-        this.calculateJump(conditional, topOfLoopLabel);
+        emitLabel(conditionLabel);
+        processTree(conditional);
+        calculateJump(conditional, topOfLoopLabel);
 
         if (containsBreak) {
-            this.emitLabel(this.breakLabel);
+            emitLabel(breakLabel);
         }
     }
 }

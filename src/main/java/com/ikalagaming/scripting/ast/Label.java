@@ -21,13 +21,13 @@ public class Label extends Node {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        if (this.type != null) {
-            result.append(this.type.toString());
+        if (type != null) {
+            result.append(type.toString());
             result.append(" ");
         } else {
             result.append("____ ");
         }
-        result.append(this.name);
+        result.append(name);
         return result.toString();
     }
 }

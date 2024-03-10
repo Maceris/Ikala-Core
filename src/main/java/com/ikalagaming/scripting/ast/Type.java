@@ -191,7 +191,7 @@ public class Type {
      */
     public boolean anyOf(Base... bases) {
         for (Base b : bases) {
-            if (this.base.equals(b)) {
+            if (base.equals(b)) {
                 return true;
             }
         }
@@ -216,27 +216,27 @@ public class Type {
      * @return The type with fewer dimensions.
      */
     public Type dereference(int count) {
-        if (this.base.equals(Base.UNKNOWN)) {
+        if (base.equals(Base.UNKNOWN)) {
             return Type.unknownType();
         }
-        if (count > this.dimensions) {
-            Type.log.warn("Dereferencing a {} by {} is invalid", this.toString(), count);
+        if (count > dimensions) {
+            log.warn("Dereferencing a {} by {} is invalid", toString(), count);
             return Type.voidType();
         }
 
-        return new Type(this.base, this.value, this.dimensions - count);
+        return new Type(base, value, dimensions - count);
     }
 
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        if (this.base == Base.IDENTIFIER) {
-            result.append(this.value);
+        if (base == Base.IDENTIFIER) {
+            result.append(value);
         } else {
-            result.append(this.base.toString());
+            result.append(base.toString());
         }
-        if (this.dimensions > 0) {
-            for (int i = 0; i < this.dimensions; ++i) {
+        if (dimensions > 0) {
+            for (int i = 0; i < dimensions; ++i) {
                 result.append("[]");
             }
         }

@@ -38,23 +38,23 @@ class EventDispatcher extends Thread {
      * @param manager the event manager that this dispatcher belongs to
      */
     public EventDispatcher(EventManager manager) {
-        this.setName("EventDispatcher");
-        this.queue = new ConcurrentLinkedDeque<>();
-        this.eventManager = manager;
-        this.hasEvents = false;
-        this.running = true;
-        this.syncObject = new Object();
+        setName("EventDispatcher");
+        queue = new ConcurrentLinkedDeque<>();
+        eventManager = manager;
+        hasEvents = false;
+        running = true;
+        syncObject = new Object();
     }
 
     private void dispatch(Event event) {
         if (event == null) {
             return;
         }
-        if (this.eventManager == null) {
-            EventDispatcher.log.error("There is no event manager!");
+        if (eventManager == null) {
+            log.error("There is no event manager!");
             return;
         }
-        HandlerList handlers = this.eventManager.getHandlers(event);
+        HandlerList handlers = eventManager.getHandlers(event);
         if (handlers == null) {
             return;
         }
@@ -66,7 +66,7 @@ class EventDispatcher extends Thread {
                 String error =
                         SafeResourceLoader.getString(
                                 "DISPATCH_ERROR", EventManager.getResourceBundle());
-                EventDispatcher.log.warn(error, e);
+                log.warn(error, e);
             }
         }
     }
@@ -83,42 +83,42 @@ class EventDispatcher extends Thread {
             return;
         }
         try {
-            synchronized (this.queue) {
-                this.queue.add(event);
+            synchronized (queue) {
+                queue.add(event);
             }
-            this.hasEvents = true;
+            hasEvents = true;
         } catch (IllegalStateException illegalState) {
             throw illegalState;
         } catch (Exception e) {
             String error =
                     SafeResourceLoader.getString(
                             "DISPATCH_ERROR", EventManager.getResourceBundle());
-            EventDispatcher.log.warn(error, e);
+            log.warn(error, e);
             return; // don't wake up thread
         }
-        this.wakeUp();
+        wakeUp();
     }
 
     private void handleEvent() {
-        synchronized (this.queue) {
-            if (this.queue.isEmpty()) {
-                this.hasEvents = false;
+        synchronized (queue) {
+            if (queue.isEmpty()) {
+                hasEvents = false;
                 return;
             }
         }
         Event event;
         try {
-            event = this.queue.remove();
+            event = queue.remove();
         } catch (NoSuchElementException noElement) {
             // the queue is empty
-            this.hasEvents = false;
+            hasEvents = false;
             String error =
                     SafeResourceLoader.getString(
                             "EVT_QUEUE_EMPTY", EventManager.getResourceBundle());
-            EventDispatcher.log.warn(error);
+            log.warn(error);
             return;
         }
-        this.dispatch(event);
+        dispatch(event);
     }
 
     /**
@@ -127,49 +127,49 @@ class EventDispatcher extends Thread {
      */
     @Override
     public void run() {
-        while (this.running) {
-            while (!this.hasEvents) {
-                synchronized (this.syncObject) {
+        while (running) {
+            while (!hasEvents) {
+                synchronized (syncObject) {
                     try {
                         // block this thread until an item is added
-                        this.syncObject.wait(EventDispatcher.WAIT_TIMEOUT);
+                        syncObject.wait(WAIT_TIMEOUT);
                     } catch (InterruptedException e) {
                         String error =
                                 SafeResourceLoader.getString(
                                         "THREAD_INTERRUPTED", EventManager.getResourceBundle());
-                        EventDispatcher.log.warn(error);
+                        log.warn(error);
                         // Re-interrupt as per SonarLint java:S2142
                         Thread.currentThread().interrupt();
                     }
                 }
                 // in case it was terminated while waiting
-                if (!this.running) {
+                if (!running) {
                     break;
                 }
             }
-            if (this.hasEvents) {
-                this.handleEvent();
+            if (hasEvents) {
+                handleEvent();
             }
         }
         // Done running
-        this.queue.clear();
+        queue.clear();
     }
 
     /**
      * Stops the thread from executing its run method in preparation for shutting down the thread.
      */
     public void terminate() {
-        this.hasEvents = false;
-        this.running = false;
-        this.eventManager = null;
-        this.wakeUp();
+        hasEvents = false;
+        running = false;
+        eventManager = null;
+        wakeUp();
     }
 
     /** Wakes this thread up when it is sleeping */
     private void wakeUp() {
-        synchronized (this.syncObject) {
+        synchronized (syncObject) {
             // Wake the thread up as there is now an event
-            this.syncObject.notifyAll();
+            syncObject.notifyAll();
         }
     }
 }

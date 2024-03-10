@@ -207,25 +207,25 @@ public class PluginManager {
      * @param eventManager The event manager to use for the plugin system
      */
     public PluginManager(@NonNull EventManager eventManager) {
-        this.enableOnLoad = true;
-        this.commandLine = false;
+        enableOnLoad = true;
+        commandLine = false;
         this.eventManager = eventManager;
-        this.pluginDetails = Collections.synchronizedMap(new HashMap<>());
-        this.pluginClassCache = Collections.synchronizedMap(new HashMap<>());
-        this.resourceBundle =
+        pluginDetails = Collections.synchronizedMap(new HashMap<>());
+        pluginClassCache = Collections.synchronizedMap(new HashMap<>());
+        resourceBundle =
                 ResourceBundle.getBundle(
                         "com.ikalagaming.plugins.PluginManager", Localization.getLocale());
-        this.commandListener = new PluginCommandListener(this);
+        commandListener = new PluginCommandListener(this);
 
-        this.commands = new ArrayList<>();
+        commands = new ArrayList<>();
 
-        this.registerCommands();
-        this.eventManager.registerEventListeners(this.commandListener);
+        registerCommands();
+        this.eventManager.registerEventListeners(commandListener);
     }
 
     private void alertMissingArgs() {
-        String tmp = SafeResourceLoader.getString("COMMAND_ARG_MISSING", this.getResourceBundle());
-        PluginManager.log.warn(tmp);
+        String tmp = SafeResourceLoader.getString("COMMAND_ARG_MISSING", getResourceBundle());
+        log.warn(tmp);
     }
 
     /**
@@ -252,7 +252,7 @@ public class PluginManager {
          */
         boolean stillEvaluatingChildren = false;
         for (String dependencyName : pluginInfo.getDependencies()) {
-            PluginState state = this.getPluginState(dependencyName);
+            PluginState state = getPluginState(dependencyName);
             switch (state) {
                 case DEPS_CHECKING:
                     /*
@@ -288,18 +288,18 @@ public class PluginManager {
 
     private void callbackDisable(@NonNull List<String> args) {
         if (args.isEmpty()) {
-            this.alertMissingArgs();
+            alertMissingArgs();
             return;
         }
-        this.disable(args.get(0));
+        disable(args.get(0));
     }
 
     private void callbackEnable(@NonNull List<String> args) {
         if (args.isEmpty()) {
-            this.alertMissingArgs();
+            alertMissingArgs();
             return;
         }
-        this.enable(args.get(0));
+        enable(args.get(0));
     }
 
     /**
@@ -308,17 +308,17 @@ public class PluginManager {
      * @param args Ignored.
      */
     void callbackHelp(List<String> args) {
-        PluginManager.log.info(SafeResourceLoader.getString("HELP_TEXT", this.resourceBundle));
+        log.info(SafeResourceLoader.getString("HELP_TEXT", resourceBundle));
 
         int longestCmdLength =
-                this.commands.stream()
+                commands.stream()
                         .map(PluginCommand::getCommand)
                         .map(String::length)
                         .mapToInt(i -> i)
                         .max()
                         .orElse(0);
 
-        for (PluginCommand cmd : this.commands) {
+        for (PluginCommand cmd : commands) {
             StringBuilder sb = new StringBuilder();
             final int padding = longestCmdLength - cmd.getCommand().length();
             sb.append(cmd.getCommand());
@@ -337,14 +337,14 @@ public class PluginManager {
 
     private void callbackLoad(@NonNull List<String> args) {
         if (args.isEmpty()) {
-            this.alertMissingArgs();
+            alertMissingArgs();
             return;
         }
-        this.loadPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH, args);
+        loadPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH, args);
     }
 
     private void callbackPrintPlugins(@SuppressWarnings("unused") List<String> args) {
-        Map<String, Plugin> loadedPlugins = this.getLoadedPlugins();
+        Map<String, Plugin> loadedPlugins = getLoadedPlugins();
 
         ArrayList<String> names = new ArrayList<>(loadedPlugins.keySet());
         Collections.sort(names);
@@ -356,11 +356,12 @@ public class PluginManager {
                             StringBuilder sb = new StringBuilder();
                             sb.append(name);
                             sb.append(" (");
-                            sb.append(this.getPluginState(name));
+                            sb.append(getPluginState(name));
                             sb.append(")");
                             /*
-                             * This should show on the command line, as logs might be redirected
-                             * to console and we want command line interaction.
+                             * This should show on the command line, as logs might be
+                             * redirected to console and we want command line
+                             * interaction.
                              */
                             System.out.println(sb.toString()); // NOSONAR
                         });
@@ -368,18 +369,18 @@ public class PluginManager {
 
     private void callbackReload(@NonNull List<String> args) {
         if (args.isEmpty()) {
-            this.alertMissingArgs();
+            alertMissingArgs();
             return;
         }
-        this.reload(args.get(0));
+        reload(args.get(0));
     }
 
     private void callbackUnload(@NonNull List<String> args) {
         if (args.isEmpty()) {
-            this.alertMissingArgs();
+            alertMissingArgs();
             return;
         }
-        this.unloadPlugin(args.get(0));
+        unloadPlugin(args.get(0));
     }
 
     /** Unregisters all commands */
@@ -475,33 +476,33 @@ public class PluginManager {
      * @return True on success, false on failure.
      */
     private boolean disableSingle(final String target) {
-        if (!this.isLoaded(target)) {
-            this.logNotLoaded(target);
+        if (!isLoaded(target)) {
+            logNotLoaded(target);
             return false;
         }
-        if (!this.isEnabled(target)) {
-            this.logAlert("ALERT_PLUGIN_ALREADY_DISABLED", target);
+        if (!isEnabled(target)) {
+            logAlert("ALERT_PLUGIN_ALREADY_DISABLED", target);
             return false;
         }
-        this.setPluginState(target, PluginState.DISABLING);
+        setPluginState(target, PluginState.DISABLING);
 
-        this.logAlert("ALERT_DISABLING", target);
+        logAlert("ALERT_DISABLING", target);
 
-        PluginDetails details = this.pluginDetails.get(target);
+        PluginDetails details = pluginDetails.get(target);
         if (null == details) {
-            this.logAlert("PLUGIN_DETAILS_MISSING", target);
+            logAlert("PLUGIN_DETAILS_MISSING", target);
             return false;
         }
 
         boolean success = details.getPlugin().onDisable();
         if (success) {
-            this.setPluginState(target, PluginState.DISABLED);
+            setPluginState(target, PluginState.DISABLED);
             new PluginDisabled(target).fire();
-            this.logAlert("ALERT_DISABLED", target);
+            logAlert("ALERT_DISABLED", target);
         } else {
-            this.setPluginState(target, PluginState.CORRUPTED);
-            this.logStateCorrupted(target);
-            this.logAlert("PLUGIN_DISABLE_FAIL", target);
+            setPluginState(target, PluginState.CORRUPTED);
+            logStateCorrupted(target);
+            logAlert("PLUGIN_DISABLE_FAIL", target);
         }
         return success;
     }
@@ -572,9 +573,8 @@ public class PluginManager {
         try (JarFile jfile = new JarFile(jar)) {
             config = jfile.getEntry(PluginManager.PLUGIN_CONFIG_FILENAME);
             if (config == null) {
-                String msg =
-                        SafeResourceLoader.getString("PLUGIN_CONFIG_MISSING", this.resourceBundle);
-                PluginManager.log.warn(msg, PluginManager.PLUGIN_CONFIG_FILENAME);
+                String msg = SafeResourceLoader.getString("PLUGIN_CONFIG_MISSING", resourceBundle);
+                log.warn(msg, PluginManager.PLUGIN_CONFIG_FILENAME);
                 return Optional.empty();
             }
 
@@ -582,19 +582,17 @@ public class PluginManager {
             PluginInfo info = new PluginInfo(configIStream);
             return Optional.ofNullable(info);
         } catch (IOException e1) {
-            String msg =
-                    SafeResourceLoader.getString("PLUGIN_CONFIG_READ_ERROR", this.resourceBundle);
-            PluginManager.log.warn(msg, fileName);
+            String msg = SafeResourceLoader.getString("PLUGIN_CONFIG_READ_ERROR", resourceBundle);
+            log.warn(msg, fileName);
             return Optional.empty();
         } catch (InvalidDescriptionException e1) {
-            String msg =
-                    SafeResourceLoader.getString("PLUGIN_INVALID_DESCRIPTION", this.resourceBundle);
-            PluginManager.log.warn(msg, fileName);
-            PluginManager.log.warn(e1.getMessage());
+            String msg = SafeResourceLoader.getString("PLUGIN_INVALID_DESCRIPTION", resourceBundle);
+            log.warn(msg, fileName);
+            log.warn(e1.getMessage());
             return Optional.empty();
         } catch (Exception e) {
-            String msg = SafeResourceLoader.getString("PLUGIN_JAR_ERROR", this.resourceBundle);
-            PluginManager.log.warn(msg, fileName);
+            String msg = SafeResourceLoader.getString("PLUGIN_JAR_ERROR", resourceBundle);
+            log.warn(msg, fileName);
             return Optional.empty();
         }
     }
@@ -606,8 +604,8 @@ public class PluginManager {
      * @return The names of plugins with that given state.
      */
     private List<String> findPluginsByState(@NonNull PluginState state) {
-        return this.pluginDetails.keySet().stream()
-                .filter(name -> state.equals(this.pluginDetails.get(name).getState()))
+        return pluginDetails.keySet().stream()
+                .filter(name -> state.equals(pluginDetails.get(name).getState()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -619,12 +617,12 @@ public class PluginManager {
      * @return The class by the given name, or null if not found.
      */
     Class<?> getClassByName(@NonNull final String name) {
-        Class<?> cachedClass = this.pluginClassCache.get(name);
+        Class<?> cachedClass = pluginClassCache.get(name);
 
         if (cachedClass != null) {
             return cachedClass;
         }
-        for (Map.Entry<String, PluginDetails> entry : this.pluginDetails.entrySet()) {
+        for (Map.Entry<String, PluginDetails> entry : pluginDetails.entrySet()) {
             PluginClassLoader loader = entry.getValue().getClassLoader();
             try {
                 cachedClass = loader.findClass(name, false);
@@ -895,15 +893,15 @@ public class PluginManager {
      * @param pluginName The plugin that the alert is about
      */
     void logAlert(String whichAlert, String pluginName) {
-        PluginDetails details = this.pluginDetails.get(pluginName);
+        PluginDetails details = pluginDetails.get(pluginName);
         String version;
         if (details == null || details.getInfo() == null) {
             version = "?";
         } else {
             version = details.getInfo().getVersion();
         }
-        String message = SafeResourceLoader.getString(whichAlert, this.getResourceBundle());
-        PluginManager.log.info(message, pluginName, version);
+        String message = SafeResourceLoader.getString(whichAlert, getResourceBundle());
+        log.info(message, pluginName, version);
     }
 
     /**
@@ -913,8 +911,8 @@ public class PluginManager {
      * @param plugin The plugin to log the alert about.
      */
     private void logNotLoaded(String plugin) {
-        String tmp = SafeResourceLoader.getString("PLUGIN_NOT_LOADED", this.getResourceBundle());
-        PluginManager.log.warn(tmp, plugin);
+        String tmp = SafeResourceLoader.getString("PLUGIN_NOT_LOADED", getResourceBundle());
+        log.warn(tmp, plugin);
     }
 
     /**
@@ -924,8 +922,8 @@ public class PluginManager {
      */
     void logStateCorrupted(String plugin) {
         String msgCorrupted =
-                SafeResourceLoader.getString("PLUGIN_STATE_CORRUPTED", this.resourceBundle);
-        PluginManager.log.warn(msgCorrupted, plugin);
+                SafeResourceLoader.getString("PLUGIN_STATE_CORRUPTED", resourceBundle);
+        log.warn(msgCorrupted, plugin);
     }
 
     /**
@@ -941,27 +939,27 @@ public class PluginManager {
             Map<File, PluginInfo> jarInfoMap,
             List<File> skipped,
             Map<File, PluginClassLoader> loaders) {
-        this.sharedClassLoader = new SharedClassLoader(this, this.getClass().getClassLoader());
-        Thread.currentThread().setContextClassLoader(this.sharedClassLoader);
-        this.eventManager.setThreadClassloader(this.sharedClassLoader);
+        sharedClassLoader = new SharedClassLoader(this, this.getClass().getClassLoader());
+        Thread.currentThread().setContextClassLoader(sharedClassLoader);
+        eventManager.setThreadClassloader(sharedClassLoader);
 
         for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
             PluginInfo info = entry.getValue();
 
             String pluginName = info.getName();
-            if (this.isLoaded(pluginName)) {
-                this.logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
+            if (isLoaded(pluginName)) {
+                logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
 
                 boolean lowerVersion =
                         PluginManager.isNewerVersion(
                                 info.getVersion(),
-                                this.pluginDetails.get(pluginName).getInfo().getVersion());
+                                pluginDetails.get(pluginName).getInfo().getVersion());
 
                 if (lowerVersion) {
-                    this.unloadPlugin(pluginName);
+                    unloadPlugin(pluginName);
                     // unload the old plugin and continue loading the new one
                 } else {
-                    this.logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
+                    logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
                     skipped.add(entry.getKey());
                     continue;
                 }
@@ -969,9 +967,9 @@ public class PluginManager {
 
             PluginClassLoader loader = null;
             try {
-                loader = new PluginClassLoader(this, this.sharedClassLoader, entry.getKey());
+                loader = new PluginClassLoader(this, sharedClassLoader, entry.getKey());
             } catch (MalformedURLException e) {
-                this.logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
+                logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
             }
 
             if (loader == null) {
@@ -996,12 +994,12 @@ public class PluginManager {
          * dependencies, but it has dependencies that are also DEPS_CHECKING,
          * mark it as DEPS_CHECKING.
          */
-        for (Map.Entry<String, PluginDetails> entry : this.pluginDetails.entrySet()) {
+        for (Map.Entry<String, PluginDetails> entry : pluginDetails.entrySet()) {
             PluginDetails details = entry.getValue();
             if (!PluginState.DISCOVERED.equals(details.getState())) {
                 continue;
             }
-            PluginState state = this.calculatePluginState(details.getInfo());
+            PluginState state = calculatePluginState(details.getInfo());
             details.setState(state);
         }
 
@@ -1016,18 +1014,18 @@ public class PluginManager {
          * or DEPS_CHECKING, we can mark the whole tree as DEPS_SATISFIED.
          */
 
-        List<String> stillChecking = this.findPluginsByState(PluginState.DEPS_CHECKING);
+        List<String> stillChecking = findPluginsByState(PluginState.DEPS_CHECKING);
         while (!stillChecking.isEmpty()) {
             String name = stillChecking.get(0);
-            this.plResolveDependencies(new PluginDependencyNode(name));
-            stillChecking = this.findPluginsByState(PluginState.DEPS_CHECKING);
+            plResolveDependencies(new PluginDependencyNode(name));
+            stillChecking = findPluginsByState(PluginState.DEPS_CHECKING);
         }
 
         // Report and unload all DEPS_MISSING plugins
 
-        for (String pluginName : this.findPluginsByState(PluginState.DEPS_MISSING)) {
-            this.logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
-            PluginDetails details = this.pluginDetails.remove(pluginName);
+        for (String pluginName : findPluginsByState(PluginState.DEPS_MISSING)) {
+            logAlert("PLUGIN_DEPENDENCY_MISSING", pluginName);
+            PluginDetails details = pluginDetails.remove(pluginName);
             details.dispose();
         }
     }
@@ -1042,7 +1040,7 @@ public class PluginManager {
     private void plDiscardInvalidPlugins(List<File> jars, Map<File, PluginInfo> jarInfoMap) {
         // grab all the plugin info from them, discard invalid plugins
         for (File jarFile : jars) {
-            Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
+            Optional<PluginInfo> info = extractPluginInfo(jarFile);
             if (!info.isPresent()) {
                 /*
                  * We don't have a valid plugin, the error was already logged
@@ -1066,13 +1064,13 @@ public class PluginManager {
 
         ArrayList<File> jars = new ArrayList<>();
         if (files == null) {
-            String msg = SafeResourceLoader.getString("PLUGIN_FILES_NULL", this.resourceBundle);
-            PluginManager.log.warn(msg, folder.getAbsolutePath());
+            String msg = SafeResourceLoader.getString("PLUGIN_FILES_NULL", resourceBundle);
+            log.warn(msg, folder.getAbsolutePath());
             return jars;
         }
         if (files.length == 0) {
-            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_EMPTY", this.resourceBundle);
-            PluginManager.log.warn(msg, folder.getAbsolutePath());
+            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_EMPTY", resourceBundle);
+            log.warn(msg, folder.getAbsolutePath());
             return jars;
         }
 
@@ -1086,9 +1084,8 @@ public class PluginManager {
                 }
             } catch (SecurityException secExcep) {
                 String msg =
-                        SafeResourceLoader.getString(
-                                "PLUGIN_FILE_SECURITY_ERR", this.resourceBundle);
-                PluginManager.log.debug(msg, file.getName());
+                        SafeResourceLoader.getString("PLUGIN_FILE_SECURITY_ERR", resourceBundle);
+                log.debug(msg, file.getName());
                 // Maybe one or more files can't be read
                 continue;
             }
@@ -1111,37 +1108,33 @@ public class PluginManager {
         try {
             pluginFolder = new File(path);
         } catch (NullPointerException nullExcept) {
-            String msg = SafeResourceLoader.getString("PLUGIN_PATH_NULL", this.resourceBundle);
-            PluginManager.log.warn(msg);
+            String msg = SafeResourceLoader.getString("PLUGIN_PATH_NULL", resourceBundle);
+            log.warn(msg);
             return Optional.empty();
         }
         try {
             if (!pluginFolder.exists()) {
                 String msg =
-                        SafeResourceLoader.getString(
-                                "PLUGIN_FOLDER_NOT_FOUND", this.resourceBundle);
-                PluginManager.log.warn(msg, pluginFolder.getAbsolutePath());
+                        SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND", resourceBundle);
+                log.warn(msg, pluginFolder.getAbsolutePath());
                 return Optional.empty();
             }
             if (!pluginFolder.isDirectory()) {
                 String msg =
-                        SafeResourceLoader.getString(
-                                "PLUGIN_FOLDER_NOT_FOLDER", this.resourceBundle);
-                PluginManager.log.warn(msg, pluginFolder.getAbsolutePath());
+                        SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOLDER", resourceBundle);
+                log.warn(msg, pluginFolder.getAbsolutePath());
                 return Optional.empty();
             }
             if (!pluginFolder.canRead()) {
                 String msg =
-                        SafeResourceLoader.getString(
-                                "PLUGIN_FOLDER_UNREADABLE", this.resourceBundle);
-                PluginManager.log.warn(msg, pluginFolder.getAbsolutePath());
+                        SafeResourceLoader.getString("PLUGIN_FOLDER_UNREADABLE", resourceBundle);
+                log.warn(msg, pluginFolder.getAbsolutePath());
                 return Optional.empty();
             }
         } catch (SecurityException securExcep) {
             String msg =
-                    SafeResourceLoader.getString(
-                            "PLUGIN_FOLDER_ACCESS_DENIED", this.resourceBundle);
-            PluginManager.log.warn(msg, path);
+                    SafeResourceLoader.getString("PLUGIN_FOLDER_ACCESS_DENIED", resourceBundle);
+            log.warn(msg, path);
             return Optional.empty();
         }
         return Optional.of(pluginFolder);
@@ -1164,9 +1157,8 @@ public class PluginManager {
         try {
             clazz = Class.forName(pluginInfo.getMainClass(), true, classLoader);
         } catch (ClassNotFoundException e) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+            String err = SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         }
 
@@ -1175,41 +1167,35 @@ public class PluginManager {
             pluginClass = clazz.asSubclass(Plugin.class);
             return pluginClass.getDeclaredConstructor().newInstance();
         } catch (ClassCastException ex) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_MAIN_NOT_A_PLUGIN", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+            String err = SafeResourceLoader.getString("PLUGIN_MAIN_NOT_A_PLUGIN", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         } catch (InstantiationException e) {
             String err =
-                    SafeResourceLoader.getString(
-                            "PLUGIN_CANT_INSTANTIATE_MAIN", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+                    SafeResourceLoader.getString("PLUGIN_CANT_INSTANTIATE_MAIN", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         } catch (IllegalAccessException e) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+            String err = SafeResourceLoader.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         } catch (IllegalArgumentException e) {
             String err =
-                    SafeResourceLoader.getString(
-                            "PLUGIN_MAIN_ILLEGAL_ARGUMENT", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+                    SafeResourceLoader.getString("PLUGIN_MAIN_ILLEGAL_ARGUMENT", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         } catch (InvocationTargetException e) {
             String err =
-                    SafeResourceLoader.getString(
-                            "PLUGIN_MAIN_INVOCATION_TARGET", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+                    SafeResourceLoader.getString("PLUGIN_MAIN_INVOCATION_TARGET", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         } catch (NoSuchMethodException e) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+            String err = SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         } catch (SecurityException e) {
-            String err = SafeResourceLoader.getString("PLUGIN_MAIN_SECURITY", this.resourceBundle);
-            PluginManager.log.warn(err, pluginInfo.getName());
+            String err = SafeResourceLoader.getString("PLUGIN_MAIN_SECURITY", resourceBundle);
+            log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         }
     }
@@ -1222,14 +1208,14 @@ public class PluginManager {
     private void plLoadPlugins(@NonNull List<File> jars) {
         Map<File, PluginInfo> jarInfoMap = new HashMap<>();
 
-        this.plDiscardInvalidPlugins(jars, jarInfoMap);
+        plDiscardInvalidPlugins(jars, jarInfoMap);
 
         // Plugins that were already had a newer version loaded
         List<File> skipped = new ArrayList<>();
 
         Map<File, PluginClassLoader> loaders = new HashMap<>();
 
-        this.plCreateClassloaders(jarInfoMap, skipped, loaders);
+        plCreateClassloaders(jarInfoMap, skipped, loaders);
 
         for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
             if (skipped.contains(entry.getKey())) {
@@ -1240,7 +1226,7 @@ public class PluginManager {
 
             Plugin plugin;
             try {
-                plugin = this.plInstantiatePluginClass(entry.getValue(), loader);
+                plugin = plInstantiatePluginClass(entry.getValue(), loader);
             } catch (InvalidPluginException e) {
                 // The method already logs the problem
                 loaders.remove(entry.getKey());
@@ -1250,11 +1236,11 @@ public class PluginManager {
 
             PluginDetails details = new PluginDetails(loader, info, plugin, PluginState.DISCOVERED);
 
-            this.pluginDetails.put(info.getName(), details);
-            this.logAlert("ALERT_DISCOVERED", info.getName());
+            pluginDetails.put(info.getName(), details);
+            logAlert("ALERT_DISCOVERED", info.getName());
         }
-        this.plDependencyResolutionStage();
-        this.plLoadSatisfiedDependencies();
+        plDependencyResolutionStage();
+        plLoadSatisfiedDependencies();
     }
 
     /** Load the satisfied dependencies, and enable them if configured to do so on load. */
@@ -1264,7 +1250,7 @@ public class PluginManager {
          * the onLoad() method, plugins should deal with connecting to plugins
          * that may be in a dependency loop.
          */
-        List<String> toLoad = this.findPluginsByState(PluginState.DEPS_SATISFIED);
+        List<String> toLoad = findPluginsByState(PluginState.DEPS_SATISFIED);
 
         // we don't want people making assumptions about load order
         Collections.shuffle(toLoad);
@@ -1276,7 +1262,7 @@ public class PluginManager {
 
         while (!unchecked.isEmpty()) {
             String current = unchecked.poll();
-            this.plTraverseDependencies(unchecked, current, loadQueue);
+            plTraverseDependencies(unchecked, current, loadQueue);
         }
 
         loadQueue.forEach(this::plLoadSinglePlugin);
@@ -1286,7 +1272,7 @@ public class PluginManager {
          * configuration is set). At this point problems with loops should have
          * been resolved enough that the plugins can start in any order.
          */
-        if (this.enableOnLoad) {
+        if (enableOnLoad) {
             toLoad.forEach(this::enable);
         }
     }
@@ -1298,13 +1284,13 @@ public class PluginManager {
      * @param pluginName The name of the plugin to load.
      */
     private void plLoadSinglePlugin(String pluginName) {
-        this.setPluginState(pluginName, PluginState.LOADING);
-        this.logAlert("ALERT_LOADING", pluginName);
+        setPluginState(pluginName, PluginState.LOADING);
+        logAlert("ALERT_LOADING", pluginName);
 
-        PluginDetails details = this.pluginDetails.get(pluginName);
+        PluginDetails details = pluginDetails.get(pluginName);
         Plugin plugin = details.getPlugin();
 
-        if (this.isCommandLine()) {
+        if (isCommandLine()) {
             String lastVersion = PluginFolder.getLastVersionUsed(pluginName);
             String newVersion = details.getInfo().getVersion();
 
@@ -1315,17 +1301,17 @@ public class PluginManager {
         }
 
         if (!plugin.onLoad()) {
-            this.logAlert("PLUGIN_LOAD_FAIL", pluginName);
-            this.unloadPlugin(pluginName);
+            logAlert("PLUGIN_LOAD_FAIL", pluginName);
+            unloadPlugin(pluginName);
         }
         for (Listener l : plugin.getListeners()) {
-            this.eventManager.registerEventListeners(l);
+            eventManager.registerEventListeners(l);
         }
-        String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS", this.resourceBundle);
-        PluginManager.log.debug(msg, pluginName);
-        this.setPluginState(pluginName, PluginState.DISABLED);
+        String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS", resourceBundle);
+        log.debug(msg, pluginName);
+        setPluginState(pluginName, PluginState.DISABLED);
 
-        this.logAlert("ALERT_LOADED", pluginName);
+        logAlert("ALERT_LOADED", pluginName);
         new PluginLoaded(pluginName).fire();
     }
 
@@ -1346,7 +1332,7 @@ public class PluginManager {
         queue.add(root);
         while (!queue.isEmpty()) {
             currentNode = queue.pollFirst();
-            this.setPluginState(currentNode.getName(), PluginState.DEPS_SATISFIED);
+            setPluginState(currentNode.getName(), PluginState.DEPS_SATISFIED);
             // fine since we avoided cycles when setting up children earlier
             queue.addAll(currentNode.getChildren());
         }
@@ -1374,9 +1360,9 @@ public class PluginManager {
         while (!queue.isEmpty()) {
             currentNode = queue.pollFirst();
 
-            PluginInfo info = this.pluginDetails.get(currentNode.getName()).getInfo();
+            PluginInfo info = pluginDetails.get(currentNode.getName()).getInfo();
             for (String dependencyName : info.getDependencies()) {
-                PluginState state = this.getPluginState(dependencyName);
+                PluginState state = getPluginState(dependencyName);
                 switch (state) {
                     case DEPS_CHECKING:
                         if (!namesInTheTree.contains(dependencyName)) {
@@ -1389,10 +1375,10 @@ public class PluginManager {
                         break;
                     case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL, UNLOADING:
                         // propagate failure up to the root and bail
-                        this.setPluginState(currentNode.getName(), PluginState.DEPS_MISSING);
+                        setPluginState(currentNode.getName(), PluginState.DEPS_MISSING);
                         PluginDependencyNode parent = currentNode.getParent();
                         while (null != parent) {
-                            this.setPluginState(parent.getName(), PluginState.DEPS_MISSING);
+                            setPluginState(parent.getName(), PluginState.DEPS_MISSING);
                             parent = parent.getParent();
                         }
                         return;
@@ -1410,7 +1396,7 @@ public class PluginManager {
             }
         }
 
-        this.plMarkSatisfied(root);
+        plMarkSatisfied(root);
     }
 
     /**
@@ -1430,7 +1416,7 @@ public class PluginManager {
         unchecked.remove(root);
         List<String> dependencies = new ArrayList<>();
 
-        PluginInfo info = this.pluginDetails.get(root).getInfo();
+        PluginInfo info = pluginDetails.get(root).getInfo();
         if (null == info) {
             // wasn't a real plugin.
             return;
@@ -1447,7 +1433,7 @@ public class PluginManager {
                  */
                 continue;
             }
-            this.plTraverseDependencies(unchecked, dependency, loadQueue);
+            plTraverseDependencies(unchecked, dependency, loadQueue);
         }
         loadQueue.add(root);
     }
@@ -1550,7 +1536,7 @@ public class PluginManager {
      * @param name The name of the class.
      */
     void removeClass(final String name) {
-        this.pluginClassCache.remove(name);
+        pluginClassCache.remove(name);
     }
 
     /**
@@ -1560,7 +1546,7 @@ public class PluginManager {
      * @param clazz The corresponding class object.
      */
     void setClass(@NonNull final String name, @NonNull final Class<?> clazz) {
-        this.pluginClassCache.computeIfAbsent(name, ignored -> clazz);
+        pluginClassCache.computeIfAbsent(name, ignored -> clazz);
     }
 
     @Synchronized("pluginLock")
@@ -1581,17 +1567,17 @@ public class PluginManager {
     }
 
     private void shutdown() {
-        this.eventManager.unregisterEventListeners(this.commandListener);
+        eventManager.unregisterEventListeners(commandListener);
 
-        synchronized (this.pluginLock) {
-            List<String> toUnload = new ArrayList<>(this.pluginDetails.keySet());
+        synchronized (pluginLock) {
+            List<String> toUnload = new ArrayList<>(pluginDetails.keySet());
             for (String s : toUnload) {
-                this.unloadPlugin(s);
+                unloadPlugin(s);
             }
         }
-        synchronized (this.commandLock) {
-            this.clearCommands();
-            this.commands = null;
+        synchronized (commandLock) {
+            clearCommands();
+            commands = null;
         }
     }
 
@@ -1670,14 +1656,14 @@ public class PluginManager {
      * @see #unloadPlugin(String)
      */
     private boolean unloadSingle(@NonNull final String toUnload) {
-        this.logAlert("ALERT_UNLOADING", toUnload);
+        logAlert("ALERT_UNLOADING", toUnload);
 
-        PluginDetails details = this.pluginDetails.get(toUnload);
+        PluginDetails details = pluginDetails.get(toUnload);
 
         if (null == details) {
             String notLoaded =
-                    SafeResourceLoader.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle);
-            PluginManager.log.warn(notLoaded, toUnload);
+                    SafeResourceLoader.getString("PLUGIN_LOADED_BUT_NULL", resourceBundle);
+            log.warn(notLoaded, toUnload);
             return false;
         }
 
@@ -1685,40 +1671,38 @@ public class PluginManager {
 
         if (null == plugin) {
             String notLoaded =
-                    SafeResourceLoader.getString("PLUGIN_LOADED_BUT_NULL", this.resourceBundle);
-            PluginManager.log.warn(notLoaded, toUnload);
+                    SafeResourceLoader.getString("PLUGIN_LOADED_BUT_NULL", resourceBundle);
+            log.warn(notLoaded, toUnload);
             details.dispose();
-            this.pluginDetails.remove(toUnload);
+            pluginDetails.remove(toUnload);
             return false;
         }
 
         // It has to be disabled before unloading.
-        if (this.isEnabled(toUnload)) {
-            this.disable(toUnload);
+        if (isEnabled(toUnload)) {
+            disable(toUnload);
         }
-        this.setPluginState(toUnload, PluginState.UNLOADING);
+        setPluginState(toUnload, PluginState.UNLOADING);
 
         if (!plugin.onUnload()) {
-            String notLoaded =
-                    SafeResourceLoader.getString("PLUGIN_UNLOAD_FAIL", this.resourceBundle);
-            PluginManager.log.warn(notLoaded, toUnload);
-            this.setPluginState(toUnload, PluginState.CORRUPTED);
+            String notLoaded = SafeResourceLoader.getString("PLUGIN_UNLOAD_FAIL", resourceBundle);
+            log.warn(notLoaded, toUnload);
+            setPluginState(toUnload, PluginState.CORRUPTED);
             return false;
         }
 
         new PluginUnloaded(toUnload).fire();
 
         for (Listener l : plugin.getListeners()) {
-            this.eventManager.unregisterEventListeners(l);
+            eventManager.unregisterEventListeners(l);
         }
-        String unreg =
-                SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS", this.resourceBundle);
-        PluginManager.log.debug(unreg, toUnload);
+        String unreg = SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS", resourceBundle);
+        log.debug(unreg, toUnload);
 
-        details = this.pluginDetails.remove(toUnload);
+        details = pluginDetails.remove(toUnload);
         details.dispose();
 
-        this.logAlert("ALERT_UNLOADED", toUnload);
+        logAlert("ALERT_UNLOADED", toUnload);
         return true;
     }
 

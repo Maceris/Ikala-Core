@@ -56,7 +56,7 @@ public class OptimizationPass implements ASTVisitor {
      * @param ast The tree to validate.
      */
     public void optimize(CompilationUnit ast) {
-        this.processTree(ast);
+        processTree(ast);
     }
 
     /**
@@ -68,7 +68,7 @@ public class OptimizationPass implements ASTVisitor {
         node.getChildren().removeIf(EmptyStatement.class::isInstance);
         for (int i = 0; i < node.getChildren().size(); ++i) {
             Node child = node.getChildren().get(i);
-            this.processTree(child);
+            processTree(child);
             if (child instanceof ExprArithmetic expr) {
                 /*
                  * We might need to replace this node with a constant after
@@ -136,13 +136,13 @@ public class OptimizationPass implements ASTVisitor {
         }
 
         if (node.getType().anyOf(Base.INT)) {
-            return this.simplifyInt(node);
+            return simplifyInt(node);
         }
         if (node.getType().anyOf(Base.DOUBLE)) {
-            return this.simplifyDouble(node);
+            return simplifyDouble(node);
         }
         if (node.getType().anyOf(Base.CHAR)) {
-            return this.simplifyChar(node);
+            return simplifyChar(node);
         }
 
         return node;
@@ -163,9 +163,9 @@ public class OptimizationPass implements ASTVisitor {
         final Node right = node.getChildren().get(1);
 
         if (ExprLogic.Operator.AND.equals(node.getOperator())) {
-            return this.simplifyAnd(node, left, right);
+            return simplifyAnd(node, left, right);
         } else if (ExprLogic.Operator.OR.equals(node.getOperator())) {
-            return this.simplifyOr(node, left, right);
+            return simplifyOr(node, left, right);
         }
         return node;
     }
@@ -187,9 +187,9 @@ public class OptimizationPass implements ASTVisitor {
             if (firstID.getName().equals(secondID.getName())) {
                 switch (node.getOperator()) {
                     case GT, LT:
-                        return this.getBool(false);
+                        return getBool(false);
                     case GTE, LTE:
-                        return this.getBool(false);
+                        return getBool(false);
                     default:
                         return node;
                 }
@@ -216,13 +216,13 @@ public class OptimizationPass implements ASTVisitor {
 
         switch (node.getOperator()) {
             case GT:
-                return this.getBool(comparison > 0);
+                return getBool(comparison > 0);
             case GTE:
-                return this.getBool(comparison >= 0);
+                return getBool(comparison >= 0);
             case LT:
-                return this.getBool(comparison < 0);
+                return getBool(comparison < 0);
             case LTE:
-                return this.getBool(comparison <= 0);
+                return getBool(comparison <= 0);
         }
         return node;
     }
@@ -241,7 +241,7 @@ public class OptimizationPass implements ASTVisitor {
         if (leftChild instanceof ConstBool left && (!left.isValue())
                 || rightChild instanceof ConstBool right && (!right.isValue())) {
             // if either side of an && is false, the result is always false
-            return this.getBool(false);
+            return getBool(false);
         }
         if (leftChild instanceof ConstBool bool && (bool.isValue())) {
             // true && ____
@@ -280,7 +280,7 @@ public class OptimizationPass implements ASTVisitor {
             // Already a char
             firstValue = value;
         } else {
-            OptimizationPass.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     firstChild.toString());
@@ -300,7 +300,7 @@ public class OptimizationPass implements ASTVisitor {
             // Already a char
             secondValue = value;
         } else {
-            OptimizationPass.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     secondChild.toString());
@@ -329,7 +329,7 @@ public class OptimizationPass implements ASTVisitor {
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
             default:
                 // Can't happen, but let's cover it anyway
-                OptimizationPass.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 OptimizationPass.INVALID_OPERATOR,
                                 ScriptManager.getResourceBundle()),
@@ -367,7 +367,7 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             firstValue = value;
         } else {
-            OptimizationPass.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     firstChild.toString());
@@ -387,7 +387,7 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             secondValue = value;
         } else {
-            OptimizationPass.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     secondChild.toString());
@@ -416,7 +416,7 @@ public class OptimizationPass implements ASTVisitor {
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
             default:
                 // Can't happen, but let's cover it anyway
-                OptimizationPass.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 OptimizationPass.INVALID_OPERATOR,
                                 ScriptManager.getResourceBundle()),
@@ -454,7 +454,7 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             firstValue = value;
         } else {
-            OptimizationPass.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     firstChild.toString());
@@ -474,7 +474,7 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             secondValue = value;
         } else {
-            OptimizationPass.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     secondChild.toString());
@@ -503,7 +503,7 @@ public class OptimizationPass implements ASTVisitor {
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
             default:
                 // Can't happen, but let's cover it anyway
-                OptimizationPass.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 OptimizationPass.INVALID_OPERATOR,
                                 ScriptManager.getResourceBundle()),
@@ -528,7 +528,7 @@ public class OptimizationPass implements ASTVisitor {
         if (leftChild instanceof ConstBool left && (left.isValue())
                 || rightChild instanceof ConstBool right && (right.isValue())) {
             // if either side of an || is true, the result is always true
-            return this.getBool(true);
+            return getBool(true);
         }
         if (leftChild instanceof ConstBool bool && (!bool.isValue())) {
             // false || ____

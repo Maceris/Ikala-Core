@@ -50,13 +50,13 @@ class ScriptRunner extends Thread {
 
     /** Creates and starts the thread. */
     public ScriptRunner() {
-        this.setName("ScriptRunner");
-        this.scripts = new ArrayList<>();
-        this.yieldRequests = Collections.synchronizedMap(new HashMap<>());
-        this.resumeRequests = Collections.synchronizedList(new ArrayList<>());
-        this.haltedScripts = new HashMap<>();
-        this.running = true;
-        this.syncObject = new Object();
+        setName("ScriptRunner");
+        scripts = new ArrayList<>();
+        yieldRequests = Collections.synchronizedMap(new HashMap<>());
+        resumeRequests = Collections.synchronizedList(new ArrayList<>());
+        haltedScripts = new HashMap<>();
+        running = true;
+        syncObject = new Object();
     }
 
     /** Halt any scripts as required. */
@@ -134,14 +134,14 @@ class ScriptRunner extends Thread {
      */
     @Override
     public void run() {
-        while (this.running) {
-            while (this.scripts.isEmpty()) {
-                synchronized (this.syncObject) {
+        while (running) {
+            while (scripts.isEmpty()) {
+                synchronized (syncObject) {
                     try {
                         // block this thread until an item is added
-                        this.syncObject.wait(ScriptRunner.WAIT_TIMEOUT);
+                        syncObject.wait(ScriptRunner.WAIT_TIMEOUT);
                     } catch (InterruptedException e) {
-                        ScriptRunner.log.warn(
+                        log.warn(
                                 SafeResourceLoader.getString(
                                         "THREAD_INTERRUPTED", ScriptManager.getResourceBundle()));
                         // Re-interrupt as per SonarLint java:S2142
@@ -149,19 +149,19 @@ class ScriptRunner extends Thread {
                     }
                 }
                 // in case it was terminated while waiting
-                if (!this.running) {
+                if (!running) {
                     break;
                 }
-                this.resumeScripts();
+                resumeScripts();
             }
-            if (!this.scripts.isEmpty()) {
-                this.stepScripts();
+            if (!scripts.isEmpty()) {
+                stepScripts();
             }
-            this.haltScripts();
-            this.resumeScripts();
+            haltScripts();
+            resumeScripts();
         }
         // Done running
-        this.scripts.clear();
+        scripts.clear();
     }
 
     /**
@@ -187,7 +187,7 @@ class ScriptRunner extends Thread {
                 script.step();
             } catch (Exception e) {
                 script.halt();
-                ScriptRunner.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "EXCEPTION_IN_RUNTIME", ScriptManager.getResourceBundle()),
                         e);
@@ -200,15 +200,15 @@ class ScriptRunner extends Thread {
      * Stops the thread from executing its run method in preparation for shutting down the thread.
      */
     public void terminate() {
-        this.running = false;
-        this.wakeUp();
+        running = false;
+        wakeUp();
     }
 
     /** Wakes this thread up when it is sleeping */
     private void wakeUp() {
-        synchronized (this.syncObject) {
+        synchronized (syncObject) {
             // Wake the thread up as there is now an event
-            this.syncObject.notifyAll();
+            syncObject.notifyAll();
         }
     }
 }

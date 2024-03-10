@@ -37,6 +37,6 @@ class EventListener {
      * @throws EventException If an exception occurs during execution
      */
     public void callEvent(final Event event) throws EventException {
-        this.executor.execute(this.listener, event);
+        executor.execute(listener, event);
     }
 }

@@ -29,7 +29,7 @@ public abstract class Plugin {
      * @return a list of listeners for the plugin.
      */
     public Set<Listener> getListeners() {
-        return this.emptyListenerSet;
+        return emptyListenerSet;
     }
 
     /**

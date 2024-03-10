@@ -29,7 +29,7 @@ public abstract class Node {
      * @param child The child to add.
      */
     public void addChild(Node child) {
-        this.children.add(child);
+        children.add(child);
     }
 
     /**
@@ -42,17 +42,17 @@ public abstract class Node {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        if (this.type != null) {
-            result.append(this.type.toString());
+        if (type != null) {
+            result.append(type.toString());
             result.append(" ");
         } else {
             result.append("____ ");
         }
         result.append(this.getClass().getSimpleName());
-        if (!this.children.isEmpty()) {
+        if (!children.isEmpty()) {
             result.append(" { ");
             result.append(
-                    this.children.stream()
+                    children.stream()
                             .map(node -> node == null ? "null" : node.toString())
                             .collect(Collectors.joining(", ")));
             result.append(" } ");

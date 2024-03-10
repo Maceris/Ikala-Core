@@ -46,7 +46,7 @@ public class PluginConfig {
         try {
             return (T) object;
         } catch (ClassCastException e) {
-            PluginConfig.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "CONFIG_INVALID_TYPE", PluginManager.getInstance().getResourceBundle()),
                     e.getLocalizedMessage());
@@ -304,7 +304,7 @@ public class PluginConfig {
      * @return True if the given key is a boolean, false if it is not a boolean or does not exist.
      */
     public boolean isBoolean(@NonNull String key) {
-        return this.isType(key, Boolean.class);
+        return isType(key, Boolean.class);
     }
 
     /**
@@ -319,7 +319,7 @@ public class PluginConfig {
      * @return True if the given key is a double, false if it is not a double or does not exist.
      */
     public boolean isDouble(@NonNull String key) {
-        return this.isType(key, Double.class);
+        return isType(key, Double.class);
     }
 
     /**
@@ -334,7 +334,7 @@ public class PluginConfig {
      * @return True if the given key is an integer, false if it is not an integer or does not exist.
      */
     public boolean isInt(@NonNull String key) {
-        return this.isType(key, Integer.class);
+        return isType(key, Integer.class);
     }
 
     /**
@@ -349,7 +349,7 @@ public class PluginConfig {
      * @return True if the given key is a list, false if it is not a list or does not exist.
      */
     public boolean isList(@NonNull String key) {
-        return this.isType(key, List.class);
+        return isType(key, List.class);
     }
 
     /**
@@ -364,7 +364,7 @@ public class PluginConfig {
      * @return True if the given key is a long, false if it is not a long or does not exist.
      */
     public boolean isLong(@NonNull String key) {
-        return this.isType(key, Long.class);
+        return isType(key, Long.class);
     }
 
     /**
@@ -379,7 +379,7 @@ public class PluginConfig {
      */
     public boolean isPresent(@NonNull String path) {
         String[] parts = path.split(PluginConfig.PATH_SEPARATOR);
-        Map<String, Object> currentMap = this.contents;
+        Map<String, Object> currentMap = contents;
         for (int i = 0; i < parts.length; ++i) {
             final String currentPart = parts[i];
             if (i == parts.length - 1) {
@@ -405,7 +405,7 @@ public class PluginConfig {
      * @return True if the given key is a string, false if it is not a string or does not exist.
      */
     public boolean isString(@NonNull String key) {
-        return this.isType(key, String.class);
+        return isType(key, String.class);
     }
 
     /**
@@ -421,7 +421,7 @@ public class PluginConfig {
      */
     private boolean isType(@NonNull String path, @NonNull Class<?> target) {
         String[] parts = path.split(PluginConfig.PATH_SEPARATOR);
-        Map<String, Object> currentMap = this.contents;
+        Map<String, Object> currentMap = contents;
         for (int i = 0; i < parts.length; ++i) {
             final String currentPart = parts[i];
             if (i == parts.length - 1) {
@@ -452,7 +452,7 @@ public class PluginConfig {
      */
     private <T> T navigateKeys(@NonNull String path, T defaultValue) {
         String[] parts = path.split(PluginConfig.PATH_SEPARATOR);
-        Map<String, Object> currentMap = this.contents;
+        Map<String, Object> currentMap = contents;
         for (int i = 0; i < parts.length; ++i) {
             final String currentPart = parts[i];
             if (i == parts.length - 1) {
@@ -463,7 +463,7 @@ public class PluginConfig {
                 for (int j = 0; j <= i; ++j) {
                     invalidName.append(parts[j]);
                 }
-                PluginConfig.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "CONFIG_INVALID_KEY",
                                 PluginManager.getInstance().getResourceBundle()),
@@ -491,7 +491,7 @@ public class PluginConfig {
      */
     public void set(@NonNull String path, Object value) {
         String[] parts = path.split(PluginConfig.PATH_SEPARATOR);
-        Map<String, Object> currentMap = this.contents;
+        Map<String, Object> currentMap = contents;
         for (int i = 0; i < parts.length; ++i) {
             final String currentPart = parts[i];
             if (i == parts.length - 1) {

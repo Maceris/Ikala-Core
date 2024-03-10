@@ -30,7 +30,7 @@ public class LoopStage {
      */
     public LoopStage(@NonNull IntSupplier method) {
         this.method = method;
-        this.id = UUID.randomUUID();
+        id = UUID.randomUUID();
     }
 
     /**
@@ -39,6 +39,6 @@ public class LoopStage {
      * @return The stage to execute.
      */
     public int execute() {
-        return this.method.getAsInt();
+        return method.getAsInt();
     }
 }

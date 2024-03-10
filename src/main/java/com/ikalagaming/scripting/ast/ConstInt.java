@@ -20,6 +20,6 @@ public class ConstInt extends Node {
 
     @Override
     public String toString() {
-        return Integer.toString(this.value);
+        return Integer.toString(value);
     }
 }

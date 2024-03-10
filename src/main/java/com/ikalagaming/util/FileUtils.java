@@ -140,7 +140,7 @@ public class FileUtils {
         try (Stream<String> stream = Files.lines(file.toPath(), StandardCharsets.UTF_8)) {
             stream.forEach(line -> contentBuilder.append(line).append("\n"));
         } catch (IOException e) {
-            FileUtils.log.warn("Exception occurred reading file", e);
+            log.warn("Exception occurred reading file", e);
         }
 
         return contentBuilder.toString();

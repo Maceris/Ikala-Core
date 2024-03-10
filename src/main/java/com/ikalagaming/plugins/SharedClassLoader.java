@@ -34,8 +34,8 @@ public class SharedClassLoader extends ClassLoader {
      * Also closes the files.
      */
     void dispose() {
-        this.getClasses().forEach(this.manager::removeClass);
-        this.classes.clear();
+        getClasses().forEach(manager::removeClass);
+        classes.clear();
     }
 
     @Override
@@ -55,14 +55,14 @@ public class SharedClassLoader extends ClassLoader {
      */
     Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
 
-        Class<?> result = this.classes.get(name);
+        Class<?> result = classes.get(name);
 
         if (result != null) {
             return result;
         }
 
         if (checkGlobal) {
-            result = this.manager.getClassByName(name);
+            result = manager.getClassByName(name);
         }
 
         if (result == null) {
@@ -74,8 +74,8 @@ public class SharedClassLoader extends ClassLoader {
         }
 
         // we did find it in the parent
-        this.manager.setClass(name, result);
-        this.classes.put(name, result);
+        manager.setClass(name, result);
+        classes.put(name, result);
 
         return result;
     }
@@ -86,6 +86,6 @@ public class SharedClassLoader extends ClassLoader {
      * @return The classes this classloader has found.
      */
     Set<String> getClasses() {
-        return this.classes.keySet();
+        return classes.keySet();
     }
 }

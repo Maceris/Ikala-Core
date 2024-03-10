@@ -103,12 +103,12 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
                 BinaryTreeNode<K, V> leftNode,
                 BinaryTreeNode<K, V> parentNode,
                 BinaryTreeNode<K, V> rightNode) {
-            this.key = newKey;
-            this.value = newValue;
-            this.height = 1;
-            this.left = leftNode;
-            this.parent = parentNode;
-            this.right = rightNode;
+            key = newKey;
+            value = newValue;
+            height = 1;
+            left = leftNode;
+            parent = parentNode;
+            right = rightNode;
         }
 
         /**
@@ -116,17 +116,17 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
          * parents and keys. Also zeroes the height.
          */
         public void delete() {
-            if (this.left != null) {
-                this.left.delete();
+            if (left != null) {
+                left.delete();
             }
-            this.left = null;
-            if (this.right != null) {
-                this.right.delete();
+            left = null;
+            if (right != null) {
+                right.delete();
             }
-            this.right = null;
-            this.parent = null;
-            this.key = null;
-            this.height = 0;
+            right = null;
+            parent = null;
+            key = null;
+            height = 0;
         }
     }
 
@@ -149,11 +149,11 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 
     /** Removes all objects from the tree. */
     public void clear() {
-        if (this.treeRoot != null) {
-            this.treeRoot.delete();
+        if (treeRoot != null) {
+            treeRoot.delete();
         }
-        this.treeRoot = null;
-        this.size = 0;
+        treeRoot = null;
+        size = 0;
     }
 
     /**
@@ -167,7 +167,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
          * true if the find method returns something that is not null (that is,
          * it exists in the tree)
          */
-        return (this.find(toFind, this.treeRoot) != null);
+        return (this.find(toFind, treeRoot) != null);
     }
 
     /**
@@ -257,9 +257,9 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
      * @return The new root of the tree (where root was before).
      */
     protected BinaryTreeNode<K, V> insert(BinaryTreeNode<K, V> root, K key, V value) {
-        if (this.treeRoot == null) {
-            this.treeRoot = new BinaryTreeNode<>(key, value);
-            return this.treeRoot;
+        if (treeRoot == null) {
+            treeRoot = new BinaryTreeNode<>(key, value);
+            return treeRoot;
         }
 
         if (root == null || root.getKey() == null) {
@@ -269,7 +269,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
         // insert node, looking for it recursively
         if (key.compareTo(root.getKey()) == 0) {
             root.setValue(value);
-            --this.size; // We did not add a node, but will later think we did
+            --size; // We did not add a node, but will later think we did
             return root;
         } else if (key.compareTo(root.getKey()) < 1) {
             // inserting on the left of this node
@@ -303,7 +303,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
             if (balance > 1 && key.compareTo(root.getLeft().getKey()) < 0) {
                 BinaryTreeNode<K, V> newRoot = this.rightRotate(root);
                 if (newRoot.getParent() == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -315,7 +315,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
                 root.setLeft(this.leftRotate(root.getLeft()));
                 BinaryTreeNode<K, V> newRoot = this.rightRotate(root);
                 if (newRoot.getParent() == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -328,7 +328,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
             if (balance < -1 && key.compareTo(root.getRight().getKey()) > 0) {
                 BinaryTreeNode<K, V> newRoot = this.leftRotate(root);
                 if (newRoot.getParent() == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -337,7 +337,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
                 root.setRight(this.rightRotate(root.getRight()));
                 BinaryTreeNode<K, V> newRoot = this.leftRotate(root);
                 if (newRoot.getParent() == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -352,8 +352,8 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
      * @param value The value to store.
      */
     public void insert(K key, V value) {
-        this.treeRoot = this.insert(this.treeRoot, key, value);
-        ++this.size;
+        treeRoot = this.insert(treeRoot, key, value);
+        ++size;
     }
 
     /**
@@ -477,11 +477,11 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
      * @param toRemove the object to remove
      */
     public void remove(@NonNull K toRemove) {
-        BinaryTreeNode<K, V> nodeToRemove = this.find(toRemove, this.treeRoot);
+        BinaryTreeNode<K, V> nodeToRemove = this.find(toRemove, treeRoot);
         if (nodeToRemove != null) {
             this.remove(nodeToRemove);
         }
-        --this.size;
+        --size;
     }
 
     /**
@@ -586,7 +586,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
         toRemove.setLeft(null);
         toRemove.setRight(null);
 
-        this.treeRoot = smallestRight;
+        treeRoot = smallestRight;
     }
 
     /**
@@ -598,7 +598,7 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
     private void removeWithNoChildren(BinaryTreeNode<K, V> toRemove) {
         if (toRemove.getParent() == null) {
             // this is the root node, and the only node in the tree
-            this.treeRoot = null;
+            treeRoot = null;
         } else if (toRemove.equals(toRemove.getParent().getLeft())) {
             // its a left child
             // remove parents reference to this node
@@ -640,8 +640,8 @@ public class AVLTreeMap<K extends Comparable<K>, V> {
 
         if (toRemove.getParent() == null) {
             // this is the root node
-            this.treeRoot = child;
-            this.updateHeight(this.treeRoot);
+            treeRoot = child;
+            this.updateHeight(treeRoot);
         } else if (toRemove.equals(toRemove.getParent().getLeft())) {
             // this is a left child
             toRemove.getParent().setLeft(child);

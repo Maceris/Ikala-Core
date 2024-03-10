@@ -14,8 +14,8 @@ public class ExprTernary extends Node {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        if (this.type != null) {
-            result.append(this.type.toString());
+        if (type != null) {
+            result.append(type.toString());
             result.append(" ");
         } else {
             result.append("____ ");
@@ -24,11 +24,11 @@ public class ExprTernary extends Node {
         result.append(this.getClass().getSimpleName());
 
         result.append(" { ");
-        result.append(this.children.get(0).toString());
+        result.append(children.get(0).toString());
         result.append(" ? ");
-        result.append(this.children.get(1).toString());
+        result.append(children.get(1).toString());
         result.append(" : ");
-        result.append(this.children.get(2).toString());
+        result.append(children.get(2).toString());
         result.append(" } ");
 
         return result.toString();

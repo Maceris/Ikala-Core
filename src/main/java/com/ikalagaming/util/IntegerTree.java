@@ -16,16 +16,15 @@ public class IntegerTree extends BinaryTree<Integer> {
      * @return the smallest available int not in the tree.
      */
     public int getSmallestUnusedInt() {
-        if (this.treeRoot == null) {
+        if (treeRoot == null) {
             return 0;
         }
-        BinaryTreeNode<Integer> node = this.getSmallestSubnode(this.treeRoot);
+        BinaryTreeNode<Integer> node = getSmallestSubnode(treeRoot);
         int smallest = 0;
         boolean exitNextLoop = false;
 
         while (true) {
-            if ((this.find(smallest, node) != null)
-                    || this.find(smallest, node.getParent()) != null) {
+            if ((find(smallest, node) != null) || find(smallest, node.getParent()) != null) {
                 ++smallest;
                 exitNextLoop = false;
             } else if (node.getParent() != null) {

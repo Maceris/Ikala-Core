@@ -27,7 +27,7 @@ public record MemLocation(@NonNull MemArea area, @NonNull Class<?> type, Object 
      * @return True if the type was specified as an boolean, otherwise false.
      */
     public boolean isBoolean() {
-        return Boolean.class.isAssignableFrom(this.type);
+        return Boolean.class.isAssignableFrom(type);
     }
 
     /**
@@ -36,7 +36,7 @@ public record MemLocation(@NonNull MemArea area, @NonNull Class<?> type, Object 
      * @return True if the type was specified as an character, otherwise false.
      */
     public boolean isChar() {
-        return Character.class.isAssignableFrom(this.type);
+        return Character.class.isAssignableFrom(type);
     }
 
     /**
@@ -45,7 +45,7 @@ public record MemLocation(@NonNull MemArea area, @NonNull Class<?> type, Object 
      * @return True if the type was specified as an double, otherwise false.
      */
     public boolean isDouble() {
-        return Double.class.isAssignableFrom(this.type);
+        return Double.class.isAssignableFrom(type);
     }
 
     /**
@@ -54,7 +54,7 @@ public record MemLocation(@NonNull MemArea area, @NonNull Class<?> type, Object 
      * @return True if the type was specified as an integer, otherwise false.
      */
     public boolean isInt() {
-        return Integer.class.isAssignableFrom(this.type);
+        return Integer.class.isAssignableFrom(type);
     }
 
     /**
@@ -63,6 +63,6 @@ public record MemLocation(@NonNull MemArea area, @NonNull Class<?> type, Object 
      * @return True if the type was specified as an string, otherwise false.
      */
     public boolean isString() {
-        return String.class.isAssignableFrom(this.type);
+        return String.class.isAssignableFrom(type);
     }
 }

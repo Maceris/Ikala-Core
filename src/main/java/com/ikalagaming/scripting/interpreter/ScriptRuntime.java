@@ -71,15 +71,15 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
-        final MemoryItem secondItem = this.loadValue(secondLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
+        final MemoryItem secondItem = loadValue(secondLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.BOOLEAN);
-        this.checkType(secondLocation, Type.Base.BOOLEAN);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.BOOLEAN);
+        checkType(secondLocation, Type.Base.BOOLEAN);
+        if (fatalError) {
             return;
         }
 
@@ -90,17 +90,17 @@ public class ScriptRuntime {
             first = (Boolean) firstItem.value();
             second = (Boolean) secondItem.value();
         } catch (ClassCastException e) {
-            ScriptRuntime.log.warn(
+            log.warn(
                     SafeResourceLoader.getString("CAST_FAILED", ScriptManager.getResourceBundle()),
                     firstItem.getClass(),
                     Boolean.class);
-            this.halt();
+            halt();
             return;
         }
 
         MemoryItem result = new MemoryItem(Boolean.class, operation.apply(first, second));
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -122,18 +122,18 @@ public class ScriptRuntime {
         List<Method> options;
         List<MemoryItem> parameters = new ArrayList<>();
         for (int paramIndex = 0; paramIndex < numParams; ++paramIndex) {
-            parameters.add(this.loadValue(stackLocation));
-            if (this.fatalError) {
+            parameters.add(loadValue(stackLocation));
+            if (fatalError) {
                 return;
             }
         }
 
-        if (this.reservedMethods(objectLocation, methodName, numParams, parameters)) {
+        if (reservedMethods(objectLocation, methodName, numParams, parameters)) {
             return;
         }
 
         if (objectLocation != MemArea.IMMEDIATE) {
-            final MemoryItem first = this.loadValue(i.firstLocation());
+            final MemoryItem first = loadValue(i.firstLocation());
 
             object = first.value();
 
@@ -147,11 +147,11 @@ public class ScriptRuntime {
                 }
             }
             if (options.isEmpty()) {
-                ScriptRuntime.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_METHOD", ScriptManager.getResourceBundle()),
                         methodName);
-                this.halt();
+                halt();
                 return;
             }
         } else {
@@ -159,11 +159,11 @@ public class ScriptRuntime {
         }
 
         if (!this.call(options, parameters, object)) {
-            ScriptRuntime.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "UNKNOWN_METHOD", ScriptManager.getResourceBundle()),
                     methodName);
-            this.halt();
+            halt();
         }
     }
 
@@ -186,7 +186,7 @@ public class ScriptRuntime {
             for (int i = 0; i < params.length; ++i) {
                 Class<?> expectedType = params[i];
                 Class<?> actualType = parameters.get(i).type();
-                viable = this.canAssign(expectedType, actualType);
+                viable = canAssign(expectedType, actualType);
                 if (!viable) {
                     break;
                 }
@@ -201,13 +201,13 @@ public class ScriptRuntime {
             try {
                 Object result = option.invoke(target, actualParams);
                 if (result != null) {
-                    this.stack.push(new MemoryItem(result));
+                    stack.push(new MemoryItem(result));
                 }
                 return true;
             } catch (IllegalAccessException
                     | IllegalArgumentException
                     | InvocationTargetException e) {
-                ScriptRuntime.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "METHOD_CALL_FAILED", ScriptManager.getResourceBundle()),
                         option.getName());
@@ -245,9 +245,9 @@ public class ScriptRuntime {
     private void cast(Instruction i) {
         final MemLocation firstLocation = i.firstLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
 
@@ -256,28 +256,28 @@ public class ScriptRuntime {
         MemoryItem target = null;
 
         if (targetClass == Integer.class) {
-            target = this.castToInt(firstItem.value());
+            target = castToInt(firstItem.value());
         } else if (targetClass == Double.class) {
-            target = this.castToDouble(firstItem.value());
+            target = castToDouble(firstItem.value());
         } else if (targetClass == Character.class) {
-            target = this.castToChar(firstItem.value());
+            target = castToChar(firstItem.value());
         } else if (targetClass == Boolean.class) {
-            target = this.castToBoolean(firstItem.value());
+            target = castToBoolean(firstItem.value());
         } else if (targetClass == String.class) {
             target = new MemoryItem(Character.class, firstItem.value().toString());
         }
 
         if (target == null) {
-            ScriptRuntime.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "INVALID_CAST_TYPE", ScriptManager.getResourceBundle()),
                     targetClass);
-            this.halt();
+            halt();
             return;
         }
 
         MemLocation targetLocation = new MemLocation(i.targetLocation().area(), targetClass);
-        this.storeValue(target, targetLocation);
+        storeValue(target, targetLocation);
     }
 
     /**
@@ -406,15 +406,15 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
-        final MemoryItem secondItem = this.loadValue(secondLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
+        final MemoryItem secondItem = loadValue(secondLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.CHAR);
-        this.checkType(secondLocation, Type.Base.CHAR);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.CHAR);
+        checkType(secondLocation, Type.Base.CHAR);
+        if (fatalError) {
             return;
         }
 
@@ -439,7 +439,7 @@ public class ScriptRuntime {
         MemoryItem result =
                 new MemoryItem(Character.class, operation.apply(firstNumber, secondNumber));
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -453,38 +453,38 @@ public class ScriptRuntime {
         switch (intended) {
             case BOOLEAN:
                 if (!memory.isBoolean()) {
-                    ScriptRuntime.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
-                    this.halt();
+                    halt();
                 }
                 break;
             case CHAR:
                 if (!memory.isChar()) {
-                    ScriptRuntime.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
-                    this.halt();
+                    halt();
                 }
                 break;
             case DOUBLE:
                 if (!(memory.isChar() || memory.isInt() || memory.isDouble())) {
-                    ScriptRuntime.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
-                    this.halt();
+                    halt();
                 }
                 break;
             case INT:
                 if (!(memory.isChar() || memory.isInt())) {
-                    ScriptRuntime.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
-                    this.halt();
+                    halt();
                 }
                 break;
             case STRING:
@@ -492,11 +492,11 @@ public class ScriptRuntime {
                 break;
             case LABEL, IDENTIFIER, UNKNOWN, VOID:
             default:
-                ScriptRuntime.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
                         intended.toString());
-                this.halt();
+                halt();
                 break;
         }
     }
@@ -511,10 +511,10 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
-        final MemoryItem secondItem = this.loadValue(secondLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
+        final MemoryItem secondItem = loadValue(secondLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
 
@@ -523,18 +523,18 @@ public class ScriptRuntime {
                         || secondLocation.isDouble()
                         || secondLocation.isInt())) {
 
-            this.doubleComparison(
+            doubleComparison(
                     i,
                     firstItem,
                     secondItem,
                     (a, b) -> {
                         final double TOLERANCE = 0.000_01;
                         if (Math.abs(a - b) < TOLERANCE) {
-                            this.lastComparison = 0;
+                            lastComparison = 0;
                         } else if (a < b) {
-                            this.lastComparison = -1;
+                            lastComparison = -1;
                         } else if (a > b) {
-                            this.lastComparison = 1;
+                            lastComparison = 1;
                         }
                     });
             return;
@@ -543,10 +543,10 @@ public class ScriptRuntime {
         Object first = firstItem.value();
         Object second = secondItem.value();
         if (first.equals(second)) {
-            this.lastComparison = 0;
+            lastComparison = 0;
         } else {
             // Different types
-            this.lastComparison = 1;
+            lastComparison = 1;
         }
     }
 
@@ -559,10 +559,10 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
-        final MemoryItem secondItem = this.loadValue(secondLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
+        final MemoryItem secondItem = loadValue(secondLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
 
@@ -571,7 +571,7 @@ public class ScriptRuntime {
 
         MemoryItem result = new MemoryItem(String.class, first + second);
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -590,7 +590,7 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
 
@@ -606,7 +606,7 @@ public class ScriptRuntime {
             first = (double) firstItem.value();
         } else {
             // Should not happen
-            this.halt();
+            halt();
             return;
         }
 
@@ -618,7 +618,7 @@ public class ScriptRuntime {
             second = (double) secondItem.value();
         } else {
             // Should not happen
-            this.halt();
+            halt();
             return;
         }
 
@@ -635,15 +635,15 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
-        final MemoryItem secondItem = this.loadValue(secondLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
+        final MemoryItem secondItem = loadValue(secondLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.DOUBLE);
-        this.checkType(secondLocation, Type.Base.DOUBLE);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.DOUBLE);
+        checkType(secondLocation, Type.Base.DOUBLE);
+        if (fatalError) {
             return;
         }
 
@@ -679,181 +679,181 @@ public class ScriptRuntime {
         MemoryItem result =
                 new MemoryItem(Double.class, operation.applyAsDouble(firstNumber, secondNumber));
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     private void execute(Instruction i) {
         switch (i.type()) {
             case ADD_CHAR:
-                this.charMath(i, (a, b) -> (char) (a + b));
-                this.programCounter++;
+                charMath(i, (a, b) -> (char) (a + b));
+                programCounter++;
                 break;
             case ADD_DOUBLE:
-                this.doubleMath(i, (a, b) -> a + b);
-                this.programCounter++;
+                doubleMath(i, (a, b) -> a + b);
+                programCounter++;
                 break;
             case ADD_INT:
-                this.intMath(i, (a, b) -> a + b);
-                this.programCounter++;
+                intMath(i, (a, b) -> a + b);
+                programCounter++;
                 break;
             case AND:
-                this.boolLogic(i, (a, b) -> a && b);
-                this.programCounter++;
+                boolLogic(i, (a, b) -> a && b);
+                programCounter++;
                 break;
             case CAST:
-                this.cast(i);
-                this.programCounter++;
+                cast(i);
+                programCounter++;
                 break;
             case CALL:
                 this.call(i);
-                this.programCounter++;
+                programCounter++;
                 break;
             case CMP:
-                this.compare(i);
-                this.programCounter++;
+                compare(i);
+                programCounter++;
                 break;
             case CONCAT_STRING:
-                this.concatStrings(i);
-                this.programCounter++;
+                concatStrings(i);
+                programCounter++;
                 break;
             case DIV_CHAR:
-                this.charMath(i, (a, b) -> (char) (a / b));
-                this.programCounter++;
+                charMath(i, (a, b) -> (char) (a / b));
+                programCounter++;
                 break;
             case DIV_DOUBLE:
-                this.doubleMath(i, (a, b) -> a / b);
-                this.programCounter++;
+                doubleMath(i, (a, b) -> a / b);
+                programCounter++;
                 break;
             case DIV_INT:
-                this.intMath(i, (a, b) -> a / b);
-                this.programCounter++;
+                intMath(i, (a, b) -> a / b);
+                programCounter++;
                 break;
             case HALT:
-                this.halt();
+                halt();
                 break;
             case JEQ:
-                this.jump(i, comp -> comp == 0);
+                jump(i, comp -> comp == 0);
                 break;
             case JGE:
-                this.jump(i, comp -> comp >= 0);
+                jump(i, comp -> comp >= 0);
                 break;
             case JGT:
-                this.jump(i, comp -> comp > 0);
+                jump(i, comp -> comp > 0);
                 break;
             case JLE:
-                this.jump(i, comp -> comp <= 0);
+                jump(i, comp -> comp <= 0);
                 break;
             case JLT:
-                this.jump(i, comp -> comp < 0);
+                jump(i, comp -> comp < 0);
                 break;
             case JMP:
-                this.jump(i, comp -> true);
+                jump(i, comp -> true);
                 break;
             case JNE:
-                this.jump(i, comp -> comp != 0);
+                jump(i, comp -> comp != 0);
                 break;
             case MOD_CHAR:
-                this.charMath(i, (a, b) -> (char) (a % b));
-                this.programCounter++;
+                charMath(i, (a, b) -> (char) (a % b));
+                programCounter++;
                 break;
             case MOD_DOUBLE:
-                this.doubleMath(i, (a, b) -> a % b);
-                this.programCounter++;
+                doubleMath(i, (a, b) -> a % b);
+                programCounter++;
                 break;
             case MOD_INT:
-                this.intMath(i, (a, b) -> a % b);
-                this.programCounter++;
+                intMath(i, (a, b) -> a % b);
+                programCounter++;
                 break;
             case MOV:
-                this.move(i);
-                this.programCounter++;
+                move(i);
+                programCounter++;
                 break;
             case MUL_CHAR:
-                this.charMath(i, (a, b) -> (char) (a * b));
-                this.programCounter++;
+                charMath(i, (a, b) -> (char) (a * b));
+                programCounter++;
                 break;
             case MUL_DOUBLE:
-                this.doubleMath(i, (a, b) -> a * b);
-                this.programCounter++;
+                doubleMath(i, (a, b) -> a * b);
+                programCounter++;
                 break;
             case MUL_INT:
-                this.intMath(i, (a, b) -> a * b);
-                this.programCounter++;
+                intMath(i, (a, b) -> a * b);
+                programCounter++;
                 break;
             case NEG_CHAR:
-                this.negateChar(i);
-                this.programCounter++;
+                negateChar(i);
+                programCounter++;
                 break;
             case NEG_DOUBLE:
-                this.negateDouble(i);
-                this.programCounter++;
+                negateDouble(i);
+                programCounter++;
                 break;
             case NEG_INT:
-                this.negateInt(i);
-                this.programCounter++;
+                negateInt(i);
+                programCounter++;
                 break;
             case NOP:
                 // No operation
-                this.programCounter++;
+                programCounter++;
                 break;
             case NOT:
-                this.not(i);
-                this.programCounter++;
+                not(i);
+                programCounter++;
                 break;
             case OR:
-                this.boolLogic(i, (a, b) -> a || b);
-                this.programCounter++;
+                boolLogic(i, (a, b) -> a || b);
+                programCounter++;
                 break;
             case SUB_CHAR:
-                this.charMath(i, (a, b) -> (char) (a - b));
-                this.programCounter++;
+                charMath(i, (a, b) -> (char) (a - b));
+                programCounter++;
                 break;
             case SUB_DOUBLE:
-                this.doubleMath(i, (a, b) -> a - b);
-                this.programCounter++;
+                doubleMath(i, (a, b) -> a - b);
+                programCounter++;
                 break;
             case SUB_INT:
-                this.intMath(i, (a, b) -> a - b);
-                this.programCounter++;
+                intMath(i, (a, b) -> a - b);
+                programCounter++;
                 break;
             case SET_EQ:
-                this.set(i, cmp -> cmp == 0);
-                this.programCounter++;
+                set(i, cmp -> cmp == 0);
+                programCounter++;
                 break;
             case SET_GE:
-                this.set(i, cmp -> cmp >= 0);
-                this.programCounter++;
+                set(i, cmp -> cmp >= 0);
+                programCounter++;
                 break;
             case SET_GT:
-                this.set(i, cmp -> cmp > 0);
-                this.programCounter++;
+                set(i, cmp -> cmp > 0);
+                programCounter++;
                 break;
             case SET_LE:
-                this.set(i, cmp -> cmp <= 0);
-                this.programCounter++;
+                set(i, cmp -> cmp <= 0);
+                programCounter++;
                 break;
             case SET_LT:
-                this.set(i, cmp -> cmp < 0);
-                this.programCounter++;
+                set(i, cmp -> cmp < 0);
+                programCounter++;
                 break;
             case SET_NE:
-                this.set(i, cmp -> cmp != 0);
-                this.programCounter++;
+                set(i, cmp -> cmp != 0);
+                programCounter++;
                 break;
             default:
-                ScriptRuntime.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_INSTRUCTION", ScriptManager.getResourceBundle()),
                         i.type().toString());
-                this.halt();
+                halt();
                 break;
         }
     }
 
     /** Stop running the program. Should only be called internally and by the script runner. */
     public void halt() {
-        this.fatalError = true;
-        this.programCounter = this.instructions.size();
+        fatalError = true;
+        programCounter = instructions.size();
     }
 
     /**
@@ -862,7 +862,7 @@ public class ScriptRuntime {
      * @return Whether we have terminated the program.
      */
     public boolean hasTerminated() {
-        return this.programCounter == this.instructions.size();
+        return programCounter == instructions.size();
     }
 
     /**
@@ -876,15 +876,15 @@ public class ScriptRuntime {
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
 
-        final MemoryItem firstItem = this.loadValue(firstLocation);
-        final MemoryItem secondItem = this.loadValue(secondLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
+        final MemoryItem secondItem = loadValue(secondLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.INT);
-        this.checkType(secondLocation, Type.Base.INT);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.INT);
+        checkType(secondLocation, Type.Base.INT);
+        if (fatalError) {
             return;
         }
 
@@ -914,7 +914,7 @@ public class ScriptRuntime {
         MemoryItem result =
                 new MemoryItem(Integer.class, operation.applyAsInt(firstNumber, secondNumber));
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -926,19 +926,19 @@ public class ScriptRuntime {
      */
     private void jump(Instruction instruction, IntPredicate operator) {
         final int location = (Integer) instruction.firstLocation().value();
-        if (location < 0 || location > this.instructions.size()) {
+        if (location < 0 || location > instructions.size()) {
             // instructions.size is for when we want to bail on the program.
-            ScriptRuntime.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "INVALID_JUMP_LOCATION", ScriptManager.getResourceBundle()),
                     location);
-            this.halt();
+            halt();
             return;
         }
-        if (operator.test(this.lastComparison)) {
-            this.programCounter = location;
+        if (operator.test(lastComparison)) {
+            programCounter = location;
         } else {
-            this.programCounter++;
+            programCounter++;
         }
     }
 
@@ -954,30 +954,30 @@ public class ScriptRuntime {
             case IMMEDIATE:
                 return new MemoryItem(from.type(), from.value());
             case STACK:
-                if (this.stack.isEmpty()) {
-                    ScriptRuntime.log.warn(
+                if (stack.isEmpty()) {
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "POPPING_TOO_FAR", ScriptManager.getResourceBundle()));
-                    this.halt();
+                    halt();
                     return ScriptRuntime.VOID_MEMORY;
                 }
-                return this.stack.pop();
+                return stack.pop();
             case VARIABLE:
-                if (!this.symbolTable.containsKey(from.value())) {
-                    ScriptRuntime.log.warn(
+                if (!symbolTable.containsKey(from.value())) {
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "UNKNOWN_VARIABLE", ScriptManager.getResourceBundle()),
                             from.value());
-                    this.halt();
+                    halt();
                     return ScriptRuntime.VOID_MEMORY;
                 }
-                return this.symbolTable.get(from.value());
+                return symbolTable.get(from.value());
             default:
-                ScriptRuntime.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_MEMORY_AREA", ScriptManager.getResourceBundle()),
                         from.area().toString());
-                this.halt();
+                halt();
                 return ScriptRuntime.VOID_MEMORY;
         }
     }
@@ -988,8 +988,8 @@ public class ScriptRuntime {
      * @param i The instruction to execute.
      */
     private void move(@NonNull Instruction i) {
-        MemoryItem memory = this.loadValue(i.firstLocation());
-        this.storeValue(memory, i.targetLocation());
+        MemoryItem memory = loadValue(i.firstLocation());
+        storeValue(memory, i.targetLocation());
     }
 
     /**
@@ -999,13 +999,13 @@ public class ScriptRuntime {
      */
     private void negateChar(Instruction i) {
         final MemLocation firstLocation = i.firstLocation();
-        final MemoryItem firstItem = this.loadValue(firstLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.CHAR);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.CHAR);
+        if (fatalError) {
             return;
         }
 
@@ -1020,7 +1020,7 @@ public class ScriptRuntime {
 
         MemoryItem result = new MemoryItem(Character.class, -firstNumber);
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -1030,13 +1030,13 @@ public class ScriptRuntime {
      */
     private void negateDouble(Instruction i) {
         final MemLocation firstLocation = i.firstLocation();
-        final MemoryItem firstItem = this.loadValue(firstLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.DOUBLE);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.DOUBLE);
+        if (fatalError) {
             return;
         }
 
@@ -1057,7 +1057,7 @@ public class ScriptRuntime {
 
         MemoryItem result = new MemoryItem(Double.class, -firstNumber);
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -1067,13 +1067,13 @@ public class ScriptRuntime {
      */
     private void negateInt(Instruction i) {
         final MemLocation firstLocation = i.firstLocation();
-        final MemoryItem firstItem = this.loadValue(firstLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.INT);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.INT);
+        if (fatalError) {
             return;
         }
 
@@ -1091,7 +1091,7 @@ public class ScriptRuntime {
 
         MemoryItem result = new MemoryItem(Integer.class, -firstNumber);
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -1101,13 +1101,13 @@ public class ScriptRuntime {
      */
     private void not(Instruction i) {
         final MemLocation firstLocation = i.firstLocation();
-        final MemoryItem firstItem = this.loadValue(firstLocation);
+        final MemoryItem firstItem = loadValue(firstLocation);
 
-        if (this.fatalError) {
+        if (fatalError) {
             return;
         }
-        this.checkType(firstLocation, Type.Base.BOOLEAN);
-        if (this.fatalError) {
+        checkType(firstLocation, Type.Base.BOOLEAN);
+        if (fatalError) {
             return;
         }
 
@@ -1115,7 +1115,7 @@ public class ScriptRuntime {
 
         MemoryItem result = new MemoryItem(Boolean.class, !value);
 
-        this.storeValue(result, i.targetLocation());
+        storeValue(result, i.targetLocation());
     }
 
     /**
@@ -1139,11 +1139,11 @@ public class ScriptRuntime {
             if (numParams == 1) {
                 Object tag = parameters.get(0).value();
                 if (!(tag instanceof String)) {
-                    ScriptRuntime.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "YIELD_PARAMETER", ScriptManager.getResourceBundle()),
                             methodName);
-                    this.halt();
+                    halt();
                     return true;
                 }
                 ScriptManager.yieldScript(this, (String) tag);
@@ -1162,19 +1162,17 @@ public class ScriptRuntime {
      * @param operation The operation that takes the last comparison and outputs a boolean result.
      */
     private void set(Instruction instruction, IntPredicate operation) {
-        MemoryItem result = new MemoryItem(Boolean.class, operation.test(this.lastComparison));
-        this.storeValue(result, instruction.targetLocation());
+        MemoryItem result = new MemoryItem(Boolean.class, operation.test(lastComparison));
+        storeValue(result, instruction.targetLocation());
     }
 
     /** Execute one instruction. */
     public void step() {
-        if (this.fatalError
-                || (this.programCounter < 0)
-                || (this.programCounter >= this.instructions.size())) {
+        if (fatalError || (programCounter < 0) || (programCounter >= instructions.size())) {
             // Stop executing
             return;
         }
-        this.execute(this.instructions.get(this.programCounter));
+        execute(instructions.get(programCounter));
     }
 
     /**
@@ -1186,33 +1184,33 @@ public class ScriptRuntime {
     private void storeValue(MemoryItem item, MemLocation location) {
         switch (location.area()) {
             case STACK:
-                this.stack.push(item);
+                stack.push(item);
                 break;
             case VARIABLE:
                 final String variable = (String) location.value();
-                if (this.symbolTable.containsKey(variable)) {
-                    MemoryItem existingValue = this.symbolTable.get(variable);
+                if (symbolTable.containsKey(variable)) {
+                    MemoryItem existingValue = symbolTable.get(variable);
                     if (!existingValue.getClass().equals(item.getClass())) {
-                        ScriptRuntime.log.warn(
+                        log.warn(
                                 SafeResourceLoader.getString(
                                         "VARIABLE_TYPE_MISMATCH",
                                         ScriptManager.getResourceBundle()),
                                 item.getClass().getSimpleName(),
                                 variable,
                                 existingValue.getClass().getSimpleName());
-                        this.halt();
+                        halt();
                         break;
                     }
                 }
-                this.symbolTable.put(variable, item);
+                symbolTable.put(variable, item);
                 break;
             case IMMEDIATE:
             default:
-                ScriptRuntime.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "INVALID_MEMORY_LOCATION", ScriptManager.getResourceBundle()),
                         location.area());
-                this.halt();
+                halt();
                 break;
         }
     }

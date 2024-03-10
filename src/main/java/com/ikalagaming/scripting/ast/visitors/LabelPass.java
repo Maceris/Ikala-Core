@@ -25,7 +25,7 @@ public class LabelPass implements ASTVisitor {
      * @param root The root of the tree.
      */
     public void processLabels(@NonNull CompilationUnit root) {
-        this.processTree(root);
+        processTree(root);
     }
 
     /**
@@ -45,6 +45,6 @@ public class LabelPass implements ASTVisitor {
     public void visit(Label node) {
         // Note down the name of the label as being a label.
         Type childType = node.getType();
-        this.typeMap.put(childType.getValue(), childType);
+        typeMap.put(childType.getValue(), childType);
     }
 }

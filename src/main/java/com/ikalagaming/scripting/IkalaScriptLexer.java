@@ -581,7 +581,7 @@ public class IkalaScriptLexer extends Lexer {
 
     public IkalaScriptLexer(CharStream input) {
         super(input);
-        this._interp =
+        _interp =
                 new LexerATNSimulator(
                         this,
                         IkalaScriptLexer._ATN,

@@ -20,6 +20,6 @@ public class ConstBool extends Node {
 
     @Override
     public String toString() {
-        return Boolean.toString(this.value);
+        return Boolean.toString(value);
     }
 }

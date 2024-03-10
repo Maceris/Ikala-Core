@@ -21,7 +21,7 @@ public class NodeAnnotationPass implements ASTVisitor {
      * @param ast The tree to validate.
      */
     public void annotate(CompilationUnit ast) {
-        this.processTree(ast);
+        processTree(ast);
     }
 
     /**
@@ -45,28 +45,28 @@ public class NodeAnnotationPass implements ASTVisitor {
      */
     private void processTree(Node node) {
         for (Node child : node.getChildren()) {
-            this.processTree(child);
+            processTree(child);
         }
         node.process(this);
     }
 
     @Override
     public void visit(Block node) {
-        this.ignoreExpressionResults(node);
+        ignoreExpressionResults(node);
     }
 
     @Override
     public void visit(CompilationUnit node) {
-        this.ignoreExpressionResults(node);
+        ignoreExpressionResults(node);
     }
 
     @Override
     public void visit(StatementList node) {
-        this.ignoreExpressionResults(node);
+        ignoreExpressionResults(node);
     }
 
     @Override
     public void visit(SwitchBlockGroup node) {
-        this.ignoreExpressionResults(node);
+        ignoreExpressionResults(node);
     }
 }

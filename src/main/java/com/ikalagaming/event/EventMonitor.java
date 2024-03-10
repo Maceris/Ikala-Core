@@ -33,7 +33,7 @@ class EventMonitor<T extends Event> implements Listener {
      */
     public EventMonitor(Class<T> eventType) {
         this.eventType = eventType;
-        this.events = new ArrayList<>();
+        events = new ArrayList<>();
     }
 
     /**
@@ -62,7 +62,7 @@ class EventMonitor<T extends Event> implements Listener {
      * @return A copy of the list of events.
      */
     public List<T> getRecordedEvents() {
-        return new ArrayList<>(this.events);
+        return new ArrayList<>(events);
     }
 
     /**

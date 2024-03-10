@@ -8,7 +8,7 @@ package com.ikalagaming.scripting.ast;
 public class ConstNull extends Node {
     /** Create a null constant. */
     public ConstNull() {
-        this.setType(Type.voidType());
+        setType(Type.voidType());
     }
 
     @Override

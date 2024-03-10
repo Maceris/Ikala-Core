@@ -1,11 +1,13 @@
 package com.ikalagaming.event;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * Represents where in the order of receiving events a particular handler is. Based off lahwran's
  * fevents.
  */
+@AllArgsConstructor
 public enum Order {
 
     /**
@@ -40,8 +42,4 @@ public enum Order {
     @SuppressWarnings("javadoc")
     @Getter
     private final int index;
-
-    Order(int slot) {
-        this.index = slot;
-    }
 }

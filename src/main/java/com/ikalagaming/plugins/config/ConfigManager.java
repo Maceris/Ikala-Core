@@ -79,7 +79,7 @@ public class ConfigManager {
             // Try and copy in the case we are still enabling the plugin
             Optional<Plugin> maybePlugin = PluginManager.getInstance().getPlugin(pluginName);
             if (maybePlugin.isPresent() && !PluginManager.getInstance().isEnabled(pluginName)) {
-                ConfigManager.log.debug(
+                log.debug(
                         SafeResourceLoader.getString(
                                 "CONFIG_REQUESTED_BEFORE_ENABLE",
                                 PluginManager.getInstance().getResourceBundle()),
@@ -89,7 +89,7 @@ public class ConfigManager {
             }
         }
         if (!configFile.exists()) {
-            ConfigManager.log.debug(
+            log.debug(
                     SafeResourceLoader.getString(
                             "CONFIG_MISSING_FROM_DISK",
                             PluginManager.getInstance().getResourceBundle()),
@@ -109,7 +109,7 @@ public class ConfigManager {
             ConfigManager.configCache.put(cacheName, cached);
             return cached;
         } catch (FileNotFoundException e) {
-            ConfigManager.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "CONFIG_FILE_VANISHED",
                             PluginManager.getInstance().getResourceBundle()),
@@ -169,7 +169,7 @@ public class ConfigManager {
         if (ConfigManager.configCache.containsKey(cacheName)) {
             config = ConfigManager.configCache.get(cacheName);
         } else {
-            ConfigManager.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "CONFIG_MISSING_FROM_MEMORY",
                             PluginManager.getInstance().getResourceBundle()),
@@ -188,7 +188,7 @@ public class ConfigManager {
             Files.writeString(
                     configFile.toPath(), yaml.dump(config.getContents()), StandardOpenOption.WRITE);
         } catch (IOException e) {
-            ConfigManager.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "CONFIG_WRITING_FAILED",
                             PluginManager.getInstance().getResourceBundle()),
@@ -209,7 +209,7 @@ public class ConfigManager {
 
         try (InputStream in = owner.getClass().getClassLoader().getResourceAsStream(configName)) {
             if (in == null) {
-                ConfigManager.log.debug(
+                log.debug(
                         SafeResourceLoader.getString(
                                 "CONFIG_MISSING_FROM_JAR",
                                 PluginManager.getInstance().getResourceBundle()),
@@ -221,7 +221,7 @@ public class ConfigManager {
             File target =
                     PluginFolder.getResource(owner.getName(), ResourceType.CONFIG, configName);
             if (target.exists()) {
-                ConfigManager.log.debug(
+                log.debug(
                         SafeResourceLoader.getString(
                                 "CONFIG_ALREADY_EXISTS",
                                 PluginManager.getInstance().getResourceBundle()),
@@ -233,7 +233,7 @@ public class ConfigManager {
             Files.copy(in, target.toPath());
         } catch (IOException e) {
             // No default config exists
-            ConfigManager.log.debug(
+            log.debug(
                     SafeResourceLoader.getString(
                             "CONFIG_WRITING_FAILED",
                             PluginManager.getInstance().getResourceBundle()),

@@ -70,7 +70,7 @@ public class ParserErrorListener implements ANTLRErrorListener {
 
     /** Reset the error count so that we can reuse this for multiple parse attempts. */
     public void resetErrorCount() {
-        this.errorCount = 0;
+        errorCount = 0;
     }
 
     @Override
@@ -81,11 +81,11 @@ public class ParserErrorListener implements ANTLRErrorListener {
             int charPositionInLine,
             String msg,
             RecognitionException e) {
-        ParserErrorListener.log.warn(
+        log.warn(
                 SafeResourceLoader.getString("SYNTAX_ERROR", ScriptManager.getResourceBundle()),
                 line,
                 charPositionInLine,
                 msg);
-        ++this.errorCount;
+        ++errorCount;
     }
 }

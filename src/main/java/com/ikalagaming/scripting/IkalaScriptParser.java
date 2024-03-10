@@ -32,7 +32,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode ADD() {
-            return this.getToken(IkalaScriptParser.ADD, 0);
+            return getToken(IkalaScriptParser.ADD, 0);
         }
 
         public AdditiveExpressionContext additiveExpression() {
@@ -63,7 +63,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SUB() {
-            return this.getToken(IkalaScriptParser.SUB, 0);
+            return getToken(IkalaScriptParser.SUB, 0);
         }
     }
 
@@ -74,11 +74,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> COMMA() {
-            return this.getTokens(IkalaScriptParser.COMMA);
+            return getTokens(IkalaScriptParser.COMMA);
         }
 
         public TerminalNode COMMA(int i) {
-            return this.getToken(IkalaScriptParser.COMMA, i);
+            return getToken(IkalaScriptParser.COMMA, i);
         }
 
         @Override
@@ -143,7 +143,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public PrimitiveTypeContext primitiveType() {
@@ -196,15 +196,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode ADD_ASSIGN() {
-            return this.getToken(IkalaScriptParser.ADD_ASSIGN, 0);
+            return getToken(IkalaScriptParser.ADD_ASSIGN, 0);
         }
 
         public TerminalNode ASSIGN() {
-            return this.getToken(IkalaScriptParser.ASSIGN, 0);
+            return getToken(IkalaScriptParser.ASSIGN, 0);
         }
 
         public TerminalNode DIV_ASSIGN() {
-            return this.getToken(IkalaScriptParser.DIV_ASSIGN, 0);
+            return getToken(IkalaScriptParser.DIV_ASSIGN, 0);
         }
 
         @Override
@@ -227,15 +227,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode MOD_ASSIGN() {
-            return this.getToken(IkalaScriptParser.MOD_ASSIGN, 0);
+            return getToken(IkalaScriptParser.MOD_ASSIGN, 0);
         }
 
         public TerminalNode MUL_ASSIGN() {
-            return this.getToken(IkalaScriptParser.MUL_ASSIGN, 0);
+            return getToken(IkalaScriptParser.MUL_ASSIGN, 0);
         }
 
         public TerminalNode SUB_ASSIGN() {
-            return this.getToken(IkalaScriptParser.SUB_ASSIGN, 0);
+            return getToken(IkalaScriptParser.SUB_ASSIGN, 0);
         }
     }
 
@@ -269,11 +269,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LBRACE() {
-            return this.getToken(IkalaScriptParser.LBRACE, 0);
+            return getToken(IkalaScriptParser.LBRACE, 0);
         }
 
         public TerminalNode RBRACE() {
-            return this.getToken(IkalaScriptParser.RBRACE, 0);
+            return getToken(IkalaScriptParser.RBRACE, 0);
         }
     }
 
@@ -356,7 +356,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode BREAK() {
-            return this.getToken(IkalaScriptParser.BREAK, 0);
+            return getToken(IkalaScriptParser.BREAK, 0);
         }
 
         @Override
@@ -379,7 +379,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
     }
 
@@ -409,7 +409,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public PrimitiveTypeContext primitiveType() {
@@ -421,7 +421,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public UnaryExpressionContext unaryExpression() {
@@ -440,11 +440,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> DOT() {
-            return this.getTokens(IkalaScriptParser.DOT);
+            return getTokens(IkalaScriptParser.DOT);
         }
 
         public TerminalNode DOT(int i) {
-            return this.getToken(IkalaScriptParser.DOT, i);
+            return getToken(IkalaScriptParser.DOT, i);
         }
 
         @Override
@@ -467,11 +467,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> Identifier() {
-            return this.getTokens(IkalaScriptParser.Identifier);
+            return getTokens(IkalaScriptParser.Identifier);
         }
 
         public TerminalNode Identifier(int i) {
-            return this.getToken(IkalaScriptParser.Identifier, i);
+            return getToken(IkalaScriptParser.Identifier, i);
         }
     }
 
@@ -497,7 +497,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode EOF() {
-            return this.getToken(Recognizer.EOF, 0);
+            return getToken(Recognizer.EOF, 0);
         }
 
         @Override
@@ -520,7 +520,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode AND() {
-            return this.getToken(IkalaScriptParser.AND, 0);
+            return getToken(IkalaScriptParser.AND, 0);
         }
 
         public ConditionalAndExpressionContext conditionalAndExpression() {
@@ -558,7 +558,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode COLON() {
-            return this.getToken(IkalaScriptParser.COLON, 0);
+            return getToken(IkalaScriptParser.COLON, 0);
         }
 
         public ConditionalExpressionContext conditionalExpression() {
@@ -593,7 +593,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode QUESTION() {
-            return this.getToken(IkalaScriptParser.QUESTION, 0);
+            return getToken(IkalaScriptParser.QUESTION, 0);
         }
     }
 
@@ -631,7 +631,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode OR() {
-            return this.getToken(IkalaScriptParser.OR, 0);
+            return getToken(IkalaScriptParser.OR, 0);
         }
     }
 
@@ -642,7 +642,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode CONTINUE() {
-            return this.getToken(IkalaScriptParser.CONTINUE, 0);
+            return getToken(IkalaScriptParser.CONTINUE, 0);
         }
 
         @Override
@@ -665,7 +665,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
     }
 
@@ -695,19 +695,19 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> LBRACK() {
-            return this.getTokens(IkalaScriptParser.LBRACK);
+            return getTokens(IkalaScriptParser.LBRACK);
         }
 
         public TerminalNode LBRACK(int i) {
-            return this.getToken(IkalaScriptParser.LBRACK, i);
+            return getToken(IkalaScriptParser.LBRACK, i);
         }
 
         public List<TerminalNode> RBRACK() {
-            return this.getTokens(IkalaScriptParser.RBRACK);
+            return getTokens(IkalaScriptParser.RBRACK);
         }
 
         public TerminalNode RBRACK(int i) {
-            return this.getToken(IkalaScriptParser.RBRACK, i);
+            return getToken(IkalaScriptParser.RBRACK, i);
         }
     }
 
@@ -718,7 +718,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode DO() {
-            return this.getToken(IkalaScriptParser.DO, 0);
+            return getToken(IkalaScriptParser.DO, 0);
         }
 
         @Override
@@ -745,15 +745,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
 
         public StatementContext statement() {
@@ -761,7 +761,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode WHILE() {
-            return this.getToken(IkalaScriptParser.WHILE, 0);
+            return getToken(IkalaScriptParser.WHILE, 0);
         }
     }
 
@@ -791,7 +791,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
     }
 
@@ -809,7 +809,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode EQUAL() {
-            return this.getToken(IkalaScriptParser.EQUAL, 0);
+            return getToken(IkalaScriptParser.EQUAL, 0);
         }
 
         public EqualityExpressionContext equalityExpression() {
@@ -829,7 +829,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode NOTEQUAL() {
-            return this.getToken(IkalaScriptParser.NOTEQUAL, 0);
+            return getToken(IkalaScriptParser.NOTEQUAL, 0);
         }
 
         public RelationalExpressionContext relationalExpression() {
@@ -851,7 +851,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode EXIT() {
-            return this.getToken(IkalaScriptParser.EXIT, 0);
+            return getToken(IkalaScriptParser.EXIT, 0);
         }
 
         @Override
@@ -867,7 +867,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
     }
 
@@ -931,7 +931,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
 
         public StatementExpressionContext statementExpression() {
@@ -998,7 +998,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode FOR() {
-            return this.getToken(IkalaScriptParser.FOR, 0);
+            return getToken(IkalaScriptParser.FOR, 0);
         }
 
         public ForInitContext forInit() {
@@ -1011,19 +1011,19 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public List<TerminalNode> SEMICOLON() {
-            return this.getTokens(IkalaScriptParser.SEMICOLON);
+            return getTokens(IkalaScriptParser.SEMICOLON);
         }
 
         public TerminalNode SEMICOLON(int i) {
-            return this.getToken(IkalaScriptParser.SEMICOLON, i);
+            return getToken(IkalaScriptParser.SEMICOLON, i);
         }
 
         public StatementContext statement() {
@@ -1060,7 +1060,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode FOR() {
-            return this.getToken(IkalaScriptParser.FOR, 0);
+            return getToken(IkalaScriptParser.FOR, 0);
         }
 
         public ForInitContext forInit() {
@@ -1073,19 +1073,19 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public List<TerminalNode> SEMICOLON() {
-            return this.getTokens(IkalaScriptParser.SEMICOLON);
+            return getTokens(IkalaScriptParser.SEMICOLON);
         }
 
         public TerminalNode SEMICOLON(int i) {
-            return this.getToken(IkalaScriptParser.SEMICOLON, i);
+            return getToken(IkalaScriptParser.SEMICOLON, i);
         }
 
         public StatementExpressionListContext statementExpressionList() {
@@ -1123,15 +1123,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode GOTO() {
-            return this.getToken(IkalaScriptParser.GOTO, 0);
+            return getToken(IkalaScriptParser.GOTO, 0);
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
     }
 
@@ -1142,7 +1142,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode ELSE() {
-            return this.getToken(IkalaScriptParser.ELSE, 0);
+            return getToken(IkalaScriptParser.ELSE, 0);
         }
 
         @Override
@@ -1169,15 +1169,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode IF() {
-            return this.getToken(IkalaScriptParser.IF, 0);
+            return getToken(IkalaScriptParser.IF, 0);
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public StatementContext statement() {
@@ -1196,7 +1196,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode ELSE() {
-            return this.getToken(IkalaScriptParser.ELSE, 0);
+            return getToken(IkalaScriptParser.ELSE, 0);
         }
 
         @Override
@@ -1223,15 +1223,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode IF() {
-            return this.getToken(IkalaScriptParser.IF, 0);
+            return getToken(IkalaScriptParser.IF, 0);
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public List<StatementNoShortIfContext> statementNoShortIf() {
@@ -1273,15 +1273,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode IF() {
-            return this.getToken(IkalaScriptParser.IF, 0);
+            return getToken(IkalaScriptParser.IF, 0);
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public StatementContext statement() {
@@ -1296,7 +1296,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode COLON() {
-            return this.getToken(IkalaScriptParser.COLON, 0);
+            return getToken(IkalaScriptParser.COLON, 0);
         }
 
         @Override
@@ -1319,7 +1319,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
     }
 
@@ -1417,7 +1417,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
     }
 
@@ -1428,11 +1428,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode BooleanLiteral() {
-            return this.getToken(IkalaScriptParser.BooleanLiteral, 0);
+            return getToken(IkalaScriptParser.BooleanLiteral, 0);
         }
 
         public TerminalNode CharacterLiteral() {
-            return this.getToken(IkalaScriptParser.CharacterLiteral, 0);
+            return getToken(IkalaScriptParser.CharacterLiteral, 0);
         }
 
         @Override
@@ -1450,7 +1450,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode FloatingPointLiteral() {
-            return this.getToken(IkalaScriptParser.FloatingPointLiteral, 0);
+            return getToken(IkalaScriptParser.FloatingPointLiteral, 0);
         }
 
         @Override
@@ -1459,15 +1459,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode IntegerLiteral() {
-            return this.getToken(IkalaScriptParser.IntegerLiteral, 0);
+            return getToken(IkalaScriptParser.IntegerLiteral, 0);
         }
 
         public TerminalNode NullLiteral() {
-            return this.getToken(IkalaScriptParser.NullLiteral, 0);
+            return getToken(IkalaScriptParser.NullLiteral, 0);
         }
 
         public TerminalNode StringLiteral() {
-            return this.getToken(IkalaScriptParser.StringLiteral, 0);
+            return getToken(IkalaScriptParser.StringLiteral, 0);
         }
     }
 
@@ -1492,7 +1492,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode FINAL() {
-            return this.getToken(IkalaScriptParser.FINAL, 0);
+            return getToken(IkalaScriptParser.FINAL, 0);
         }
 
         @Override
@@ -1540,7 +1540,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SEMICOLON() {
-            return this.getToken(IkalaScriptParser.SEMICOLON, 0);
+            return getToken(IkalaScriptParser.SEMICOLON, 0);
         }
     }
 
@@ -1555,7 +1555,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode DOT() {
-            return this.getToken(IkalaScriptParser.DOT, 0);
+            return getToken(IkalaScriptParser.DOT, 0);
         }
 
         @Override
@@ -1578,15 +1578,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
     }
 
@@ -1620,15 +1620,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
     }
 
@@ -1643,7 +1643,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode DOT() {
-            return this.getToken(IkalaScriptParser.DOT, 0);
+            return getToken(IkalaScriptParser.DOT, 0);
         }
 
         @Override
@@ -1666,11 +1666,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public PrimaryContext primary() {
@@ -1678,7 +1678,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
     }
 
@@ -1689,7 +1689,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode DIV() {
-            return this.getToken(IkalaScriptParser.DIV, 0);
+            return getToken(IkalaScriptParser.DIV, 0);
         }
 
         @Override
@@ -1712,11 +1712,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode MOD() {
-            return this.getToken(IkalaScriptParser.MOD, 0);
+            return getToken(IkalaScriptParser.MOD, 0);
         }
 
         public TerminalNode MUL() {
-            return this.getToken(IkalaScriptParser.MUL, 0);
+            return getToken(IkalaScriptParser.MUL, 0);
         }
 
         public MultiplicativeExpressionContext multiplicativeExpression() {
@@ -1735,11 +1735,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode CHAR() {
-            return this.getToken(IkalaScriptParser.CHAR, 0);
+            return getToken(IkalaScriptParser.CHAR, 0);
         }
 
         public TerminalNode DOUBLE() {
-            return this.getToken(IkalaScriptParser.DOUBLE, 0);
+            return getToken(IkalaScriptParser.DOUBLE, 0);
         }
 
         @Override
@@ -1762,7 +1762,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode INT() {
-            return this.getToken(IkalaScriptParser.INT, 0);
+            return getToken(IkalaScriptParser.INT, 0);
         }
     }
 
@@ -1773,7 +1773,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode DEC() {
-            return this.getToken(IkalaScriptParser.DEC, 0);
+            return getToken(IkalaScriptParser.DEC, 0);
         }
 
         @Override
@@ -1807,11 +1807,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> DEC() {
-            return this.getTokens(IkalaScriptParser.DEC);
+            return getTokens(IkalaScriptParser.DEC);
         }
 
         public TerminalNode DEC(int i) {
-            return this.getToken(IkalaScriptParser.DEC, i);
+            return getToken(IkalaScriptParser.DEC, i);
         }
 
         @Override
@@ -1834,15 +1834,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public List<TerminalNode> INC() {
-            return this.getTokens(IkalaScriptParser.INC);
+            return getTokens(IkalaScriptParser.INC);
         }
 
         public TerminalNode INC(int i) {
-            return this.getToken(IkalaScriptParser.INC, i);
+            return getToken(IkalaScriptParser.INC, i);
         }
 
         public PrimaryContext primary() {
@@ -1876,7 +1876,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode INC() {
-            return this.getToken(IkalaScriptParser.INC, 0);
+            return getToken(IkalaScriptParser.INC, 0);
         }
 
         public PostfixExpressionContext postfixExpression() {
@@ -1891,7 +1891,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode DEC() {
-            return this.getToken(IkalaScriptParser.DEC, 0);
+            return getToken(IkalaScriptParser.DEC, 0);
         }
 
         @Override
@@ -1944,7 +1944,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode INC() {
-            return this.getToken(IkalaScriptParser.INC, 0);
+            return getToken(IkalaScriptParser.INC, 0);
         }
 
         public UnaryExpressionContext unaryExpression() {
@@ -2016,7 +2016,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public MethodInvocation_LHSContext methodInvocation_LHS() {
@@ -2024,7 +2024,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
     }
 
@@ -2058,7 +2058,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
 
         public LiteralContext literal() {
@@ -2066,7 +2066,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public MethodInvocation_LHSContext methodInvocation_LHS() {
@@ -2074,7 +2074,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
     }
 
@@ -2123,7 +2123,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode BOOLEAN() {
-            return this.getToken(IkalaScriptParser.BOOLEAN, 0);
+            return getToken(IkalaScriptParser.BOOLEAN, 0);
         }
 
         @Override
@@ -2150,7 +2150,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode STRING() {
-            return this.getToken(IkalaScriptParser.STRING, 0);
+            return getToken(IkalaScriptParser.STRING, 0);
         }
     }
 
@@ -2188,7 +2188,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
     }
 
@@ -2222,19 +2222,19 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode GT() {
-            return this.getToken(IkalaScriptParser.GT, 0);
+            return getToken(IkalaScriptParser.GT, 0);
         }
 
         public TerminalNode GTE() {
-            return this.getToken(IkalaScriptParser.GTE, 0);
+            return getToken(IkalaScriptParser.GTE, 0);
         }
 
         public TerminalNode LT() {
-            return this.getToken(IkalaScriptParser.LT, 0);
+            return getToken(IkalaScriptParser.LT, 0);
         }
 
         public TerminalNode LTE() {
-            return this.getToken(IkalaScriptParser.LTE, 0);
+            return getToken(IkalaScriptParser.LTE, 0);
         }
 
         public RelationalExpressionContext relationalExpression() {
@@ -2349,11 +2349,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> COMMA() {
-            return this.getTokens(IkalaScriptParser.COMMA);
+            return getTokens(IkalaScriptParser.COMMA);
         }
 
         public TerminalNode COMMA(int i) {
-            return this.getToken(IkalaScriptParser.COMMA, i);
+            return getToken(IkalaScriptParser.COMMA, i);
         }
 
         @Override
@@ -2521,11 +2521,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LBRACE() {
-            return this.getToken(IkalaScriptParser.LBRACE, 0);
+            return getToken(IkalaScriptParser.LBRACE, 0);
         }
 
         public TerminalNode RBRACE() {
-            return this.getToken(IkalaScriptParser.RBRACE, 0);
+            return getToken(IkalaScriptParser.RBRACE, 0);
         }
 
         public List<SwitchBlockStatementGroupContext> switchBlockStatementGroup() {
@@ -2590,15 +2590,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode CASE() {
-            return this.getToken(IkalaScriptParser.CASE, 0);
+            return getToken(IkalaScriptParser.CASE, 0);
         }
 
         public TerminalNode COLON() {
-            return this.getToken(IkalaScriptParser.COLON, 0);
+            return getToken(IkalaScriptParser.COLON, 0);
         }
 
         public TerminalNode DEFAULT() {
-            return this.getToken(IkalaScriptParser.DEFAULT, 0);
+            return getToken(IkalaScriptParser.DEFAULT, 0);
         }
 
         @Override
@@ -2655,15 +2655,15 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public TerminalNode SWITCH() {
-            return this.getToken(IkalaScriptParser.SWITCH, 0);
+            return getToken(IkalaScriptParser.SWITCH, 0);
         }
 
         public SwitchBlockContext switchBlock() {
@@ -2712,7 +2712,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode ADD() {
-            return this.getToken(IkalaScriptParser.ADD, 0);
+            return getToken(IkalaScriptParser.ADD, 0);
         }
 
         @Override
@@ -2743,7 +2743,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode SUB() {
-            return this.getToken(IkalaScriptParser.SUB, 0);
+            return getToken(IkalaScriptParser.SUB, 0);
         }
 
         public UnaryExpressionContext unaryExpression() {
@@ -2785,7 +2785,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode NOT() {
-            return this.getToken(IkalaScriptParser.NOT, 0);
+            return getToken(IkalaScriptParser.NOT, 0);
         }
 
         public PostfixExpressionContext postfixExpression() {
@@ -2804,7 +2804,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode ASSIGN() {
-            return this.getToken(IkalaScriptParser.ASSIGN, 0);
+            return getToken(IkalaScriptParser.ASSIGN, 0);
         }
 
         @Override
@@ -2865,7 +2865,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode Identifier() {
-            return this.getToken(IkalaScriptParser.Identifier, 0);
+            return getToken(IkalaScriptParser.Identifier, 0);
         }
     }
 
@@ -2876,11 +2876,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public List<TerminalNode> COMMA() {
-            return this.getTokens(IkalaScriptParser.COMMA);
+            return getTokens(IkalaScriptParser.COMMA);
         }
 
         public TerminalNode COMMA(int i) {
-            return this.getToken(IkalaScriptParser.COMMA, i);
+            return getToken(IkalaScriptParser.COMMA, i);
         }
 
         @Override
@@ -2941,11 +2941,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public StatementContext statement() {
@@ -2953,7 +2953,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode WHILE() {
-            return this.getToken(IkalaScriptParser.WHILE, 0);
+            return getToken(IkalaScriptParser.WHILE, 0);
         }
     }
 
@@ -2987,11 +2987,11 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode LPAREN() {
-            return this.getToken(IkalaScriptParser.LPAREN, 0);
+            return getToken(IkalaScriptParser.LPAREN, 0);
         }
 
         public TerminalNode RPAREN() {
-            return this.getToken(IkalaScriptParser.RPAREN, 0);
+            return getToken(IkalaScriptParser.RPAREN, 0);
         }
 
         public StatementNoShortIfContext statementNoShortIf() {
@@ -2999,7 +2999,7 @@ public class IkalaScriptParser extends Parser {
         }
 
         public TerminalNode WHILE() {
-            return this.getToken(IkalaScriptParser.WHILE, 0);
+            return getToken(IkalaScriptParser.WHILE, 0);
         }
     }
 
@@ -3791,7 +3791,7 @@ public class IkalaScriptParser extends Parser {
 
     public IkalaScriptParser(TokenStream input) {
         super(input);
-        this._interp =
+        _interp =
                 new ParserATNSimulator(
                         this,
                         IkalaScriptParser._ATN,
@@ -3804,53 +3804,51 @@ public class IkalaScriptParser extends Parser {
     }
 
     private AdditiveExpressionContext additiveExpression(int _p) throws RecognitionException {
-        ParserRuleContext _parentctx = this._ctx;
-        int _parentState = this.getState();
-        AdditiveExpressionContext _localctx =
-                new AdditiveExpressionContext(this._ctx, _parentState);
+        ParserRuleContext _parentctx = _ctx;
+        int _parentState = getState();
+        AdditiveExpressionContext _localctx = new AdditiveExpressionContext(_ctx, _parentState);
         AdditiveExpressionContext _prevctx = _localctx;
         int _startState = 122;
         this.enterRecursionRule(_localctx, 122, IkalaScriptParser.RULE_additiveExpression, _p);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(564);
+                    setState(564);
                     this.multiplicativeExpression(0);
                 }
-                this._ctx.stop = this._input.LT(-1);
-                this.setState(574);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 48, this._ctx);
+                _ctx.stop = _input.LT(-1);
+                setState(574);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 48, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
-                        if (this._parseListeners != null) {
-                            this.triggerExitRuleEvent();
+                        if (_parseListeners != null) {
+                            triggerExitRuleEvent();
                         }
                         _prevctx = _localctx;
                         {
-                            this.setState(572);
-                            this._errHandler.sync(this);
-                            switch (this.getInterpreter()
-                                    .adaptivePredict(this._input, 47, this._ctx)) {
+                            setState(572);
+                            _errHandler.sync(this);
+                            switch (getInterpreter().adaptivePredict(_input, 47, _ctx)) {
                                 case 1:
                                     {
                                         _localctx =
                                                 new AdditiveExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_additiveExpression);
-                                        this.setState(566);
-                                        if (!(this.precpred(this._ctx, 2))) {
+                                        setState(566);
+                                        if (!(precpred(_ctx, 2))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 2)");
                                         }
-                                        this.setState(567);
-                                        this.match(IkalaScriptParser.ADD);
-                                        this.setState(568);
+                                        setState(567);
+                                        match(IkalaScriptParser.ADD);
+                                        setState(568);
                                         this.multiplicativeExpression(0);
                                     }
                                     break;
@@ -3859,35 +3857,35 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new AdditiveExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_additiveExpression);
-                                        this.setState(569);
-                                        if (!(this.precpred(this._ctx, 1))) {
+                                        setState(569);
+                                        if (!(precpred(_ctx, 1))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 1)");
                                         }
-                                        this.setState(570);
-                                        this.match(IkalaScriptParser.SUB);
-                                        this.setState(571);
+                                        setState(570);
+                                        match(IkalaScriptParser.SUB);
+                                        setState(571);
                                         this.multiplicativeExpression(0);
                                     }
                                     break;
                             }
                         }
                     }
-                    this.setState(576);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 48, this._ctx);
+                    setState(576);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 48, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.unrollRecursionContexts(_parentctx);
+            unrollRecursionContexts(_parentctx);
         }
         return _localctx;
     }
@@ -3895,382 +3893,380 @@ public class IkalaScriptParser extends Parser {
     private boolean additiveExpression_sempred(AdditiveExpressionContext _localctx, int predIndex) {
         switch (predIndex) {
             case 8:
-                return this.precpred(this._ctx, 2);
+                return precpred(_ctx, 2);
             case 9:
-                return this.precpred(this._ctx, 1);
+                return precpred(_ctx, 1);
         }
         return true;
     }
 
     public final ArgumentListContext argumentList() throws RecognitionException {
-        ArgumentListContext _localctx = new ArgumentListContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 102, IkalaScriptParser.RULE_argumentList);
+        ArgumentListContext _localctx = new ArgumentListContext(_ctx, getState());
+        enterRule(_localctx, 102, IkalaScriptParser.RULE_argumentList);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(478);
-                this.expression();
-                this.setState(483);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(478);
+                expression();
+                setState(483);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while (_la == IkalaScriptParser.COMMA) {
                     {
                         {
-                            this.setState(479);
-                            this.match(IkalaScriptParser.COMMA);
-                            this.setState(480);
-                            this.expression();
+                            setState(479);
+                            match(IkalaScriptParser.COMMA);
+                            setState(480);
+                            expression();
                         }
                     }
-                    this.setState(485);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(485);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ArrayTypeContext arrayType() throws RecognitionException {
-        ArrayTypeContext _localctx = new ArrayTypeContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 10, IkalaScriptParser.RULE_arrayType);
+        ArrayTypeContext _localctx = new ArrayTypeContext(_ctx, getState());
+        enterRule(_localctx, 10, IkalaScriptParser.RULE_arrayType);
         try {
-            this.setState(172);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 3, this._ctx)) {
+            setState(172);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 3, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(164);
-                        this.primitiveType();
-                        this.setState(165);
-                        this.dims();
+                        setState(164);
+                        primitiveType();
+                        setState(165);
+                        dims();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(167);
-                        this.classOrInterfaceType();
-                        this.setState(168);
-                        this.dims();
+                        setState(167);
+                        classOrInterfaceType();
+                        setState(168);
+                        dims();
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(170);
-                        this.match(IkalaScriptParser.Identifier);
-                        this.setState(171);
-                        this.dims();
+                        setState(170);
+                        match(IkalaScriptParser.Identifier);
+                        setState(171);
+                        dims();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final AssignmentContext assignment() throws RecognitionException {
-        AssignmentContext _localctx = new AssignmentContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 106, IkalaScriptParser.RULE_assignment);
+        AssignmentContext _localctx = new AssignmentContext(_ctx, getState());
+        enterRule(_localctx, 106, IkalaScriptParser.RULE_assignment);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(490);
-                this.leftHandSide();
-                this.setState(491);
-                this.assignmentOperator();
-                this.setState(492);
-                this.expression();
+                setState(490);
+                leftHandSide();
+                setState(491);
+                assignmentOperator();
+                setState(492);
+                expression();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final AssignmentOperatorContext assignmentOperator() throws RecognitionException {
-        AssignmentOperatorContext _localctx =
-                new AssignmentOperatorContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 110, IkalaScriptParser.RULE_assignmentOperator);
+        AssignmentOperatorContext _localctx = new AssignmentOperatorContext(_ctx, getState());
+        enterRule(_localctx, 110, IkalaScriptParser.RULE_assignmentOperator);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(496);
-                _la = this._input.LA(1);
+                setState(496);
+                _la = _input.LA(1);
                 if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 1116892776307359744L) != 0))) {
-                    this._errHandler.recoverInline(this);
+                    _errHandler.recoverInline(this);
                 } else {
-                    if (this._input.LA(1) == Token.EOF) {
-                        this.matchedEOF = true;
+                    if (_input.LA(1) == Token.EOF) {
+                        matchedEOF = true;
                     }
-                    this._errHandler.reportMatch(this);
-                    this.consume();
+                    _errHandler.reportMatch(this);
+                    consume();
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final BlockContext block() throws RecognitionException {
-        BlockContext _localctx = new BlockContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 24, IkalaScriptParser.RULE_block);
+        BlockContext _localctx = new BlockContext(_ctx, getState());
+        enterRule(_localctx, 24, IkalaScriptParser.RULE_block);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(212);
-                this.match(IkalaScriptParser.LBRACE);
-                this.setState(214);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(212);
+                match(IkalaScriptParser.LBRACE);
+                setState(214);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844434325110198L) != 0)) {
                     {
-                        this.setState(213);
-                        this.blockStatements();
+                        setState(213);
+                        blockStatements();
                     }
                 }
 
-                this.setState(216);
-                this.match(IkalaScriptParser.RBRACE);
+                setState(216);
+                match(IkalaScriptParser.RBRACE);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final BlockStatementContext blockStatement() throws RecognitionException {
-        BlockStatementContext _localctx = new BlockStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 28, IkalaScriptParser.RULE_blockStatement);
+        BlockStatementContext _localctx = new BlockStatementContext(_ctx, getState());
+        enterRule(_localctx, 28, IkalaScriptParser.RULE_blockStatement);
         try {
-            this.setState(226);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 12, this._ctx)) {
+            setState(226);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 12, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(223);
-                        this.localVariableDeclarationStatement();
+                        setState(223);
+                        localVariableDeclarationStatement();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(224);
-                        this.statement();
+                        setState(224);
+                        statement();
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(225);
-                        this.label();
+                        setState(225);
+                        label();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final BlockStatementsContext blockStatements() throws RecognitionException {
-        BlockStatementsContext _localctx = new BlockStatementsContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 26, IkalaScriptParser.RULE_blockStatements);
+        BlockStatementsContext _localctx = new BlockStatementsContext(_ctx, getState());
+        enterRule(_localctx, 26, IkalaScriptParser.RULE_blockStatements);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(219);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(219);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 do {
                     {
                         {
-                            this.setState(218);
-                            this.blockStatement();
+                            setState(218);
+                            blockStatement();
                         }
                     }
-                    this.setState(221);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(221);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 } while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844434325110198L) != 0));
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final BreakStatementContext breakStatement() throws RecognitionException {
-        BreakStatementContext _localctx = new BreakStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 80, IkalaScriptParser.RULE_breakStatement);
+        BreakStatementContext _localctx = new BreakStatementContext(_ctx, getState());
+        enterRule(_localctx, 80, IkalaScriptParser.RULE_breakStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(407);
-                this.match(IkalaScriptParser.BREAK);
-                this.setState(408);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(407);
+                match(IkalaScriptParser.BREAK);
+                setState(408);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final CastExpressionContext castExpression() throws RecognitionException {
-        CastExpressionContext _localctx = new CastExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 140, IkalaScriptParser.RULE_castExpression);
+        CastExpressionContext _localctx = new CastExpressionContext(_ctx, getState());
+        enterRule(_localctx, 140, IkalaScriptParser.RULE_castExpression);
         try {
-            this.setState(641);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 55, this._ctx)) {
+            setState(641);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 55, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(631);
-                        this.match(IkalaScriptParser.LPAREN);
-                        this.setState(632);
-                        this.primitiveType();
-                        this.setState(633);
-                        this.match(IkalaScriptParser.RPAREN);
-                        this.setState(634);
-                        this.unaryExpression();
+                        setState(631);
+                        match(IkalaScriptParser.LPAREN);
+                        setState(632);
+                        primitiveType();
+                        setState(633);
+                        match(IkalaScriptParser.RPAREN);
+                        setState(634);
+                        unaryExpression();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(636);
-                        this.match(IkalaScriptParser.LPAREN);
-                        this.setState(637);
-                        this.referenceType();
-                        this.setState(638);
-                        this.match(IkalaScriptParser.RPAREN);
-                        this.setState(639);
-                        this.unaryExpressionNotPlusMinus();
+                        setState(636);
+                        match(IkalaScriptParser.LPAREN);
+                        setState(637);
+                        referenceType();
+                        setState(638);
+                        match(IkalaScriptParser.RPAREN);
+                        setState(639);
+                        unaryExpressionNotPlusMinus();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ClassOrInterfaceTypeContext classOrInterfaceType() throws RecognitionException {
-        ClassOrInterfaceTypeContext _localctx =
-                new ClassOrInterfaceTypeContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 8, IkalaScriptParser.RULE_classOrInterfaceType);
+        ClassOrInterfaceTypeContext _localctx = new ClassOrInterfaceTypeContext(_ctx, getState());
+        enterRule(_localctx, 8, IkalaScriptParser.RULE_classOrInterfaceType);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(156);
-                this.match(IkalaScriptParser.Identifier);
-                this.setState(161);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(156);
+                match(IkalaScriptParser.Identifier);
+                setState(161);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while (_la == IkalaScriptParser.DOT) {
                     {
                         {
-                            this.setState(157);
-                            this.match(IkalaScriptParser.DOT);
-                            this.setState(158);
-                            this.match(IkalaScriptParser.Identifier);
+                            setState(157);
+                            match(IkalaScriptParser.DOT);
+                            setState(158);
+                            match(IkalaScriptParser.Identifier);
                         }
                     }
-                    this.setState(163);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(163);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final CompilationUnitContext compilationUnit() throws RecognitionException {
-        CompilationUnitContext _localctx = new CompilationUnitContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 22, IkalaScriptParser.RULE_compilationUnit);
+        CompilationUnitContext _localctx = new CompilationUnitContext(_ctx, getState());
+        enterRule(_localctx, 22, IkalaScriptParser.RULE_compilationUnit);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(207);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(207);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844434325110198L) != 0)) {
                     {
                         {
-                            this.setState(204);
-                            this.blockStatement();
+                            setState(204);
+                            blockStatement();
                         }
                     }
-                    this.setState(209);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(209);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
-                this.setState(210);
-                this.match(Recognizer.EOF);
+                setState(210);
+                match(Recognizer.EOF);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -4282,30 +4278,30 @@ public class IkalaScriptParser extends Parser {
 
     private ConditionalAndExpressionContext conditionalAndExpression(int _p)
             throws RecognitionException {
-        ParserRuleContext _parentctx = this._ctx;
-        int _parentState = this.getState();
+        ParserRuleContext _parentctx = _ctx;
+        int _parentState = getState();
         ConditionalAndExpressionContext _localctx =
-                new ConditionalAndExpressionContext(this._ctx, _parentState);
+                new ConditionalAndExpressionContext(_ctx, _parentState);
         ConditionalAndExpressionContext _prevctx = _localctx;
         int _startState = 116;
         this.enterRecursionRule(
                 _localctx, 116, IkalaScriptParser.RULE_conditionalAndExpression, _p);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(519);
+                    setState(519);
                     this.equalityExpression(0);
                 }
-                this._ctx.stop = this._input.LT(-1);
-                this.setState(526);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 42, this._ctx);
+                _ctx.stop = _input.LT(-1);
+                setState(526);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 42, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
-                        if (this._parseListeners != null) {
-                            this.triggerExitRuleEvent();
+                        if (_parseListeners != null) {
+                            triggerExitRuleEvent();
                         }
                         _prevctx = _localctx;
                         {
@@ -4313,32 +4309,32 @@ public class IkalaScriptParser extends Parser {
                                 _localctx =
                                         new ConditionalAndExpressionContext(
                                                 _parentctx, _parentState);
-                                this.pushNewRecursionContext(
+                                pushNewRecursionContext(
                                         _localctx,
                                         _startState,
                                         IkalaScriptParser.RULE_conditionalAndExpression);
-                                this.setState(521);
-                                if (!(this.precpred(this._ctx, 1))) {
+                                setState(521);
+                                if (!(precpred(_ctx, 1))) {
                                     throw new FailedPredicateException(this, "precpred(_ctx, 1)");
                                 }
-                                this.setState(522);
-                                this.match(IkalaScriptParser.AND);
-                                this.setState(523);
+                                setState(522);
+                                match(IkalaScriptParser.AND);
+                                setState(523);
                                 this.equalityExpression(0);
                             }
                         }
                     }
-                    this.setState(528);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 42, this._ctx);
+                    setState(528);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 42, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.unrollRecursionContexts(_parentctx);
+            unrollRecursionContexts(_parentctx);
         }
         return _localctx;
     }
@@ -4347,48 +4343,47 @@ public class IkalaScriptParser extends Parser {
             ConditionalAndExpressionContext _localctx, int predIndex) {
         switch (predIndex) {
             case 1:
-                return this.precpred(this._ctx, 1);
+                return precpred(_ctx, 1);
         }
         return true;
     }
 
     public final ConditionalExpressionContext conditionalExpression() throws RecognitionException {
-        ConditionalExpressionContext _localctx =
-                new ConditionalExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 112, IkalaScriptParser.RULE_conditionalExpression);
+        ConditionalExpressionContext _localctx = new ConditionalExpressionContext(_ctx, getState());
+        enterRule(_localctx, 112, IkalaScriptParser.RULE_conditionalExpression);
         try {
-            this.setState(505);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 40, this._ctx)) {
+            setState(505);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 40, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(498);
+                        setState(498);
                         this.conditionalOrExpression(0);
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(499);
+                        setState(499);
                         this.conditionalOrExpression(0);
-                        this.setState(500);
-                        this.match(IkalaScriptParser.QUESTION);
-                        this.setState(501);
-                        this.expression();
-                        this.setState(502);
-                        this.match(IkalaScriptParser.COLON);
-                        this.setState(503);
-                        this.conditionalExpression();
+                        setState(500);
+                        match(IkalaScriptParser.QUESTION);
+                        setState(501);
+                        expression();
+                        setState(502);
+                        match(IkalaScriptParser.COLON);
+                        setState(503);
+                        conditionalExpression();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -4400,29 +4395,29 @@ public class IkalaScriptParser extends Parser {
 
     private ConditionalOrExpressionContext conditionalOrExpression(int _p)
             throws RecognitionException {
-        ParserRuleContext _parentctx = this._ctx;
-        int _parentState = this.getState();
+        ParserRuleContext _parentctx = _ctx;
+        int _parentState = getState();
         ConditionalOrExpressionContext _localctx =
-                new ConditionalOrExpressionContext(this._ctx, _parentState);
+                new ConditionalOrExpressionContext(_ctx, _parentState);
         ConditionalOrExpressionContext _prevctx = _localctx;
         int _startState = 114;
         this.enterRecursionRule(_localctx, 114, IkalaScriptParser.RULE_conditionalOrExpression, _p);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(508);
+                    setState(508);
                     this.conditionalAndExpression(0);
                 }
-                this._ctx.stop = this._input.LT(-1);
-                this.setState(515);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 41, this._ctx);
+                _ctx.stop = _input.LT(-1);
+                setState(515);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 41, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
-                        if (this._parseListeners != null) {
-                            this.triggerExitRuleEvent();
+                        if (_parseListeners != null) {
+                            triggerExitRuleEvent();
                         }
                         _prevctx = _localctx;
                         {
@@ -4430,32 +4425,32 @@ public class IkalaScriptParser extends Parser {
                                 _localctx =
                                         new ConditionalOrExpressionContext(
                                                 _parentctx, _parentState);
-                                this.pushNewRecursionContext(
+                                pushNewRecursionContext(
                                         _localctx,
                                         _startState,
                                         IkalaScriptParser.RULE_conditionalOrExpression);
-                                this.setState(510);
-                                if (!(this.precpred(this._ctx, 1))) {
+                                setState(510);
+                                if (!(precpred(_ctx, 1))) {
                                     throw new FailedPredicateException(this, "precpred(_ctx, 1)");
                                 }
-                                this.setState(511);
-                                this.match(IkalaScriptParser.OR);
-                                this.setState(512);
+                                setState(511);
+                                match(IkalaScriptParser.OR);
+                                setState(512);
                                 this.conditionalAndExpression(0);
                             }
                         }
                     }
-                    this.setState(517);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 41, this._ctx);
+                    setState(517);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 41, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.unrollRecursionContexts(_parentctx);
+            unrollRecursionContexts(_parentctx);
         }
         return _localctx;
     }
@@ -4464,117 +4459,116 @@ public class IkalaScriptParser extends Parser {
             ConditionalOrExpressionContext _localctx, int predIndex) {
         switch (predIndex) {
             case 0:
-                return this.precpred(this._ctx, 1);
+                return precpred(_ctx, 1);
         }
         return true;
     }
 
     public final ContinueStatementContext continueStatement() throws RecognitionException {
-        ContinueStatementContext _localctx =
-                new ContinueStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 82, IkalaScriptParser.RULE_continueStatement);
+        ContinueStatementContext _localctx = new ContinueStatementContext(_ctx, getState());
+        enterRule(_localctx, 82, IkalaScriptParser.RULE_continueStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(410);
-                this.match(IkalaScriptParser.CONTINUE);
-                this.setState(411);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(410);
+                match(IkalaScriptParser.CONTINUE);
+                setState(411);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final DimsContext dims() throws RecognitionException {
-        DimsContext _localctx = new DimsContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 12, IkalaScriptParser.RULE_dims);
+        DimsContext _localctx = new DimsContext(_ctx, getState());
+        enterRule(_localctx, 12, IkalaScriptParser.RULE_dims);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(174);
-                this.match(IkalaScriptParser.LBRACK);
-                this.setState(175);
-                this.match(IkalaScriptParser.RBRACK);
-                this.setState(180);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(174);
+                match(IkalaScriptParser.LBRACK);
+                setState(175);
+                match(IkalaScriptParser.RBRACK);
+                setState(180);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while (_la == IkalaScriptParser.LBRACK) {
                     {
                         {
-                            this.setState(176);
-                            this.match(IkalaScriptParser.LBRACK);
-                            this.setState(177);
-                            this.match(IkalaScriptParser.RBRACK);
+                            setState(176);
+                            match(IkalaScriptParser.LBRACK);
+                            setState(177);
+                            match(IkalaScriptParser.RBRACK);
                         }
                     }
-                    this.setState(182);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(182);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final DoStatementContext doStatement() throws RecognitionException {
-        DoStatementContext _localctx = new DoStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 70, IkalaScriptParser.RULE_doStatement);
+        DoStatementContext _localctx = new DoStatementContext(_ctx, getState());
+        enterRule(_localctx, 70, IkalaScriptParser.RULE_doStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(355);
-                this.match(IkalaScriptParser.DO);
-                this.setState(356);
-                this.statement();
-                this.setState(357);
-                this.match(IkalaScriptParser.WHILE);
-                this.setState(358);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(359);
-                this.expression();
-                this.setState(360);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(361);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(355);
+                match(IkalaScriptParser.DO);
+                setState(356);
+                statement();
+                setState(357);
+                match(IkalaScriptParser.WHILE);
+                setState(358);
+                match(IkalaScriptParser.LPAREN);
+                setState(359);
+                expression();
+                setState(360);
+                match(IkalaScriptParser.RPAREN);
+                setState(361);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final EmptyStatementContext emptyStatement() throws RecognitionException {
-        EmptyStatementContext _localctx = new EmptyStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 46, IkalaScriptParser.RULE_emptyStatement);
+        EmptyStatementContext _localctx = new EmptyStatementContext(_ctx, getState());
+        enterRule(_localctx, 46, IkalaScriptParser.RULE_emptyStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(272);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(272);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -4584,53 +4578,51 @@ public class IkalaScriptParser extends Parser {
     }
 
     private EqualityExpressionContext equalityExpression(int _p) throws RecognitionException {
-        ParserRuleContext _parentctx = this._ctx;
-        int _parentState = this.getState();
-        EqualityExpressionContext _localctx =
-                new EqualityExpressionContext(this._ctx, _parentState);
+        ParserRuleContext _parentctx = _ctx;
+        int _parentState = getState();
+        EqualityExpressionContext _localctx = new EqualityExpressionContext(_ctx, _parentState);
         EqualityExpressionContext _prevctx = _localctx;
         int _startState = 118;
         this.enterRecursionRule(_localctx, 118, IkalaScriptParser.RULE_equalityExpression, _p);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(530);
+                    setState(530);
                     this.relationalExpression(0);
                 }
-                this._ctx.stop = this._input.LT(-1);
-                this.setState(540);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 44, this._ctx);
+                _ctx.stop = _input.LT(-1);
+                setState(540);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 44, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
-                        if (this._parseListeners != null) {
-                            this.triggerExitRuleEvent();
+                        if (_parseListeners != null) {
+                            triggerExitRuleEvent();
                         }
                         _prevctx = _localctx;
                         {
-                            this.setState(538);
-                            this._errHandler.sync(this);
-                            switch (this.getInterpreter()
-                                    .adaptivePredict(this._input, 43, this._ctx)) {
+                            setState(538);
+                            _errHandler.sync(this);
+                            switch (getInterpreter().adaptivePredict(_input, 43, _ctx)) {
                                 case 1:
                                     {
                                         _localctx =
                                                 new EqualityExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_equalityExpression);
-                                        this.setState(532);
-                                        if (!(this.precpred(this._ctx, 2))) {
+                                        setState(532);
+                                        if (!(precpred(_ctx, 2))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 2)");
                                         }
-                                        this.setState(533);
-                                        this.match(IkalaScriptParser.EQUAL);
-                                        this.setState(534);
+                                        setState(533);
+                                        match(IkalaScriptParser.EQUAL);
+                                        setState(534);
                                         this.relationalExpression(0);
                                     }
                                     break;
@@ -4639,35 +4631,35 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new EqualityExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_equalityExpression);
-                                        this.setState(535);
-                                        if (!(this.precpred(this._ctx, 1))) {
+                                        setState(535);
+                                        if (!(precpred(_ctx, 1))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 1)");
                                         }
-                                        this.setState(536);
-                                        this.match(IkalaScriptParser.NOTEQUAL);
-                                        this.setState(537);
+                                        setState(536);
+                                        match(IkalaScriptParser.NOTEQUAL);
+                                        setState(537);
                                         this.relationalExpression(0);
                                     }
                                     break;
                             }
                         }
                     }
-                    this.setState(542);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 44, this._ctx);
+                    setState(542);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 44, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.unrollRecursionContexts(_parentctx);
+            unrollRecursionContexts(_parentctx);
         }
         return _localctx;
     }
@@ -4675,237 +4667,235 @@ public class IkalaScriptParser extends Parser {
     private boolean equalityExpression_sempred(EqualityExpressionContext _localctx, int predIndex) {
         switch (predIndex) {
             case 2:
-                return this.precpred(this._ctx, 2);
+                return precpred(_ctx, 2);
             case 3:
-                return this.precpred(this._ctx, 1);
+                return precpred(_ctx, 1);
         }
         return true;
     }
 
     public final ExitStatementContext exitStatement() throws RecognitionException {
-        ExitStatementContext _localctx = new ExitStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 86, IkalaScriptParser.RULE_exitStatement);
+        ExitStatementContext _localctx = new ExitStatementContext(_ctx, getState());
+        enterRule(_localctx, 86, IkalaScriptParser.RULE_exitStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(417);
-                this.match(IkalaScriptParser.EXIT);
-                this.setState(418);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(417);
+                match(IkalaScriptParser.EXIT);
+                setState(418);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ExpressionContext expression() throws RecognitionException {
-        ExpressionContext _localctx = new ExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 104, IkalaScriptParser.RULE_expression);
+        ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
+        enterRule(_localctx, 104, IkalaScriptParser.RULE_expression);
         try {
-            this.setState(488);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 39, this._ctx)) {
+            setState(488);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 39, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(486);
-                        this.conditionalExpression();
+                        setState(486);
+                        conditionalExpression();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(487);
-                        this.assignment();
+                        setState(487);
+                        assignment();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ExpressionStatementContext expressionStatement() throws RecognitionException {
-        ExpressionStatementContext _localctx =
-                new ExpressionStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 48, IkalaScriptParser.RULE_expressionStatement);
+        ExpressionStatementContext _localctx = new ExpressionStatementContext(_ctx, getState());
+        enterRule(_localctx, 48, IkalaScriptParser.RULE_expressionStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(274);
-                this.statementExpression();
-                this.setState(275);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(274);
+                statementExpression();
+                setState(275);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ForInitContext forInit() throws RecognitionException {
-        ForInitContext _localctx = new ForInitContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 76, IkalaScriptParser.RULE_forInit);
+        ForInitContext _localctx = new ForInitContext(_ctx, getState());
+        enterRule(_localctx, 76, IkalaScriptParser.RULE_forInit);
         try {
-            this.setState(397);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 28, this._ctx)) {
+            setState(397);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 28, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(395);
-                        this.statementExpressionList();
+                        setState(395);
+                        statementExpressionList();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(396);
-                        this.localVariableDeclaration();
+                        setState(396);
+                        localVariableDeclaration();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ForStatementContext forStatement() throws RecognitionException {
-        ForStatementContext _localctx = new ForStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 72, IkalaScriptParser.RULE_forStatement);
+        ForStatementContext _localctx = new ForStatementContext(_ctx, getState());
+        enterRule(_localctx, 72, IkalaScriptParser.RULE_forStatement);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(363);
-                this.match(IkalaScriptParser.FOR);
-                this.setState(364);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(366);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(363);
+                match(IkalaScriptParser.FOR);
+                setState(364);
+                match(IkalaScriptParser.LPAREN);
+                setState(366);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844425197619474L) != 0)) {
                     {
-                        this.setState(365);
-                        this.forInit();
+                        setState(365);
+                        forInit();
                     }
                 }
 
-                this.setState(368);
-                this.match(IkalaScriptParser.SEMICOLON);
-                this.setState(370);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(368);
+                match(IkalaScriptParser.SEMICOLON);
+                setState(370);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4222674673860608L) != 0)) {
                     {
-                        this.setState(369);
-                        this.expression();
+                        setState(369);
+                        expression();
                     }
                 }
 
-                this.setState(372);
-                this.match(IkalaScriptParser.SEMICOLON);
-                this.setState(374);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(372);
+                match(IkalaScriptParser.SEMICOLON);
+                setState(374);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844425197518848L) != 0)) {
                     {
-                        this.setState(373);
-                        this.statementExpressionList();
+                        setState(373);
+                        statementExpressionList();
                     }
                 }
 
-                this.setState(376);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(377);
-                this.statement();
+                setState(376);
+                match(IkalaScriptParser.RPAREN);
+                setState(377);
+                statement();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ForStatementNoShortIfContext forStatementNoShortIf() throws RecognitionException {
-        ForStatementNoShortIfContext _localctx =
-                new ForStatementNoShortIfContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 74, IkalaScriptParser.RULE_forStatementNoShortIf);
+        ForStatementNoShortIfContext _localctx = new ForStatementNoShortIfContext(_ctx, getState());
+        enterRule(_localctx, 74, IkalaScriptParser.RULE_forStatementNoShortIf);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(379);
-                this.match(IkalaScriptParser.FOR);
-                this.setState(380);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(382);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(379);
+                match(IkalaScriptParser.FOR);
+                setState(380);
+                match(IkalaScriptParser.LPAREN);
+                setState(382);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844425197619474L) != 0)) {
                     {
-                        this.setState(381);
-                        this.forInit();
+                        setState(381);
+                        forInit();
                     }
                 }
 
-                this.setState(384);
-                this.match(IkalaScriptParser.SEMICOLON);
-                this.setState(386);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(384);
+                match(IkalaScriptParser.SEMICOLON);
+                setState(386);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4222674673860608L) != 0)) {
                     {
-                        this.setState(385);
-                        this.expression();
+                        setState(385);
+                        expression();
                     }
                 }
 
-                this.setState(388);
-                this.match(IkalaScriptParser.SEMICOLON);
-                this.setState(390);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(388);
+                match(IkalaScriptParser.SEMICOLON);
+                setState(390);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 844425197518848L) != 0)) {
                     {
-                        this.setState(389);
-                        this.statementExpressionList();
+                        setState(389);
+                        statementExpressionList();
                     }
                 }
 
-                this.setState(392);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(393);
-                this.statementNoShortIf();
+                setState(392);
+                match(IkalaScriptParser.RPAREN);
+                setState(393);
+                statementNoShortIf();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -4942,56 +4932,55 @@ public class IkalaScriptParser extends Parser {
     }
 
     public final GotoStatementContext gotoStatement() throws RecognitionException {
-        GotoStatementContext _localctx = new GotoStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 84, IkalaScriptParser.RULE_gotoStatement);
+        GotoStatementContext _localctx = new GotoStatementContext(_ctx, getState());
+        enterRule(_localctx, 84, IkalaScriptParser.RULE_gotoStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(413);
-                this.match(IkalaScriptParser.GOTO);
-                this.setState(414);
-                this.match(IkalaScriptParser.Identifier);
-                this.setState(415);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(413);
+                match(IkalaScriptParser.GOTO);
+                setState(414);
+                match(IkalaScriptParser.Identifier);
+                setState(415);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final IfThenElseStatementContext ifThenElseStatement() throws RecognitionException {
-        IfThenElseStatementContext _localctx =
-                new IfThenElseStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 54, IkalaScriptParser.RULE_ifThenElseStatement);
+        IfThenElseStatementContext _localctx = new IfThenElseStatementContext(_ctx, getState());
+        enterRule(_localctx, 54, IkalaScriptParser.RULE_ifThenElseStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(291);
-                this.match(IkalaScriptParser.IF);
-                this.setState(292);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(293);
-                this.expression();
-                this.setState(294);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(295);
-                this.statementNoShortIf();
-                this.setState(296);
-                this.match(IkalaScriptParser.ELSE);
-                this.setState(297);
-                this.statement();
+                setState(291);
+                match(IkalaScriptParser.IF);
+                setState(292);
+                match(IkalaScriptParser.LPAREN);
+                setState(293);
+                expression();
+                setState(294);
+                match(IkalaScriptParser.RPAREN);
+                setState(295);
+                statementNoShortIf();
+                setState(296);
+                match(IkalaScriptParser.ELSE);
+                setState(297);
+                statement();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -4999,101 +4988,101 @@ public class IkalaScriptParser extends Parser {
     public final IfThenElseStatementNoShortIfContext ifThenElseStatementNoShortIf()
             throws RecognitionException {
         IfThenElseStatementNoShortIfContext _localctx =
-                new IfThenElseStatementNoShortIfContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 56, IkalaScriptParser.RULE_ifThenElseStatementNoShortIf);
+                new IfThenElseStatementNoShortIfContext(_ctx, getState());
+        enterRule(_localctx, 56, IkalaScriptParser.RULE_ifThenElseStatementNoShortIf);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(299);
-                this.match(IkalaScriptParser.IF);
-                this.setState(300);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(301);
-                this.expression();
-                this.setState(302);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(303);
-                this.statementNoShortIf();
-                this.setState(304);
-                this.match(IkalaScriptParser.ELSE);
-                this.setState(305);
-                this.statementNoShortIf();
+                setState(299);
+                match(IkalaScriptParser.IF);
+                setState(300);
+                match(IkalaScriptParser.LPAREN);
+                setState(301);
+                expression();
+                setState(302);
+                match(IkalaScriptParser.RPAREN);
+                setState(303);
+                statementNoShortIf();
+                setState(304);
+                match(IkalaScriptParser.ELSE);
+                setState(305);
+                statementNoShortIf();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final IfThenStatementContext ifThenStatement() throws RecognitionException {
-        IfThenStatementContext _localctx = new IfThenStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 52, IkalaScriptParser.RULE_ifThenStatement);
+        IfThenStatementContext _localctx = new IfThenStatementContext(_ctx, getState());
+        enterRule(_localctx, 52, IkalaScriptParser.RULE_ifThenStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(285);
-                this.match(IkalaScriptParser.IF);
-                this.setState(286);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(287);
-                this.expression();
-                this.setState(288);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(289);
-                this.statement();
+                setState(285);
+                match(IkalaScriptParser.IF);
+                setState(286);
+                match(IkalaScriptParser.LPAREN);
+                setState(287);
+                expression();
+                setState(288);
+                match(IkalaScriptParser.RPAREN);
+                setState(289);
+                statement();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final LabelContext label() throws RecognitionException {
-        LabelContext _localctx = new LabelContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 40, IkalaScriptParser.RULE_label);
+        LabelContext _localctx = new LabelContext(_ctx, getState());
+        enterRule(_localctx, 40, IkalaScriptParser.RULE_label);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(263);
-                this.match(IkalaScriptParser.Identifier);
-                this.setState(264);
-                this.match(IkalaScriptParser.COLON);
+                setState(263);
+                match(IkalaScriptParser.Identifier);
+                setState(264);
+                match(IkalaScriptParser.COLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final LabeledStatementContext labeledStatement() throws RecognitionException {
-        LabeledStatementContext _localctx = new LabeledStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 42, IkalaScriptParser.RULE_labeledStatement);
+        LabeledStatementContext _localctx = new LabeledStatementContext(_ctx, getState());
+        enterRule(_localctx, 42, IkalaScriptParser.RULE_labeledStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(266);
-                this.label();
-                this.setState(267);
-                this.statement();
+                setState(266);
+                label();
+                setState(267);
+                statement();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5101,70 +5090,70 @@ public class IkalaScriptParser extends Parser {
     public final LabeledStatementNoShortIfContext labeledStatementNoShortIf()
             throws RecognitionException {
         LabeledStatementNoShortIfContext _localctx =
-                new LabeledStatementNoShortIfContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 44, IkalaScriptParser.RULE_labeledStatementNoShortIf);
+                new LabeledStatementNoShortIfContext(_ctx, getState());
+        enterRule(_localctx, 44, IkalaScriptParser.RULE_labeledStatementNoShortIf);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(269);
-                this.label();
-                this.setState(270);
-                this.statementNoShortIf();
+                setState(269);
+                label();
+                setState(270);
+                statementNoShortIf();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final LeftHandSideContext leftHandSide() throws RecognitionException {
-        LeftHandSideContext _localctx = new LeftHandSideContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 108, IkalaScriptParser.RULE_leftHandSide);
+        LeftHandSideContext _localctx = new LeftHandSideContext(_ctx, getState());
+        enterRule(_localctx, 108, IkalaScriptParser.RULE_leftHandSide);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(494);
-                this.match(IkalaScriptParser.Identifier);
+                setState(494);
+                match(IkalaScriptParser.Identifier);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final LiteralContext literal() throws RecognitionException {
-        LiteralContext _localctx = new LiteralContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 0, IkalaScriptParser.RULE_literal);
+        LiteralContext _localctx = new LiteralContext(_ctx, getState());
+        enterRule(_localctx, 0, IkalaScriptParser.RULE_literal);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(142);
-                _la = this._input.LA(1);
+                setState(142);
+                _la = _input.LA(1);
                 if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 66060288L) != 0))) {
-                    this._errHandler.recoverInline(this);
+                    _errHandler.recoverInline(this);
                 } else {
-                    if (this._input.LA(1) == Token.EOF) {
-                        this.matchedEOF = true;
+                    if (_input.LA(1) == Token.EOF) {
+                        matchedEOF = true;
                     }
-                    this._errHandler.reportMatch(this);
-                    this.consume();
+                    _errHandler.reportMatch(this);
+                    consume();
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5172,33 +5161,33 @@ public class IkalaScriptParser extends Parser {
     public final LocalVariableDeclarationContext localVariableDeclaration()
             throws RecognitionException {
         LocalVariableDeclarationContext _localctx =
-                new LocalVariableDeclarationContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 32, IkalaScriptParser.RULE_localVariableDeclaration);
+                new LocalVariableDeclarationContext(_ctx, getState());
+        enterRule(_localctx, 32, IkalaScriptParser.RULE_localVariableDeclaration);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(232);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(232);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if (_la == IkalaScriptParser.FINAL) {
                     {
-                        this.setState(231);
-                        this.match(IkalaScriptParser.FINAL);
+                        setState(231);
+                        match(IkalaScriptParser.FINAL);
                     }
                 }
 
-                this.setState(234);
-                this.type();
-                this.setState(235);
-                this.variableDeclaratorList();
+                setState(234);
+                type();
+                setState(235);
+                variableDeclaratorList();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5206,87 +5195,87 @@ public class IkalaScriptParser extends Parser {
     public final LocalVariableDeclarationStatementContext localVariableDeclarationStatement()
             throws RecognitionException {
         LocalVariableDeclarationStatementContext _localctx =
-                new LocalVariableDeclarationStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 30, IkalaScriptParser.RULE_localVariableDeclarationStatement);
+                new LocalVariableDeclarationStatementContext(_ctx, getState());
+        enterRule(_localctx, 30, IkalaScriptParser.RULE_localVariableDeclarationStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(228);
-                this.localVariableDeclaration();
-                this.setState(229);
-                this.match(IkalaScriptParser.SEMICOLON);
+                setState(228);
+                localVariableDeclaration();
+                setState(229);
+                match(IkalaScriptParser.SEMICOLON);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final MethodInvocationContext methodInvocation() throws RecognitionException {
-        MethodInvocationContext _localctx = new MethodInvocationContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 96, IkalaScriptParser.RULE_methodInvocation);
+        MethodInvocationContext _localctx = new MethodInvocationContext(_ctx, getState());
+        enterRule(_localctx, 96, IkalaScriptParser.RULE_methodInvocation);
         int _la;
         try {
-            this.setState(461);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 35, this._ctx)) {
+            setState(461);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 35, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(446);
-                        this.match(IkalaScriptParser.Identifier);
-                        this.setState(447);
-                        this.match(IkalaScriptParser.LPAREN);
-                        this.setState(449);
-                        this._errHandler.sync(this);
-                        _la = this._input.LA(1);
+                        setState(446);
+                        match(IkalaScriptParser.Identifier);
+                        setState(447);
+                        match(IkalaScriptParser.LPAREN);
+                        setState(449);
+                        _errHandler.sync(this);
+                        _la = _input.LA(1);
                         if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4222674673860608L) != 0)) {
                             {
-                                this.setState(448);
-                                this.argumentList();
+                                setState(448);
+                                argumentList();
                             }
                         }
 
-                        this.setState(451);
-                        this.match(IkalaScriptParser.RPAREN);
+                        setState(451);
+                        match(IkalaScriptParser.RPAREN);
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(452);
-                        this.primary();
-                        this.setState(453);
-                        this.match(IkalaScriptParser.DOT);
-                        this.setState(454);
-                        this.match(IkalaScriptParser.Identifier);
-                        this.setState(455);
-                        this.match(IkalaScriptParser.LPAREN);
-                        this.setState(457);
-                        this._errHandler.sync(this);
-                        _la = this._input.LA(1);
+                        setState(452);
+                        primary();
+                        setState(453);
+                        match(IkalaScriptParser.DOT);
+                        setState(454);
+                        match(IkalaScriptParser.Identifier);
+                        setState(455);
+                        match(IkalaScriptParser.LPAREN);
+                        setState(457);
+                        _errHandler.sync(this);
+                        _la = _input.LA(1);
                         if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4222674673860608L) != 0)) {
                             {
-                                this.setState(456);
-                                this.argumentList();
+                                setState(456);
+                                argumentList();
                             }
                         }
 
-                        this.setState(459);
-                        this.match(IkalaScriptParser.RPAREN);
+                        setState(459);
+                        match(IkalaScriptParser.RPAREN);
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5294,72 +5283,71 @@ public class IkalaScriptParser extends Parser {
     public final MethodInvocation_extensionContext methodInvocation_extension()
             throws RecognitionException {
         MethodInvocation_extensionContext _localctx =
-                new MethodInvocation_extensionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 98, IkalaScriptParser.RULE_methodInvocation_extension);
+                new MethodInvocation_extensionContext(_ctx, getState());
+        enterRule(_localctx, 98, IkalaScriptParser.RULE_methodInvocation_extension);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(463);
-                this.match(IkalaScriptParser.DOT);
-                this.setState(464);
-                this.match(IkalaScriptParser.Identifier);
-                this.setState(465);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(467);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(463);
+                match(IkalaScriptParser.DOT);
+                setState(464);
+                match(IkalaScriptParser.Identifier);
+                setState(465);
+                match(IkalaScriptParser.LPAREN);
+                setState(467);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4222674673860608L) != 0)) {
                     {
-                        this.setState(466);
-                        this.argumentList();
+                        setState(466);
+                        argumentList();
                     }
                 }
 
-                this.setState(469);
-                this.match(IkalaScriptParser.RPAREN);
+                setState(469);
+                match(IkalaScriptParser.RPAREN);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final MethodInvocation_LHSContext methodInvocation_LHS() throws RecognitionException {
-        MethodInvocation_LHSContext _localctx =
-                new MethodInvocation_LHSContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 100, IkalaScriptParser.RULE_methodInvocation_LHS);
+        MethodInvocation_LHSContext _localctx = new MethodInvocation_LHSContext(_ctx, getState());
+        enterRule(_localctx, 100, IkalaScriptParser.RULE_methodInvocation_LHS);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(471);
-                this.match(IkalaScriptParser.Identifier);
-                this.setState(472);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(474);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(471);
+                match(IkalaScriptParser.Identifier);
+                setState(472);
+                match(IkalaScriptParser.LPAREN);
+                setState(474);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4222674673860608L) != 0)) {
                     {
-                        this.setState(473);
-                        this.argumentList();
+                        setState(473);
+                        argumentList();
                     }
                 }
 
-                this.setState(476);
-                this.match(IkalaScriptParser.RPAREN);
+                setState(476);
+                match(IkalaScriptParser.RPAREN);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5371,55 +5359,54 @@ public class IkalaScriptParser extends Parser {
 
     private MultiplicativeExpressionContext multiplicativeExpression(int _p)
             throws RecognitionException {
-        ParserRuleContext _parentctx = this._ctx;
-        int _parentState = this.getState();
+        ParserRuleContext _parentctx = _ctx;
+        int _parentState = getState();
         MultiplicativeExpressionContext _localctx =
-                new MultiplicativeExpressionContext(this._ctx, _parentState);
+                new MultiplicativeExpressionContext(_ctx, _parentState);
         MultiplicativeExpressionContext _prevctx = _localctx;
         int _startState = 124;
         this.enterRecursionRule(
                 _localctx, 124, IkalaScriptParser.RULE_multiplicativeExpression, _p);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(578);
-                    this.unaryExpression();
+                    setState(578);
+                    unaryExpression();
                 }
-                this._ctx.stop = this._input.LT(-1);
-                this.setState(591);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 50, this._ctx);
+                _ctx.stop = _input.LT(-1);
+                setState(591);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 50, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
-                        if (this._parseListeners != null) {
-                            this.triggerExitRuleEvent();
+                        if (_parseListeners != null) {
+                            triggerExitRuleEvent();
                         }
                         _prevctx = _localctx;
                         {
-                            this.setState(589);
-                            this._errHandler.sync(this);
-                            switch (this.getInterpreter()
-                                    .adaptivePredict(this._input, 49, this._ctx)) {
+                            setState(589);
+                            _errHandler.sync(this);
+                            switch (getInterpreter().adaptivePredict(_input, 49, _ctx)) {
                                 case 1:
                                     {
                                         _localctx =
                                                 new MultiplicativeExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_multiplicativeExpression);
-                                        this.setState(580);
-                                        if (!(this.precpred(this._ctx, 3))) {
+                                        setState(580);
+                                        if (!(precpred(_ctx, 3))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 3)");
                                         }
-                                        this.setState(581);
-                                        this.match(IkalaScriptParser.MUL);
-                                        this.setState(582);
-                                        this.unaryExpression();
+                                        setState(581);
+                                        match(IkalaScriptParser.MUL);
+                                        setState(582);
+                                        unaryExpression();
                                     }
                                     break;
                                 case 2:
@@ -5427,19 +5414,19 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new MultiplicativeExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_multiplicativeExpression);
-                                        this.setState(583);
-                                        if (!(this.precpred(this._ctx, 2))) {
+                                        setState(583);
+                                        if (!(precpred(_ctx, 2))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 2)");
                                         }
-                                        this.setState(584);
-                                        this.match(IkalaScriptParser.DIV);
-                                        this.setState(585);
-                                        this.unaryExpression();
+                                        setState(584);
+                                        match(IkalaScriptParser.DIV);
+                                        setState(585);
+                                        unaryExpression();
                                     }
                                     break;
                                 case 3:
@@ -5447,35 +5434,35 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new MultiplicativeExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_multiplicativeExpression);
-                                        this.setState(586);
-                                        if (!(this.precpred(this._ctx, 1))) {
+                                        setState(586);
+                                        if (!(precpred(_ctx, 1))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 1)");
                                         }
-                                        this.setState(587);
-                                        this.match(IkalaScriptParser.MOD);
-                                        this.setState(588);
-                                        this.unaryExpression();
+                                        setState(587);
+                                        match(IkalaScriptParser.MOD);
+                                        setState(588);
+                                        unaryExpression();
                                     }
                                     break;
                             }
                         }
                     }
-                    this.setState(593);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 50, this._ctx);
+                    setState(593);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 50, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.unrollRecursionContexts(_parentctx);
+            unrollRecursionContexts(_parentctx);
         }
         return _localctx;
     }
@@ -5484,40 +5471,40 @@ public class IkalaScriptParser extends Parser {
             MultiplicativeExpressionContext _localctx, int predIndex) {
         switch (predIndex) {
             case 10:
-                return this.precpred(this._ctx, 3);
+                return precpred(_ctx, 3);
             case 11:
-                return this.precpred(this._ctx, 2);
+                return precpred(_ctx, 2);
             case 12:
-                return this.precpred(this._ctx, 1);
+                return precpred(_ctx, 1);
         }
         return true;
     }
 
     public final NumericTypeContext numericType() throws RecognitionException {
-        NumericTypeContext _localctx = new NumericTypeContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 4, IkalaScriptParser.RULE_numericType);
+        NumericTypeContext _localctx = new NumericTypeContext(_ctx, getState());
+        enterRule(_localctx, 4, IkalaScriptParser.RULE_numericType);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(149);
-                _la = this._input.LA(1);
+                setState(149);
+                _la = _input.LA(1);
                 if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 33040L) != 0))) {
-                    this._errHandler.recoverInline(this);
+                    _errHandler.recoverInline(this);
                 } else {
-                    if (this._input.LA(1) == Token.EOF) {
-                        this.matchedEOF = true;
+                    if (_input.LA(1) == Token.EOF) {
+                        matchedEOF = true;
                     }
-                    this._errHandler.reportMatch(this);
-                    this.consume();
+                    _errHandler.reportMatch(this);
+                    consume();
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5525,84 +5512,83 @@ public class IkalaScriptParser extends Parser {
     public final PostDecrementExpressionContext postDecrementExpression()
             throws RecognitionException {
         PostDecrementExpressionContext _localctx =
-                new PostDecrementExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 138, IkalaScriptParser.RULE_postDecrementExpression);
+                new PostDecrementExpressionContext(_ctx, getState());
+        enterRule(_localctx, 138, IkalaScriptParser.RULE_postDecrementExpression);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(628);
-                this.postfixExpression();
-                this.setState(629);
-                this.match(IkalaScriptParser.DEC);
+                setState(628);
+                postfixExpression();
+                setState(629);
+                match(IkalaScriptParser.DEC);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final PostfixExpressionContext postfixExpression() throws RecognitionException {
-        PostfixExpressionContext _localctx =
-                new PostfixExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 134, IkalaScriptParser.RULE_postfixExpression);
+        PostfixExpressionContext _localctx = new PostfixExpressionContext(_ctx, getState());
+        enterRule(_localctx, 134, IkalaScriptParser.RULE_postfixExpression);
         int _la;
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(617);
-                this._errHandler.sync(this);
-                switch (this.getInterpreter().adaptivePredict(this._input, 53, this._ctx)) {
+                setState(617);
+                _errHandler.sync(this);
+                switch (getInterpreter().adaptivePredict(_input, 53, _ctx)) {
                     case 1:
                         {
-                            this.setState(615);
-                            this.primary();
+                            setState(615);
+                            primary();
                         }
                         break;
                     case 2:
                         {
-                            this.setState(616);
-                            this.match(IkalaScriptParser.Identifier);
+                            setState(616);
+                            match(IkalaScriptParser.Identifier);
                         }
                         break;
                 }
-                this.setState(622);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 54, this._ctx);
+                setState(622);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 54, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
                         {
                             {
-                                this.setState(619);
-                                _la = this._input.LA(1);
+                                setState(619);
+                                _la = _input.LA(1);
                                 if (!(_la == IkalaScriptParser.INC
                                         || _la == IkalaScriptParser.DEC)) {
-                                    this._errHandler.recoverInline(this);
+                                    _errHandler.recoverInline(this);
                                 } else {
-                                    if (this._input.LA(1) == Token.EOF) {
-                                        this.matchedEOF = true;
+                                    if (_input.LA(1) == Token.EOF) {
+                                        matchedEOF = true;
                                     }
-                                    this._errHandler.reportMatch(this);
-                                    this.consume();
+                                    _errHandler.reportMatch(this);
+                                    consume();
                                 }
                             }
                         }
                     }
-                    this.setState(624);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 54, this._ctx);
+                    setState(624);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 54, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5610,22 +5596,22 @@ public class IkalaScriptParser extends Parser {
     public final PostIncrementExpressionContext postIncrementExpression()
             throws RecognitionException {
         PostIncrementExpressionContext _localctx =
-                new PostIncrementExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 136, IkalaScriptParser.RULE_postIncrementExpression);
+                new PostIncrementExpressionContext(_ctx, getState());
+        enterRule(_localctx, 136, IkalaScriptParser.RULE_postIncrementExpression);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(625);
-                this.postfixExpression();
-                this.setState(626);
-                this.match(IkalaScriptParser.INC);
+                setState(625);
+                postfixExpression();
+                setState(626);
+                match(IkalaScriptParser.INC);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5633,22 +5619,22 @@ public class IkalaScriptParser extends Parser {
     public final PreDecrementExpressionContext preDecrementExpression()
             throws RecognitionException {
         PreDecrementExpressionContext _localctx =
-                new PreDecrementExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 130, IkalaScriptParser.RULE_preDecrementExpression);
+                new PreDecrementExpressionContext(_ctx, getState());
+        enterRule(_localctx, 130, IkalaScriptParser.RULE_preDecrementExpression);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(606);
-                this.match(IkalaScriptParser.DEC);
-                this.setState(607);
-                this.unaryExpression();
+                setState(606);
+                match(IkalaScriptParser.DEC);
+                setState(607);
+                unaryExpression();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5656,170 +5642,168 @@ public class IkalaScriptParser extends Parser {
     public final PreIncrementExpressionContext preIncrementExpression()
             throws RecognitionException {
         PreIncrementExpressionContext _localctx =
-                new PreIncrementExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 128, IkalaScriptParser.RULE_preIncrementExpression);
+                new PreIncrementExpressionContext(_ctx, getState());
+        enterRule(_localctx, 128, IkalaScriptParser.RULE_preIncrementExpression);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(603);
-                this.match(IkalaScriptParser.INC);
-                this.setState(604);
-                this.unaryExpression();
+                setState(603);
+                match(IkalaScriptParser.INC);
+                setState(604);
+                unaryExpression();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final PrimaryContext primary() throws RecognitionException {
-        PrimaryContext _localctx = new PrimaryContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 88, IkalaScriptParser.RULE_primary);
+        PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
+        enterRule(_localctx, 88, IkalaScriptParser.RULE_primary);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(420);
-                    this.primary_LHS();
+                    setState(420);
+                    primary_LHS();
                 }
-                this.setState(424);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 30, this._ctx);
+                setState(424);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 30, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
                         {
                             {
-                                this.setState(421);
-                                this.primary_extension();
+                                setState(421);
+                                primary_extension();
                             }
                         }
                     }
-                    this.setState(426);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 30, this._ctx);
+                    setState(426);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 30, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final Primary_extensionContext primary_extension() throws RecognitionException {
-        Primary_extensionContext _localctx =
-                new Primary_extensionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 90, IkalaScriptParser.RULE_primary_extension);
+        Primary_extensionContext _localctx = new Primary_extensionContext(_ctx, getState());
+        enterRule(_localctx, 90, IkalaScriptParser.RULE_primary_extension);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(427);
-                this.methodInvocation_extension();
+                setState(427);
+                methodInvocation_extension();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final Primary_LHSContext primary_LHS() throws RecognitionException {
-        Primary_LHSContext _localctx = new Primary_LHSContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 92, IkalaScriptParser.RULE_primary_LHS);
+        Primary_LHSContext _localctx = new Primary_LHSContext(_ctx, getState());
+        enterRule(_localctx, 92, IkalaScriptParser.RULE_primary_LHS);
         try {
-            this.setState(436);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 31, this._ctx)) {
+            setState(436);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 31, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(429);
-                        this.literal();
+                        setState(429);
+                        literal();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(430);
-                        this.match(IkalaScriptParser.LPAREN);
-                        this.setState(431);
-                        this.expression();
-                        this.setState(432);
-                        this.match(IkalaScriptParser.RPAREN);
+                        setState(430);
+                        match(IkalaScriptParser.LPAREN);
+                        setState(431);
+                        expression();
+                        setState(432);
+                        match(IkalaScriptParser.RPAREN);
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(434);
-                        this.methodInvocation_LHS();
+                        setState(434);
+                        methodInvocation_LHS();
                     }
                     break;
                 case 4:
-                    this.enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 4);
                     {
-                        this.setState(435);
-                        this.match(IkalaScriptParser.Identifier);
+                        setState(435);
+                        match(IkalaScriptParser.Identifier);
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final Primary_LHS_accessContext primary_LHS_access() throws RecognitionException {
-        Primary_LHS_accessContext _localctx =
-                new Primary_LHS_accessContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 94, IkalaScriptParser.RULE_primary_LHS_access);
+        Primary_LHS_accessContext _localctx = new Primary_LHS_accessContext(_ctx, getState());
+        enterRule(_localctx, 94, IkalaScriptParser.RULE_primary_LHS_access);
         try {
-            this.setState(444);
-            this._errHandler.sync(this);
-            switch (this._input.LA(1)) {
+            setState(444);
+            _errHandler.sync(this);
+            switch (_input.LA(1)) {
                 case IntegerLiteral:
                 case FloatingPointLiteral:
                 case BooleanLiteral:
                 case CharacterLiteral:
                 case StringLiteral:
                 case NullLiteral:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(438);
-                        this.literal();
+                        setState(438);
+                        literal();
                     }
                     break;
                 case LPAREN:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(439);
-                        this.match(IkalaScriptParser.LPAREN);
-                        this.setState(440);
-                        this.expression();
-                        this.setState(441);
-                        this.match(IkalaScriptParser.RPAREN);
+                        setState(439);
+                        match(IkalaScriptParser.LPAREN);
+                        setState(440);
+                        expression();
+                        setState(441);
+                        match(IkalaScriptParser.RPAREN);
                     }
                     break;
                 case Identifier:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(443);
-                        this.methodInvocation_LHS();
+                        setState(443);
+                        methodInvocation_LHS();
                     }
                     break;
                 default:
@@ -5827,42 +5811,42 @@ public class IkalaScriptParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final PrimitiveTypeContext primitiveType() throws RecognitionException {
-        PrimitiveTypeContext _localctx = new PrimitiveTypeContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 2, IkalaScriptParser.RULE_primitiveType);
+        PrimitiveTypeContext _localctx = new PrimitiveTypeContext(_ctx, getState());
+        enterRule(_localctx, 2, IkalaScriptParser.RULE_primitiveType);
         try {
-            this.setState(147);
-            this._errHandler.sync(this);
-            switch (this._input.LA(1)) {
+            setState(147);
+            _errHandler.sync(this);
+            switch (_input.LA(1)) {
                 case CHAR:
                 case DOUBLE:
                 case INT:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(144);
-                        this.numericType();
+                        setState(144);
+                        numericType();
                     }
                     break;
                 case BOOLEAN:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(145);
-                        this.match(IkalaScriptParser.BOOLEAN);
+                        setState(145);
+                        match(IkalaScriptParser.BOOLEAN);
                     }
                     break;
                 case STRING:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(146);
-                        this.match(IkalaScriptParser.STRING);
+                        setState(146);
+                        match(IkalaScriptParser.STRING);
                     }
                     break;
                 default:
@@ -5870,49 +5854,49 @@ public class IkalaScriptParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final ReferenceTypeContext referenceType() throws RecognitionException {
-        ReferenceTypeContext _localctx = new ReferenceTypeContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 6, IkalaScriptParser.RULE_referenceType);
+        ReferenceTypeContext _localctx = new ReferenceTypeContext(_ctx, getState());
+        enterRule(_localctx, 6, IkalaScriptParser.RULE_referenceType);
         try {
-            this.setState(154);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 1, this._ctx)) {
+            setState(154);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 1, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(151);
-                        this.classOrInterfaceType();
+                        setState(151);
+                        classOrInterfaceType();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(152);
-                        this.match(IkalaScriptParser.Identifier);
+                        setState(152);
+                        match(IkalaScriptParser.Identifier);
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(153);
-                        this.arrayType();
+                        setState(153);
+                        arrayType();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -5922,53 +5906,51 @@ public class IkalaScriptParser extends Parser {
     }
 
     private RelationalExpressionContext relationalExpression(int _p) throws RecognitionException {
-        ParserRuleContext _parentctx = this._ctx;
-        int _parentState = this.getState();
-        RelationalExpressionContext _localctx =
-                new RelationalExpressionContext(this._ctx, _parentState);
+        ParserRuleContext _parentctx = _ctx;
+        int _parentState = getState();
+        RelationalExpressionContext _localctx = new RelationalExpressionContext(_ctx, _parentState);
         RelationalExpressionContext _prevctx = _localctx;
         int _startState = 120;
         this.enterRecursionRule(_localctx, 120, IkalaScriptParser.RULE_relationalExpression, _p);
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 {
-                    this.setState(544);
+                    setState(544);
                     this.additiveExpression(0);
                 }
-                this._ctx.stop = this._input.LT(-1);
-                this.setState(560);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 46, this._ctx);
+                _ctx.stop = _input.LT(-1);
+                setState(560);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 46, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
-                        if (this._parseListeners != null) {
-                            this.triggerExitRuleEvent();
+                        if (_parseListeners != null) {
+                            triggerExitRuleEvent();
                         }
                         _prevctx = _localctx;
                         {
-                            this.setState(558);
-                            this._errHandler.sync(this);
-                            switch (this.getInterpreter()
-                                    .adaptivePredict(this._input, 45, this._ctx)) {
+                            setState(558);
+                            _errHandler.sync(this);
+                            switch (getInterpreter().adaptivePredict(_input, 45, _ctx)) {
                                 case 1:
                                     {
                                         _localctx =
                                                 new RelationalExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_relationalExpression);
-                                        this.setState(546);
-                                        if (!(this.precpred(this._ctx, 4))) {
+                                        setState(546);
+                                        if (!(precpred(_ctx, 4))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 4)");
                                         }
-                                        this.setState(547);
-                                        this.match(IkalaScriptParser.LT);
-                                        this.setState(548);
+                                        setState(547);
+                                        match(IkalaScriptParser.LT);
+                                        setState(548);
                                         this.additiveExpression(0);
                                     }
                                     break;
@@ -5977,18 +5959,18 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new RelationalExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_relationalExpression);
-                                        this.setState(549);
-                                        if (!(this.precpred(this._ctx, 3))) {
+                                        setState(549);
+                                        if (!(precpred(_ctx, 3))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 3)");
                                         }
-                                        this.setState(550);
-                                        this.match(IkalaScriptParser.GT);
-                                        this.setState(551);
+                                        setState(550);
+                                        match(IkalaScriptParser.GT);
+                                        setState(551);
                                         this.additiveExpression(0);
                                     }
                                     break;
@@ -5997,18 +5979,18 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new RelationalExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_relationalExpression);
-                                        this.setState(552);
-                                        if (!(this.precpred(this._ctx, 2))) {
+                                        setState(552);
+                                        if (!(precpred(_ctx, 2))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 2)");
                                         }
-                                        this.setState(553);
-                                        this.match(IkalaScriptParser.LTE);
-                                        this.setState(554);
+                                        setState(553);
+                                        match(IkalaScriptParser.LTE);
+                                        setState(554);
                                         this.additiveExpression(0);
                                     }
                                     break;
@@ -6017,35 +5999,35 @@ public class IkalaScriptParser extends Parser {
                                         _localctx =
                                                 new RelationalExpressionContext(
                                                         _parentctx, _parentState);
-                                        this.pushNewRecursionContext(
+                                        pushNewRecursionContext(
                                                 _localctx,
                                                 _startState,
                                                 IkalaScriptParser.RULE_relationalExpression);
-                                        this.setState(555);
-                                        if (!(this.precpred(this._ctx, 1))) {
+                                        setState(555);
+                                        if (!(precpred(_ctx, 1))) {
                                             throw new FailedPredicateException(
                                                     this, "precpred(_ctx, 1)");
                                         }
-                                        this.setState(556);
-                                        this.match(IkalaScriptParser.GTE);
-                                        this.setState(557);
+                                        setState(556);
+                                        match(IkalaScriptParser.GTE);
+                                        setState(557);
                                         this.additiveExpression(0);
                                     }
                                     break;
                             }
                         }
                     }
-                    this.setState(562);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 46, this._ctx);
+                    setState(562);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 46, _ctx);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.unrollRecursionContexts(_parentctx);
+            unrollRecursionContexts(_parentctx);
         }
         return _localctx;
     }
@@ -6054,13 +6036,13 @@ public class IkalaScriptParser extends Parser {
             RelationalExpressionContext _localctx, int predIndex) {
         switch (predIndex) {
             case 4:
-                return this.precpred(this._ctx, 4);
+                return precpred(_ctx, 4);
             case 5:
-                return this.precpred(this._ctx, 3);
+                return precpred(_ctx, 3);
             case 6:
-                return this.precpred(this._ctx, 2);
+                return precpred(_ctx, 2);
             case 7:
-                return this.precpred(this._ctx, 1);
+                return precpred(_ctx, 1);
         }
         return true;
     }
@@ -6069,144 +6051,141 @@ public class IkalaScriptParser extends Parser {
     public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
         switch (ruleIndex) {
             case 57:
-                return this.conditionalOrExpression_sempred(
+                return conditionalOrExpression_sempred(
                         (ConditionalOrExpressionContext) _localctx, predIndex);
             case 58:
-                return this.conditionalAndExpression_sempred(
+                return conditionalAndExpression_sempred(
                         (ConditionalAndExpressionContext) _localctx, predIndex);
             case 59:
-                return this.equalityExpression_sempred(
-                        (EqualityExpressionContext) _localctx, predIndex);
+                return equalityExpression_sempred((EqualityExpressionContext) _localctx, predIndex);
             case 60:
-                return this.relationalExpression_sempred(
+                return relationalExpression_sempred(
                         (RelationalExpressionContext) _localctx, predIndex);
             case 61:
-                return this.additiveExpression_sempred(
-                        (AdditiveExpressionContext) _localctx, predIndex);
+                return additiveExpression_sempred((AdditiveExpressionContext) _localctx, predIndex);
             case 62:
-                return this.multiplicativeExpression_sempred(
+                return multiplicativeExpression_sempred(
                         (MultiplicativeExpressionContext) _localctx, predIndex);
         }
         return true;
     }
 
     public final StatementContext statement() throws RecognitionException {
-        StatementContext _localctx = new StatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 34, IkalaScriptParser.RULE_statement);
+        StatementContext _localctx = new StatementContext(_ctx, getState());
+        enterRule(_localctx, 34, IkalaScriptParser.RULE_statement);
         try {
-            this.setState(243);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 14, this._ctx)) {
+            setState(243);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 14, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(237);
-                        this.statementWithoutTrailingSubstatement();
+                        setState(237);
+                        statementWithoutTrailingSubstatement();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(238);
-                        this.labeledStatement();
+                        setState(238);
+                        labeledStatement();
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(239);
-                        this.ifThenStatement();
+                        setState(239);
+                        ifThenStatement();
                     }
                     break;
                 case 4:
-                    this.enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 4);
                     {
-                        this.setState(240);
-                        this.ifThenElseStatement();
+                        setState(240);
+                        ifThenElseStatement();
                     }
                     break;
                 case 5:
-                    this.enterOuterAlt(_localctx, 5);
+                    enterOuterAlt(_localctx, 5);
                     {
-                        this.setState(241);
-                        this.whileStatement();
+                        setState(241);
+                        whileStatement();
                     }
                     break;
                 case 6:
-                    this.enterOuterAlt(_localctx, 6);
+                    enterOuterAlt(_localctx, 6);
                     {
-                        this.setState(242);
-                        this.forStatement();
+                        setState(242);
+                        forStatement();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final StatementExpressionContext statementExpression() throws RecognitionException {
-        StatementExpressionContext _localctx =
-                new StatementExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 50, IkalaScriptParser.RULE_statementExpression);
+        StatementExpressionContext _localctx = new StatementExpressionContext(_ctx, getState());
+        enterRule(_localctx, 50, IkalaScriptParser.RULE_statementExpression);
         try {
-            this.setState(283);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 17, this._ctx)) {
+            setState(283);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 17, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(277);
-                        this.assignment();
+                        setState(277);
+                        assignment();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(278);
-                        this.preIncrementExpression();
+                        setState(278);
+                        preIncrementExpression();
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(279);
-                        this.preDecrementExpression();
+                        setState(279);
+                        preDecrementExpression();
                     }
                     break;
                 case 4:
-                    this.enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 4);
                     {
-                        this.setState(280);
-                        this.postIncrementExpression();
+                        setState(280);
+                        postIncrementExpression();
                     }
                     break;
                 case 5:
-                    this.enterOuterAlt(_localctx, 5);
+                    enterOuterAlt(_localctx, 5);
                     {
-                        this.setState(281);
-                        this.postDecrementExpression();
+                        setState(281);
+                        postDecrementExpression();
                     }
                     break;
                 case 6:
-                    this.enterOuterAlt(_localctx, 6);
+                    enterOuterAlt(_localctx, 6);
                     {
-                        this.setState(282);
-                        this.methodInvocation();
+                        setState(282);
+                        methodInvocation();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -6214,91 +6193,90 @@ public class IkalaScriptParser extends Parser {
     public final StatementExpressionListContext statementExpressionList()
             throws RecognitionException {
         StatementExpressionListContext _localctx =
-                new StatementExpressionListContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 78, IkalaScriptParser.RULE_statementExpressionList);
+                new StatementExpressionListContext(_ctx, getState());
+        enterRule(_localctx, 78, IkalaScriptParser.RULE_statementExpressionList);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(399);
-                this.statementExpression();
-                this.setState(404);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(399);
+                statementExpression();
+                setState(404);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while (_la == IkalaScriptParser.COMMA) {
                     {
                         {
-                            this.setState(400);
-                            this.match(IkalaScriptParser.COMMA);
-                            this.setState(401);
-                            this.statementExpression();
+                            setState(400);
+                            match(IkalaScriptParser.COMMA);
+                            setState(401);
+                            statementExpression();
                         }
                     }
-                    this.setState(406);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(406);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final StatementNoShortIfContext statementNoShortIf() throws RecognitionException {
-        StatementNoShortIfContext _localctx =
-                new StatementNoShortIfContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 36, IkalaScriptParser.RULE_statementNoShortIf);
+        StatementNoShortIfContext _localctx = new StatementNoShortIfContext(_ctx, getState());
+        enterRule(_localctx, 36, IkalaScriptParser.RULE_statementNoShortIf);
         try {
-            this.setState(250);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 15, this._ctx)) {
+            setState(250);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 15, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(245);
-                        this.statementWithoutTrailingSubstatement();
+                        setState(245);
+                        statementWithoutTrailingSubstatement();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(246);
-                        this.labeledStatementNoShortIf();
+                        setState(246);
+                        labeledStatementNoShortIf();
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(247);
-                        this.ifThenElseStatementNoShortIf();
+                        setState(247);
+                        ifThenElseStatementNoShortIf();
                     }
                     break;
                 case 4:
-                    this.enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 4);
                     {
-                        this.setState(248);
-                        this.whileStatementNoShortIf();
+                        setState(248);
+                        whileStatementNoShortIf();
                     }
                     break;
                 case 5:
-                    this.enterOuterAlt(_localctx, 5);
+                    enterOuterAlt(_localctx, 5);
                     {
-                        this.setState(249);
-                        this.forStatementNoShortIf();
+                        setState(249);
+                        forStatementNoShortIf();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -6306,24 +6284,24 @@ public class IkalaScriptParser extends Parser {
     public final StatementWithoutTrailingSubstatementContext statementWithoutTrailingSubstatement()
             throws RecognitionException {
         StatementWithoutTrailingSubstatementContext _localctx =
-                new StatementWithoutTrailingSubstatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 38, IkalaScriptParser.RULE_statementWithoutTrailingSubstatement);
+                new StatementWithoutTrailingSubstatementContext(_ctx, getState());
+        enterRule(_localctx, 38, IkalaScriptParser.RULE_statementWithoutTrailingSubstatement);
         try {
-            this.setState(261);
-            this._errHandler.sync(this);
-            switch (this._input.LA(1)) {
+            setState(261);
+            _errHandler.sync(this);
+            switch (_input.LA(1)) {
                 case LBRACE:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(252);
-                        this.block();
+                        setState(252);
+                        block();
                     }
                     break;
                 case SEMICOLON:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(253);
-                        this.emptyStatement();
+                        setState(253);
+                        emptyStatement();
                     }
                     break;
                 case IntegerLiteral:
@@ -6336,52 +6314,52 @@ public class IkalaScriptParser extends Parser {
                 case LPAREN:
                 case INC:
                 case DEC:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(254);
-                        this.expressionStatement();
+                        setState(254);
+                        expressionStatement();
                     }
                     break;
                 case SWITCH:
-                    this.enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 4);
                     {
-                        this.setState(255);
-                        this.switchStatement();
+                        setState(255);
+                        switchStatement();
                     }
                     break;
                 case DO:
-                    this.enterOuterAlt(_localctx, 5);
+                    enterOuterAlt(_localctx, 5);
                     {
-                        this.setState(256);
-                        this.doStatement();
+                        setState(256);
+                        doStatement();
                     }
                     break;
                 case BREAK:
-                    this.enterOuterAlt(_localctx, 6);
+                    enterOuterAlt(_localctx, 6);
                     {
-                        this.setState(257);
-                        this.breakStatement();
+                        setState(257);
+                        breakStatement();
                     }
                     break;
                 case CONTINUE:
-                    this.enterOuterAlt(_localctx, 7);
+                    enterOuterAlt(_localctx, 7);
                     {
-                        this.setState(258);
-                        this.continueStatement();
+                        setState(258);
+                        continueStatement();
                     }
                     break;
                 case GOTO:
-                    this.enterOuterAlt(_localctx, 8);
+                    enterOuterAlt(_localctx, 8);
                     {
-                        this.setState(259);
-                        this.gotoStatement();
+                        setState(259);
+                        gotoStatement();
                     }
                     break;
                 case EXIT:
-                    this.enterOuterAlt(_localctx, 9);
+                    enterOuterAlt(_localctx, 9);
                     {
-                        this.setState(260);
-                        this.exitStatement();
+                        setState(260);
+                        exitStatement();
                     }
                     break;
                 default:
@@ -6389,63 +6367,63 @@ public class IkalaScriptParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final SwitchBlockContext switchBlock() throws RecognitionException {
-        SwitchBlockContext _localctx = new SwitchBlockContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 60, IkalaScriptParser.RULE_switchBlock);
+        SwitchBlockContext _localctx = new SwitchBlockContext(_ctx, getState());
+        enterRule(_localctx, 60, IkalaScriptParser.RULE_switchBlock);
         int _la;
         try {
             int _alt;
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(313);
-                this.match(IkalaScriptParser.LBRACE);
-                this.setState(317);
-                this._errHandler.sync(this);
-                _alt = this.getInterpreter().adaptivePredict(this._input, 18, this._ctx);
+                setState(313);
+                match(IkalaScriptParser.LBRACE);
+                setState(317);
+                _errHandler.sync(this);
+                _alt = getInterpreter().adaptivePredict(_input, 18, _ctx);
                 while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
                     if (_alt == 1) {
                         {
                             {
-                                this.setState(314);
-                                this.switchBlockStatementGroup();
+                                setState(314);
+                                switchBlockStatementGroup();
                             }
                         }
                     }
-                    this.setState(319);
-                    this._errHandler.sync(this);
-                    _alt = this.getInterpreter().adaptivePredict(this._input, 18, this._ctx);
+                    setState(319);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 18, _ctx);
                 }
-                this.setState(323);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(323);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while (_la == IkalaScriptParser.CASE || _la == IkalaScriptParser.DEFAULT) {
                     {
                         {
-                            this.setState(320);
-                            this.switchLabel();
+                            setState(320);
+                            switchLabel();
                         }
                     }
-                    this.setState(325);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(325);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
-                this.setState(326);
-                this.match(IkalaScriptParser.RBRACE);
+                setState(326);
+                match(IkalaScriptParser.RBRACE);
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -6453,64 +6431,64 @@ public class IkalaScriptParser extends Parser {
     public final SwitchBlockStatementGroupContext switchBlockStatementGroup()
             throws RecognitionException {
         SwitchBlockStatementGroupContext _localctx =
-                new SwitchBlockStatementGroupContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 62, IkalaScriptParser.RULE_switchBlockStatementGroup);
+                new SwitchBlockStatementGroupContext(_ctx, getState());
+        enterRule(_localctx, 62, IkalaScriptParser.RULE_switchBlockStatementGroup);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(329);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(329);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 do {
                     {
                         {
-                            this.setState(328);
-                            this.switchLabel();
+                            setState(328);
+                            switchLabel();
                         }
                     }
-                    this.setState(331);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(331);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 } while (_la == IkalaScriptParser.CASE || _la == IkalaScriptParser.DEFAULT);
-                this.setState(333);
-                this.blockStatements();
+                setState(333);
+                blockStatements();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final SwitchLabelContext switchLabel() throws RecognitionException {
-        SwitchLabelContext _localctx = new SwitchLabelContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 64, IkalaScriptParser.RULE_switchLabel);
+        SwitchLabelContext _localctx = new SwitchLabelContext(_ctx, getState());
+        enterRule(_localctx, 64, IkalaScriptParser.RULE_switchLabel);
         try {
-            this.setState(341);
-            this._errHandler.sync(this);
-            switch (this._input.LA(1)) {
+            setState(341);
+            _errHandler.sync(this);
+            switch (_input.LA(1)) {
                 case CASE:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(335);
-                        this.match(IkalaScriptParser.CASE);
-                        this.setState(336);
-                        this.expression();
-                        this.setState(337);
-                        this.match(IkalaScriptParser.COLON);
+                        setState(335);
+                        match(IkalaScriptParser.CASE);
+                        setState(336);
+                        expression();
+                        setState(337);
+                        match(IkalaScriptParser.COLON);
                     }
                     break;
                 case DEFAULT:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(339);
-                        this.match(IkalaScriptParser.DEFAULT);
-                        this.setState(340);
-                        this.match(IkalaScriptParser.COLON);
+                        setState(339);
+                        match(IkalaScriptParser.DEFAULT);
+                        setState(340);
+                        match(IkalaScriptParser.COLON);
                     }
                     break;
                 default:
@@ -6518,110 +6496,110 @@ public class IkalaScriptParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final SwitchStatementContext switchStatement() throws RecognitionException {
-        SwitchStatementContext _localctx = new SwitchStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 58, IkalaScriptParser.RULE_switchStatement);
+        SwitchStatementContext _localctx = new SwitchStatementContext(_ctx, getState());
+        enterRule(_localctx, 58, IkalaScriptParser.RULE_switchStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(307);
-                this.match(IkalaScriptParser.SWITCH);
-                this.setState(308);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(309);
-                this.expression();
-                this.setState(310);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(311);
-                this.switchBlock();
+                setState(307);
+                match(IkalaScriptParser.SWITCH);
+                setState(308);
+                match(IkalaScriptParser.LPAREN);
+                setState(309);
+                expression();
+                setState(310);
+                match(IkalaScriptParser.RPAREN);
+                setState(311);
+                switchBlock();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final TypeContext type() throws RecognitionException {
-        TypeContext _localctx = new TypeContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 20, IkalaScriptParser.RULE_type);
+        TypeContext _localctx = new TypeContext(_ctx, getState());
+        enterRule(_localctx, 20, IkalaScriptParser.RULE_type);
         try {
-            this.setState(202);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 8, this._ctx)) {
+            setState(202);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 8, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(200);
-                        this.primitiveType();
+                        setState(200);
+                        primitiveType();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(201);
-                        this.referenceType();
+                        setState(201);
+                        referenceType();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final UnaryExpressionContext unaryExpression() throws RecognitionException {
-        UnaryExpressionContext _localctx = new UnaryExpressionContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 126, IkalaScriptParser.RULE_unaryExpression);
+        UnaryExpressionContext _localctx = new UnaryExpressionContext(_ctx, getState());
+        enterRule(_localctx, 126, IkalaScriptParser.RULE_unaryExpression);
         try {
-            this.setState(601);
-            this._errHandler.sync(this);
-            switch (this._input.LA(1)) {
+            setState(601);
+            _errHandler.sync(this);
+            switch (_input.LA(1)) {
                 case INC:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(594);
-                        this.preIncrementExpression();
+                        setState(594);
+                        preIncrementExpression();
                     }
                     break;
                 case DEC:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(595);
-                        this.preDecrementExpression();
+                        setState(595);
+                        preDecrementExpression();
                     }
                     break;
                 case ADD:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(596);
-                        this.match(IkalaScriptParser.ADD);
-                        this.setState(597);
-                        this.unaryExpression();
+                        setState(596);
+                        match(IkalaScriptParser.ADD);
+                        setState(597);
+                        unaryExpression();
                     }
                     break;
                 case SUB:
-                    this.enterOuterAlt(_localctx, 4);
+                    enterOuterAlt(_localctx, 4);
                     {
-                        this.setState(598);
-                        this.match(IkalaScriptParser.SUB);
-                        this.setState(599);
-                        this.unaryExpression();
+                        setState(598);
+                        match(IkalaScriptParser.SUB);
+                        setState(599);
+                        unaryExpression();
                     }
                     break;
                 case IntegerLiteral:
@@ -6633,10 +6611,10 @@ public class IkalaScriptParser extends Parser {
                 case Identifier:
                 case LPAREN:
                 case NOT:
-                    this.enterOuterAlt(_localctx, 5);
+                    enterOuterAlt(_localctx, 5);
                     {
-                        this.setState(600);
-                        this.unaryExpressionNotPlusMinus();
+                        setState(600);
+                        unaryExpressionNotPlusMinus();
                     }
                     break;
                 default:
@@ -6644,10 +6622,10 @@ public class IkalaScriptParser extends Parser {
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -6655,104 +6633,102 @@ public class IkalaScriptParser extends Parser {
     public final UnaryExpressionNotPlusMinusContext unaryExpressionNotPlusMinus()
             throws RecognitionException {
         UnaryExpressionNotPlusMinusContext _localctx =
-                new UnaryExpressionNotPlusMinusContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 132, IkalaScriptParser.RULE_unaryExpressionNotPlusMinus);
+                new UnaryExpressionNotPlusMinusContext(_ctx, getState());
+        enterRule(_localctx, 132, IkalaScriptParser.RULE_unaryExpressionNotPlusMinus);
         try {
-            this.setState(613);
-            this._errHandler.sync(this);
-            switch (this.getInterpreter().adaptivePredict(this._input, 52, this._ctx)) {
+            setState(613);
+            _errHandler.sync(this);
+            switch (getInterpreter().adaptivePredict(_input, 52, _ctx)) {
                 case 1:
-                    this.enterOuterAlt(_localctx, 1);
+                    enterOuterAlt(_localctx, 1);
                     {
-                        this.setState(609);
-                        this.postfixExpression();
+                        setState(609);
+                        postfixExpression();
                     }
                     break;
                 case 2:
-                    this.enterOuterAlt(_localctx, 2);
+                    enterOuterAlt(_localctx, 2);
                     {
-                        this.setState(610);
-                        this.match(IkalaScriptParser.NOT);
-                        this.setState(611);
-                        this.unaryExpression();
+                        setState(610);
+                        match(IkalaScriptParser.NOT);
+                        setState(611);
+                        unaryExpression();
                     }
                     break;
                 case 3:
-                    this.enterOuterAlt(_localctx, 3);
+                    enterOuterAlt(_localctx, 3);
                     {
-                        this.setState(612);
-                        this.castExpression();
+                        setState(612);
+                        castExpression();
                     }
                     break;
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final VariableDeclaratorContext variableDeclarator() throws RecognitionException {
-        VariableDeclaratorContext _localctx =
-                new VariableDeclaratorContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 16, IkalaScriptParser.RULE_variableDeclarator);
+        VariableDeclaratorContext _localctx = new VariableDeclaratorContext(_ctx, getState());
+        enterRule(_localctx, 16, IkalaScriptParser.RULE_variableDeclarator);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(191);
-                this.variableDeclaratorId();
-                this.setState(194);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(191);
+                variableDeclaratorId();
+                setState(194);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if (_la == IkalaScriptParser.ASSIGN) {
                     {
-                        this.setState(192);
-                        this.match(IkalaScriptParser.ASSIGN);
-                        this.setState(193);
-                        this.expression();
+                        setState(192);
+                        match(IkalaScriptParser.ASSIGN);
+                        setState(193);
+                        expression();
                     }
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final VariableDeclaratorIdContext variableDeclaratorId() throws RecognitionException {
-        VariableDeclaratorIdContext _localctx =
-                new VariableDeclaratorIdContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 18, IkalaScriptParser.RULE_variableDeclaratorId);
+        VariableDeclaratorIdContext _localctx = new VariableDeclaratorIdContext(_ctx, getState());
+        enterRule(_localctx, 18, IkalaScriptParser.RULE_variableDeclaratorId);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(196);
-                this.match(IkalaScriptParser.Identifier);
-                this.setState(198);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(196);
+                match(IkalaScriptParser.Identifier);
+                setState(198);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 if (_la == IkalaScriptParser.LBRACK) {
                     {
-                        this.setState(197);
-                        this.dims();
+                        setState(197);
+                        dims();
                     }
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -6760,64 +6736,64 @@ public class IkalaScriptParser extends Parser {
     public final VariableDeclaratorListContext variableDeclaratorList()
             throws RecognitionException {
         VariableDeclaratorListContext _localctx =
-                new VariableDeclaratorListContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 14, IkalaScriptParser.RULE_variableDeclaratorList);
+                new VariableDeclaratorListContext(_ctx, getState());
+        enterRule(_localctx, 14, IkalaScriptParser.RULE_variableDeclaratorList);
         int _la;
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(183);
-                this.variableDeclarator();
-                this.setState(188);
-                this._errHandler.sync(this);
-                _la = this._input.LA(1);
+                setState(183);
+                variableDeclarator();
+                setState(188);
+                _errHandler.sync(this);
+                _la = _input.LA(1);
                 while (_la == IkalaScriptParser.COMMA) {
                     {
                         {
-                            this.setState(184);
-                            this.match(IkalaScriptParser.COMMA);
-                            this.setState(185);
-                            this.variableDeclarator();
+                            setState(184);
+                            match(IkalaScriptParser.COMMA);
+                            setState(185);
+                            variableDeclarator();
                         }
                     }
-                    this.setState(190);
-                    this._errHandler.sync(this);
-                    _la = this._input.LA(1);
+                    setState(190);
+                    _errHandler.sync(this);
+                    _la = _input.LA(1);
                 }
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
 
     public final WhileStatementContext whileStatement() throws RecognitionException {
-        WhileStatementContext _localctx = new WhileStatementContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 66, IkalaScriptParser.RULE_whileStatement);
+        WhileStatementContext _localctx = new WhileStatementContext(_ctx, getState());
+        enterRule(_localctx, 66, IkalaScriptParser.RULE_whileStatement);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(343);
-                this.match(IkalaScriptParser.WHILE);
-                this.setState(344);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(345);
-                this.expression();
-                this.setState(346);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(347);
-                this.statement();
+                setState(343);
+                match(IkalaScriptParser.WHILE);
+                setState(344);
+                match(IkalaScriptParser.LPAREN);
+                setState(345);
+                expression();
+                setState(346);
+                match(IkalaScriptParser.RPAREN);
+                setState(347);
+                statement();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }
@@ -6825,28 +6801,28 @@ public class IkalaScriptParser extends Parser {
     public final WhileStatementNoShortIfContext whileStatementNoShortIf()
             throws RecognitionException {
         WhileStatementNoShortIfContext _localctx =
-                new WhileStatementNoShortIfContext(this._ctx, this.getState());
-        this.enterRule(_localctx, 68, IkalaScriptParser.RULE_whileStatementNoShortIf);
+                new WhileStatementNoShortIfContext(_ctx, getState());
+        enterRule(_localctx, 68, IkalaScriptParser.RULE_whileStatementNoShortIf);
         try {
-            this.enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
-                this.setState(349);
-                this.match(IkalaScriptParser.WHILE);
-                this.setState(350);
-                this.match(IkalaScriptParser.LPAREN);
-                this.setState(351);
-                this.expression();
-                this.setState(352);
-                this.match(IkalaScriptParser.RPAREN);
-                this.setState(353);
-                this.statementNoShortIf();
+                setState(349);
+                match(IkalaScriptParser.WHILE);
+                setState(350);
+                match(IkalaScriptParser.LPAREN);
+                setState(351);
+                expression();
+                setState(352);
+                match(IkalaScriptParser.RPAREN);
+                setState(353);
+                statementNoShortIf();
             }
         } catch (RecognitionException re) {
             _localctx.exception = re;
-            this._errHandler.reportError(this, re);
-            this._errHandler.recover(this, re);
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
         } finally {
-            this.exitRule();
+            exitRule();
         }
         return _localctx;
     }

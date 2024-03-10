@@ -25,7 +25,7 @@ class VariableTypeMap {
 
     /** Create a new empty type map. */
     public VariableTypeMap() {
-        this.map = new HashMap<>();
+        map = new HashMap<>();
     }
 
     /**
@@ -34,8 +34,8 @@ class VariableTypeMap {
      * @param toCopy The map to clone.
      */
     public VariableTypeMap(VariableTypeMap toCopy) {
-        this.map = new HashMap<>();
-        this.map.putAll(toCopy.map);
+        map = new HashMap<>();
+        map.putAll(toCopy.map);
     }
 
     /**
@@ -45,7 +45,7 @@ class VariableTypeMap {
      * @return True if it exists, false otherwise.
      */
     public boolean contains(@NonNull String variable) {
-        return this.map.containsKey(variable);
+        return map.containsKey(variable);
     }
 
     /**
@@ -55,7 +55,7 @@ class VariableTypeMap {
      * @return The type of the variable, or void.
      */
     public Type get(@NonNull String variable) {
-        return this.map.getOrDefault(variable, VariableTypeMap.DEFAULT);
+        return map.getOrDefault(variable, VariableTypeMap.DEFAULT);
     }
 
     /**
@@ -66,16 +66,16 @@ class VariableTypeMap {
      * @param type The type of the variable.
      */
     public void put(@NonNull String variable, @NonNull Type type) {
-        this.map.computeIfPresent(
+        map.computeIfPresent(
                 variable,
                 (key, current) -> {
-                    VariableTypeMap.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "VARIABLE_ALREADY_DEFINED", ScriptManager.getResourceBundle()),
                             variable);
                     return VariableTypeMap.DEFAULT;
                 });
-        this.map.put(variable, type);
+        map.put(variable, type);
     }
 
     /**
@@ -84,11 +84,11 @@ class VariableTypeMap {
      * @param variable The variable in question.
      */
     public void remove(@NonNull String variable) {
-        this.map.remove(variable);
+        map.remove(variable);
     }
 
     @Override
     public String toString() {
-        return this.map.toString();
+        return map.toString();
     }
 }

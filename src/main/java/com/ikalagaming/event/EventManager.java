@@ -71,9 +71,9 @@ public class EventManager {
      * Sets up the event managers handlers and event dispatching and starts the dispatching thread
      */
     public EventManager() {
-        this.dispatcher = new EventDispatcher(this);
-        this.handlerMap = new HashMap<>();
-        this.dispatcher.start();
+        dispatcher = new EventDispatcher(this);
+        handlerMap = new HashMap<>();
+        dispatcher.start();
     }
 
     /**
@@ -136,14 +136,14 @@ public class EventManager {
      */
     public void fireEvent(Event event) throws IllegalStateException {
         try {
-            this.dispatcher.dispatchEvent(event);
+            dispatcher.dispatchEvent(event);
         } catch (IllegalStateException illegalState) {
             throw illegalState;
         } catch (Exception e) {
             String err =
                     SafeResourceLoader.getString("EVT_QUEUE_FULL", "com.ikalagaming.event.strings")
                             + "in EventManager.fireEvent(Event)";
-            EventManager.log.warn(err);
+            log.warn(err);
         }
     }
 
@@ -154,9 +154,9 @@ public class EventManager {
      * @return the map of handlers for the given type
      */
     private HandlerList getEventListeners(Class<? extends Event> type) {
-        synchronized (this.handlerMap) {
-            this.handlerMap.computeIfAbsent(type, ignored -> new HandlerList());
-            return this.handlerMap.get(type);
+        synchronized (handlerMap) {
+            handlerMap.computeIfAbsent(type, ignored -> new HandlerList());
+            return handlerMap.get(type);
         }
     }
 
@@ -167,7 +167,7 @@ public class EventManager {
      * @return the handlerlist for that class
      */
     public HandlerList getHandlers(Event event) {
-        return this.getEventListeners(event.getClass());
+        return getEventListeners(event.getClass());
     }
 
     /**
@@ -183,8 +183,8 @@ public class EventManager {
                 (listener, event) -> {
                     try {
                         /*
-                         * This executor only runs for the given monitor instance, so we
-                         * can cast it to the type that it is.
+                         * This executor only runs for the given monitor instance,
+                         * so we can cast it to the type that it is.
                          */
                         ((EventMonitor<T>) listener).onEvent((T) event);
                     } catch (Exception t) {
@@ -192,7 +192,7 @@ public class EventManager {
                     }
                 };
 
-        HandlerList handlers = this.getEventListeners(monitor.getEventType());
+        HandlerList handlers = getEventListeners(monitor.getEventType());
         EventListener listener = new EventListener(monitor, executor, Order.MONITOR);
         handlers.register(listener);
     }
@@ -204,9 +204,8 @@ public class EventManager {
      */
     public void registerEventListeners(Listener listener) {
         Map<Class<? extends Event>, Set<EventListener>> listMap;
-        listMap = this.createRegisteredListeners(listener);
-        listMap.entrySet()
-                .forEach(e -> this.getEventListeners(e.getKey()).registerAll(e.getValue()));
+        listMap = createRegisteredListeners(listener);
+        listMap.entrySet().forEach(e -> getEventListeners(e.getKey()).registerAll(e.getValue()));
     }
 
     /**
@@ -215,21 +214,21 @@ public class EventManager {
      * @param loader The new loader to use.
      */
     public void setThreadClassloader(ClassLoader loader) {
-        this.dispatcher.setContextClassLoader(loader);
+        dispatcher.setContextClassLoader(loader);
     }
 
     /** Clears up the handlers and stops the dispatching thread. Acts like an onUnload method. */
     public void shutdown() {
-        synchronized (this.handlerMap) {
-            this.handlerMap.values().forEach(HandlerList::unregisterAll);
-            this.handlerMap.clear();
+        synchronized (handlerMap) {
+            handlerMap.values().forEach(HandlerList::unregisterAll);
+            handlerMap.clear();
         }
 
-        this.dispatcher.terminate();
+        dispatcher.terminate();
         try {
-            this.dispatcher.join();
+            dispatcher.join();
         } catch (InterruptedException e) {
-            EventManager.log.warn("Interrupted while shutting down", e);
+            log.warn("Interrupted while shutting down", e);
             // Re-interrupt as per SonarLint java:S2142
             Thread.currentThread().interrupt();
         }
@@ -241,8 +240,8 @@ public class EventManager {
      * @param listener The listener to unregister
      */
     public void unregisterEventListeners(Listener listener) {
-        synchronized (this.handlerMap) {
-            this.handlerMap.values().forEach(list -> list.unregister(listener));
+        synchronized (handlerMap) {
+            handlerMap.values().forEach(list -> list.unregister(listener));
         }
     }
 }

@@ -44,7 +44,7 @@ public class PluginCommand implements Comparable<PluginCommand> {
 
     @Override
     public int compareTo(PluginCommand o) {
-        return this.getCommand().toLowerCase().compareTo(o.getCommand().toLowerCase());
+        return getCommand().toLowerCase().compareTo(o.getCommand().toLowerCase());
     }
 
     @Override
@@ -57,18 +57,18 @@ public class PluginCommand implements Comparable<PluginCommand> {
         }
 
         String otherCommand = ((PluginCommand) obj).getCommand();
-        if (null == this.command) {
+        if (null == command) {
             return null == otherCommand;
         }
 
-        return this.command.equalsIgnoreCase(otherCommand);
+        return command.equalsIgnoreCase(otherCommand);
     }
 
     @Override
     public int hashCode() {
-        if (null == this.command) {
+        if (null == command) {
             return super.hashCode();
         }
-        return this.command.hashCode();
+        return command.hashCode();
     }
 }

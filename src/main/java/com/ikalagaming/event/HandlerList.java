@@ -20,11 +20,11 @@ class HandlerList {
      * added to meta-list for use in bakeAll().
      */
     public HandlerList() {
-        this.handlerSlots = new EnumMap<>(Order.class);
+        handlerSlots = new EnumMap<>(Order.class);
         for (Order o : Order.values()) {
-            this.handlerSlots.put(o, new ArrayDeque<>());
+            handlerSlots.put(o, new ArrayDeque<>());
         }
-        this.bakedList = null;
+        bakedList = null;
     }
 
     /**
@@ -52,8 +52,8 @@ class HandlerList {
      */
     public EventListener[] getRegisteredListeners() {
         EventListener[] handlers;
-        while ((handlers = this.bakedList) == null) {
-            this.bake(); // This prevents fringe cases of returning null
+        while ((handlers = bakedList) == null) {
+            bake(); // This prevents fringe cases of returning null
         }
         return handlers;
     }
@@ -84,7 +84,7 @@ class HandlerList {
      */
     public void registerAll(Collection<EventListener> listeners) {
         for (EventListener listener : listeners) {
-            this.register(listener);
+            register(listener);
         }
     }
 

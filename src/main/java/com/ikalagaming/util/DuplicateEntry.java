@@ -9,7 +9,7 @@ public class DuplicateEntry extends Exception {
 
     /** Constructs a new {@link DuplicateEntry} with no cause. */
     public DuplicateEntry() {
-        this.theCause = null;
+        theCause = null;
     }
 
     /**
@@ -19,7 +19,7 @@ public class DuplicateEntry extends Exception {
      */
     public DuplicateEntry(String message) {
         super(message);
-        this.theCause = null;
+        theCause = null;
     }
 
     /**
@@ -28,7 +28,7 @@ public class DuplicateEntry extends Exception {
      * @param throwable The throwable that was thrown
      */
     public DuplicateEntry(Throwable throwable) {
-        this.theCause = throwable;
+        theCause = throwable;
     }
 
     /**
@@ -39,7 +39,7 @@ public class DuplicateEntry extends Exception {
      */
     public DuplicateEntry(Throwable cause, String message) {
         super(message);
-        this.theCause = cause;
+        theCause = cause;
     }
 
     /**
@@ -49,6 +49,6 @@ public class DuplicateEntry extends Exception {
      */
     @Override
     public synchronized Throwable getCause() {
-        return this.theCause;
+        return theCause;
     }
 }

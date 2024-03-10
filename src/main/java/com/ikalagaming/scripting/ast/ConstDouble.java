@@ -20,6 +20,6 @@ public class ConstDouble extends Node {
 
     @Override
     public String toString() {
-        return Double.toString(this.value);
+        return Double.toString(value);
     }
 }

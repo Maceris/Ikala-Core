@@ -55,7 +55,7 @@ public class TypePreprocessor implements ASTVisitor {
         // invalid types
         if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID, Base.STRING)
                 || secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID, Base.STRING)) {
-            TypePreprocessor.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "INVALID_TYPES", ScriptManager.getResourceBundle()),
                     firstType.toString(),
@@ -90,7 +90,7 @@ public class TypePreprocessor implements ASTVisitor {
             node.setType(secondType);
             return;
         }
-        TypePreprocessor.log.warn(
+        log.warn(
                 SafeResourceLoader.getString("INVALID_CAST", ScriptManager.getResourceBundle()),
                 firstType.toString(),
                 secondType.toString());
@@ -144,13 +144,13 @@ public class TypePreprocessor implements ASTVisitor {
      */
     public void processTreeTypes(@NonNull CompilationUnit ast) {
         VariableTypeMap variables = new VariableTypeMap();
-        this.variableMaps.clear();
+        variableMaps.clear();
 
-        this.variableMaps.push(variables);
+        variableMaps.push(variables);
         LabelPass labels = new LabelPass(variables);
         labels.processLabels(ast);
 
-        this.processTypes(ast);
+        processTypes(ast);
     }
 
     /**
@@ -162,7 +162,7 @@ public class TypePreprocessor implements ASTVisitor {
         final boolean newContext = (root instanceof Block || root instanceof ForLoop);
 
         if (newContext) {
-            this.variableMaps.push(new VariableTypeMap(this.variableMaps.peek()));
+            variableMaps.push(new VariableTypeMap(variableMaps.peek()));
         }
 
         if (!root.getChildren().isEmpty()) {
@@ -175,13 +175,13 @@ public class TypePreprocessor implements ASTVisitor {
                     continue;
                 }
 
-                this.processTypes(child);
+                processTypes(child);
             }
         }
         root.process(this);
 
         if (newContext) {
-            this.variableMaps.pop();
+            variableMaps.pop();
         }
     }
 
@@ -193,10 +193,10 @@ public class TypePreprocessor implements ASTVisitor {
     @Override
     public void visit(ExprArithmetic node) {
         if (node.getChildren().isEmpty()) {
-            TypePreprocessor.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "MISSING_FIRST_CHILD", ScriptManager.getResourceBundle()),
-                    this.toString());
+                    toString());
             node.setType(Type.voidType());
             return;
         }
@@ -212,10 +212,10 @@ public class TypePreprocessor implements ASTVisitor {
         switch (node.getOperator()) {
             case DIV, MUL:
                 if (node.getChildren().size() < 2) {
-                    TypePreprocessor.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "MISSING_SECOND_CHILD", ScriptManager.getResourceBundle()),
-                            this.toString());
+                            toString());
                     node.setType(Type.voidType());
                     return;
                 }
@@ -237,13 +237,13 @@ public class TypePreprocessor implements ASTVisitor {
                 }
                 // fallthrough
             case SUB, MOD:
-                this.calculateFourFunctionType(node, firstType, secondType);
+                calculateFourFunctionType(node, firstType, secondType);
                 break;
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
                 if (firstType.anyOf(Base.INT, Base.CHAR, Base.DOUBLE, Base.UNKNOWN)) {
                     node.setType(firstType);
                 } else {
-                    TypePreprocessor.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
                             node.getOperator().toString(),
@@ -252,7 +252,7 @@ public class TypePreprocessor implements ASTVisitor {
                 }
                 break;
             default:
-                TypePreprocessor.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
@@ -277,7 +277,7 @@ public class TypePreprocessor implements ASTVisitor {
         }
 
         // Both numeric
-        if (this.handleTernaryNumeric(node, ifTrue, ifFalse)) {
+        if (handleTernaryNumeric(node, ifTrue, ifFalse)) {
             return;
         }
 
@@ -309,7 +309,7 @@ public class TypePreprocessor implements ASTVisitor {
             return;
         }
 
-        TypePreprocessor.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(
                         "NON_MATCHING_TYPES", ScriptManager.getResourceBundle()),
                 ifTrue,
@@ -319,7 +319,7 @@ public class TypePreprocessor implements ASTVisitor {
 
     @Override
     public void visit(Identifier node) {
-        node.setType(this.variableMaps.peek().get(node.getName()));
+        node.setType(variableMaps.peek().get(node.getName()));
     }
 
     @Override
@@ -331,7 +331,7 @@ public class TypePreprocessor implements ASTVisitor {
             decl.setType(declaredType);
             Identifier id = (Identifier) decl.getChildren().get(0);
             id.setType(declaredType);
-            this.variableMaps.peek().put(id.getName(), declaredType);
+            variableMaps.peek().put(id.getName(), declaredType);
         }
     }
 }

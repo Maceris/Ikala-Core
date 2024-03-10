@@ -54,7 +54,7 @@ public class Launcher {
          */
         @EventHandler(order = Order.MONITOR)
         public void onShutdown(Shutdown event) {
-            Launcher.log.info(SafeResourceLoader.getString("SHUTTING_DOWN", Launcher.bundle));
+            log.info(SafeResourceLoader.getString("SHUTTING_DOWN", Launcher.bundle));
             Launcher.shouldShutdown.set(true);
         }
     }
@@ -90,8 +90,7 @@ public class Launcher {
         synchronized (Launcher.mainThreadStages) {
             Launcher.mainThreadStages.add(newStage);
         }
-        Launcher.log.debug(
-                SafeResourceLoader.getString("STAGE_ADDED", Launcher.bundle), newStage.getId());
+        log.debug(SafeResourceLoader.getString("STAGE_ADDED", Launcher.bundle), newStage.getId());
         return newStage.getId();
     }
 
@@ -101,9 +100,9 @@ public class Launcher {
         Launcher.bundle =
                 ResourceBundle.getBundle(
                         "com.ikalagaming.launcher.Launcher", Localization.getLocale());
-        Launcher.log.info("=====================================================");
-        Launcher.log.info(SafeResourceLoader.getString("STARTING_MESSAGE", Launcher.bundle));
-        Launcher.log.info("=====================================================");
+        log.info("=====================================================");
+        log.info(SafeResourceLoader.getString("STARTING_MESSAGE", Launcher.bundle));
+        log.info("=====================================================");
         // creates all the static instances
         EventManager.getInstance();
         PluginManager.getInstance();
@@ -168,7 +167,7 @@ public class Launcher {
                             String message =
                                     SafeResourceLoader.getString(
                                             "STAGE_CODE_NOT_OK", Launcher.bundle);
-                            Launcher.log.warn(message, stage.getId(), status);
+                            log.warn(message, stage.getId(), status);
                     }
                 }
                 toRemove.forEach(Launcher::removeMainThreadStage);
@@ -294,7 +293,7 @@ public class Launcher {
         synchronized (Launcher.mainThreadStages) {
             Launcher.mainThreadStages.removeIf(stage -> stage.getId().equals(stageID));
         }
-        Launcher.log.debug(SafeResourceLoader.getString("STAGE_REMOVED", Launcher.bundle), stageID);
+        log.debug(SafeResourceLoader.getString("STAGE_REMOVED", Launcher.bundle), stageID);
     }
 
     /**
@@ -347,12 +346,6 @@ public class Launcher {
         return true;
     }
 
-    /** Set up the config files for all plugins. */
-    private static void setupPluginConfigs() {
-        Map<String, Plugin> plugins = PluginManager.getInstance().getLoadedPlugins();
-        plugins.values().forEach(Plugin::saveDefaultConfig);
-    }
-
     /** Sets up the folders used by the system if they don't exist. */
     private static void setupMainFolders() {
         File pluginFolder = new File(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
@@ -361,9 +354,14 @@ public class Launcher {
                 pluginFolder.mkdirs();
             }
         } catch (SecurityException e) {
-            Launcher.log.warn(
-                    SafeResourceLoader.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
+            log.warn(SafeResourceLoader.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
         }
+    }
+
+    /** Set up the config files for all plugins. */
+    private static void setupPluginConfigs() {
+        Map<String, Plugin> plugins = PluginManager.getInstance().getLoadedPlugins();
+        plugins.values().forEach(Plugin::saveDefaultConfig);
     }
 
     /** Set up the resource folders for all plugins. */

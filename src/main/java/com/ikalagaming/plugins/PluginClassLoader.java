@@ -48,13 +48,13 @@ public class PluginClassLoader extends URLClassLoader {
      * Also closes the files.
      */
     void dispose() {
-        this.getClasses().forEach(this.manager::removeClass);
-        this.classes.clear();
+        getClasses().forEach(manager::removeClass);
+        classes.clear();
         try {
-            this.close();
+            close();
         } catch (IOException e) {
             String name;
-            URL[] urls = this.getURLs();
+            URL[] urls = getURLs();
             if (urls == null || urls.length == 0) {
                 name = "?";
             } else {
@@ -62,8 +62,8 @@ public class PluginClassLoader extends URLClassLoader {
             }
             String err =
                     SafeResourceLoader.getString(
-                            "PLUGIN_JAR_CLOSE_ERROR", this.manager.getResourceBundle());
-            PluginClassLoader.log.warn(err, name);
+                            "PLUGIN_JAR_CLOSE_ERROR", manager.getResourceBundle());
+            log.warn(err, name);
         }
     }
 
@@ -84,14 +84,14 @@ public class PluginClassLoader extends URLClassLoader {
      */
     Class<?> findClass(String name, boolean checkGlobal) throws ClassNotFoundException {
 
-        Class<?> result = this.classes.get(name);
+        Class<?> result = classes.get(name);
 
         if (result != null) {
             return result;
         }
 
         if (checkGlobal) {
-            result = this.manager.getClassByName(name);
+            result = manager.getClassByName(name);
         }
 
         if (result == null) {
@@ -103,8 +103,8 @@ public class PluginClassLoader extends URLClassLoader {
         }
 
         // we did find it in the parent
-        this.manager.setClass(name, result);
-        this.classes.put(name, result);
+        manager.setClass(name, result);
+        classes.put(name, result);
 
         return result;
     }
@@ -115,6 +115,6 @@ public class PluginClassLoader extends URLClassLoader {
      * @return The classes this classloader has found.
      */
     Set<String> getClasses() {
-        return this.classes.keySet();
+        return classes.keySet();
     }
 }

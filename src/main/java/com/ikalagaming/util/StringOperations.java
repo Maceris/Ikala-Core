@@ -39,10 +39,7 @@ public class StringOperations {
      * @return how many times the substring appears in the string
      */
     public static int countOccurances(@NonNull String toSearch, @NonNull String toFind) {
-        if (toSearch.isEmpty()) {
-            return 0;
-        }
-        if (!toSearch.contains(toFind)) {
+        if (toSearch.isEmpty() || !toSearch.contains(toFind)) {
             return 0;
         }
         return (toSearch.length() - toSearch.replace(toFind, "").length()) / toFind.length();

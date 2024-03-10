@@ -67,17 +67,17 @@ public class TreeValidator implements ASTVisitor {
             boolean inSwitch = node instanceof SwitchStatement;
 
             if (inLoop) {
-                this.loopDepth++;
+                loopDepth++;
             }
             if (inSwitch) {
-                this.switchDepth++;
+                switchDepth++;
             }
-            this.check(child);
+            check(child);
             if (inLoop) {
-                this.loopDepth--;
+                loopDepth--;
             }
             if (inSwitch) {
-                this.switchDepth--;
+                switchDepth--;
             }
         }
         node.process(this);
@@ -91,18 +91,18 @@ public class TreeValidator implements ASTVisitor {
      *     in a fresh list.
      */
     private void checkLabels(Node node, List<String> names) {
-        if (!this.valid) {
+        if (!valid) {
             return;
         }
         for (Node child : node.getChildren()) {
-            this.checkLabels(child, names);
-            if (!this.valid) {
+            checkLabels(child, names);
+            if (!valid) {
                 return;
             }
         }
         if (node instanceof Label label) {
             if (names.contains(label.getName())) {
-                this.markInvalid(node, "DUPLICATE_LABEL");
+                markInvalid(node, "DUPLICATE_LABEL");
             }
             names.add(label.getName());
         }
@@ -120,7 +120,7 @@ public class TreeValidator implements ASTVisitor {
                         && secondChild.getType().anyOf(Base.INT, Base.DOUBLE))
                 || (firstChild.getType().anyOf(Base.INT)
                         && secondChild.getType().anyOf(Base.DOUBLE))) {
-            this.markInvalid(node, TreeValidator.DOWNCASTING);
+            markInvalid(node, TreeValidator.DOWNCASTING);
             return;
         }
         if ((firstChild.getType().anyOf(Base.BOOLEAN)
@@ -146,10 +146,10 @@ public class TreeValidator implements ASTVisitor {
                                         Base.DOUBLE,
                                         Base.INT,
                                         Base.IDENTIFIER))) {
-            this.markInvalid(node, TreeValidator.INVALID_CAST);
+            markInvalid(node, TreeValidator.INVALID_CAST);
             return;
         }
-        this.checkMoveTypesIdentifier(node, firstChild, secondChild);
+        checkMoveTypesIdentifier(node, firstChild, secondChild);
     }
 
     /**
@@ -164,13 +164,13 @@ public class TreeValidator implements ASTVisitor {
         if (firstChild.getType().anyOf(Base.IDENTIFIER)) {
             if (secondChild.getType().anyOf(Base.IDENTIFIER)
                     && !firstChild.getType().getValue().equals(secondChild.getType().getValue())) {
-                this.markInvalid(node, TreeValidator.INVALID_CAST);
+                markInvalid(node, TreeValidator.INVALID_CAST);
                 return;
             }
             if (secondChild
                     .getType()
                     .anyOf(Base.BOOLEAN, Base.CHAR, Base.DOUBLE, Base.INT, Base.STRING)) {
-                this.markInvalid(node, TreeValidator.INVALID_CAST);
+                markInvalid(node, TreeValidator.INVALID_CAST);
             }
         }
     }
@@ -207,7 +207,7 @@ public class TreeValidator implements ASTVisitor {
      */
     private boolean hasAtLeastOneChild(Node node) {
         if (node.getChildren().isEmpty()) {
-            this.markInvalid(node, "MISSING_FIRST_CHILD");
+            markInvalid(node, "MISSING_FIRST_CHILD");
             return false;
         }
         return true;
@@ -221,7 +221,7 @@ public class TreeValidator implements ASTVisitor {
      */
     private boolean hasAtLeastTwoChildren(Node node) {
         if (node.getChildren().size() < 2) {
-            this.markInvalid(node, "MISSING_SECOND_CHILD");
+            markInvalid(node, "MISSING_SECOND_CHILD");
             return false;
         }
         return true;
@@ -235,10 +235,10 @@ public class TreeValidator implements ASTVisitor {
      * @param errorMessage The key to look up the localize error message.
      */
     private void markInvalid(@NonNull Node node, @NonNull String errorMessage) {
-        TreeValidator.log.warn(
+        log.warn(
                 SafeResourceLoader.getString(errorMessage, ScriptManager.getResourceBundle()),
                 node.toString());
-        this.valid = false;
+        valid = false;
     }
 
     /**
@@ -248,16 +248,16 @@ public class TreeValidator implements ASTVisitor {
      * @return True if the tree is valid, false if anything was not.
      */
     public boolean validate(CompilationUnit ast) {
-        this.valid = true;
-        this.check(ast);
-        this.checkLabels(ast, new ArrayList<>());
-        return this.valid;
+        valid = true;
+        check(ast);
+        checkLabels(ast, new ArrayList<>());
+        return valid;
     }
 
     @Override
     public void visit(Break node) {
-        if (this.loopDepth == 0 && this.switchDepth == 0) {
-            this.markInvalid(node, "BREAK_OUTSIDE_LOOP");
+        if (loopDepth == 0 && switchDepth == 0) {
+            markInvalid(node, "BREAK_OUTSIDE_LOOP");
         }
     }
 
@@ -266,15 +266,15 @@ public class TreeValidator implements ASTVisitor {
         if (node.isPrimary()) {
             Node expression = node.getChildren().get(0);
             if (!expression.getType().anyOf(Base.IDENTIFIER, Base.UNKNOWN)) {
-                this.markInvalid(expression, "INVALID_METHOD_CALL");
+                markInvalid(expression, "INVALID_METHOD_CALL");
             }
         }
     }
 
     @Override
     public void visit(Continue node) {
-        if (this.loopDepth == 0) {
-            this.markInvalid(node, "CONTINUE_OUTSIDE_LOOP");
+        if (loopDepth == 0) {
+            markInvalid(node, "CONTINUE_OUTSIDE_LOOP");
         }
     }
 
@@ -282,27 +282,27 @@ public class TreeValidator implements ASTVisitor {
     public void visit(DoWhile node) {
         final Node expression = node.getChildren().get(1);
         if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-            this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
+            markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
         }
     }
 
     @Override
     public void visit(ExprArithmetic node) {
         if (node.getType().anyOf(Base.VOID)) {
-            this.markInvalid(node, TreeValidator.INVALID_TYPE);
+            markInvalid(node, TreeValidator.INVALID_TYPE);
             return;
         }
-        if (!this.hasAtLeastOneChild(node)) {
+        if (!hasAtLeastOneChild(node)) {
             return;
         }
         final Node firstChild = node.getChildren().get(0);
         if (firstChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
-            this.markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
+            markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
         }
         if (node.getChildren().size() == 2) {
             final Node secondChild = node.getChildren().get(1);
             if (secondChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
-                this.markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
+                markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
             }
         }
         switch (node.getOperator()) {
@@ -310,7 +310,7 @@ public class TreeValidator implements ASTVisitor {
                 break;
             case ADD, DIV, MUL, MOD:
                 // Sets the flag if not
-                this.hasAtLeastTwoChildren(node);
+                hasAtLeastTwoChildren(node);
                 break;
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
                 if (firstChild instanceof Identifier id
@@ -319,31 +319,31 @@ public class TreeValidator implements ASTVisitor {
                 } else if (firstChild instanceof ExprArithmetic arith) {
                     switch (arith.getOperator()) {
                         case SUB, ADD, DIV, MUL, MOD:
-                            TreeValidator.log.warn(
+                            log.warn(
                                     SafeResourceLoader.getString(
                                             "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
                                     node.getOperator().toString(),
                                     firstChild.getClass().getSimpleName());
-                            this.valid = false;
+                            valid = false;
                             break;
                         case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
                         default:
                     }
                 } else {
-                    TreeValidator.log.warn(
+                    log.warn(
                             SafeResourceLoader.getString(
                                     "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
                             node.getOperator().toString(),
                             firstChild.getClass().getSimpleName());
-                    this.valid = false;
+                    valid = false;
                 }
                 break;
             default:
-                TreeValidator.log.warn(
+                log.warn(
                         SafeResourceLoader.getString(
                                 "UNKNOWN_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
-                this.valid = false;
+                valid = false;
         }
     }
 
@@ -356,54 +356,54 @@ public class TreeValidator implements ASTVisitor {
         final Node firstChild = node.getChildren().get(0);
         final Node secondChild = node.getChildren().get(1);
 
-        this.checkMoveTypes(node, firstChild, secondChild);
+        checkMoveTypes(node, firstChild, secondChild);
     }
 
     @Override
     public void visit(ExprLogic node) {
         if (node.getType().anyOf(Base.VOID)) {
-            this.markInvalid(node, TreeValidator.INVALID_TYPE);
+            markInvalid(node, TreeValidator.INVALID_TYPE);
             return;
         }
-        if (!this.hasAtLeastOneChild(node)) {
+        if (!hasAtLeastOneChild(node)) {
             return;
         }
         final Node firstChild = node.getChildren().get(0);
         if (!firstChild.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-            this.markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
+            markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
             return;
         }
 
-        if (!this.hasAtLeastTwoChildren(node)) {
+        if (!hasAtLeastTwoChildren(node)) {
             return;
         }
         final Node secondChild = node.getChildren().get(1);
         if (!secondChild.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-            this.markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
+            markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
         }
     }
 
     @Override
     public void visit(ExprRelation node) {
-        if (!this.hasAtLeastOneChild(node)) {
+        if (!hasAtLeastOneChild(node)) {
             return;
         }
         final Node firstChild = node.getChildren().get(0);
         if (firstChild
                 .getType()
                 .anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.LABEL, Base.STRING, Base.VOID)) {
-            this.markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
+            markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
             return;
         }
 
-        if (!this.hasAtLeastTwoChildren(node)) {
+        if (!hasAtLeastTwoChildren(node)) {
             return;
         }
         final Node secondChild = node.getChildren().get(1);
         if (secondChild
                 .getType()
                 .anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.LABEL, Base.STRING, Base.VOID)) {
-            this.markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
+            markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
         }
     }
 
@@ -412,12 +412,12 @@ public class TreeValidator implements ASTVisitor {
         final Node expression = node.getChildren().get(0);
 
         if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-            this.markInvalid(expression, TreeValidator.INVALID_FIRST_CHILD);
+            markInvalid(expression, TreeValidator.INVALID_FIRST_CHILD);
             return;
         }
 
         if (node.getType().anyOf(Base.VOID)) {
-            this.markInvalid(node, TreeValidator.INVALID_TYPE);
+            markInvalid(node, TreeValidator.INVALID_TYPE);
         }
     }
 
@@ -430,7 +430,7 @@ public class TreeValidator implements ASTVisitor {
             }
             final Node expression = node.getChildren().get(conditionalIndex);
             if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-                this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
+                markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
             }
         }
     }
@@ -438,11 +438,11 @@ public class TreeValidator implements ASTVisitor {
     @Override
     public void visit(Identifier node) {
         if (node.getType().anyOf(Base.VOID)) {
-            TreeValidator.log.warn(
+            log.warn(
                     SafeResourceLoader.getString(
                             "INVALID_VARIABLE_USE", ScriptManager.getResourceBundle()),
                     node.getName());
-            this.valid = false;
+            valid = false;
         }
     }
 
@@ -450,7 +450,7 @@ public class TreeValidator implements ASTVisitor {
     public void visit(If node) {
         final Node expression = node.getChildren().get(0);
         if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-            this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
+            markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
         }
     }
 
@@ -460,7 +460,7 @@ public class TreeValidator implements ASTVisitor {
         Node block = node.getChildren().get(1);
         int defaultCount = 0;
 
-        List<SwitchLabel> labels = this.getSwitchLabels(block);
+        List<SwitchLabel> labels = getSwitchLabels(block);
 
         for (SwitchLabel label : labels) {
             if (label.isDefault()) {
@@ -468,12 +468,12 @@ public class TreeValidator implements ASTVisitor {
             }
             if (!label.isDefault()
                     && !label.getChildren().get(0).getType().equals(expressionType)) {
-                this.markInvalid(label, "SWITCH_TYPE_MISMATCH");
+                markInvalid(label, "SWITCH_TYPE_MISMATCH");
             }
         }
 
         if (defaultCount > 1) {
-            this.markInvalid(node, "MULTIPLE_DEFAULTS");
+            markInvalid(node, "MULTIPLE_DEFAULTS");
         }
     }
 
@@ -485,14 +485,14 @@ public class TreeValidator implements ASTVisitor {
         final Node firstChild = node.getChildren().get(0);
         final Node secondChild = node.getChildren().get(1);
 
-        this.checkMoveTypes(node, firstChild, secondChild);
+        checkMoveTypes(node, firstChild, secondChild);
     }
 
     @Override
     public void visit(While node) {
         final Node expression = node.getChildren().get(0);
         if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
-            this.markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
+            markInvalid(expression, TreeValidator.CONDITIONAL_NOT_BOOLEAN);
         }
     }
 }

@@ -57,11 +57,11 @@ public class BinaryTree<T extends Comparable<T>> {
                 BinaryTreeNode<R> leftNode,
                 BinaryTreeNode<R> parentNode,
                 BinaryTreeNode<R> rightNode) {
-            this.key = newKey;
-            this.height = 1;
-            this.left = leftNode;
-            this.parent = parentNode;
-            this.right = rightNode;
+            key = newKey;
+            height = 1;
+            left = leftNode;
+            parent = parentNode;
+            right = rightNode;
         }
 
         /**
@@ -69,17 +69,17 @@ public class BinaryTree<T extends Comparable<T>> {
          * parents and keys. Also zeroes the height.
          */
         public void delete() {
-            if (this.left != null) {
-                this.left.delete();
+            if (left != null) {
+                left.delete();
             }
-            this.left = null;
-            if (this.right != null) {
-                this.right.delete();
+            left = null;
+            if (right != null) {
+                right.delete();
             }
-            this.right = null;
-            this.parent = null;
-            this.key = null;
-            this.height = 0;
+            right = null;
+            parent = null;
+            key = null;
+            height = 0;
         }
 
         /**
@@ -89,7 +89,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @return this nodes height
          */
         public int getHeight() {
-            return this.height;
+            return height;
         }
 
         /**
@@ -98,7 +98,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @return the key
          */
         public R getKey() {
-            return this.key;
+            return key;
         }
 
         /**
@@ -107,7 +107,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @return the left child, or null
          */
         public BinaryTreeNode<R> getLeft() {
-            return this.left;
+            return left;
         }
 
         /**
@@ -116,7 +116,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @return the parent, or null
          */
         public BinaryTreeNode<R> getParent() {
-            return this.parent;
+            return parent;
         }
 
         /**
@@ -125,7 +125,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @return the right child, or null
          */
         public BinaryTreeNode<R> getRight() {
-            return this.right;
+            return right;
         }
 
         /**
@@ -134,7 +134,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @param newHeight the new height of this node
          */
         public void setHeight(int newHeight) {
-            this.height = newHeight;
+            height = newHeight;
         }
 
         /**
@@ -143,7 +143,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @param newKey the new key
          */
         public void setKey(R newKey) {
-            this.key = newKey;
+            key = newKey;
         }
 
         /**
@@ -152,7 +152,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @param newLeft the new left child
          */
         public void setLeft(BinaryTreeNode<R> newLeft) {
-            this.left = newLeft;
+            left = newLeft;
         }
 
         /**
@@ -161,7 +161,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @param newParent the new parent
          */
         public void setParent(BinaryTreeNode<R> newParent) {
-            this.parent = newParent;
+            parent = newParent;
         }
 
         /**
@@ -170,7 +170,7 @@ public class BinaryTree<T extends Comparable<T>> {
          * @param newRight the new right child
          */
         public void setRight(BinaryTreeNode<R> newRight) {
-            this.right = newRight;
+            right = newRight;
         }
     }
 
@@ -182,11 +182,11 @@ public class BinaryTree<T extends Comparable<T>> {
 
     /** Removes all objects from the tree. */
     public void clear() {
-        if (this.treeRoot != null) {
-            this.treeRoot.delete();
+        if (treeRoot != null) {
+            treeRoot.delete();
         }
-        this.treeRoot = null;
-        this.size = 0;
+        treeRoot = null;
+        size = 0;
     }
 
     /**
@@ -198,7 +198,7 @@ public class BinaryTree<T extends Comparable<T>> {
     public boolean contains(T toFind) {
         // true if the find method returns something that is not null
         // (that is, it exists in the tree)
-        return (this.find(toFind, this.treeRoot) != null);
+        return (this.find(toFind, treeRoot) != null);
     }
 
     /**
@@ -286,9 +286,9 @@ public class BinaryTree<T extends Comparable<T>> {
      * @throws DuplicateEntry if the entry already exists in the tree
      */
     protected BinaryTreeNode<T> insert(BinaryTreeNode<T> theRoot, T ins) throws DuplicateEntry {
-        if (this.treeRoot == null) {
-            this.treeRoot = new BinaryTreeNode<>(ins, null, null, null);
-            return this.treeRoot;
+        if (treeRoot == null) {
+            treeRoot = new BinaryTreeNode<>(ins, null, null, null);
+            return treeRoot;
         }
 
         if (theRoot == null || theRoot.key == null) {
@@ -327,7 +327,7 @@ public class BinaryTree<T extends Comparable<T>> {
             if (balance > 1 && ins.compareTo(theRoot.left.key) < 0) {
                 BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
                 if (newRoot.parent == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -337,7 +337,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 theRoot.left = this.leftRotate(theRoot.left);
                 BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
                 if (newRoot.parent == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -348,7 +348,7 @@ public class BinaryTree<T extends Comparable<T>> {
             if (balance < -1 && ins.compareTo(theRoot.right.key) > 0) {
                 BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
                 if (newRoot.parent == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -357,7 +357,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 theRoot.right = this.rightRotate(theRoot.right);
                 BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
                 if (newRoot.parent == null) {
-                    this.treeRoot = newRoot;
+                    treeRoot = newRoot;
                 }
                 return newRoot;
             }
@@ -373,8 +373,8 @@ public class BinaryTree<T extends Comparable<T>> {
      * @throws DuplicateEntry if the entry already exists in the tree
      */
     public void insert(T toInsert) throws DuplicateEntry {
-        this.treeRoot = this.insert(this.treeRoot, toInsert);
-        ++this.size;
+        treeRoot = this.insert(treeRoot, toInsert);
+        ++size;
     }
 
     /**
@@ -486,8 +486,8 @@ public class BinaryTree<T extends Comparable<T>> {
 
             if (toRemove.parent == null) {
                 // this is the root node
-                this.treeRoot = child;
-                this.updateHeight(this.treeRoot);
+                treeRoot = child;
+                this.updateHeight(treeRoot);
             } else if (toRemove.parent.left == toRemove) {
                 // this is a left child
                 toRemove.parent.left = child;
@@ -509,7 +509,7 @@ public class BinaryTree<T extends Comparable<T>> {
         else if (toRemove.left == null) {
             if (toRemove.parent == null) {
                 // this is the root node, and the only node in the tree
-                this.treeRoot = null;
+                treeRoot = null;
             } else if (toRemove.parent.left == toRemove) {
                 // its a left child
                 toRemove.parent.left = null; // remove parents reference to this
@@ -520,7 +520,8 @@ public class BinaryTree<T extends Comparable<T>> {
                 this.rebalance(parent);
 
             } else if (toRemove.parent.right == toRemove) {
-                toRemove.parent.right = null; // remove parents reference to this
+                toRemove.parent.right = null; // remove parents reference to
+                // this
                 // node
                 this.updateHeight(toRemove.parent);
                 BinaryTreeNode<T> parent = toRemove.parent;
@@ -561,7 +562,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 toRemove.left = null;
                 toRemove.right = null;
 
-                this.treeRoot = smallestRight;
+                treeRoot = smallestRight;
             } else if (toRemove.parent.left == toRemove) {
                 // this is a left child
                 if (smallestRight.parent.left == smallestRight) {
@@ -635,11 +636,11 @@ public class BinaryTree<T extends Comparable<T>> {
      * @param toRemove the object to remove
      */
     public void remove(T toRemove) {
-        BinaryTreeNode<T> nodeToRemove = this.find(toRemove, this.treeRoot);
+        BinaryTreeNode<T> nodeToRemove = this.find(toRemove, treeRoot);
         if (nodeToRemove != null) {
             this.remove(nodeToRemove);
         }
-        --this.size;
+        --size;
     }
 
     /**
@@ -691,7 +692,7 @@ public class BinaryTree<T extends Comparable<T>> {
      * @return the data structures size
      */
     public int size() {
-        return this.size;
+        return size;
     }
 
     /**

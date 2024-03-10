@@ -66,29 +66,29 @@ public class ExprArithmetic extends Node {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
-        if (this.type != null) {
-            result.append(this.type.toString());
+        if (type != null) {
+            result.append(type.toString());
             result.append(" ");
         } else {
             result.append("____ ");
         }
         result.append(this.getClass().getSimpleName());
 
-        if (this.ignoreResult) {
+        if (ignoreResult) {
             result.append(" result_ignored ");
         } else {
             result.append(" result_kept ");
         }
         result.append(" { ");
 
-        final String firstChild = this.children.get(0).toString();
+        final String firstChild = children.get(0).toString();
 
-        final String secondChild = this.children.size() > 1 ? this.children.get(1).toString() : "";
+        final String secondChild = children.size() > 1 ? children.get(1).toString() : "";
 
-        switch (this.operator) {
+        switch (operator) {
             case ADD, SUB:
-                if (this.children.size() == 1) {
-                    result.append(this.operator.getReadable());
+                if (children.size() == 1) {
+                    result.append(operator.getReadable());
                     result.append(firstChild);
                     break;
                 }
@@ -96,34 +96,34 @@ public class ExprArithmetic extends Node {
             case MOD, MUL, DIV:
                 result.append(firstChild);
                 result.append(' ');
-                result.append(this.operator.getReadable());
+                result.append(operator.getReadable());
                 result.append(' ');
                 result.append(secondChild);
                 break;
             case DEC_PREFIX, INC_PREFIX:
-                result.append(this.operator.getReadable());
+                result.append(operator.getReadable());
                 result.append('x');
-                result.append(this.unaryCount);
+                result.append(unaryCount);
                 result.append(' ');
                 result.append(firstChild);
                 break;
             case DEC_SUFFIX, INC_SUFFIX:
                 result.append(firstChild);
                 result.append(' ');
-                result.append(this.operator.getReadable());
+                result.append(operator.getReadable());
                 result.append('x');
-                result.append(this.unaryCount);
+                result.append(unaryCount);
                 break;
             default:
-                result.append(this.operator.toString());
+                result.append(operator.toString());
                 break;
         }
 
-        if (this.children.size() > 2) {
+        if (children.size() > 2) {
             result.append("Extra nodes ( ");
-            for (int i = 2; i < this.children.size(); ++i) {
-                result.append(this.children.get(i).toString());
-                if (i < this.children.size() - 1) {
+            for (int i = 2; i < children.size(); ++i) {
+                result.append(children.get(i).toString());
+                if (i < children.size() - 1) {
                     result.append(", ");
                 }
             }
