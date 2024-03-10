@@ -1223,22 +1223,34 @@ public class PluginManager {
             }
             PluginInfo info = entry.getValue();
             PluginClassLoader loader = loaders.get(entry.getKey());
+            PluginDetails details = new PluginDetails(loader, info, null, PluginState.DISCOVERED);
+
+            pluginDetails.put(info.getName(), details);
+        }
+
+        for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
+            if (skipped.contains(entry.getKey())) {
+                continue;
+            }
+            PluginInfo info = entry.getValue();
+
+            PluginDetails details = pluginDetails.get(info.getName());
 
             Plugin plugin;
             try {
-                plugin = plInstantiatePluginClass(entry.getValue(), loader);
+                plugin = plInstantiatePluginClass(entry.getValue(), details.getClassLoader());
+                details.setPlugin(plugin);
             } catch (InvalidPluginException e) {
                 // The method already logs the problem
                 loaders.remove(entry.getKey());
-                loader.dispose();
+                details.getClassLoader().dispose();
+                pluginDetails.remove(info.getName());
                 continue;
             }
 
-            PluginDetails details = new PluginDetails(loader, info, plugin, PluginState.DISCOVERED);
-
-            pluginDetails.put(info.getName(), details);
             logAlert("ALERT_DISCOVERED", info.getName());
         }
+
         plDependencyResolutionStage();
         plLoadSatisfiedDependencies();
     }
