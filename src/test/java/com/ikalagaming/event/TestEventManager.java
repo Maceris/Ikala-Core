@@ -24,7 +24,7 @@ public class TestEventManager {
     /** Tear down after the tests, destroying the event manager. */
     @AfterAll
     public static void afterClass() {
-        EventManager.destoryInstance();
+        EventManager.destroyInstance();
         EventAssert.stopListeningForEverything();
     }
 

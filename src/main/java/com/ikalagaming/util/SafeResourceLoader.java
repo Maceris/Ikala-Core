@@ -2,12 +2,10 @@ package com.ikalagaming.util;
 
 import com.ikalagaming.localization.Localization;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.helpers.MessageFormatter;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -30,20 +28,19 @@ public class SafeResourceLoader {
      * @return The formatted string.
      * @see #getStringFormatted(String, ResourceBundle, String...)
      */
-    public static String format(String message, String... args) {
+    public static String format(@NonNull String message, String... args) {
         return MessageFormatter.arrayFormat(message, args).getMessage();
     }
 
     /**
      * Returns a string from the supplied bundle. Any errors are printed to console. If no string is
-     * loaded, it attempts to load from the root resource bundle. If it fails again, the name is
-     * returned.
+     * loaded, the name is returned.
      *
      * @param name what to get from the bundle
      * @param from the bundle to use
      * @return the string from the bundle or name
      */
-    public static String getString(String name, ResourceBundle from) {
+    public static String getString(@NonNull String name, @NonNull ResourceBundle from) {
         try {
             return from.getString(name);
         } catch (MissingResourceException missingResource) {
@@ -52,35 +49,20 @@ public class SafeResourceLoader {
             SafeResourceLoader.logClassCastException(name, from.getBaseBundleName());
         }
 
-        ResourceBundle rootOnly =
-                ResourceBundle.getBundle(
-                        from.getBaseBundleName(),
-                        new ResourceBundle.Control() {
-                            @Override
-                            public List<Locale> getCandidateLocales(String n, Locale locale) {
-                                return Collections.singletonList(Locale.ROOT);
-                            }
-                        });
-        try {
-            return rootOnly.getString(name);
-        } catch (MissingResourceException missingResource) {
-            SafeResourceLoader.logMissingResource(name, from.getBaseBundleName());
-        } catch (ClassCastException classCast) {
-            SafeResourceLoader.logClassCastException(name, from.getBaseBundleName());
-        }
         return name;
     }
 
     /**
-     * Returns a string from the supplied bundle. Any errors are printed to console. If no string is
-     * loaded, returns the fallback.
+     * Returns a string from the supplied bundle. Any errors are logged. If no string is loaded,
+     * returns the fallback.
      *
      * @param name what to get from the bundle
      * @param from the bundle to use
      * @param fallback the string to use in the event of failure
      * @return the string from the bundle or the fallback
      */
-    public static String getString(String name, ResourceBundle from, String fallback) {
+    public static String getString(
+            @NonNull String name, @NonNull ResourceBundle from, String fallback) {
         try {
             return from.getString(name);
         } catch (MissingResourceException missingResource) {
@@ -92,15 +74,14 @@ public class SafeResourceLoader {
     }
 
     /**
-     * Returns a string from the supplied bundle. Any errors are printed to console. If no string is
-     * loaded, it attempts to load from the root resource bundle. If it fails again, the name is
-     * returned.
+     * Returns a string from the supplied bundle. Any errors are logged. If no string is loaded, it
+     * attempts to load from the root resource bundle. If it fails again, the name is returned.
      *
      * @param name what to get from the bundle
      * @param from the bundle to use
      * @return the string from the bundle or the fallback
      */
-    public static String getString(String name, String from) {
+    public static String getString(@NonNull String name, @NonNull String from) {
         ResourceBundle bundle;
 
         try {
@@ -112,36 +93,19 @@ public class SafeResourceLoader {
             SafeResourceLoader.logClassCastException(name, from);
         }
 
-        ResourceBundle rootOnly =
-                ResourceBundle.getBundle(
-                        from,
-                        new ResourceBundle.Control() {
-                            @Override
-                            public List<Locale> getCandidateLocales(String n, Locale locale) {
-                                return Collections.singletonList(Locale.ROOT);
-                            }
-                        });
-
-        try {
-            return rootOnly.getString(name);
-        } catch (MissingResourceException missingResource) {
-            SafeResourceLoader.logMissingResource(name, from);
-        } catch (ClassCastException classCast) {
-            SafeResourceLoader.logClassCastException(name, from);
-        }
         return name;
     }
 
     /**
-     * Returns a string from the supplied bundle. Any errors are printed to console. If no string is
-     * loaded, returns the fallback.
+     * Returns a string from the supplied bundle. Any errors are logged. If no string is loaded,
+     * returns the fallback.
      *
      * @param name what to get from the bundle
      * @param from the bundle to use
      * @param fallback the string to use in the event of failure
      * @return the string from the bundle or the fallback
      */
-    public static String getString(String name, String from, String fallback) {
+    public static String getString(@NonNull String name, @NonNull String from, String fallback) {
         ResourceBundle bundle;
         try {
             bundle = ResourceBundle.getBundle(from, Localization.getLocale());
@@ -155,13 +119,12 @@ public class SafeResourceLoader {
     }
 
     /**
-     * Returns a string from the supplied bundle. Any errors are printed to console. If no string is
-     * loaded, it attempts to load from the root resource bundle. If it fails again, the name is
-     * returned.
+     * Returns a string from the supplied bundle. Any errors are logged. If no string is loaded, it
+     * attempts to load from the root resource bundle. If it fails again, the name is returned.
      *
      * <p>The arguments are used to replace any "{}" in the string, intended only for use in
-     * creating messages for exceptions. Strings for logging should not use this method, as it is
-     * inefficient.
+     * creating messages for exceptions. Strings for logging should not use this method, as that is
+     * going through extra steps.
      *
      * @param name what to get from the bundle
      * @param from the bundle to use
@@ -169,7 +132,8 @@ public class SafeResourceLoader {
      * @return The string from the bundle or name, after formatting.
      * @see #format(String, String...)
      */
-    public static String getStringFormatted(String name, ResourceBundle from, String... args) {
+    public static String getStringFormatted(
+            @NonNull String name, @NonNull ResourceBundle from, String... args) {
         return SafeResourceLoader.format(SafeResourceLoader.getString(name, from), args);
     }
 

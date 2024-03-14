@@ -27,7 +27,7 @@ public class EventManager {
      */
     @SuppressWarnings("javadoc")
     @Getter
-    private static ResourceBundle resourceBundle =
+    private static final ResourceBundle resourceBundle =
             ResourceBundle.getBundle("com.ikalagaming.event.Events", Localization.getLocale());
 
     /**
@@ -39,7 +39,7 @@ public class EventManager {
      * @see EventManager#getInstance()
      */
     @Synchronized
-    public static void destoryInstance() {
+    public static void destroyInstance() {
         if (EventManager.instance == null) {
             return;
         }
@@ -53,7 +53,7 @@ public class EventManager {
      * should share. If there is no instance yet, one will be created.
      *
      * @return the static instance of the Event Manager
-     * @see EventManager#destoryInstance()
+     * @see EventManager#destroyInstance()
      */
     @Synchronized
     public static EventManager getInstance() {
@@ -63,9 +63,9 @@ public class EventManager {
         return EventManager.instance;
     }
 
-    private EventDispatcher dispatcher;
+    private final EventDispatcher dispatcher;
 
-    private HashMap<Class<? extends Event>, HandlerList> handlerMap;
+    private final HashMap<Class<? extends Event>, HandlerList> handlerMap;
 
     /**
      * Sets up the event managers handlers and event dispatching and starts the dispatching thread
@@ -140,10 +140,7 @@ public class EventManager {
         } catch (IllegalStateException illegalState) {
             throw illegalState;
         } catch (Exception e) {
-            String err =
-                    SafeResourceLoader.getString("EVT_QUEUE_FULL", "com.ikalagaming.event.strings")
-                            + "in EventManager.fireEvent(Event)";
-            log.warn(err);
+            log.warn(SafeResourceLoader.getString("EVT_QUEUE_FULL", resourceBundle), e);
         }
     }
 
@@ -166,7 +163,7 @@ public class EventManager {
      * @param event the class to find handlers for
      * @return the handlerlist for that class
      */
-    public HandlerList getHandlers(Event event) {
+    HandlerList getHandlers(Event event) {
         return getEventListeners(event.getClass());
     }
 
@@ -205,7 +202,7 @@ public class EventManager {
     public void registerEventListeners(Listener listener) {
         Map<Class<? extends Event>, Set<EventListener>> listMap;
         listMap = createRegisteredListeners(listener);
-        listMap.entrySet().forEach(e -> getEventListeners(e.getKey()).registerAll(e.getValue()));
+        listMap.forEach((key, value) -> getEventListeners(key).registerAll(value));
     }
 
     /**

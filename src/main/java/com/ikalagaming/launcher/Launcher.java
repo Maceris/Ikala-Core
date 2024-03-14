@@ -385,7 +385,7 @@ public class Launcher {
     private static void shutdown() {
         ScriptManager.shutdown();
         PluginManager.destoryInstance();
-        EventManager.destoryInstance();
+        EventManager.destroyInstance();
         Launcher.bundle = null;
     }
 

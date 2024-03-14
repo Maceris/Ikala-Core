@@ -238,7 +238,7 @@ class TestPluginManager {
         String unloadedMessage = String.format("Plugin '%s' should not be loaded.", pluginName);
         assertFalse(realManager.isLoaded(pluginName), unloadedMessage);
         assertFalse(realManager.isEnabled(pluginName), disabledMessage);
-        EventManager.destoryInstance();
+        EventManager.destroyInstance();
     }
 
     /**

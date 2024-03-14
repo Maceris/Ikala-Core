@@ -21,7 +21,7 @@ class EventDispatcher extends Thread {
      */
     private static final long WAIT_TIMEOUT = 1000;
 
-    private ConcurrentLinkedDeque<Event> queue;
+    private final ConcurrentLinkedDeque<Event> queue;
 
     private EventManager eventManager;
 
@@ -29,7 +29,7 @@ class EventDispatcher extends Thread {
     private boolean hasEvents;
 
     /** Used to handle synchronization and waiting for events */
-    private Object syncObject;
+    private final Object syncObject;
 
     /**
      * Creates and starts the thread. It will begin attempting to dispatch events immediately if
