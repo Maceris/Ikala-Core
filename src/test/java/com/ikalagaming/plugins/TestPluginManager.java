@@ -94,7 +94,7 @@ class TestPluginManager {
     /** Tear down after each test, shutting down the framework. */
     @AfterEach
     void afterTest() {
-        PluginManager.destoryInstance();
+        PluginManager.destroyInstance();
     }
 
     /** Set up before each test, initializing the framework. */

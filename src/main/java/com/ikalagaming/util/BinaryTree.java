@@ -1,5 +1,10 @@
 package com.ikalagaming.util;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Objects;
+
 /**
  * A binary AVL tree for storing (comparable) objects. This is not synchronized, so synchronization
  * must be done externally.
@@ -14,7 +19,9 @@ public class BinaryTree<T extends Comparable<T>> {
      * @author Ches Burks
      * @param <R> the Type of object this node holds
      */
-    static class BinaryTreeNode<R extends Comparable<R>> {
+    @Getter
+    @Setter
+    protected static class BinaryTreeNode<R extends Comparable<R>> {
         /** The value stored in this node. */
         protected R key;
 
@@ -32,16 +39,6 @@ public class BinaryTree<T extends Comparable<T>> {
          * the tree.
          */
         protected BinaryTreeNode<R> parent;
-
-        /**
-         * Constructs a new BinaryTree node for the given object with null pointers for left, right,
-         * and parent.
-         *
-         * @param newKey the key to store
-         */
-        public BinaryTreeNode(R newKey) {
-            this(newKey, null, null, null);
-        }
 
         /**
          * Constructs a new BinaryTree node for the given object and children/parent. The other
@@ -63,115 +60,6 @@ public class BinaryTree<T extends Comparable<T>> {
             parent = parentNode;
             right = rightNode;
         }
-
-        /**
-         * Recursively calls delete on all children then removes all references to the children,
-         * parents and keys. Also zeroes the height.
-         */
-        public void delete() {
-            if (left != null) {
-                left.delete();
-            }
-            left = null;
-            if (right != null) {
-                right.delete();
-            }
-            right = null;
-            parent = null;
-            key = null;
-            height = 0;
-        }
-
-        /**
-         * Returns the height of the largest subtree starting at this node. Stored in the node for
-         * speed.
-         *
-         * @return this nodes height
-         */
-        public int getHeight() {
-            return height;
-        }
-
-        /**
-         * Returns the key stored in this node.
-         *
-         * @return the key
-         */
-        public R getKey() {
-            return key;
-        }
-
-        /**
-         * Returns the left child of this node. This will be null if there is no left child.
-         *
-         * @return the left child, or null
-         */
-        public BinaryTreeNode<R> getLeft() {
-            return left;
-        }
-
-        /**
-         * Returns the parent of this node. This will be null if this node is the root of the tree.
-         *
-         * @return the parent, or null
-         */
-        public BinaryTreeNode<R> getParent() {
-            return parent;
-        }
-
-        /**
-         * Returns the right child of this node. This will be null if there is no right child.
-         *
-         * @return the right child, or null
-         */
-        public BinaryTreeNode<R> getRight() {
-            return right;
-        }
-
-        /**
-         * Sets the height of this node.
-         *
-         * @param newHeight the new height of this node
-         */
-        public void setHeight(int newHeight) {
-            height = newHeight;
-        }
-
-        /**
-         * Set the key value stored in this node.
-         *
-         * @param newKey the new key
-         */
-        public void setKey(R newKey) {
-            key = newKey;
-        }
-
-        /**
-         * Sets the left child of this node to the supplied node.
-         *
-         * @param newLeft the new left child
-         */
-        public void setLeft(BinaryTreeNode<R> newLeft) {
-            left = newLeft;
-        }
-
-        /**
-         * Sets the parent of this node to the supplied node.
-         *
-         * @param newParent the new parent
-         */
-        public void setParent(BinaryTreeNode<R> newParent) {
-            parent = newParent;
-        }
-
-        /**
-         * Sets the right child of this node to the supplied node.
-         *
-         * @param newRight the new right child
-         */
-        public void setRight(BinaryTreeNode<R> newRight) {
-            right = newRight;
-        }
     }
 
     /** The base of the tree. This is null if the tree is empty. */
@@ -182,9 +70,6 @@ public class BinaryTree<T extends Comparable<T>> {
 
     /** Removes all objects from the tree. */
     public void clear() {
-        if (treeRoot != null) {
-            treeRoot.delete();
-        }
         treeRoot = null;
         size = 0;
     }
@@ -196,9 +81,7 @@ public class BinaryTree<T extends Comparable<T>> {
      * @return true if the object exists or false if it is not in the tree
      */
     public boolean contains(T toFind) {
-        // true if the find method returns something that is not null
-        // (that is, it exists in the tree)
-        return (this.find(toFind, treeRoot) != null);
+        return this.find(toFind, treeRoot) != null;
     }
 
     /**
@@ -217,15 +100,12 @@ public class BinaryTree<T extends Comparable<T>> {
         if (compareVal == 0) {
             // they match
             return root;
-        } else if (compareVal < 0) {
+        }
+        if (compareVal < 0) {
             // less than the roots value, so in the left subtree
             return this.find(toFind, root.left);
-        } else if (compareVal > 0) {
-            // greater than the roots value, so in the right subtree
-            return this.find(toFind, root.right);
         }
-        // won't reach here but just in case.
-        return null;
+        return this.find(toFind, root.right);
     }
 
     /**
@@ -268,7 +148,7 @@ public class BinaryTree<T extends Comparable<T>> {
         if (root == null) {
             return null;
         }
-        BinaryTreeNode<T> node = root;
+        var node = root;
         while (node.left != null) {
             node = node.left;
         }
@@ -308,21 +188,13 @@ public class BinaryTree<T extends Comparable<T>> {
             theRoot.right.parent = theRoot;
         }
 
-        // update the height
-        /*
-         * recalculate the height of the left node. this will be called on each
-         * parent until the root because this is a recursive function and this
-         * occurs after the recursive function call, so it will update the
-         * height appropriately
-         */
-        theRoot.height = this.max(this.getHeight(theRoot.left), this.getHeight(theRoot.right)) + 1;
+        theRoot.height = Math.max(this.getHeight(theRoot.left), this.getHeight(theRoot.right)) + 1;
 
         int balance = this.getBalance(theRoot);
 
         // if it is unbalanced, handle the 4 special cases
 
-        // single right, because its larger on the left and inserting on
-        // left.left
+        // single right
         if (theRoot.left != null && theRoot.left.key != null) {
             if (balance > 1 && ins.compareTo(theRoot.left.key) < 0) {
                 BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
@@ -331,8 +203,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 }
                 return newRoot;
             }
-            // double right, because its larger on the left and inserting on
-            // left.right
+            // double right
             if (balance > 1 && ins.compareTo(theRoot.left.key) > 0) {
                 theRoot.left = this.leftRotate(theRoot.left);
                 BinaryTreeNode<T> newRoot = this.rightRotate(theRoot);
@@ -342,8 +213,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 return newRoot;
             }
         }
-        // single left, because its larger on the right and its inserting on
-        // right.right
+        // single left
         if (theRoot.right != null && theRoot.right.key != null) {
             if (balance < -1 && ins.compareTo(theRoot.right.key) > 0) {
                 BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
@@ -353,7 +223,7 @@ public class BinaryTree<T extends Comparable<T>> {
                 return newRoot;
             }
             // double left
-            if (balance < -1 && ins.compareTo(theRoot.right.key) > 0) {
+            if (balance < -1 && ins.compareTo(theRoot.right.key) < 0) {
                 theRoot.right = this.rightRotate(theRoot.right);
                 BinaryTreeNode<T> newRoot = this.leftRotate(theRoot);
                 if (newRoot.parent == null) {
@@ -386,68 +256,48 @@ public class BinaryTree<T extends Comparable<T>> {
      * @return the new root
      */
     protected BinaryTreeNode<T> leftRotate(BinaryTreeNode<T> root) {
-        BinaryTreeNode<T> rightChild = root.right;
+        var rightChild = root.right;
         if (rightChild == null) {
             return root;
         }
-        BinaryTreeNode<T> rightsLeftChild = rightChild.left;
+        var rightsLeftChild = rightChild.left;
+        var parent = root.parent;
 
-        // Change root.parents reference to root to root.left
-        if (root.parent != null) {
-            if (root.parent.left == root) {
-                root.parent.left = rightChild;
-            } else if (root.parent.right == root) {
-                root.parent.right = rightChild;
+        // Change root.parents reference to root, to root.left
+        if (parent != null) {
+            if (parent.left == root) {
+                parent.left = rightChild;
+            } else if (parent.right == root) {
+                parent.right = rightChild;
             }
         }
 
         // rotate
         rightChild.left = root;
-        rightChild.parent = root.parent;
+        rightChild.parent = parent;
         root.parent = rightChild;
         root.right = rightsLeftChild;
         if (rightsLeftChild != null) {
             rightsLeftChild.parent = root;
         }
 
-        // update height, starting with the smallest changed child
-        if (rightsLeftChild != null) {
-            this.updateHeight(rightsLeftChild);
-        } else {
-            this.updateHeight(root);
-        }
+        this.updateHeight(Objects.requireNonNullElse(rightsLeftChild, root));
 
         return rightChild;
-    }
-
-    /**
-     * Returns the larger of the two numbers.
-     *
-     * @param a the first number
-     * @param b the second number
-     * @return whichever number is largest
-     */
-    protected int max(int a, int b) {
-        /*
-         * If a is less than b, return b. otherwise, return a.
-         */
-        return (a < b) ? b : a;
     }
 
     /**
      * Rebalances the tree starting at the given the lowest possibly unbalanced node and working up
      * the path to the root.
      *
-     * @param lowest the lowest node in the tree that might be unbalance or was changed
+     * @param lowest the lowest node in the tree that might be unbalanced or was changed
      */
     protected void rebalance(BinaryTreeNode<T> lowest) {
         if (lowest == null) {
             return;
         }
         int balance = this.getBalance(lowest);
-        // single right, because its larger on the left and inserting on
-        // left.left
-        BinaryTreeNode<T> newLowest = lowest;
+        var newLowest = lowest;
         if (balance > 1) {
             // left is too big
             newLowest = this.rightRotate(lowest);
@@ -465,169 +315,133 @@ public class BinaryTree<T extends Comparable<T>> {
      */
     protected void remove(BinaryTreeNode<T> toRemove) {
         if (toRemove == null) {
-            return; // just ignore it
+            return;
         }
 
-        // If and only if only one child is not null. (a logical exclusive or)
-        // Basically, there is a child but only one child.
-        if ((toRemove.left == null) != (toRemove.right == null)) {
-            // set this nodes child's parent pointer to this nodes parent
-            // if its null then those are the new root.
-            BinaryTreeNode<T> child;
-            if (toRemove.left != null) {
-                // its the left child
-                child = toRemove.left;
-                toRemove.left.parent = toRemove.parent;
-            } else {
-                // its the right child
-                child = toRemove.right;
-                toRemove.right.parent = toRemove.parent;
-            }
+        var parent = toRemove.parent;
 
-            if (toRemove.parent == null) {
+        // There is a child, but only one child.
+        if ((toRemove.left == null) != (toRemove.right == null)) {
+            BinaryTreeNode<T> child =
+                    Objects.requireNonNullElseGet(toRemove.left, () -> toRemove.right);
+            child.parent = toRemove.parent;
+
+            if (parent == null) {
                 // this is the root node
                 treeRoot = child;
                 this.updateHeight(treeRoot);
-            } else if (toRemove.parent.left == toRemove) {
-                // this is a left child
-                toRemove.parent.left = child;
-                child.parent = toRemove.parent;
+            } else if (toRemove == parent.left) {
+                parent.left = child;
                 this.updateHeight(child);
-            } else if (toRemove.parent.right == toRemove) {
-                // this is a right child
-                toRemove.parent.right = child;
-                child.parent = toRemove.parent;
+            } else if (toRemove == parent.right) {
+                parent.right = child;
                 this.updateHeight(child);
             }
             this.rebalance(child);
+            return;
         }
         /*
-         * No children, just delete this node. this works because the null
-         * status of both children is the same, so only checking one is fine
-         * (and faster)
+         * No children, just delete this node.
          */
-        else if (toRemove.left == null) {
-            if (toRemove.parent == null) {
+        if (toRemove.left == null) {
+            if (parent == null) {
                 // this is the root node, and the only node in the tree
                 treeRoot = null;
-            } else if (toRemove.parent.left == toRemove) {
-                // its a left child
-                toRemove.parent.left = null; // remove parents reference to this
-                // node
-                this.updateHeight(toRemove.parent);
-                BinaryTreeNode<T> parent = toRemove.parent;
-                toRemove.parent = null;
+            } else if (toRemove == parent.left) {
+                // it's a left child
+                parent.left = null;
+                this.updateHeight(parent);
                 this.rebalance(parent);
-
-            } else if (toRemove.parent.right == toRemove) {
-                toRemove.parent.right = null; // remove parents reference to
-                // this
-                // node
-                this.updateHeight(toRemove.parent);
-                BinaryTreeNode<T> parent = toRemove.parent;
-                toRemove.parent = null;
+            } else if (parent.right == toRemove) {
+                parent.right = null;
+                this.updateHeight(parent);
+                parent = null;
                 this.rebalance(parent);
             }
+            return;
         }
         /*
          * There are two children Because the null status of both children is
          * the same and the children can't be null because of the previous else
          * in the if-else chain
          */
-        else {
-            BinaryTreeNode<T> smallestRight = this.getSmallestSubnode(toRemove.right);
-            BinaryTreeNode<T> parent = smallestRight.parent;
-            if (toRemove.parent == null) {
-                // this is the root node
-                if (smallestRight.parent.left == smallestRight) {
-                    smallestRight.parent.left = null;
-                } else if (smallestRight.parent.right == smallestRight) {
-                    smallestRight.parent.right = null;
-                }
-                if (toRemove.left != null && toRemove.left != smallestRight) {
-                    toRemove.left.parent = smallestRight;
-                }
-                if (toRemove.right != null && toRemove.right != smallestRight) {
-                    toRemove.right.parent = smallestRight;
-                }
-                if (toRemove.left != smallestRight) {
-                    smallestRight.left = toRemove.left;
-                }
-                if (toRemove.right != smallestRight) {
-                    smallestRight.right = toRemove.right;
-                }
-                smallestRight.parent = null;
-
-                toRemove.parent = null;
-                toRemove.left = null;
-                toRemove.right = null;
-
-                treeRoot = smallestRight;
-            } else if (toRemove.parent.left == toRemove) {
-                // this is a left child
-                if (smallestRight.parent.left == smallestRight) {
-                    smallestRight.parent.left = null;
-                } else if (smallestRight.parent.right == smallestRight) {
-                    smallestRight.parent.right = null;
-                }
-                if (toRemove.left != null && toRemove.left != smallestRight) {
-                    toRemove.left.parent = smallestRight;
-                }
-                if (toRemove.right != null && toRemove.right != smallestRight) {
-                    toRemove.right.parent = smallestRight;
-                }
-
-                toRemove.parent.left = smallestRight;
-                if (toRemove.left != smallestRight) {
-                    smallestRight.left = toRemove.left;
-                }
-                if (toRemove.right != smallestRight) {
-                    smallestRight.right = toRemove.right;
-                }
-                smallestRight.parent = toRemove.parent;
-                toRemove.parent = null;
-                toRemove.left = null;
-                toRemove.right = null;
-            } else if (toRemove.parent.right == toRemove) {
-                // this is a right child
-                if (toRemove.left != null) {
-                    toRemove.left.parent = smallestRight;
-                }
-                if (toRemove.right != null) {
-                    toRemove.right.parent = smallestRight;
-                }
-
-                if (smallestRight.parent.left == smallestRight) {
-                    smallestRight.parent.left = null;
-                } else if (smallestRight.parent.right == smallestRight) {
-                    smallestRight.parent.right = null;
-                }
-
-                toRemove.parent.right = smallestRight;
-
-                if (toRemove.left != smallestRight) {
-                    smallestRight.left = toRemove.left;
-                }
-                if (toRemove.right != smallestRight) {
-                    smallestRight.right = toRemove.right;
-                }
-                smallestRight.parent = toRemove.parent;
-                toRemove.parent = null;
-                toRemove.left = null;
-                toRemove.right = null;
+        var smallestRight = this.getSmallestSubnode(toRemove.right);
+        var newParent = smallestRight.parent;
+        if (parent == null) {
+            // this is the root node
+            if (newParent.left == smallestRight) {
+                newParent.left = null;
+            } else if (newParent.right == smallestRight) {
+                newParent.right = null;
+            }
+            if (toRemove.left != null && toRemove.left != smallestRight) {
+                toRemove.left.parent = smallestRight;
+            }
+            if (toRemove.right != null && toRemove.right != smallestRight) {
+                toRemove.right.parent = smallestRight;
+            }
+            if (toRemove.left != smallestRight) {
+                smallestRight.left = toRemove.left;
+            }
+            if (toRemove.right != smallestRight) {
+                smallestRight.right = toRemove.right;
             }
 
-            // update heights and balance
-            if (parent != null) {
-                this.updateHeight(parent);
-                this.rebalance(parent);
-            } else {
-                this.updateHeight(smallestRight);
-                this.rebalance(smallestRight);
+            treeRoot = smallestRight;
+        } else if (parent.left == toRemove) {
+            // this is a left child
+            if (newParent.left == smallestRight) {
+                newParent.left = null;
+            } else if (newParent.right == smallestRight) {
+                newParent.right = null;
+            }
+            if (toRemove.left != null && toRemove.left != smallestRight) {
+                toRemove.left.parent = smallestRight;
+            }
+            if (toRemove.right != null && toRemove.right != smallestRight) {
+                toRemove.right.parent = smallestRight;
+            }
+
+            parent.left = smallestRight;
+            if (toRemove.left != smallestRight) {
+                smallestRight.left = toRemove.left;
+            }
+            if (toRemove.right != smallestRight) {
+                smallestRight.right = toRemove.right;
+            }
+        } else if (parent.right == toRemove) {
+            // this is a right child
+            if (toRemove.left != null) {
+                toRemove.left.parent = smallestRight;
+            }
+            if (toRemove.right != null) {
+                toRemove.right.parent = smallestRight;
+            }
+
+            if (newParent.left == smallestRight) {
+                newParent.left = null;
+            } else if (newParent.right == smallestRight) {
+                newParent.right = null;
+            }
+
+            parent.right = smallestRight;
+
+            if (toRemove.left != smallestRight) {
+                smallestRight.left = toRemove.left;
+            }
+            if (toRemove.right != smallestRight) {
+                smallestRight.right = toRemove.right;
             }
         }
-        // ensure the element to remove is gone
-        toRemove.delete();
+
+        // update heights and balance
+        if (parent != null) {
+            this.updateHeight(parent);
+            this.rebalance(parent);
+        } else {
+            this.updateHeight(smallestRight);
+            this.rebalance(smallestRight);
+        }
     }
 
     /**
@@ -636,7 +450,7 @@ public class BinaryTree<T extends Comparable<T>> {
      * @param toRemove the object to remove
      */
     public void remove(T toRemove) {
-        BinaryTreeNode<T> nodeToRemove = this.find(toRemove, treeRoot);
+        var nodeToRemove = this.find(toRemove, treeRoot);
         if (nodeToRemove != null) {
             this.remove(nodeToRemove);
         }
@@ -652,47 +466,35 @@ public class BinaryTree<T extends Comparable<T>> {
      * @return the new root
      */
     protected BinaryTreeNode<T> rightRotate(BinaryTreeNode<T> root) {
-        BinaryTreeNode<T> leftChild = root.left;
+        var leftChild = root.left;
         if (leftChild == null) {
             return root;
         }
-        BinaryTreeNode<T> leftsRightChild = leftChild.right;
+        var leftsRightChild = leftChild.right;
+
+        var parent = root.parent;
 
         // Change root.parents reference to root to the root.left
-        if (root.parent != null) {
-            if (root.parent.left == root) {
-                root.parent.left = leftChild;
-            } else if (root.parent.right == root) {
-                root.parent.right = leftChild;
+        if (parent != null) {
+            if (parent.left == root) {
+                parent.left = leftChild;
+            } else if (parent.right == root) {
+                parent.right = leftChild;
             }
         }
 
         // rotate
         leftChild.right = root;
-        leftChild.parent = root.parent;
+        leftChild.parent = parent;
         root.parent = leftChild;
         root.left = leftsRightChild;
         if (leftsRightChild != null) {
             leftsRightChild.parent = root;
         }
 
-        // update height, starting with the smallest changed child
-        if (leftsRightChild != null) {
-            this.updateHeight(leftsRightChild);
-        } else {
-            this.updateHeight(root);
-        }
+        this.updateHeight(Objects.requireNonNullElse(leftsRightChild, root));
 
         return leftChild;
-    }
-
-    /**
-     * Returns the number of elements in this tree.
-     *
-     * @return the data structures size
-     */
-    public int size() {
-        return size;
     }
 
     /**
@@ -704,7 +506,7 @@ public class BinaryTree<T extends Comparable<T>> {
         if (changed == null) {
             return;
         }
-        changed.height = this.max(this.getHeight(changed.left), this.getHeight(changed.right)) + 1;
+        changed.height = Math.max(this.getHeight(changed.left), this.getHeight(changed.right)) + 1;
         if (changed.parent != null) {
             this.updateHeight(changed.parent);
         }

@@ -384,7 +384,7 @@ public class Launcher {
     /** Shut down all the main systems, unloads everything. */
     private static void shutdown() {
         ScriptManager.shutdown();
-        PluginManager.destoryInstance();
+        PluginManager.destroyInstance();
         EventManager.destroyInstance();
         Launcher.bundle = null;
     }

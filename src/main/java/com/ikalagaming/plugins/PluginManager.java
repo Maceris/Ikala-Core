@@ -82,7 +82,7 @@ public class PluginManager {
      * @see #getInstance()
      */
     @Synchronized
-    public static void destoryInstance() {
+    public static void destroyInstance() {
         if (PluginManager.instance == null) {
             return;
         }
@@ -96,7 +96,7 @@ public class PluginManager {
      * should share. If there is no instance yet, one will be created.
      *
      * @return The static instance of the Plugin Manager.
-     * @see PluginManager#destoryInstance()
+     * @see PluginManager#destroyInstance()
      */
     @Synchronized
     public static PluginManager getInstance() {
@@ -113,7 +113,7 @@ public class PluginManager {
      *
      * @param eventManager The event manager to use.
      * @return The static instance of the Plugin Manager.
-     * @see PluginManager#destoryInstance()
+     * @see PluginManager#destroyInstance()
      */
     @Synchronized
     public static PluginManager getInstance(EventManager eventManager) {
