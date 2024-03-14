@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated resource loader to use SLF4j string formatting
 - Changed plugin commands to use lists instead of arrays
 
+### Removed
+- AVLTreeMap class
+
 ## [0.5.0] - 2023-05-31
 ### Added
 - Ability to add stages to run as part of the core loop
