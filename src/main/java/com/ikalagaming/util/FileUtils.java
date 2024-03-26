@@ -50,7 +50,6 @@ public class FileUtils {
      * @return true if the folder was created, otherwise false
      */
     public static boolean createFolder(@NonNull String path, @NonNull String folderName) {
-
         try {
             File f = new File(path + folderName);
             if (f.exists()) {

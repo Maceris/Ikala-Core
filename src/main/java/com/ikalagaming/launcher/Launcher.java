@@ -61,7 +61,7 @@ public class Launcher {
 
     private static ResourceBundle bundle;
 
-    private static List<LoopStage> mainThreadStages;
+    private static final List<LoopStage> mainThreadStages = new ArrayList<>();
 
     /** The status for a main thread stage indicating everything is fine. */
     public static final int STATUS_OK = 0;
@@ -72,7 +72,7 @@ public class Launcher {
     /** The status for when a stage wants to remove itself. */
     public static final int STATUS_REQUEST_REMOVAL = -2;
 
-    private static AtomicBoolean shouldShutdown = new AtomicBoolean(false);
+    private static final AtomicBoolean shouldShutdown = new AtomicBoolean(false);
 
     /** Used to exit the program. */
     private static String stopCommand;
@@ -96,7 +96,6 @@ public class Launcher {
 
     /** Set up the main systems. */
     public static void initialize() {
-        Launcher.mainThreadStages = new ArrayList<>();
         Launcher.bundle =
                 ResourceBundle.getBundle(
                         "com.ikalagaming.launcher.Launcher", Localization.getLocale());
@@ -371,7 +370,7 @@ public class Launcher {
             PluginFolder.createFolder(plugin);
             for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType.values()) {
                 if (!PluginFolder.createResourceFolder(plugin, resourceType)) {
-                    log.warn(
+                    log.debug(
                             SafeResourceLoader.getStringFormatted(
                                     "ERROR_CREATE_RESOURCE_FOLDER",
                                     Launcher.bundle,

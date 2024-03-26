@@ -88,7 +88,7 @@ public class PluginFolder {
     }
 
     /**
-     * Delete a directory and all files and sub-directories.
+     * Delete a directory and all files and subdirectories.
      *
      * @param toDelete The folder to delete.
      * @return True on success, false on a failure.
