@@ -51,10 +51,10 @@ public class SystemProperties {
      * @return the programs home directory
      */
     public static String getHomeDir() {
-        if (SystemProperties.homeDirectory == null) {
-            SystemProperties.obtainHomeDir();
+        if (homeDirectory == null) {
+            obtainHomeDir();
         }
-        return SystemProperties.homeDirectory;
+        return homeDirectory;
     }
 
     /**
@@ -72,10 +72,10 @@ public class SystemProperties {
      * @return the name of the OS
      */
     public static String getOS() {
-        if (SystemProperties.operatingSystem == null) {
-            SystemProperties.obtainOS();
+        if (operatingSystem == null) {
+            obtainOS();
         }
-        return SystemProperties.operatingSystem;
+        return operatingSystem;
     }
 
     /**
@@ -124,25 +124,25 @@ public class SystemProperties {
      * folder path.
      */
     private static void obtainHomeDir() {
-        if (SystemProperties.operatingSystem == null) {
-            SystemProperties.obtainOS();
+        if (operatingSystem == null) {
+            obtainOS();
         }
         String theDir = "";
-        if ("WINDOWS".equals(SystemProperties.operatingSystem)) {
+        if ("WINDOWS".equals(operatingSystem)) {
             theDir = System.getenv("APPDATA");
-        } else if ("MAC".equals(SystemProperties.operatingSystem)) {
+        } else if ("MAC".equals(operatingSystem)) {
             theDir =
                     System.getProperty("user.home")
                             + File.separator
                             + "Library"
                             + File.separator
                             + "Application Support";
-        } else if ("LINUX".equals(SystemProperties.operatingSystem)) {
+        } else if ("LINUX".equals(operatingSystem)) {
             theDir = System.getProperty("user.home");
         } else {
             theDir = System.getProperty("user.dir");
         }
-        SystemProperties.homeDirectory = theDir;
+        homeDirectory = theDir;
     }
 
     /** Determines what operating system is running and sets the OS string. */
@@ -158,7 +158,7 @@ public class SystemProperties {
         } else {
             toSet = "UNKNOWN";
         }
-        SystemProperties.operatingSystem = toSet;
+        operatingSystem = toSet;
     }
 
     /** Private constructor so that this class is not instantiated. */
