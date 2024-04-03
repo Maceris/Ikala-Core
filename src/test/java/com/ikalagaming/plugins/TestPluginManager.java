@@ -38,7 +38,27 @@ import java.util.stream.Stream;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TestPluginManager {
 
+    private static enum VersionComparison {
+        NEWER,
+        EQUAL,
+        OLDER;
+    }
+
+    private static Stream<Arguments> versionProvider() {
+        return Stream.of(
+                Arguments.of(
+                        "1.0.0-rc.1+build.1", "1.3.7+build.2.b8f12d7", VersionComparison.OLDER),
+                Arguments.of("2.3.4-rc.1", "2.3.4", VersionComparison.OLDER),
+                Arguments.of("3.0.0", "3.0.0", VersionComparison.EQUAL),
+                Arguments.of("1.0.0-beta", "1.0.0-beta", VersionComparison.EQUAL),
+                Arguments.of("1.0.0-rc.1+build.1", "1.0.0-rc.1+build.2", VersionComparison.EQUAL),
+                Arguments.of("3.0.0", "2.5.3", VersionComparison.NEWER),
+                Arguments.of(
+                        "1.3.7+build.2.b8f12d7", "1.0.0-rc.1+build.1", VersionComparison.NEWER));
+    }
+
     @Mock private EventManager eventManager;
+
     private PluginManager pluginManager;
 
     /** The resources folder where the test jars are located. */
@@ -322,24 +342,5 @@ class TestPluginManager {
 
         assertTrue(resultMatches);
         assertTrue(newerMatches);
-    }
-
-    private static Stream<Arguments> versionProvider() {
-        return Stream.of(
-                Arguments.of(
-                        "1.0.0-rc.1+build.1", "1.3.7+build.2.b8f12d7", VersionComparison.OLDER),
-                Arguments.of("2.3.4-rc.1", "2.3.4", VersionComparison.OLDER),
-                Arguments.of("3.0.0", "3.0.0", VersionComparison.EQUAL),
-                Arguments.of("1.0.0-beta", "1.0.0-beta", VersionComparison.EQUAL),
-                Arguments.of("1.0.0-rc.1+build.1", "1.0.0-rc.1+build.2", VersionComparison.EQUAL),
-                Arguments.of("3.0.0", "2.5.3", VersionComparison.NEWER),
-                Arguments.of(
-                        "1.3.7+build.2.b8f12d7", "1.0.0-rc.1+build.1", VersionComparison.NEWER));
-    }
-
-    private static enum VersionComparison {
-        NEWER,
-        EQUAL,
-        OLDER;
     }
 }

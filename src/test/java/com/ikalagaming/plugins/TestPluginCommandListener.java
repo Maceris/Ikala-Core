@@ -55,17 +55,6 @@ class TestPluginCommandListener {
         listener = new PluginCommandListener(manager);
     }
 
-    /** Tests that we properly forward commands without arguments. */
-    @Test
-    void testPluginCommandSentWithoutArguments() {
-        var event = new PluginCommandSent(intendedCommandName);
-
-        listener.onPluginCommand(event);
-
-        verify(intendedConsumer).accept(List.of());
-        verify(otherConsumer, never()).accept(List.of());
-    }
-
     /** Tests that we properly forward commands with arguments. */
     @Test
     void testPluginCommandSentWithArguments() {
@@ -76,5 +65,16 @@ class TestPluginCommandListener {
 
         verify(intendedConsumer).accept(List.of(argument));
         verify(otherConsumer, never()).accept(List.of(argument));
+    }
+
+    /** Tests that we properly forward commands without arguments. */
+    @Test
+    void testPluginCommandSentWithoutArguments() {
+        var event = new PluginCommandSent(intendedCommandName);
+
+        listener.onPluginCommand(event);
+
+        verify(intendedConsumer).accept(List.of());
+        verify(otherConsumer, never()).accept(List.of());
     }
 }
