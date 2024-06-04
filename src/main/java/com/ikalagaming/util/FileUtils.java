@@ -143,6 +143,9 @@ public class FileUtils {
      */
     public static String readAsString(@NonNull File file) {
         if (!file.exists() || !file.canRead() || !file.isFile()) {
+            log.warn(
+                    SafeResourceLoader.getString("FILE_NOT_FOUND", Utilities.getResourceBundle()),
+                    file.getAbsolutePath());
             return "";
         }
         StringBuilder contentBuilder = new StringBuilder();
@@ -150,7 +153,10 @@ public class FileUtils {
         try (Stream<String> stream = Files.lines(file.toPath(), StandardCharsets.UTF_8)) {
             stream.forEach(line -> contentBuilder.append(line).append("\n"));
         } catch (IOException e) {
-            log.warn("Exception occurred reading file", e);
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "FILE_READING_ERROR", Utilities.getResourceBundle()),
+                    e);
         }
 
         return contentBuilder.toString();
