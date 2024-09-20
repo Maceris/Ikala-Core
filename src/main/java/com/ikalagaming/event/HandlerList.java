@@ -2,6 +2,7 @@ package com.ikalagaming.event;
 
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.NonNull;
 import lombok.Synchronized;
 
 import java.util.ArrayDeque;
@@ -39,10 +40,10 @@ class HandlerList {
         // A temporary list of entries
         ArrayDeque<EventListener> entries = new ArrayDeque<>();
 
-        // add all of the listeners, in priority order, to the entries list
-        this.handlerSlots.entrySet().forEach(entry -> entries.addAll(entry.getValue()));
+        // add all the listeners, in priority order, to the entries list
+        this.handlerSlots.forEach((key, value) -> entries.addAll(value));
         // bake the list into an array
-        this.bakedList = entries.toArray(new EventListener[entries.size()]);
+        this.bakedList = entries.toArray(new EventListener[0]);
     }
 
     /**
@@ -65,7 +66,7 @@ class HandlerList {
      * @throws IllegalStateException if the listener is already registered
      */
     @Synchronized
-    public void register(EventListener listener) {
+    public void register(@NonNull EventListener listener) {
         if (this.handlerSlots.get(listener.getOrder()).contains(listener)) {
             throw new IllegalStateException(
                     SafeResourceLoader.getStringFormatted(
@@ -82,10 +83,8 @@ class HandlerList {
      *
      * @param listeners The collection to register
      */
-    public void registerAll(Collection<EventListener> listeners) {
-        for (EventListener listener : listeners) {
-            register(listener);
-        }
+    public void registerAll(@NonNull Collection<EventListener> listeners) {
+        listeners.forEach(this::register);
     }
 
     /**
@@ -94,7 +93,7 @@ class HandlerList {
      * @param listener The listener to unregister
      */
     @Synchronized
-    public void unregister(EventListener listener) {
+    public void unregister(@NonNull EventListener listener) {
         if (this.handlerSlots.get(listener.getOrder()).remove(listener)) {
             this.bakedList = null;
         }
@@ -106,7 +105,7 @@ class HandlerList {
      * @param listener listener to remove
      */
     @Synchronized
-    public void unregister(Listener listener) {
+    public void unregister(@NonNull Listener listener) {
         // go through each priority
         this.handlerSlots
                 .values()

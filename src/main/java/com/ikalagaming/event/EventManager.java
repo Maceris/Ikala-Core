@@ -4,6 +4,7 @@ import com.ikalagaming.localization.Localization;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,7 +84,7 @@ public class EventManager {
      * @return A map of events to a set of EventListeners belonging to it
      */
     private Map<Class<? extends Event>, Set<EventListener>> createRegisteredListeners(
-            Listener listener) {
+            @NonNull Listener listener) {
 
         Map<Class<? extends Event>, Set<EventListener>> toReturn = new HashMap<>();
 
@@ -102,7 +103,7 @@ public class EventManager {
             /*
              * We need the method to be publicly visible so that it can be
              * called and passed events. SonarLint java:S3011 complains about
-             * this but we don't have much better options.
+             * this, but we don't have much better options.
              */
             method.setAccessible(true); // NOSONAR
 
@@ -150,7 +151,7 @@ public class EventManager {
      * @param type the type of event to find handlers for
      * @return the map of handlers for the given type
      */
-    private HandlerList getEventListeners(Class<? extends Event> type) {
+    private HandlerList getEventListeners(@NonNull Class<? extends Event> type) {
         synchronized (handlerMap) {
             handlerMap.computeIfAbsent(type, ignored -> new HandlerList());
             return handlerMap.get(type);
@@ -163,7 +164,7 @@ public class EventManager {
      * @param event the class to find handlers for
      * @return the handlerlist for that class
      */
-    HandlerList getHandlers(Event event) {
+    HandlerList getHandlers(@NonNull Event event) {
         return getEventListeners(event.getClass());
     }
 
@@ -173,7 +174,7 @@ public class EventManager {
      * @param <T> The type of event we are recording a listener for.
      * @param monitor The listener to register.
      */
-    <T extends Event> void registerEventListeners(EventMonitor<T> monitor) {
+    <T extends Event> void registerEventListeners(@NonNull EventMonitor<T> monitor) {
 
         @SuppressWarnings("unchecked")
         EventExecutor executor =
@@ -199,7 +200,7 @@ public class EventManager {
      *
      * @param listener The listener to register
      */
-    public void registerEventListeners(Listener listener) {
+    public void registerEventListeners(@NonNull Listener listener) {
         Map<Class<? extends Event>, Set<EventListener>> listMap;
         listMap = createRegisteredListeners(listener);
         listMap.forEach((key, value) -> getEventListeners(key).registerAll(value));
@@ -210,7 +211,7 @@ public class EventManager {
      *
      * @param loader The new loader to use.
      */
-    public void setThreadClassloader(ClassLoader loader) {
+    public void setThreadClassloader(@NonNull ClassLoader loader) {
         dispatcher.setContextClassLoader(loader);
     }
 
@@ -236,7 +237,7 @@ public class EventManager {
      *
      * @param listener The listener to unregister
      */
-    public void unregisterEventListeners(Listener listener) {
+    public void unregisterEventListeners(@NonNull Listener listener) {
         synchronized (handlerMap) {
             handlerMap.values().forEach(list -> list.unregister(listener));
         }
