@@ -244,6 +244,52 @@ public class FloatArrayList extends AbstractList<Float>
         return true;
     }
 
+    /**
+     * Push a float onto the stack, equivalent to adding to the end of the list.
+     *
+     * @param e The float to add.
+     * @return If we were successful.
+     */
+    public boolean push(float e) {
+        ++modCount;
+        add(e, contents, size);
+        return true;
+    }
+
+    /**
+     * Returns the top of the stack (last element in the list).
+     *
+     * @return The last element in the list.
+     * @see #isEmpty()
+     * @see #pop()
+     * @throws EmptyStackException if the list is empty.
+     */
+    public float peek() {
+        if (isEmpty()) {
+            throw new EmptyStackException();
+        }
+        return contents[size - 1];
+    }
+
+    /**
+     * Remove and return the top item of the stack (last element in the list).
+     *
+     * @return The last element of the list.
+     * @see #isEmpty()
+     * @see #peek()
+     * @throws EmptyStackException if the list is empty.
+     */
+    public float pop() {
+        if (isEmpty()) {
+            throw new EmptyStackException();
+        }
+        ++modCount;
+        final int newSize = size - 1;
+        float value = contents[newSize];
+        size = newSize;
+        return value;
+    }
+
     @Override
     public void add(int index, Float element) {
         Objects.checkIndex(index, size - 1);
