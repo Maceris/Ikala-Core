@@ -12,23 +12,23 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
-public class FloatArrayList extends AbstractList<Float>
-        implements List<Float>, RandomAccess, Cloneable, java.io.Serializable {
+public class IntArrayList extends AbstractList<Integer>
+        implements List<Integer>, RandomAccess, Cloneable, Serializable {
 
     private static final int DEFAULT_CAPACITY = 16;
     private static final int SOFT_MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;
 
     /** Shared instance to use for empty lists. */
-    private static final float[] EMPTY_LIST = {};
+    private static final int[] EMPTY_LIST = {};
 
     /** Shared instance to use for empty lists that have never had anything added to them. */
-    private static final float[] DEFAULT_EMPTY_LIST = {};
+    private static final int[] DEFAULT_EMPTY_LIST = {};
 
-    private transient float[] contents;
+    private transient int[] contents;
     private int size;
 
     /** Create an empty list with a capacity of 16. */
-    public FloatArrayList() {
+    public IntArrayList() {
         this.contents = DEFAULT_EMPTY_LIST;
     }
 
@@ -38,33 +38,33 @@ public class FloatArrayList extends AbstractList<Float>
      * @param initialCapacity The initial capacity, which must be >= 0.
      * @throws IllegalArgumentException if the initial capacity is negative
      */
-    public FloatArrayList(int initialCapacity) {
+    public IntArrayList(int initialCapacity) {
         if (initialCapacity < 0) {
             throw new IllegalArgumentException("Initial capacity must not be negative");
         } else if (initialCapacity == 0) {
             this.contents = EMPTY_LIST;
         } else {
-            this.contents = new float[initialCapacity];
+            this.contents = new int[initialCapacity];
         }
     }
 
-    public FloatArrayList(@NonNull Collection<? extends Number> other) {
+    public IntArrayList(@NonNull Collection<? extends Number> other) {
         Object[] array = other.toArray();
         this.size = array.length;
 
         if (size == 0) {
             this.contents = EMPTY_LIST;
         } else {
-            this.contents = new float[array.length];
+            this.contents = new int[array.length];
             for (int i = 0; i < array.length; ++i) {
-                this.contents[i] = (float) array[i];
+                this.contents[i] = (int) array[i];
             }
         }
     }
 
-    public FloatArrayList(@NonNull FloatArrayList other) {
+    public IntArrayList(@NonNull IntArrayList other) {
         this.size = other.size;
-        this.contents = new float[other.contents.length];
+        this.contents = new int[other.contents.length];
         System.arraycopy(other.contents, 0, this.contents, 0, other.contents.length);
     }
 
@@ -100,18 +100,18 @@ public class FloatArrayList extends AbstractList<Float>
         return Math.max(minLength, SOFT_MAX_ARRAY_LENGTH);
     }
 
-    private float[] grow(int minCapacity) {
+    private int[] grow(int minCapacity) {
         int oldCapacity = contents.length;
         if (oldCapacity > 0 || contents != DEFAULT_EMPTY_LIST) {
             int newCapacity = newLength(oldCapacity, minCapacity - oldCapacity, oldCapacity >> 1);
             contents = Arrays.copyOf(contents, newCapacity);
         } else {
-            contents = new float[Math.max(DEFAULT_CAPACITY, minCapacity)];
+            contents = new int[Math.max(DEFAULT_CAPACITY, minCapacity)];
         }
         return contents;
     }
 
-    private float[] grow() {
+    private int[] grow() {
         return grow(size + 1);
     }
 
@@ -135,7 +135,7 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     private int indexOfWithinRange(Object o, int start, int end) {
-        float[] localContents = contents;
+        int[] localContents = contents;
         if (o == null) {
             return -1;
         }
@@ -153,7 +153,7 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     private int lastIndexOfWithinRange(Object o, int start, int end) {
-        float[] localContents = contents;
+        int[] localContents = contents;
         if (o == null) {
             return -1;
         }
@@ -168,7 +168,7 @@ public class FloatArrayList extends AbstractList<Float>
     public Object clone() { // NOSONAR
         // ArrayList and kin have this, we are trying to be as functionally close as possible
         try {
-            FloatArrayList other = (FloatArrayList) super.clone();
+            IntArrayList other = (IntArrayList) super.clone();
             other.contents = Arrays.copyOf(contents, size);
             other.modCount = 0;
             return other;
@@ -179,7 +179,7 @@ public class FloatArrayList extends AbstractList<Float>
 
     @Override
     public Object @NonNull [] toArray() {
-        Float[] result = new Float[size];
+        Integer[] result = new Integer[size];
         for (int i = 0; i < size; ++i) {
             // They need to be boxed.
             result[i] = contents[i]; // NOSONAR
@@ -198,32 +198,32 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public Float get(int index) {
+    public Integer get(int index) {
         Objects.checkIndex(index, size);
         return contents[index];
     }
 
-    public float getFloat(int index) {
+    public int getInt(int index) {
         Objects.checkIndex(index, size);
         return contents[index];
     }
 
     @Override
-    public Float set(int index, Float element) {
+    public Integer set(int index, Integer element) {
         Objects.checkIndex(index, size);
-        float oldValue = contents[index];
+        int oldValue = contents[index];
         contents[index] = element;
         return oldValue;
     }
 
-    public float setFloat(int index, float element) {
+    public int setInt(int index, int element) {
         Objects.checkIndex(index, size);
-        float oldValue = contents[index];
+        int oldValue = contents[index];
         contents[index] = element;
         return oldValue;
     }
 
-    private void add(Float e, float[] data, int s) {
+    private void add(Integer e, int[] data, int s) {
         if (s == data.length) {
             data = grow();
         }
@@ -232,25 +232,25 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public boolean add(Float e) {
+    public boolean add(Integer e) {
         ++modCount;
         add(e, contents, size);
         return true;
     }
 
-    public boolean addFloat(float e) {
+    public boolean addInt(int e) {
         ++modCount;
         add(e, contents, size);
         return true;
     }
 
     /**
-     * Push a float onto the stack, equivalent to adding to the end of the list.
+     * Push an int onto the stack, equivalent to adding to the end of the list.
      *
-     * @param e The float to add.
+     * @param e The int to add.
      * @return If we were successful.
      */
-    public boolean push(float e) {
+    public boolean push(int e) {
         ++modCount;
         add(e, contents, size);
         return true;
@@ -264,7 +264,7 @@ public class FloatArrayList extends AbstractList<Float>
      * @see #pop()
      * @throws EmptyStackException if the list is empty.
      */
-    public float peek() {
+    public int peek() {
         if (isEmpty()) {
             throw new EmptyStackException();
         }
@@ -279,23 +279,23 @@ public class FloatArrayList extends AbstractList<Float>
      * @see #peek()
      * @throws EmptyStackException if the list is empty.
      */
-    public float pop() {
+    public int pop() {
         if (isEmpty()) {
             throw new EmptyStackException();
         }
         ++modCount;
         final int newSize = size - 1;
-        float value = contents[newSize];
+        int value = contents[newSize];
         size = newSize;
         return value;
     }
 
     @Override
-    public void add(int index, Float element) {
+    public void add(int index, Integer element) {
         Objects.checkIndex(index, size - 1);
         ++modCount;
         final int localSize = size;
-        float[] localContents = this.contents;
+        int[] localContents = this.contents;
 
         if (localSize == localContents.length) {
             localContents = grow();
@@ -305,11 +305,11 @@ public class FloatArrayList extends AbstractList<Float>
         size = localSize + 1;
     }
 
-    public void addFloat(int index, float element) {
+    public void addInt(int index, int element) {
         Objects.checkIndex(index, size - 1);
         ++modCount;
         final int localSize = size;
-        float[] localContents = this.contents;
+        int[] localContents = this.contents;
         if (localSize == localContents.length) {
             localContents = grow();
         }
@@ -318,7 +318,7 @@ public class FloatArrayList extends AbstractList<Float>
         size = localSize + 1;
     }
 
-    private void justRemove(float[] localContents, int index) {
+    private void justRemove(int[] localContents, int index) {
         ++modCount;
         final int newSize = size - 1;
         if (newSize > index) {
@@ -327,11 +327,21 @@ public class FloatArrayList extends AbstractList<Float>
         size = newSize;
     }
 
+    /**
+     * Removes the element at the specified position in this list (optional operation). Shifts any
+     * subsequent elements to the left (subtracts one from their indices). Returns the element that
+     * was removed from the list.
+     *
+     * @param index the index of the element to be removed
+     * @return the element previously at the specified position
+     * @throws IndexOutOfBoundsException if the index is out of range
+     * @see #removeInt(int)
+     */
     @Override
-    public Float remove(int index) {
+    public Integer remove(int index) {
         Objects.checkIndex(index, size);
-        final float[] localContents = contents;
-        final float oldValue = localContents[index];
+        final int[] localContents = contents;
+        final int oldValue = localContents[index];
         justRemove(localContents, index);
         return oldValue;
     }
@@ -341,7 +351,7 @@ public class FloatArrayList extends AbstractList<Float>
         if (o == this) {
             return true;
         }
-        if (!(o instanceof FloatArrayList otherList)) {
+        if (!(o instanceof IntArrayList otherList)) {
             return false;
         }
 
@@ -352,8 +362,8 @@ public class FloatArrayList extends AbstractList<Float>
 
         boolean equal = localSize == otherSize;
         if (equal) {
-            final float[] localContents = contents;
-            final float[] otherContents = otherList.contents;
+            final int[] localContents = contents;
+            final int[] otherContents = otherList.contents;
             if (localSize > localContents.length || localSize > otherContents.length) {
                 throw new ConcurrentModificationException();
             }
@@ -384,28 +394,41 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     private int hashCodeOfSlice(int start, int end) {
-        final float[] localContents = contents;
+        final int[] localContents = contents;
         if (end > localContents.length) {
             throw new ConcurrentModificationException();
         }
         int hashCode = 1;
         for (int i = start; i < end; ++i) {
-            hashCode = hashCode * 31 + Float.hashCode(localContents[i]);
+            hashCode = hashCode * 31 + Integer.hashCode(localContents[i]);
         }
         return hashCode;
     }
 
     @Override
     public boolean remove(Object o) {
-        if (!(o instanceof Float other)) {
+        if (!(o instanceof Integer other)) {
             return false;
         }
-        final float[] localContents = contents;
+        final int[] localContents = contents;
         final int localSize = size;
-        final float otherCasted = other;
+        final int otherCasted = other;
 
         for (int i = 0; i < localSize; ++i) {
             if (localContents[i] == otherCasted) {
+                justRemove(localContents, i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean removeInt(int value) {
+        final int[] localContents = contents;
+        final int localSize = size;
+
+        for (int i = 0; i < localSize; ++i) {
+            if (localContents[i] == value) {
                 justRemove(localContents, i);
                 return true;
             }
@@ -420,28 +443,28 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public boolean addAll(Collection<? extends Float> c) {
+    public boolean addAll(Collection<? extends Integer> c) {
         Object[] array = c.toArray();
         ++modCount;
         int newItemCount = array.length;
         if (newItemCount == 0) {
             return false;
         }
-        float[] localContents = contents;
+        int[] localContents = contents;
         final int localSize = size;
         if (newItemCount > localContents.length - localSize) {
             localContents = grow(localSize + newItemCount);
         }
         for (int i = 0; i < newItemCount; ++i) {
             // Java, why can't you be normal?
-            localContents[localSize + i] = (Float) array[i];
+            localContents[localSize + i] = (Integer) array[i];
         }
         size = localSize + 1;
         return true;
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends Float> c) {
+    public boolean addAll(int index, Collection<? extends Integer> c) {
         Objects.checkIndex(index, size - 1);
 
         Object[] array = c.toArray();
@@ -450,7 +473,7 @@ public class FloatArrayList extends AbstractList<Float>
         if (newItemCount == 0) {
             return false;
         }
-        float[] localContents = contents;
+        int[] localContents = contents;
         final int localSize = size;
         if (newItemCount > localContents.length - localSize) {
             localContents = grow(localSize + newItemCount);
@@ -461,7 +484,7 @@ public class FloatArrayList extends AbstractList<Float>
                     localContents, index, localContents, index + newItemCount, movedItemCount);
         }
         for (int i = 0; i < newItemCount; ++i) {
-            localContents[index + i] = (Float) array[i];
+            localContents[index + i] = (Integer) array[i];
         }
         size = localSize + 1;
         return true;
@@ -474,7 +497,7 @@ public class FloatArrayList extends AbstractList<Float>
 
     private boolean removeCollection(
             @NonNull Collection<?> c, final boolean invert, final int start, final int end) {
-        final float[] localContents = contents;
+        final int[] localContents = contents;
 
         // Go ahead and skip over the initial list of items that we are going to keep
         int position;
@@ -489,7 +512,7 @@ public class FloatArrayList extends AbstractList<Float>
         int removed = position;
         ++position;
         try {
-            float value;
+            int value;
             for (; position < end; position++) {
                 value = localContents[position];
                 if (c.contains(value) != invert) {
@@ -515,7 +538,7 @@ public class FloatArrayList extends AbstractList<Float>
         s.writeInt(size); // To work like ArrayList does
 
         for (int i = 0; i < size; ++i) {
-            s.writeFloat(contents[i]);
+            s.writeInt(contents[i]);
         }
 
         checkForConcurrentModification(expectedModCount);
@@ -529,9 +552,9 @@ public class FloatArrayList extends AbstractList<Float>
         s.readInt();
 
         if (size > 0) {
-            float[] newContents = new float[size];
+            int[] newContents = new int[size];
             for (int i = 0; i < size; ++i) {
-                newContents[i] = s.readFloat();
+                newContents[i] = s.readInt();
             }
             contents = newContents;
         } else if (size == 0) {
@@ -542,23 +565,23 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public @NonNull ListIterator<Float> listIterator(int index) {
+    public @NonNull ListIterator<Integer> listIterator(int index) {
         Objects.checkIndex(index, size - 1);
         return new ListItr(index);
     }
 
     @Override
-    public @NonNull ListIterator<Float> listIterator() {
+    public @NonNull ListIterator<Integer> listIterator() {
         return new ListItr(0);
     }
 
     @Override
-    public @NonNull Iterator<Float> iterator() {
+    public @NonNull Iterator<Integer> iterator() {
         return new Itr();
     }
 
     @NoArgsConstructor(access = AccessLevel.PACKAGE)
-    private class Itr implements Iterator<Float> {
+    private class Itr implements Iterator<Integer> {
         int cursor;
         int lastReturned = -1;
         int expectedModCount = modCount;
@@ -567,13 +590,13 @@ public class FloatArrayList extends AbstractList<Float>
             return cursor != size;
         }
 
-        public Float next() {
+        public Integer next() {
             checkForConcurrentModification();
             int i = cursor;
             if (i >= size) {
                 throw new NoSuchElementException();
             }
-            float[] localContents = contents;
+            int[] localContents = contents;
             if (i >= localContents.length) {
                 throw new ConcurrentModificationException();
             }
@@ -589,7 +612,7 @@ public class FloatArrayList extends AbstractList<Float>
             }
             checkForConcurrentModification();
             try {
-                FloatArrayList.this.remove(lastReturned);
+                IntArrayList.this.remove(lastReturned);
                 cursor = lastReturned;
                 lastReturned = -1;
                 expectedModCount = modCount;
@@ -599,11 +622,11 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public void forEachRemaining(@NonNull Consumer<? super Float> action) {
+        public void forEachRemaining(@NonNull Consumer<? super Integer> action) {
             final int localSize = size;
             int i = cursor;
             if (i < localSize) {
-                float[] localContents = contents;
+                int[] localContents = contents;
                 if (i >= localContents.length) {
                     throw new ConcurrentModificationException();
                 }
@@ -623,7 +646,7 @@ public class FloatArrayList extends AbstractList<Float>
         }
     }
 
-    private class ListItr extends Itr implements ListIterator<Float> {
+    private class ListItr extends Itr implements ListIterator<Integer> {
         ListItr(int index) {
             cursor = index;
         }
@@ -640,13 +663,13 @@ public class FloatArrayList extends AbstractList<Float>
             return cursor - 1;
         }
 
-        public Float previous() {
+        public Integer previous() {
             super.checkForConcurrentModification();
             int i = cursor - 1;
             if (i < 0) {
                 throw new NoSuchElementException();
             }
-            float[] localContents = contents;
+            int[] localContents = contents;
             if (i >= localContents.length) {
                 throw new ConcurrentModificationException();
             }
@@ -655,24 +678,24 @@ public class FloatArrayList extends AbstractList<Float>
             return localContents[i];
         }
 
-        public void set(Float e) {
+        public void set(Integer e) {
             if (lastReturned < 0) {
                 throw new IllegalStateException();
             }
             super.checkForConcurrentModification();
             try {
-                FloatArrayList.this.setFloat(lastReturned, e);
+                IntArrayList.this.setInt(lastReturned, e);
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
             }
         }
 
-        public void add(Float e) {
+        public void add(Integer e) {
             super.checkForConcurrentModification();
 
             try {
                 int i = cursor;
-                FloatArrayList.this.addFloat(i, e);
+                IntArrayList.this.addInt(i, e);
                 cursor = i + 1;
                 lastReturned = -1;
                 expectedModCount = modCount;
@@ -683,7 +706,7 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public @NonNull List<Float> subList(int fromIndex, int toIndex) {
+    public @NonNull List<Integer> subList(int fromIndex, int toIndex) {
         subListRangeCheck(fromIndex, toIndex, size);
         return new SubList(this, fromIndex, toIndex);
     }
@@ -701,13 +724,13 @@ public class FloatArrayList extends AbstractList<Float>
         }
     }
 
-    private static class SubList extends AbstractList<Float> implements RandomAccess {
-        private final FloatArrayList root;
+    private static class SubList extends AbstractList<Integer> implements RandomAccess {
+        private final IntArrayList root;
         private final SubList parent;
         private final int offset;
         private int size;
 
-        public SubList(FloatArrayList root, int from, int to) {
+        public SubList(IntArrayList root, int from, int to) {
             this.root = root;
             this.parent = null;
             this.offset = from;
@@ -724,16 +747,16 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public Float set(int index, Float element) {
+        public Integer set(int index, Integer element) {
             Objects.checkIndex(index, size);
             checkForConcurrentModification();
-            float oldValue = root.contents[offset + index];
+            int oldValue = root.contents[offset + index];
             root.contents[offset + index] = element;
             return oldValue;
         }
 
         @Override
-        public Float get(int index) {
+        public Integer get(int index) {
             Objects.checkIndex(index, size);
             checkForConcurrentModification();
             return root.contents[offset + index];
@@ -746,7 +769,7 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public void add(int index, Float element) {
+        public void add(int index, Integer element) {
             Objects.checkIndex(index, size);
             checkForConcurrentModification();
             root.add(offset + index, element);
@@ -754,10 +777,10 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public Float remove(int index) {
+        public Integer remove(int index) {
             Objects.checkIndex(index, size);
             checkForConcurrentModification();
-            Float result = root.remove(offset + index);
+            Integer result = root.remove(offset + index);
             updateSizeAndModCount(-1);
             return result;
         }
@@ -770,12 +793,12 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public boolean addAll(@NonNull Collection<? extends Float> c) {
+        public boolean addAll(@NonNull Collection<? extends Integer> c) {
             return addAll(this.size, c);
         }
 
         @Override
-        public boolean addAll(int index, Collection<? extends Float> c) {
+        public boolean addAll(int index, Collection<? extends Integer> c) {
             Objects.checkIndex(index, size - 1);
             final int toAdd = c.size();
             if (toAdd == 0) {
@@ -788,7 +811,7 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public void replaceAll(UnaryOperator<Float> operator) {
+        public void replaceAll(UnaryOperator<Integer> operator) {
             root.replaceAllRange(operator, offset, offset + size);
         }
 
@@ -813,7 +836,7 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public boolean removeIf(Predicate<? super Float> filter) {
+        public boolean removeIf(Predicate<? super Integer> filter) {
             checkForConcurrentModification();
             int oldSize = root.size;
             boolean modified = root.removeIf(filter, offset, offset + size);
@@ -826,7 +849,7 @@ public class FloatArrayList extends AbstractList<Float>
         @Override
         public Object @NonNull [] toArray() {
             checkForConcurrentModification();
-            Float[] result = new Float[size];
+            Integer[] result = new Integer[size];
             for (int i = 0; i < size; ++i) {
                 result[i] = root.contents[offset + i];
             }
@@ -853,7 +876,7 @@ public class FloatArrayList extends AbstractList<Float>
 
             boolean equal = localSize == otherSize;
             if (equal) {
-                final float[] localContents = root.contents;
+                final int[] localContents = root.contents;
                 if (localSize > localContents.length) {
                     throw new ConcurrentModificationException();
                 }
@@ -902,12 +925,12 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public @NonNull Iterator<Float> iterator() {
+        public @NonNull Iterator<Integer> iterator() {
             return super.listIterator();
         }
 
         @Override
-        public @NonNull ListIterator<Float> listIterator(int index) {
+        public @NonNull ListIterator<Integer> listIterator(int index) {
             Objects.checkIndex(index, size - 1);
             checkForConcurrentModification();
 
@@ -920,13 +943,13 @@ public class FloatArrayList extends AbstractList<Float>
                     return cursor != size;
                 }
 
-                public Float next() {
+                public Integer next() {
                     checkForConcurrentModification();
                     int i = cursor;
                     if (i >= size) {
                         throw new NoSuchElementException();
                     }
-                    float[] contents = root.contents;
+                    int[] contents = root.contents;
                     if (offset + i >= contents.length) {
                         throw new ConcurrentModificationException();
                     }
@@ -939,13 +962,13 @@ public class FloatArrayList extends AbstractList<Float>
                     return cursor != 0;
                 }
 
-                public Float previous() {
+                public Integer previous() {
                     checkForConcurrentModification();
                     int i = cursor - 1;
                     if (i < 0) {
                         throw new NoSuchElementException();
                     }
-                    float[] contents = root.contents;
+                    int[] contents = root.contents;
                     if (offset + i >= contents.length) {
                         throw new ConcurrentModificationException();
                     }
@@ -955,11 +978,11 @@ public class FloatArrayList extends AbstractList<Float>
                 }
 
                 @Override
-                public void forEachRemaining(@NonNull Consumer<? super Float> action) {
+                public void forEachRemaining(@NonNull Consumer<? super Integer> action) {
                     final int localSize = size;
                     int i = cursor;
                     if (i < localSize) {
-                        final float[] localContents = root.contents;
+                        final int[] localContents = root.contents;
                         if (offset + i >= localContents.length) {
                             throw new ConcurrentModificationException();
                         }
@@ -987,7 +1010,7 @@ public class FloatArrayList extends AbstractList<Float>
                     checkForConcurrentModification();
 
                     try {
-                        FloatArrayList.SubList.this.remove(lastReturned);
+                        IntArrayList.SubList.this.remove(lastReturned);
                         cursor = lastReturned;
                         lastReturned = -1;
                         expectedModCount = modCount;
@@ -996,7 +1019,7 @@ public class FloatArrayList extends AbstractList<Float>
                     }
                 }
 
-                public void set(Float e) {
+                public void set(Integer e) {
                     if (lastReturned < 0) {
                         throw new IllegalStateException();
                     }
@@ -1009,12 +1032,12 @@ public class FloatArrayList extends AbstractList<Float>
                     }
                 }
 
-                public void add(Float e) {
+                public void add(Integer e) {
                     checkForConcurrentModification();
 
                     try {
                         int i = cursor;
-                        FloatArrayList.SubList.this.add(i, e);
+                        IntArrayList.SubList.this.add(i, e);
                         cursor = i + 1;
                         lastReturned = -1;
                         expectedModCount = modCount;
@@ -1026,13 +1049,13 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public @NonNull List<Float> subList(int fromIndex, int toIndex) {
+        public @NonNull List<Integer> subList(int fromIndex, int toIndex) {
             subListRangeCheck(fromIndex, toIndex, size);
-            return new FloatArrayList.SubList(this, fromIndex, toIndex);
+            return new IntArrayList.SubList(this, fromIndex, toIndex);
         }
 
         @Override
-        public Spliterator<Float> spliterator() {
+        public Spliterator<Integer> spliterator() {
             checkForConcurrentModification();
 
             return new Spliterator<>() {
@@ -1049,7 +1072,7 @@ public class FloatArrayList extends AbstractList<Float>
                     return hi;
                 }
 
-                public Spliterator<Float> trySplit() {
+                public Spliterator<Integer> trySplit() {
                     int hi = getFence();
                     int lo = index;
                     int mid = (lo + hi) >>> 1;
@@ -1057,15 +1080,15 @@ public class FloatArrayList extends AbstractList<Float>
                         return null;
                     }
                     index = mid;
-                    return root.new FloatArrayListSpliterator(lo, mid, expectedModCount);
+                    return root.new IntArrayListSpliterator(lo, mid, expectedModCount);
                 }
 
-                public boolean tryAdvance(@NonNull Consumer<? super Float> action) {
+                public boolean tryAdvance(@NonNull Consumer<? super Integer> action) {
                     int hi = getFence();
                     int i = index;
                     if (i < hi) {
                         index = i + 1;
-                        float e = root.contents[i];
+                        int e = root.contents[i];
                         action.accept(e);
                         checkForConcurrentModification();
                         return true;
@@ -1074,12 +1097,12 @@ public class FloatArrayList extends AbstractList<Float>
                 }
 
                 @Override
-                public void forEachRemaining(@NonNull Consumer<? super Float> action) {
+                public void forEachRemaining(@NonNull Consumer<? super Integer> action) {
                     int i;
                     int hi;
                     int mc;
-                    FloatArrayList localRoot = root;
-                    float[] localContents = localRoot.contents;
+                    IntArrayList localRoot = root;
+                    int[] localContents = localRoot.contents;
                     if (localContents != null) {
                         hi = fence;
                         if (hi < 0) {
@@ -1090,7 +1113,7 @@ public class FloatArrayList extends AbstractList<Float>
                         }
                         if ((i = index) >= 0 && (index = hi) <= localContents.length) {
                             for (; i < hi; ++i) {
-                                float e = localContents[i];
+                                int e = localContents[i];
                                 action.accept(e);
                             }
                             if (localRoot.modCount == mc) {
@@ -1128,7 +1151,7 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @AllArgsConstructor
-    final class FloatArrayListSpliterator implements Spliterator<Float> {
+    final class IntArrayListSpliterator implements Spliterator<Integer> {
         private int index;
         private int fence;
         private int expectedModCount;
@@ -1142,7 +1165,7 @@ public class FloatArrayList extends AbstractList<Float>
             return hi;
         }
 
-        public FloatArrayListSpliterator trySplit() {
+        public IntArrayListSpliterator trySplit() {
             int hi = getFence();
             int lo = index;
             int mid = (lo + hi) >>> 1;
@@ -1150,15 +1173,15 @@ public class FloatArrayList extends AbstractList<Float>
                 return null;
             }
             index = mid;
-            return new FloatArrayListSpliterator(lo, mid, expectedModCount);
+            return new IntArrayListSpliterator(lo, mid, expectedModCount);
         }
 
-        public boolean tryAdvance(@NonNull Consumer<? super Float> action) {
+        public boolean tryAdvance(@NonNull Consumer<? super Integer> action) {
             int hi = getFence();
             int i = index;
             if (i < hi) {
                 index = i + 1;
-                float e = contents[i];
+                int e = contents[i];
                 action.accept(e);
                 checkForConcurrentModification(expectedModCount);
                 return true;
@@ -1167,11 +1190,11 @@ public class FloatArrayList extends AbstractList<Float>
         }
 
         @Override
-        public void forEachRemaining(@NonNull Consumer<? super Float> action) {
+        public void forEachRemaining(@NonNull Consumer<? super Integer> action) {
             int i;
             int hi;
             int mc;
-            float[] localContents = contents;
+            int[] localContents = contents;
 
             if (localContents != null) {
                 hi = fence;
@@ -1183,7 +1206,7 @@ public class FloatArrayList extends AbstractList<Float>
                 }
                 if ((i = index) >= 0 && (index = hi) <= localContents.length) {
                     for (; i < hi; ++i) {
-                        float e = localContents[i];
+                        int e = localContents[i];
                         action.accept(e);
                     }
                     if (modCount == mc) {
@@ -1204,10 +1227,10 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public void forEach(Consumer<? super Float> action) {
+    public void forEach(Consumer<? super Integer> action) {
         Objects.requireNonNull(action);
         final int expectedModCount = modCount;
-        final float[] localContents = contents;
+        final int[] localContents = contents;
         final int localSize = this.size;
         // No, "modCount == expectedModCount" might not always be true
         for (int i = 0; modCount == expectedModCount && i < localSize; i++) { // NOSONAR
@@ -1217,8 +1240,8 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public Spliterator<Float> spliterator() {
-        return new FloatArrayListSpliterator(0, -1, 0);
+    public Spliterator<Integer> spliterator() {
+        return new IntArrayListSpliterator(0, -1, 0);
     }
 
     private static long[] nBits(int n) {
@@ -1233,9 +1256,9 @@ public class FloatArrayList extends AbstractList<Float>
         return (bits[i >> 6] & (1L << i)) == 0;
     }
 
-    boolean removeIf(@NonNull Predicate<? super Float> filter, int i, final int end) {
+    boolean removeIf(@NonNull Predicate<? super Integer> filter, int i, final int end) {
         int expectedModCount = modCount;
-        final float[] localContents = contents;
+        final int[] localContents = contents;
 
         // Go ahead and skip over the initial list of items that we are going to keep
         for (; i < end && !filter.test(localContents[i]); ++i) { // NOSONAR
@@ -1268,13 +1291,13 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public void replaceAll(UnaryOperator<Float> operator) {
+    public void replaceAll(UnaryOperator<Integer> operator) {
         replaceAllRange(operator, 0, size);
     }
 
-    private void replaceAllRange(@NonNull UnaryOperator<Float> operator, int i, int end) {
+    private void replaceAllRange(@NonNull UnaryOperator<Integer> operator, int i, int end) {
         final int expectedModCount = modCount;
-        final float[] localContents = contents;
+        final int[] localContents = contents;
         for (; modCount == expectedModCount && i < end; i++) { // NOSONAR
             localContents[i] = operator.apply(localContents[i]);
         }
@@ -1282,19 +1305,19 @@ public class FloatArrayList extends AbstractList<Float>
     }
 
     @Override
-    public void sort(Comparator<? super Float> c) {
+    public void sort(Comparator<? super Integer> c) {
         final int expectedModCount = modCount;
         if (c == null) {
             Arrays.sort(contents);
         } else {
             // Seriously we need better Arrays or Stream APIs for this
-            Float[] results =
+            Integer[] results =
                     IntStream.range(0, size)
                             .mapToObj(i -> contents[i])
-                            .sorted(c)
-                            .toArray(Float[]::new);
+                            .sorted(c) // Can't provide a comparator to IntStreams .sort()
+                            .toArray(Integer[]::new);
             for (int i = 0; i < size; ++i) {
-                // We need to unbox, because we can't sort plain floats with a comparator for some
+                // We need to unbox, because we can't sort plain ints with a comparator for some
                 // reason
                 contents[i] = results[i]; // NOSONAR
             }
