@@ -47,6 +47,12 @@ public class FileUtils {
             }
             return f.createNewFile();
         } catch (IOException | SecurityException e) {
+            log.warn(
+                    SafeResourceLoader.getStringFormatted(
+                            "COULD_NOT_CREATE_FILE",
+                            Utilities.getResourceBundle(),
+                            combinePath(path, filename)),
+                    e);
             return false;
         }
     }
@@ -68,6 +74,12 @@ public class FileUtils {
             }
             return f.mkdirs();
         } catch (SecurityException e) {
+            log.warn(
+                    SafeResourceLoader.getStringFormatted(
+                            "COULD_NOT_CREATE_FOLDER",
+                            Utilities.getResourceBundle(),
+                            combinePath(path, folderName)),
+                    e);
             return false;
         }
     }

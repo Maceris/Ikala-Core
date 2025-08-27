@@ -369,13 +369,7 @@ public class Launcher {
         for (String plugin : plugins.keySet()) {
             PluginFolder.createFolder(plugin);
             for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType.values()) {
-                if (!PluginFolder.createResourceFolder(plugin, resourceType)) {
-                    log.debug(
-                            SafeResourceLoader.getStringFormatted(
-                                    "ERROR_CREATE_RESOURCE_FOLDER",
-                                    Launcher.bundle,
-                                    resourceType.name()));
-                }
+                PluginFolder.createResourceFolder(plugin, resourceType);
             }
         }
     }
