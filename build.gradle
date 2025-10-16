@@ -53,6 +53,7 @@ dependencies {
 	testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
 	testCompileOnly "org.hamcrest:hamcrest:${hamcrestVersion}"
 	testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 	testImplementation "org.mockito:mockito-core:${mockitoVersion}"
 	testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
 	
