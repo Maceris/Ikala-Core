@@ -1,21 +1,23 @@
 plugins {
-    id 'java'
+    id 'application'
     id 'eclipse'
     id 'idea'
     id 'io.franzbecker.gradle-lombok' version '5.0.0'
-    id 'com.diffplug.spotless' version '6.25.0'
+    id 'com.diffplug.spotless' version '8.0.0'
 }
 
 import io.franzbecker.gradle.lombok.task.DelombokTask
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
     withSourcesJar()
     withJavadocJar()
 }
 
-archivesBaseName = "${pluginName}"
+base {
+	archivesName = "${pluginName}"
+}
 version = "${pluginVersion}"
 
 repositories {
@@ -62,7 +64,7 @@ dependencies {
 }
 
 tasks.register('delombok', DelombokTask) {
-	description 'Delomboks the source code'
+	description = 'Delomboks the source code'
     ext.outputDir = file("${delombokedSourceDir}")
     outputs.dir(outputDir)
     sourceSets.main.java.srcDirs.each {
@@ -77,16 +79,20 @@ tasks.register('delombok', DelombokTask) {
 tasks.named('test') {
 	useJUnitPlatform()
 	testLogging {
-		exceptionFormat 'full'
-		events 'passed', 'skipped', 'failed'
-		showStandardStreams true
+		exceptionFormat = 'full'
+		events = ['passed', 'skipped', 'failed']
+		showStandardStreams = true
 	}
 }
 
 tasks.named('javadoc') {
-	dependsOn delombok
+	dependsOn = delombok as Iterable<?>
 	source = delombok.outputDir
 	failOnError = false
+}
+
+tasks.withType(Javadoc).configureEach {
+	options.addStringOption('Xdoclint:-missing', '-quiet')
 }
 
 tasks.named('clean') {
@@ -95,10 +101,11 @@ tasks.named('clean') {
 	delete 'logs'
 }
 
+application {
+	mainClass = 'com.ikalagaming.launcher.Launcher'
+}
+
 tasks.named('jar') {
-    manifest {
-        attributes 'Main-Class': 'com.ikalagaming.launcher.Launcher'
-    }
     from {
         [
         configurations.compileClasspath.collect {

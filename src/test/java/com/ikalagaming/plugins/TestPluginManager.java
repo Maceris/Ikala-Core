@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TestPluginManager {
 
-    private static enum VersionComparison {
+    private enum VersionComparison {
         NEWER,
         EQUAL,
         OLDER;

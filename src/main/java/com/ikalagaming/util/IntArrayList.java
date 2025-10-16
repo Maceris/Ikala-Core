@@ -257,16 +257,15 @@ public class IntArrayList extends AbstractList<Integer>
     }
 
     /**
-     * Returns the top of the stack (last element in the list).
+     * Returns the top of the stack (last element in the list), or 0 if the stack is empty.
      *
      * @return The last element in the list.
      * @see #isEmpty()
      * @see #pop()
-     * @throws EmptyStackException if the list is empty.
      */
     public int peek() {
         if (isEmpty()) {
-            throw new EmptyStackException();
+            return 0;
         }
         return contents[size - 1];
     }
