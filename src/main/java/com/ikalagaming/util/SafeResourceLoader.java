@@ -26,9 +26,9 @@ public class SafeResourceLoader {
      * @param message The message to format.
      * @param args The arguments to insert into the string.
      * @return The formatted string.
-     * @see #getStringFormatted(String, ResourceBundle, String...)
+     * @see #getStringFormatted(String, ResourceBundle, Object...)
      */
-    public static String format(@NonNull String message, String... args) {
+    public static String format(@NonNull String message, Object... args) {
         return MessageFormatter.arrayFormat(message, args).getMessage();
     }
 
@@ -130,10 +130,10 @@ public class SafeResourceLoader {
      * @param from the bundle to use
      * @param args The arguments to insert into the string.
      * @return The string from the bundle or name, after formatting.
-     * @see #format(String, String...)
+     * @see #format(String, Object...)
      */
     public static String getStringFormatted(
-            @NonNull String name, @NonNull ResourceBundle from, String... args) {
+            @NonNull String name, @NonNull ResourceBundle from, Object... args) {
         return SafeResourceLoader.format(SafeResourceLoader.getString(name, from), args);
     }
 
