@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntSupplier;
 
 /**
- * Contains functionality for controling the lifecycle of the framework, and the main method for
+ * Contains functionality for controlling the lifecycle of the framework, and the main method for
  * running from command line.
  *
  * @author Ches Burks
@@ -79,8 +79,7 @@ public class Launcher {
 
     /**
      * Add a stage to the main thread loop. The main loop will go through and run each stage in
-     * order on the main thread. This returns a status value indicating whether or not everything is
-     * fine.
+     * order on the main thread. This returns a status value indicating whether everything is fine.
      *
      * @param stage The method to execute each loop. Should return a status value.
      * @return The ID of the newly recorded stage. Required if you want to remove that stage again.
@@ -297,7 +296,7 @@ public class Launcher {
 
     /**
      * Sets the language/country. If language is null, or either language or country are not valid
-     * ISO values, this will fail. Returns the status of whether or not it should have worked.
+     * ISO values, this will fail. Returns the status of whether it should have worked.
      *
      * @param language The language to use in ISO format ("fr", "en").
      * @param country The country, in ISO format ("CN", "US")
@@ -318,7 +317,7 @@ public class Launcher {
         }
 
         if (null == country) {
-            Locale locale = new Locale(language);
+            Locale locale = new Locale.Builder().setLanguage(language).build();
             if (Arrays.stream(Locale.getAvailableLocales()).noneMatch(locale::equals)) {
                 System.out.println("'" + locale + "' is not a supported locale.");
                 Launcher.printHelp();
@@ -335,7 +334,7 @@ public class Launcher {
             Launcher.printHelp();
             return false;
         }
-        Locale locale = new Locale(language, country);
+        Locale locale = new Locale.Builder().setLanguage(language).setRegion(country).build();
         if (Arrays.stream(Locale.getAvailableLocales()).noneMatch(locale::equals)) {
             System.out.println("'" + locale + "' is not a supported locale.");
             Launcher.printHelp();
