@@ -20,6 +20,10 @@ base {
 }
 version = "${pluginVersion}"
 
+configurations {
+	mockitoAgent { transitive = false }
+}
+
 repositories {
     mavenCentral()
 }
@@ -56,7 +60,9 @@ dependencies {
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 	testImplementation "org.mockito:mockito-core:${mockitoVersion}"
 	testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
-	
+
+	mockitoAgent "org.mockito:mockito-core:${mockitoVersion}"
+
 	// lombok
 	compileOnly "org.projectlombok:lombok:${lombokVersion}"
 	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -79,6 +85,7 @@ tasks.register('delombok', DelombokTask) {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 	testLogging {
 		exceptionFormat = 'full'
 		events = ['skipped', 'failed']
