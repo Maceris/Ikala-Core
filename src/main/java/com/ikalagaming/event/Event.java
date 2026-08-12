@@ -3,6 +3,8 @@ package com.ikalagaming.event;
 /**
  * An abstract event to be extended. These should always be passive observations, e.g. "X happened"
  * not "do X". Based off lahwran's fevents.
+ *
+ * @see Command
  */
 public abstract class Event {
 

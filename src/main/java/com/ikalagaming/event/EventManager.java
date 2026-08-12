@@ -1,35 +1,20 @@
 package com.ikalagaming.event;
 
-import com.ikalagaming.localization.Localization;
 import com.ikalagaming.util.SafeResourceLoader;
 
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
 
 /** Manages events and listeners. Based off lahwran's fevents. */
 @Slf4j
 public class EventManager {
 
     private static EventManager instance;
-
-    /**
-     * The resource bundle for event manager.
-     *
-     * @return The current resource bundle, which may be null.
-     */
-    @SuppressWarnings("javadoc")
-    @Getter
-    private static final ResourceBundle resourceBundle =
-            ResourceBundle.getBundle("com.ikalagaming.event.Events", Localization.getLocale());
 
     /**
      * Shuts down the static instance if it exists, and then nullifies the reference to it. This
@@ -66,29 +51,27 @@ public class EventManager {
 
     private final EventDispatcher dispatcher;
 
-    private final HashMap<Class<? extends Event>, HandlerList> handlerMap;
+    private final Map<Class<? extends Event>, HandlerList> eventHandlers;
+    private final Map<Class<? extends Command>, CommandListener> commandListeners;
 
     /**
      * Sets up the event managers handlers and event dispatching and starts the dispatching thread
      */
     public EventManager() {
         dispatcher = new EventDispatcher(this);
-        handlerMap = new HashMap<>();
+        eventHandlers = new HashMap<>();
+        commandListeners = new HashMap<>();
         dispatcher.start();
     }
 
     /**
-     * Creates {@link EventListener EventListeners} for a given {@link Listener listener}.
+     * Creates and registers {@link EventListener EventListeners} for a given {@link Listener
+     * listener}.
      *
-     * @param listener The listener to create EventListenrs for
-     * @return A map of events to a set of EventListeners belonging to it
+     * @param listener Listener to create EventListeners for.
      */
-    private Map<Class<? extends Event>, Set<EventListener>> createRegisteredListeners(
-            @NonNull Listener listener) {
-
-        Map<Class<? extends Event>, Set<EventListener>> toReturn = new HashMap<>();
-
-        // search the methods for listeners
+    private void createEventListeners(@NonNull Listener listener) {
+        // Search the methods for listeners
         for (final Method method : listener.getClass().getDeclaredMethods()) {
             final EventHandler handlerAnnotation = method.getAnnotation(EventHandler.class);
             if (handlerAnnotation == null) {
@@ -107,9 +90,6 @@ public class EventManager {
              */
             method.setAccessible(true); // NOSONAR
 
-            Set<EventListener> eventSet =
-                    toReturn.computeIfAbsent(eventClass, ignored -> new HashSet<>());
-
             // creates a class to execute the listener for the event
             EventExecutor executor =
                     (listener1, event) -> {
@@ -123,13 +103,90 @@ public class EventManager {
                         }
                     };
 
-            eventSet.add(new EventListener(listener, executor, handlerAnnotation.order()));
+            eventHandlers
+                    .computeIfAbsent(eventClass, ignored -> new HandlerList())
+                    .register(new EventListener(listener, executor, handlerAnnotation.order()));
         }
-        return toReturn;
     }
 
     /**
-     * Sends the {@link Event event} to all of its listeners.
+     * Creates and registers {@link CommandHandler CommandHandlers} for a given {@link Listener
+     * listener}.
+     *
+     * @param listener Listener to create CommandHandlers for.
+     */
+    private void createCommandHandlers(@NonNull Listener listener) {
+        // Search the methods for listeners
+        for (final Method method : listener.getClass().getDeclaredMethods()) {
+            final CommandHandler handlerAnnotation = method.getAnnotation(CommandHandler.class);
+            if (handlerAnnotation == null) {
+                continue;
+            }
+            final Class<?> checkClass = method.getParameterTypes()[0];
+            if (method.getParameterTypes().length != 1
+                    || !Command.class.isAssignableFrom(checkClass)) {
+                continue;
+            }
+            final Class<? extends Command> eventClass = checkClass.asSubclass(Command.class);
+
+            if (commandListeners.containsKey(eventClass)) {
+                String message =
+                        SafeResourceLoader.format(
+                                "There is already a command handler associated with {}, registered by {}",
+                                eventClass,
+                                commandListeners
+                                        .get(eventClass)
+                                        .getListener()
+                                        .getClass()
+                                        .toString());
+                log.error(message);
+                throw new IllegalStateException(message);
+            }
+
+            /*
+             * We need the method to be publicly visible so that it can be
+             * called and passed events. SonarLint java:S3011 complains about
+             * this, but we don't have much better options.
+             */
+            method.setAccessible(true); // NOSONAR
+
+            // creates a class to execute the listener for the event
+            EventExecutor executor =
+                    (listener1, event) -> {
+                        try {
+                            if (!eventClass.isAssignableFrom(event.getClass())) {
+                                return;
+                            }
+                            method.invoke(listener1, event);
+                        } catch (Exception t) {
+                            throw new EventException(t);
+                        }
+                    };
+            commandListeners.put(eventClass, new CommandListener(listener, executor));
+        }
+    }
+
+    /**
+     * Sends the {@link Command command} to all of its listeners.
+     *
+     * @param command The command to fire.
+     * @throws IllegalStateException if the element cannot be added at this time due to capacity
+     *     restrictions
+     */
+    public void fireCommand(Command command) throws IllegalStateException {
+        try {
+            dispatcher.dispatchCommand(command);
+        } catch (IllegalStateException illegalState) {
+            throw illegalState;
+        } catch (Exception e) {
+            log.warn("Exception while dispatching command", e);
+        }
+    }
+
+    /**
+     * Sends the {@link Event event} to all of its listeners. Should not be used for {@link Command
+     * commands}, * as they'll be dispatched to any relevant event handlers anyway and this would
+     * not call the command handler.
      *
      * @param event The event to fire
      * @throws IllegalStateException if the element cannot be added at this time due to capacity
@@ -141,7 +198,7 @@ public class EventManager {
         } catch (IllegalStateException illegalState) {
             throw illegalState;
         } catch (Exception e) {
-            log.warn(SafeResourceLoader.getString("EVT_QUEUE_FULL", resourceBundle), e);
+            log.warn("Exception while dispatching event", e);
         }
     }
 
@@ -152,20 +209,32 @@ public class EventManager {
      * @return the map of handlers for the given type
      */
     private HandlerList getEventListeners(@NonNull Class<? extends Event> type) {
-        synchronized (handlerMap) {
-            handlerMap.computeIfAbsent(type, ignored -> new HandlerList());
-            return handlerMap.get(type);
+        synchronized (eventHandlers) {
+            eventHandlers.computeIfAbsent(type, ignored -> new HandlerList());
+            return eventHandlers.get(type);
         }
     }
 
     /**
-     * Returns the handlerlist for the given event.
+     * Returns the handler list for the given event.
      *
      * @param event the class to find handlers for
-     * @return the handlerlist for that class
+     * @return The event handlers list for the given event.
      */
-    HandlerList getHandlers(@NonNull Event event) {
+    HandlerList getEventHandlers(@NonNull Event event) {
         return getEventListeners(event.getClass());
+    }
+
+    /**
+     * Fetch the command handler for the given command. Might be null if there isn't one.
+     *
+     * @param command The command.
+     * @return The command handler, or possibly null.
+     */
+    CommandListener getCommandHandler(@NonNull Command command) {
+        synchronized (commandListeners) {
+            return commandListeners.get(command.getClass());
+        }
     }
 
     /**
@@ -175,7 +244,6 @@ public class EventManager {
      * @param monitor The listener to register.
      */
     <T extends Event> void registerEventListeners(@NonNull EventMonitor<T> monitor) {
-
         @SuppressWarnings("unchecked")
         EventExecutor executor =
                 (listener, event) -> {
@@ -201,9 +269,12 @@ public class EventManager {
      * @param listener The listener to register
      */
     public void registerEventListeners(@NonNull Listener listener) {
-        Map<Class<? extends Event>, Set<EventListener>> listMap;
-        listMap = createRegisteredListeners(listener);
-        listMap.forEach((key, value) -> getEventListeners(key).registerAll(value));
+        synchronized (eventHandlers) {
+            createEventListeners(listener);
+        }
+        synchronized (commandListeners) {
+            createCommandHandlers(listener);
+        }
     }
 
     /**
@@ -217,9 +288,12 @@ public class EventManager {
 
     /** Clears up the handlers and stops the dispatching thread. Acts like an onUnload method. */
     public void shutdown() {
-        synchronized (handlerMap) {
-            handlerMap.values().forEach(HandlerList::unregisterAll);
-            handlerMap.clear();
+        synchronized (eventHandlers) {
+            eventHandlers.values().forEach(HandlerList::unregisterAll);
+            eventHandlers.clear();
+        }
+        synchronized (commandListeners) {
+            commandListeners.clear();
         }
 
         dispatcher.terminate();
@@ -238,8 +312,13 @@ public class EventManager {
      * @param listener The listener to unregister
      */
     public void unregisterEventListeners(@NonNull Listener listener) {
-        synchronized (handlerMap) {
-            handlerMap.values().forEach(list -> list.unregister(listener));
+        synchronized (eventHandlers) {
+            eventHandlers.values().forEach(list -> list.unregister(listener));
+        }
+        synchronized (commandListeners) {
+            this.commandListeners
+                    .entrySet()
+                    .removeIf(entry -> entry.getValue().getListener().equals(listener));
         }
     }
 }

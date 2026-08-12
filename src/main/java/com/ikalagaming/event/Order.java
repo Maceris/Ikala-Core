@@ -42,4 +42,22 @@ public enum Order {
     @SuppressWarnings("javadoc")
     @Getter
     private final int index;
+
+    /**
+     * Convert from an index to an order. Invalid indices result in null.
+     *
+     * @param index The index of the order.
+     * @return The order corresponding to the provided index, or null if none match.
+     */
+    public static Order fromIndex(int index) {
+        return switch (index) {
+            case 0 -> EARLIEST;
+            case 1 -> EARLY;
+            case 2 -> DEFAULT;
+            case 3 -> LATE;
+            case 4 -> LATEST;
+            case 5 -> MONITOR;
+            default -> null;
+        };
+    }
 }

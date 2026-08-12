@@ -69,9 +69,8 @@ class HandlerList {
     public void register(@NonNull EventListener listener) {
         if (this.handlerSlots.get(listener.getOrder()).contains(listener)) {
             throw new IllegalStateException(
-                    SafeResourceLoader.getStringFormatted(
-                            "LISTENER_ALREADY_REGISTERED",
-                            EventManager.getResourceBundle(),
+                    SafeResourceLoader.format(
+                            "This listener is already registered to priority {}",
                             listener.getOrder().toString()));
         }
         this.bakedList = null;
