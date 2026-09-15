@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -139,7 +140,7 @@ public class PluginManager {
         return Version.parse(toCheck).isHigherThan(Version.parse(existing));
     }
 
-    private Object commandLock = new Object();
+    private final Object commandLock = new Object();
 
     /** A list of all of the commands registered. This list is sorted. */
     private List<PluginCommand> commands;
@@ -177,6 +178,8 @@ public class PluginManager {
     /** Stores all the classes loaded by plugins. Keys are the unique class names. */
     private final Map<String, Class<?>> pluginClassCache;
 
+    private final Map<String, Object> pluginClassLoadLocks;
+
     /**
      * The class loader that replaces the threads class loader.
      *
@@ -188,7 +191,7 @@ public class PluginManager {
     private Map<String, PluginDetails> pluginDetails;
 
     /** Lock object for plugin related activities */
-    private Object pluginLock = new Object();
+    private final Object pluginLock = new Object();
 
     /**
      * The current resource bundle for the plugin manager.
@@ -210,8 +213,9 @@ public class PluginManager {
         enableOnLoad = true;
         commandLine = false;
         this.eventManager = eventManager;
-        pluginDetails = Collections.synchronizedMap(new HashMap<>());
-        pluginClassCache = Collections.synchronizedMap(new HashMap<>());
+        pluginDetails = new ConcurrentHashMap<>();
+        pluginClassCache = new ConcurrentHashMap<>();
+        pluginClassLoadLocks = new ConcurrentHashMap<>();
         resourceBundle =
                 ResourceBundle.getBundle(
                         "com.ikalagaming.plugins.PluginManager", Localization.getLocale());
@@ -617,24 +621,35 @@ public class PluginManager {
      * @return The class by the given name, or null if not found.
      */
     Class<?> getClassByName(@NonNull final String name) {
-        Class<?> cachedClass = pluginClassCache.get(name);
-
-        if (cachedClass != null) {
-            return cachedClass;
+        Class<?> cached = pluginClassCache.get(name);
+        if (cached != null) {
+            return cached;
         }
-        for (Map.Entry<String, PluginDetails> entry : pluginDetails.entrySet()) {
-            PluginClassLoader loader = entry.getValue().getClassLoader();
-            try {
-                cachedClass = loader.findClass(name, false);
-            } catch (ClassNotFoundException e) {
-                // We couldn't find it here, try another
-                continue;
+        Object lock = this.pluginClassLoadLocks.computeIfAbsent(name, ignored -> new Object());
+        synchronized (lock) {
+            // It's not useless, could be a weird threading issue
+            cached = this.pluginClassCache.get(name);
+            if (cached != null) {
+                return cached;
             }
-            if (cachedClass != null) {
-                return cachedClass;
+            Class<?> result = null;
+            for (Entry<String, PluginDetails> entry : pluginDetails.entrySet()) {
+                PluginClassLoader loader = entry.getValue().getClassLoader();
+                try {
+                    result = loader.loadClassInternal(name, false, true);
+                } catch (ClassNotFoundException e) {
+                    // We couldn't find it here, try another
+                    continue;
+                }
+                if (result != null) {
+                    break;
+                }
             }
+            if (result != null) {
+                this.pluginClassCache.put(name, result);
+            }
+            return result;
         }
-        return null;
     }
 
     /**
@@ -1549,16 +1564,6 @@ public class PluginManager {
      */
     void removeClass(final String name) {
         pluginClassCache.remove(name);
-    }
-
-    /**
-     * Stores the class by name in the cached class list.
-     *
-     * @param name The name of the class.
-     * @param clazz The corresponding class object.
-     */
-    void setClass(@NonNull final String name, @NonNull final Class<?> clazz) {
-        pluginClassCache.computeIfAbsent(name, ignored -> clazz);
     }
 
     @Synchronized("pluginLock")
