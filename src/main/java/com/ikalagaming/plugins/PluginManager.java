@@ -178,7 +178,7 @@ public class PluginManager {
     /** Stores all the classes loaded by plugins. Keys are the unique class names. */
     private final Map<String, Class<?>> pluginClassCache;
 
-    private final Map<String, Object> pluginClassLoadLocks;
+    final Map<String, Object> pluginClassLoadLocks;
 
     /**
      * The class loader that replaces the threads class loader.
@@ -625,8 +625,9 @@ public class PluginManager {
         if (cached != null) {
             return cached;
         }
-        Object lock = this.pluginClassLoadLocks.computeIfAbsent(name, ignored -> new Object());
-        synchronized (lock) {
+        // TODO(ches) I'm pretty sure there's still ghosts here somewhere, fix multithreading
+        // weirdness
+        synchronized (this.pluginClassLoadLocks.computeIfAbsent(name, ignored -> new Object())) {
             // It's not useless, could be a weird threading issue
             cached = this.pluginClassCache.get(name);
             if (cached != null) {

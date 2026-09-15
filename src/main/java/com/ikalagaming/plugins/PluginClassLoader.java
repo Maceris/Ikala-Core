@@ -94,7 +94,7 @@ public class PluginClassLoader extends URLClassLoader {
      */
     Class<?> loadClassInternal(String name, boolean resolve, boolean calledByGetClassByName)
             throws ClassNotFoundException {
-        synchronized (getClassLoadingLock(name)) {
+        synchronized (manager.pluginClassLoadLocks.computeIfAbsent(name, ignored -> new Object())) {
             // First, check if the class has already been loaded
             Class<?> c = findLoadedClass(name);
             if (c == null) {
