@@ -14,6 +14,15 @@ For more information about what this provides and how to use the components, ple
 
 To build the project, run `./gradlew clean build`. This should build the project, run the tests, and generate jars for distribution (under `build\libs`).
 
+## Parser
+
+Some of the scripting language parser is generated with antlr. See `docs` for the g4 files, when antlr is regenerated
+the scripts will need to be regenerated like
+
+```bash
+java -jar antlr-4.13.2-complete.jar -Dlanguage=Java IkalaScriptLexer.g4 IkalaScriptParser.g4
+```
+
 # Editing
 To set up a project for Eclipse you can run `./gradlew eclipse`, or for IntelliJ you can run `./gradlew idea`.
 
