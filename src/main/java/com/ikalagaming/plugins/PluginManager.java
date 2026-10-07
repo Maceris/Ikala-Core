@@ -32,13 +32,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 /**
@@ -196,10 +199,9 @@ public class PluginManager {
     /** Stores all the classes loaded by plugins. Keys are the unique class names. */
     private final Map<String, Class<?>> pluginClassCache;
 
-    final Map<String, Object> pluginClassLoadLocks;
-
     /**
-     * The class loader that replaces the threads class loader.
+     * The class loader that replaces the threads class loader. It can see the engine and all
+     * plugins. This is replaced whenever plugins are loaded or unloaded, so don't hold onto it.
      *
      * @return The common class loader for plugins.
      */
@@ -233,7 +235,6 @@ public class PluginManager {
         this.eventManager = eventManager;
         pluginDetails = new ConcurrentHashMap<>();
         pluginClassCache = new ConcurrentHashMap<>();
-        pluginClassLoadLocks = new ConcurrentHashMap<>();
         resourceBundle =
                 ResourceBundle.getBundle(
                         "com.ikalagaming.plugins.PluginManager", Localization.getLocale());
@@ -636,8 +637,10 @@ public class PluginManager {
     }
 
     /**
-     * Find the class by class name. Checks for cached versions, but will search through known
-     * plugin class loaders to find it. If it cannot be found, returns null.
+     * Find a class defined in any loaded plugin's jar, by class name. This is a global view for the
+     * {@link SharedClassLoader}, plugins themselves can only see their dependencies. If more than
+     * one plugin has a class by that name, the plugin whose name sorts first wins. If it cannot be
+     * found, returns null.
      *
      * @param name The name of the class to look for.
      * @return The class by the given name, or null if not found.
@@ -647,32 +650,44 @@ public class PluginManager {
         if (cached != null) {
             return cached;
         }
-        // TODO(ches) I'm pretty sure there's still ghosts here somewhere, fix multithreading
-        // weirdness
-        synchronized (this.pluginClassLoadLocks.computeIfAbsent(name, ignored -> new Object())) {
-            // It's not useless, could be a weird threading issue
-            cached = this.pluginClassCache.get(name);
-            if (cached != null) {
-                return cached;
+        /*
+         * No locking needed here, the plugin class loaders each lock themselves
+         * and make sure a class is only defined once. At worst two threads both
+         * find the same class and put it in the cache.
+         */
+        for (String plugin : new TreeSet<>(pluginDetails.keySet())) {
+            PluginDetails details = pluginDetails.get(plugin);
+            if (details == null || details.getClassLoader() == null) {
+                continue;
             }
-            Class<?> result = null;
-            for (Entry<String, PluginDetails> entry : pluginDetails.entrySet()) {
-                PluginClassLoader loader = entry.getValue().getClassLoader();
-                try {
-                    result = loader.loadClassInternal(name, false, true);
-                } catch (ClassNotFoundException e) {
-                    // We couldn't find it here, try another
-                    continue;
-                }
-                if (result != null) {
-                    break;
-                }
-            }
+            Class<?> result = details.getClassLoader().findOwnClass(name);
             if (result != null) {
-                this.pluginClassCache.put(name, result);
+                pluginClassCache.put(name, result);
+                return result;
             }
-            return result;
         }
+        return null;
+    }
+
+    /**
+     * The class loaders for the plugins that the given plugin declares as dependencies or soft
+     * dependencies, if they are currently loaded. These are the plugins whose classes it can see.
+     *
+     * @param pluginName The plugin whose dependencies we want.
+     * @return The class loaders for its dependencies, hard dependencies first.
+     */
+    List<PluginClassLoader> getDependencyClassLoaders(@NonNull String pluginName) {
+        PluginDetails details = pluginDetails.get(pluginName);
+        if (details == null || details.getInfo() == null) {
+            return List.of();
+        }
+        PluginInfo info = details.getInfo();
+        return Stream.concat(info.getDependencies().stream(), info.getSoftDependencies().stream())
+                .map(pluginDetails::get)
+                .filter(Objects::nonNull)
+                .map(PluginDetails::getClassLoader)
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     /**
@@ -977,9 +992,7 @@ public class PluginManager {
             Map<File, PluginInfo> jarInfoMap,
             List<File> skipped,
             Map<File, PluginClassLoader> loaders) {
-        sharedClassLoader = new SharedClassLoader(this, this.getClass().getClassLoader());
-        Thread.currentThread().setContextClassLoader(sharedClassLoader);
-        eventManager.setThreadClassloader(sharedClassLoader);
+        plResetSharedClassLoader();
 
         for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
             PluginInfo info = entry.getValue();
@@ -1005,7 +1018,9 @@ public class PluginManager {
 
             PluginClassLoader loader = null;
             try {
-                loader = new PluginClassLoader(this, sharedClassLoader, entry.getKey());
+                loader =
+                        new PluginClassLoader(
+                                this, pluginName, this.getClass().getClassLoader(), entry.getKey());
             } catch (MalformedURLException e) {
                 logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
             }
@@ -1459,6 +1474,18 @@ public class PluginManager {
     }
 
     /**
+     * Replace the shared class loader with a new one, and make it the context class loader for the
+     * current thread and the event thread. The JVM remembers every class that was looked up through
+     * a class loader, so this prevents the old one from returning or keeping alive classes from
+     * plugins that have since been unloaded.
+     */
+    private void plResetSharedClassLoader() {
+        sharedClassLoader = new SharedClassLoader(this, this.getClass().getClassLoader());
+        Thread.currentThread().setContextClassLoader(sharedClassLoader);
+        eventManager.setThreadClassloader(sharedClassLoader);
+    }
+
+    /**
      * Resolve the dependencies of all children using a breadth-first search. Returns true if
      * everything is fine, but false if there is an unresolved dependency. This return value is used
      * to propagate failures up the tree. This will set the state of any plugin it reaches which is
@@ -1818,6 +1845,8 @@ public class PluginManager {
              */
             success = unloadSingle(plugin) && success;
         }
+        // Don't let the shared class loader hold onto the unloaded classes
+        plResetSharedClassLoader();
 
         return success;
     }
