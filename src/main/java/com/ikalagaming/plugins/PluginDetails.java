@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
+
 /**
  * Contains all details about plugins that are loaded in memory.
  *
@@ -48,6 +50,15 @@ class PluginDetails {
      */
     @SuppressWarnings("javadoc")
     private PluginState state;
+
+    /**
+     * The jar file the plugin was loaded from.
+     *
+     * @param jar The jar file for the plugin.
+     * @return The jar file for the plugin.
+     */
+    @SuppressWarnings("javadoc")
+    private File jar;
 
     /** Dereference and clean up all information, pending removal of the associated plugin. */
     void dispose() {

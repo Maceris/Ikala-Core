@@ -27,12 +27,14 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
@@ -122,6 +124,22 @@ public class PluginManager {
             PluginManager.instance = new PluginManager(eventManager);
         }
         return PluginManager.instance;
+    }
+
+    /**
+     * Whether a plugin in the given state has had {@link Plugin#onLoad()} called on it, meaning
+     * that {@link Plugin#onUnload()} needs to be called when removing it.
+     *
+     * @param state The state of the plugin.
+     * @return True if the plugin has started loading, false if it is still being discovered or
+     *     having its dependencies checked.
+     */
+    private static boolean hasStartedLoading(@NonNull PluginState state) {
+        return switch (state) {
+            case LOADING, ENABLING, ENABLED, DISABLING, DISABLED, UNLOADING, CORRUPTED -> true;
+            case DISCOVERED, DEPS_CHECKING, DEPS_SATISFIED, DEPS_MISSING -> false;
+            case PENDING_REMOVAL, NOT_LOADED -> false;
+        };
     }
 
     /**
@@ -246,26 +264,28 @@ public class PluginManager {
             return PluginState.NOT_LOADED;
         }
         /*
-         * If all dependencies are satisfied (DISCOVERED, loaded/enabled,
-         * DEPS_SATISFIED, generally existing in the system), or it has no
-         * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
-         * unsatisfied dependencies, such as something NOT_LOADED, mark the
-         * plugin as DEPS_MISSING. If a plugin does not have missing
-         * dependencies, but it has dependencies that are also DEPS_CHECKING,
-         * mark it as DEPS_CHECKING.
+         * If all dependencies are satisfied (loaded/enabled, DEPS_SATISFIED,
+         * generally existing in the system), or it has no dependencies, mark
+         * it as DEPS_SATISFIED as well. If a plugin has unsatisfied
+         * dependencies, such as something NOT_LOADED, mark the plugin as
+         * DEPS_MISSING. If a plugin does not have missing dependencies, but it
+         * has dependencies that are still DISCOVERED or DEPS_CHECKING, mark it
+         * as DEPS_CHECKING.
          */
         boolean stillEvaluatingChildren = false;
         for (String dependencyName : pluginInfo.getDependencies()) {
             PluginState state = getPluginState(dependencyName);
             switch (state) {
-                case DEPS_CHECKING:
+                case DEPS_CHECKING, DISCOVERED:
                     /*
                      * Not yet confirmed until children nodes are validated, so
-                     * set the flag and keep checking children.
+                     * set the flag and keep checking children. A DISCOVERED
+                     * dependency hasn't been checked yet, and might still turn
+                     * out to be missing its own dependencies.
                      */
                     stillEvaluatingChildren = true;
                     break;
-                case DEPS_SATISFIED, DISABLED, DISABLING, DISCOVERED, ENABLED, ENABLING, LOADING:
+                case DEPS_SATISFIED, DISABLED, DISABLING, ENABLED, ENABLING, LOADING:
                     // satisfied, we can keep going
                     break;
                 case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL, UNLOADING:
@@ -422,52 +442,17 @@ public class PluginManager {
             return false;
         }
 
-        ArrayDeque<String> needsDisable = new ArrayDeque<>();
-        ArrayDeque<String> processingQueue = new ArrayDeque<>();
-        processingQueue.add(target);
-
-        /*
-         * Add all plugins to a queue in order as if doing a Breadth-First
-         * Search.
-         */
-        while (!processingQueue.isEmpty()) {
-            String next = processingQueue.poll();
-            List<String> dependents =
-                    pluginDetails.entrySet().stream()
-                            .filter(
-                                    entry ->
-                                            entry.getValue()
-                                                    .getInfo()
-                                                    .getDependencies()
-                                                    .contains(next))
-                            .filter(
-                                    entry ->
-                                            PluginState.ENABLED.equals(entry.getValue().getState()))
-                            .map(Entry::getKey)
-                            .collect(Collectors.toCollection(ArrayList::new));
-
-            for (String dependent : dependents) {
-                if (processingQueue.contains(dependent) || needsDisable.contains(dependent)) {
-                    continue;
-                }
-                processingQueue.add(dependent);
-            }
-            if (!needsDisable.contains(next)) {
-                needsDisable.add(next);
-            }
-        }
-
         boolean success = true;
-        /*
-         * We unload from deepest dependency first, starting with the last thing
-         * added to the list and working our way back to the original plugin.
-         */
-        while (!needsDisable.isEmpty()) {
+        for (String plugin : plDependentsFirst(target)) {
+            if (!plugin.equals(target) && !isEnabled(plugin)) {
+                // Dependents that are not enabled don't need to be disabled
+                continue;
+            }
             /*
-             * Keep the unload operation first so we don't short circuit and
-             * skip unloading if something fails.
+             * Keep the disable operation first so we don't short circuit and
+             * skip disabling if something fails.
              */
-            success = disableSingle(needsDisable.pop()) && success;
+            success = disableSingle(plugin) && success;
         }
 
         return success;
@@ -1002,13 +987,13 @@ public class PluginManager {
     private void plDependencyResolutionStage() {
         /*
          * Resolve easy dependencies. Loop through all plugins once, if all
-         * dependencies are satisfied (DISCOVERED, loaded/enabled,
-         * DEPS_SATISFIED, generally existing in the system), or it has no
-         * dependencies, mark it as DEPS_SATISFIED as well. If a plugin has
-         * unsatisfied dependencies, such as something NOT_LOADED, mark the
-         * plugin as DEPS_MISSING. If a plugin does not have missing
-         * dependencies, but it has dependencies that are also DEPS_CHECKING,
-         * mark it as DEPS_CHECKING.
+         * dependencies are satisfied (loaded/enabled, DEPS_SATISFIED,
+         * generally existing in the system), or it has no dependencies, mark
+         * it as DEPS_SATISFIED as well. If a plugin has unsatisfied
+         * dependencies, such as something NOT_LOADED, mark the plugin as
+         * DEPS_MISSING. If a plugin does not have missing dependencies, but it
+         * has dependencies that are still DISCOVERED or DEPS_CHECKING, mark it
+         * as DEPS_CHECKING.
          */
         for (Map.Entry<String, PluginDetails> entry : pluginDetails.entrySet()) {
             PluginDetails details = entry.getValue();
@@ -1044,6 +1029,21 @@ public class PluginManager {
             PluginDetails details = pluginDetails.remove(pluginName);
             details.dispose();
         }
+    }
+
+    /**
+     * Find the target plugin and every loaded plugin that (transitively) depends on it, ordered so
+     * that each plugin comes before all of the plugins it depends on. This is the order that
+     * plugins need to be disabled or unloaded in. Cycles in the dependency graph are broken
+     * arbitrarily.
+     *
+     * @param target The plugin to start from.
+     * @return The target and its dependents, with dependents first and the target last.
+     */
+    private List<String> plDependentsFirst(@NonNull String target) {
+        List<String> order = new ArrayList<>();
+        plVisitDependents(target, new HashSet<>(), order);
+        return order;
     }
 
     /**
@@ -1217,11 +1217,22 @@ public class PluginManager {
     }
 
     /**
-     * Attempt to load all the provided jars as plugins.
+     * Attempt to load all the provided jars as plugins, enabling them afterward if {@link
+     * #isEnableOnLoad()} is set.
      *
      * @param jars The jars we want to load.
      */
     private void plLoadPlugins(@NonNull List<File> jars) {
+        plLoadPlugins(jars, enableOnLoad);
+    }
+
+    /**
+     * Attempt to load all the provided jars as plugins.
+     *
+     * @param jars The jars we want to load.
+     * @param enableAfterLoad Whether to enable the plugins after they are loaded.
+     */
+    private void plLoadPlugins(@NonNull List<File> jars, boolean enableAfterLoad) {
         Map<File, PluginInfo> jarInfoMap = new HashMap<>();
 
         plDiscardInvalidPlugins(jars, jarInfoMap);
@@ -1239,7 +1250,8 @@ public class PluginManager {
             }
             PluginInfo info = entry.getValue();
             PluginClassLoader loader = loaders.get(entry.getKey());
-            PluginDetails details = new PluginDetails(loader, info, null, PluginState.DISCOVERED);
+            PluginDetails details =
+                    new PluginDetails(loader, info, null, PluginState.DISCOVERED, entry.getKey());
 
             pluginDetails.put(info.getName(), details);
         }
@@ -1268,11 +1280,15 @@ public class PluginManager {
         }
 
         plDependencyResolutionStage();
-        plLoadSatisfiedDependencies();
+        plLoadSatisfiedDependencies(enableAfterLoad);
     }
 
-    /** Load the satisfied dependencies, and enable them if configured to do so on load. */
-    private void plLoadSatisfiedDependencies() {
+    /**
+     * Load the satisfied dependencies, and optionally enable them.
+     *
+     * @param enableAfterLoad Whether to enable the plugins after they are loaded.
+     */
+    private void plLoadSatisfiedDependencies(boolean enableAfterLoad) {
         /*
          * All plugins should now be DEPS_SATISFIED, so load them all. During
          * the onLoad() method, plugins should deal with connecting to plugins
@@ -1297,11 +1313,13 @@ public class PluginManager {
 
         /*
          * After all plugins have been loaded, now they can be enabled (if that
-         * configuration is set). At this point problems with loops should have
-         * been resolved enough that the plugins can start in any order.
+         * configuration is set). We go in load order so that dependencies are
+         * enabled first where possible, and skip anything that failed to load.
          */
-        if (enableOnLoad) {
-            toLoad.forEach(this::enable);
+        if (enableAfterLoad) {
+            loadQueue.stream()
+                    .filter(name -> PluginState.DISABLED.equals(getPluginState(name)))
+                    .forEach(this::enable);
         }
     }
 
@@ -1312,10 +1330,18 @@ public class PluginManager {
      * @param pluginName The name of the plugin to load.
      */
     private void plLoadSinglePlugin(String pluginName) {
+        PluginDetails details = pluginDetails.get(pluginName);
+        if (details == null || !PluginState.DEPS_SATISFIED.equals(details.getState())) {
+            /*
+             * Something earlier in the load queue failed and took this plugin
+             * down with it, since it depended on the failed plugin.
+             */
+            return;
+        }
+
         setPluginState(pluginName, PluginState.LOADING);
         logAlert("ALERT_LOADING", pluginName);
 
-        PluginDetails details = pluginDetails.get(pluginName);
         Plugin plugin = details.getPlugin();
 
         if (isCommandLine()) {
@@ -1330,7 +1356,9 @@ public class PluginManager {
 
         if (!plugin.onLoad()) {
             logAlert("PLUGIN_LOAD_FAIL", pluginName);
+            // Also removes anything depending on it, loaded yet or not
             unloadPlugin(pluginName);
+            return;
         }
         for (Listener l : plugin.getListeners()) {
             eventManager.registerEventListeners(l);
@@ -1396,7 +1424,7 @@ public class PluginManager {
                         if (!namesInTheTree.contains(dependencyName)) {
                             namesInTheTree.add(dependencyName);
                             PluginDependencyNode child = new PluginDependencyNode(dependencyName);
-                            child.setParent(root);
+                            child.setParent(currentNode);
                             currentNode.getChildren().add(child);
                             queue.add(child);
                         }
@@ -1467,6 +1495,35 @@ public class PluginManager {
     }
 
     /**
+     * Depth-first search through the plugins that depend on the current one, adding them to the
+     * order after all of their own dependents. Used by {@link #plDependentsFirst(String)}.
+     *
+     * @param current The plugin we are visiting.
+     * @param visited The plugins we have already visited. This will be modified.
+     * @param order The resulting order, dependents first. This will be modified.
+     */
+    private void plVisitDependents(String current, Set<String> visited, List<String> order) {
+        if (!visited.add(current)) {
+            return;
+        }
+        List<String> dependents =
+                pluginDetails.entrySet().stream()
+                        .filter(entry -> entry.getValue().getInfo() != null)
+                        .filter(
+                                entry ->
+                                        entry.getValue()
+                                                .getInfo()
+                                                .getDependencies()
+                                                .contains(current))
+                        .map(Entry::getKey)
+                        .toList();
+        for (String dependent : dependents) {
+            plVisitDependents(dependent, visited, order);
+        }
+        order.add(current);
+    }
+
+    /**
      * Attempts to register the command for the given class. If the command already exists, an error
      * is logged and the method returns false.
      *
@@ -1533,11 +1590,16 @@ public class PluginManager {
     }
 
     /**
-     * This is essentially restarting the plugins. The plugin is disabled if it is enabled,
-     * unloaded, then loaded.
+     * This is essentially restarting the plugins. The plugin is unloaded (disabling it first if it
+     * is enabled), then loaded again from the same jar file it was originally loaded from.
+     *
+     * <p>Since unloading a plugin also unloads everything that depends on it, those dependents are
+     * reloaded as well. Plugins that were enabled before reloading are enabled again afterward, and
+     * plugins that were disabled stay disabled.
      *
      * @param target The name of the plugin to reload
-     * @return true if the plugin reloaded successfully, false otherwise
+     * @return true if the plugin and its dependents reloaded successfully and are back in the state
+     *     they were in before, false otherwise
      */
     @Synchronized("pluginLock")
     public boolean reload(@NonNull String target) {
@@ -1546,16 +1608,41 @@ public class PluginManager {
             return false;
         }
 
-        if (this.isEnabled(target) && !this.disable(target)) {
-            // disable failed
-            this.setPluginState(target, PluginState.CORRUPTED);
-            return false;
+        List<String> affected = plDependentsFirst(target);
+        Map<String, File> jars = new HashMap<>();
+        Set<String> wasEnabled = new HashSet<>();
+        for (String plugin : affected) {
+            PluginDetails details = pluginDetails.get(plugin);
+            jars.put(plugin, details.getJar());
+            if (PluginState.ENABLED.equals(details.getState())) {
+                wasEnabled.add(plugin);
+            }
         }
-        this.setPluginState(target, PluginState.UNLOADING);
-        this.unloadPlugin(target);
-        this.setPluginState(target, PluginState.LOADING);
-        this.loadPlugin(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH, target);
-        return true;
+
+        boolean success = unloadPlugin(target);
+
+        /*
+         * Anything that failed to unload is left alone, but everything that was
+         * unloaded is loaded back together so dependencies are resolved as a
+         * group.
+         */
+        List<File> toLoad =
+                affected.stream().filter(plugin -> !isLoaded(plugin)).map(jars::get).toList();
+        plLoadPlugins(toLoad, false);
+
+        // Dependencies first, so they are enabled before the plugins that need them
+        for (String plugin : affected.reversed()) {
+            if (wasEnabled.contains(plugin)
+                    && PluginState.DISABLED.equals(getPluginState(plugin))) {
+                enable(plugin);
+            }
+        }
+
+        for (String plugin : affected) {
+            boolean restored = wasEnabled.contains(plugin) ? isEnabled(plugin) : isLoaded(plugin);
+            success = success && restored;
+        }
+        return success;
     }
 
     /**
@@ -1618,49 +1705,13 @@ public class PluginManager {
             return false;
         }
 
-        ArrayDeque<String> needsUnload = new ArrayDeque<>();
-        ArrayDeque<String> processingQueue = new ArrayDeque<>();
-        processingQueue.add(toUnload);
-
-        /*
-         * Add all plugins to a queue in order as if doing a Breadth-First
-         * Search.
-         */
-        while (!processingQueue.isEmpty()) {
-            String next = processingQueue.poll();
-            List<String> dependents =
-                    pluginDetails.entrySet().stream()
-                            .filter(
-                                    entry ->
-                                            entry.getValue()
-                                                    .getInfo()
-                                                    .getDependencies()
-                                                    .contains(next))
-                            .map(Entry::getKey)
-                            .collect(Collectors.toCollection(ArrayList::new));
-
-            for (String dependent : dependents) {
-                if (processingQueue.contains(dependent) || needsUnload.contains(dependent)) {
-                    continue;
-                }
-                processingQueue.add(dependent);
-            }
-            if (!needsUnload.contains(next)) {
-                needsUnload.add(next);
-            }
-        }
-
         boolean success = true;
-        /*
-         * We unload from deepest dependency first, starting with the last thing
-         * added to the list and working our way back to the original plugin.
-         */
-        while (!needsUnload.isEmpty()) {
+        for (String plugin : plDependentsFirst(toUnload)) {
             /*
              * Keep the unload operation first so we don't short circuit and
              * skip unloading if something fails.
              */
-            success = unloadSingle(needsUnload.pop()) && success;
+            success = unloadSingle(plugin) && success;
         }
 
         return success;
@@ -1683,6 +1734,14 @@ public class PluginManager {
                     SafeResourceLoader.getString("PLUGIN_LOADED_BUT_NULL", resourceBundle);
             log.warn(notLoaded, toUnload);
             return false;
+        }
+
+        if (!PluginManager.hasStartedLoading(details.getState())) {
+            // onLoad() was never called, so there is nothing for the plugin to clean up
+            pluginDetails.remove(toUnload);
+            details.dispose();
+            logAlert("ALERT_UNLOADED", toUnload);
+            return true;
         }
 
         Plugin plugin = details.getPlugin();

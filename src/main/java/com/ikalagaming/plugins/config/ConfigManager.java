@@ -12,15 +12,14 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles reading, writing, and caching configurations.
@@ -32,7 +31,7 @@ public class ConfigManager {
     /** The name of the default configuration file. */
     public static final String DEFAULT_NAME = "config.yml";
 
-    private static Map<String, PluginConfig> configCache = new HashMap<>();
+    private static final Map<String, PluginConfig> configCache = new ConcurrentHashMap<>();
 
     /**
      * Create an empty configuration to use if none is present.
@@ -100,15 +99,30 @@ public class ConfigManager {
             return cached;
         }
 
-        try {
-            InputStream stream = new FileInputStream(configFile);
+        try (InputStream stream = Files.newInputStream(configFile.toPath())) {
             Yaml yaml = new Yaml();
-            Map<String, Object> contents = yaml.load(stream);
+            Object contents = yaml.load(stream);
 
-            PluginConfig cached = new PluginConfig(contents);
+            PluginConfig cached;
+            if (contents instanceof Map<?, ?> map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> settings = (Map<String, Object>) map;
+                cached = new PluginConfig(settings);
+            } else {
+                if (contents != null) {
+                    // An empty file is fine, but anything else isn't a valid config
+                    log.warn(
+                            SafeResourceLoader.getString(
+                                    "CONFIG_NOT_A_MAP",
+                                    PluginManager.getInstance().getResourceBundle()),
+                            configName,
+                            pluginName);
+                }
+                cached = ConfigManager.emptyConfig();
+            }
             ConfigManager.configCache.put(cacheName, cached);
             return cached;
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             log.warn(
                     SafeResourceLoader.getString(
                             "CONFIG_FILE_VANISHED",
@@ -185,8 +199,10 @@ public class ConfigManager {
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
             options.setPrettyFlow(true);
             Yaml yaml = new Yaml(options);
-            Files.writeString(
-                    configFile.toPath(), yaml.dump(config.getContents()), StandardOpenOption.WRITE);
+            Path configPath = configFile.toPath();
+            Files.createDirectories(configPath.getParent());
+            // Creates the file if missing, and truncates it if it already exists
+            Files.writeString(configPath, yaml.dump(config.getContents()));
         } catch (IOException e) {
             log.warn(
                     SafeResourceLoader.getString(
@@ -230,6 +246,7 @@ public class ConfigManager {
                 return;
             }
 
+            Files.createDirectories(target.toPath().getParent());
             Files.copy(in, target.toPath());
         } catch (IOException e) {
             // No default config exists
