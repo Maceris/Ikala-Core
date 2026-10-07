@@ -1,10 +1,14 @@
 package com.ikalagaming.plugins;
 
+import com.ikalagaming.event.Listener;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.io.File;
+import java.util.Set;
 
 /**
  * Contains all details about plugins that are loaded in memory.
@@ -60,11 +64,21 @@ class PluginDetails {
     @SuppressWarnings("javadoc")
     private File jar;
 
+    /**
+     * The event listeners currently registered for the plugin, which is only while it is enabled.
+     *
+     * @param listeners The listeners that were registered.
+     * @return The listeners that are registered, empty if there are none.
+     */
+    @SuppressWarnings("javadoc")
+    @NonNull private Set<Listener> listeners;
+
     /** Dereference and clean up all information, pending removal of the associated plugin. */
     void dispose() {
         classLoader.dispose();
         info = null;
         plugin = null;
+        listeners = Set.of();
         state = PluginState.PENDING_REMOVAL;
     }
 }

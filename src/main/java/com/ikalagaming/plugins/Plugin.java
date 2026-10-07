@@ -24,7 +24,8 @@ public abstract class Plugin {
 
     /**
      * Returns a list of listeners for this plugin. These listeners will be used with the event
-     * system.
+     * system. They are registered after {@link #onEnable()} succeeds, and unregistered before
+     * {@link #onDisable()} is called, so the plugin only receives events while it is enabled.
      *
      * @return a list of listeners for the plugin.
      */
@@ -51,7 +52,9 @@ public abstract class Plugin {
 
     /**
      * This method is called when the plugin is enabled. Initialization should be performed here,
-     * and configuration and data should be loaded from disk if necessary.
+     * and configuration and data should be loaded from disk if necessary. All of the plugin's
+     * dependencies are enabled before this is called, unless they are part of a dependency cycle
+     * with this plugin.
      *
      * @return True if enabling was successful, false if there was a problem
      */

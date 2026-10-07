@@ -483,6 +483,9 @@ public class PluginManager {
             return false;
         }
 
+        // Stop sending events before the plugin starts shutting down
+        plUnregisterListeners(target, details);
+
         boolean success = details.getPlugin().onDisable();
         if (success) {
             setPluginState(target, PluginState.DISABLED);
@@ -499,9 +502,14 @@ public class PluginManager {
     /**
      * Activates the plugin and enables it to perform its normal functions. Calls {@link
      * Plugin#onEnable()}. This changes the plugin state to {@link PluginState#ENABLING ENABLING}.
-     * The plugin state is changed to {@link PluginState#ENABLED ENABLED} after completion. If
-     * {@link Plugin#onEnable()} returns false (failed), the plugin state is set to {@link
-     * PluginState#CORRUPTED CORRUPTED}.
+     * The plugin state is changed to {@link PluginState#ENABLED ENABLED} after completion, and its
+     * event listeners are registered. If {@link Plugin#onEnable()} returns false (failed), the
+     * plugin state is set to {@link PluginState#CORRUPTED CORRUPTED}.
+     *
+     * <p>Plugins can only run while their dependencies are enabled, so any of the plugin's hard
+     * dependencies (recursively) that are disabled will be enabled first. If a dependency can't be
+     * enabled, the plugin is not enabled either. Plugins in a dependency cycle are enabled in an
+     * arbitrary order.
      *
      * @param target The name of the plugin to enable
      * @return true if the plugin was successfully enabled, false if there was a problem
@@ -518,6 +526,34 @@ public class PluginManager {
             return false;
         }
 
+        List<String> toEnable = plDependenciesFirst(target);
+        for (String plugin : toEnable) {
+            PluginState state = getPluginState(plugin);
+            if (!plugin.equals(target) && !PluginState.DISABLED.equals(state)) {
+                String msg =
+                        SafeResourceLoader.getString(
+                                "PLUGIN_DEPENDENCY_CANT_ENABLE", getResourceBundle());
+                log.warn(msg, target, plugin, state);
+                return false;
+            }
+        }
+
+        for (String plugin : toEnable) {
+            if (!enableSingle(plugin)) {
+                // Anything after this might depend on it, so we can't continue
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Enable a single plugin.
+     *
+     * @param target The plugin to enable.
+     * @return True on success, false on failure.
+     */
+    private boolean enableSingle(final String target) {
         this.setPluginState(target, PluginState.ENABLING);
 
         logAlert("ALERT_ENABLING", target);
@@ -531,6 +567,7 @@ public class PluginManager {
         boolean success = details.getPlugin().onEnable();
         if (success) {
             this.setPluginState(target, PluginState.ENABLED);
+            plRegisterListeners(target, details);
             new PluginEnabled(target).fire();
             logAlert("ALERT_ENABLED", target);
         } else {
@@ -981,6 +1018,21 @@ public class PluginManager {
     }
 
     /**
+     * Find the target plugin and all of its (transitive) hard dependencies that are not already
+     * enabled, ordered so that each plugin comes after all of the plugins it depends on. This is
+     * the order that plugins need to be enabled in. Cycles in the dependency graph are broken
+     * arbitrarily.
+     *
+     * @param target The plugin to start from.
+     * @return The target and its dependencies that aren't enabled, with the target last.
+     */
+    private List<String> plDependenciesFirst(@NonNull String target) {
+        List<String> order = new ArrayList<>();
+        plVisitDependencies(target, new HashSet<>(), order);
+        return order;
+    }
+
+    /**
      * Calculate the state of plugins that are being loaded based on their dependencies, and unload
      * the ones that are missing dependencies.
      */
@@ -1251,7 +1303,8 @@ public class PluginManager {
             PluginInfo info = entry.getValue();
             PluginClassLoader loader = loaders.get(entry.getKey());
             PluginDetails details =
-                    new PluginDetails(loader, info, null, PluginState.DISCOVERED, entry.getKey());
+                    new PluginDetails(
+                            loader, info, null, PluginState.DISCOVERED, entry.getKey(), Set.of());
 
             pluginDetails.put(info.getName(), details);
         }
@@ -1360,11 +1413,7 @@ public class PluginManager {
             unloadPlugin(pluginName);
             return;
         }
-        for (Listener l : plugin.getListeners()) {
-            eventManager.registerEventListeners(l);
-        }
-        String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS", resourceBundle);
-        log.debug(msg, pluginName);
+        // Listeners are registered when the plugin is enabled, not here
         setPluginState(pluginName, PluginState.DISABLED);
 
         logAlert("ALERT_LOADED", pluginName);
@@ -1392,6 +1441,21 @@ public class PluginManager {
             // fine since we avoided cycles when setting up children earlier
             queue.addAll(currentNode.getChildren());
         }
+    }
+
+    /**
+     * Register the plugin's event listeners, and remember them so that exactly the same listeners
+     * are unregistered later, even if the plugin returns different ones by then.
+     *
+     * @param pluginName The name of the plugin.
+     * @param details The details for the plugin.
+     */
+    private void plRegisterListeners(String pluginName, PluginDetails details) {
+        Set<Listener> listeners = Set.copyOf(details.getPlugin().getListeners());
+        listeners.forEach(eventManager::registerEventListeners);
+        details.setListeners(listeners);
+        String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS", resourceBundle);
+        log.debug(msg, pluginName);
     }
 
     /**
@@ -1492,6 +1556,47 @@ public class PluginManager {
             plTraverseDependencies(unchecked, dependency, loadQueue);
         }
         loadQueue.add(root);
+    }
+
+    /**
+     * Unregister all the event listeners that were registered for a plugin when it was enabled.
+     *
+     * @param pluginName The name of the plugin.
+     * @param details The details for the plugin.
+     */
+    private void plUnregisterListeners(String pluginName, PluginDetails details) {
+        if (details.getListeners().isEmpty()) {
+            return;
+        }
+        details.getListeners().forEach(eventManager::unregisterEventListeners);
+        details.setListeners(Set.of());
+        String msg = SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS", resourceBundle);
+        log.debug(msg, pluginName);
+    }
+
+    /**
+     * Depth-first search through the hard dependencies of the current plugin that are not enabled,
+     * adding them to the order before the plugins that depend on them. Dependencies that don't
+     * exist are still added, so that the caller can tell they can't be enabled. Used by {@link
+     * #plDependenciesFirst(String)}.
+     *
+     * @param current The plugin we are visiting.
+     * @param visited The plugins we have already visited. This will be modified.
+     * @param order The resulting order, dependencies first. This will be modified.
+     */
+    private void plVisitDependencies(String current, Set<String> visited, List<String> order) {
+        if (!visited.add(current)) {
+            return;
+        }
+        PluginDetails details = pluginDetails.get(current);
+        if (details != null && details.getInfo() != null) {
+            for (String dependency : details.getInfo().getDependencies()) {
+                if (!isEnabled(dependency)) {
+                    plVisitDependencies(dependency, visited, order);
+                }
+            }
+        }
+        order.add(current);
     }
 
     /**
@@ -1770,11 +1875,11 @@ public class PluginManager {
 
         new PluginUnloaded(toUnload).fire();
 
-        for (Listener l : plugin.getListeners()) {
-            eventManager.unregisterEventListeners(l);
-        }
-        String unreg = SafeResourceLoader.getString("ALERT_UNREG_EVENT_LISTENERS", resourceBundle);
-        log.debug(unreg, toUnload);
+        /*
+         * Disabling already unregisters listeners, this just makes sure none
+         * are left behind if the plugin ended up in an unusual state.
+         */
+        plUnregisterListeners(toUnload, details);
 
         details = pluginDetails.remove(toUnload);
         details.dispose();

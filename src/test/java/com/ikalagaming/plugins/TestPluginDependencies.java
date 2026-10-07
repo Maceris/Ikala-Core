@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.ikalagaming.event.EventManager;
+import com.ikalagaming.event.Listener;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -220,5 +222,80 @@ class TestPluginDependencies {
         assertFalse(pluginManager.isLoaded(TARGET));
         assertFalse(pluginManager.isLoaded(MIDDLE));
         assertFalse(pluginManager.isLoaded(TOP));
+    }
+
+    @Test
+    void testEnableEnablesDependenciesFirst() throws IOException {
+        writeDiamond();
+        pluginManager.loadAllPlugins(folder.toString());
+
+        assertTrue(pluginManager.enable(TOP));
+
+        assertCalledInOrder("onEnable", TARGET, MIDDLE, TOP);
+        assertTrue(pluginManager.isEnabled(TARGET));
+        assertTrue(pluginManager.isEnabled(MIDDLE));
+        assertTrue(pluginManager.isEnabled(TOP));
+    }
+
+    @Test
+    void testEnableHardDependencyCycle() throws IOException {
+        PluginJars.write(folder, "CycleA", RecordingPlugin.class, "CycleB");
+        PluginJars.write(folder, "CycleB", RecordingPlugin.class, "CycleA");
+        pluginManager.loadAllPlugins(folder.toString());
+
+        assertTrue(pluginManager.enable("CycleA"));
+
+        assertTrue(pluginManager.isEnabled("CycleA"));
+        assertTrue(pluginManager.isEnabled("CycleB"));
+    }
+
+    @Test
+    void testEnableStopsWhenDependencyFails() throws IOException {
+        PluginJars.write(folder, TARGET, FailingEnablePlugin.class);
+        PluginJars.write(folder, MIDDLE, ListeningPlugin.class, TARGET);
+        pluginManager.loadAllPlugins(folder.toString());
+        ListeningPlugin target = (ListeningPlugin) pluginManager.getPlugin(TARGET).orElseThrow();
+        ListeningPlugin middle = (ListeningPlugin) pluginManager.getPlugin(MIDDLE).orElseThrow();
+
+        assertFalse(pluginManager.enable(MIDDLE));
+
+        assertEquals(PluginState.CORRUPTED, pluginManager.getPluginState(TARGET));
+        assertFalse(pluginManager.isEnabled(MIDDLE));
+        assertEquals(-1, RecordingPlugin.indexOf("onEnable", MIDDLE));
+
+        // The dependency is now corrupted, so it should not even be attempted again
+        RecordingPlugin.CALLS.clear();
+        assertFalse(pluginManager.enable(MIDDLE));
+        assertTrue(RecordingPlugin.CALLS.isEmpty(), RecordingPlugin.CALLS.toString());
+
+        verify(eventManager, never()).registerEventListeners(target.getListener());
+        verify(eventManager, never()).registerEventListeners(middle.getListener());
+    }
+
+    @Test
+    void testListenersOnlyRegisteredWhileEnabled() throws IOException {
+        PluginJars.write(folder, "Listening", ListeningPlugin.class);
+        pluginManager.loadAllPlugins(folder.toString());
+        Listener listener =
+                ((ListeningPlugin) pluginManager.getPlugin("Listening").orElseThrow())
+                        .getListener();
+
+        // Loaded but disabled, so it should not receive events
+        verify(eventManager, never()).registerEventListeners(listener);
+
+        assertTrue(pluginManager.enable("Listening"));
+        verify(eventManager, times(1)).registerEventListeners(listener);
+        verify(eventManager, never()).unregisterEventListeners(listener);
+
+        assertTrue(pluginManager.disable("Listening"));
+        verify(eventManager, times(1)).unregisterEventListeners(listener);
+
+        assertTrue(pluginManager.enable("Listening"));
+        verify(eventManager, times(2)).registerEventListeners(listener);
+
+        // Unloading an enabled plugin disables it, which unregisters the listener
+        assertTrue(pluginManager.unloadPlugin("Listening"));
+        verify(eventManager, times(2)).unregisterEventListeners(listener);
+        verify(eventManager, times(2)).registerEventListeners(listener);
     }
 }
