@@ -26,6 +26,13 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for reading and writing configuration files.
@@ -102,6 +109,36 @@ class TestConfigManager {
         ConfigManager.clearCache(PLUGIN);
 
         assertFalse(ConfigManager.loadConfig(PLUGIN, "cache.yml").isPresent("value"));
+    }
+
+    @Test
+    void testConcurrentLoadsGetSameConfig() throws Exception {
+        final String configName = "concurrent.yml";
+        writeConfig(configName, "value: 1\n");
+        final int threads = 8;
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            List<Future<PluginConfig>> results = new ArrayList<>();
+            for (int i = 0; i < threads; ++i) {
+                results.add(
+                        executor.submit(
+                                () -> {
+                                    start.await();
+                                    return ConfigManager.loadConfig(PLUGIN, configName);
+                                }));
+            }
+            start.countDown();
+
+            PluginConfig first = results.get(0).get(30, TimeUnit.SECONDS);
+            for (Future<PluginConfig> result : results) {
+                assertSame(first, result.get(30, TimeUnit.SECONDS));
+            }
+            assertSame(first, ConfigManager.loadConfig(PLUGIN, configName));
+        } finally {
+            executor.shutdownNow();
+            ConfigManager.clearCache(PLUGIN);
+        }
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.ikalagaming.plugins.config;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -19,8 +20,16 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.yaml.snakeyaml.Yaml;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Tests for reading and changing values in a plugin configuration. The configuration is loaded from
@@ -64,6 +73,85 @@ class TestPluginConfig {
         PluginManager.getInstance(eventManager);
         Map<String, Object> contents = new Yaml().load(YAML);
         config = new PluginConfig(contents);
+    }
+
+    @Test
+    void testConcurrentAccess() throws InterruptedException {
+        final int threads = 8;
+        final int valuesPerThread = 500;
+        ExecutorService executor = Executors.newFixedThreadPool(threads + 1);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<?>> results = new ArrayList<>();
+        AtomicBoolean writing = new AtomicBoolean(true);
+        try {
+            for (int i = 0; i < threads; ++i) {
+                final int thread = i;
+                results.add(
+                        executor.submit(
+                                () -> {
+                                    start.await();
+                                    for (int j = 0; j < valuesPerThread; ++j) {
+                                        config.set("thread" + thread + ".value" + j, j);
+                                        config.getIntList("numbers");
+                                        config.isPresent("thread" + thread);
+                                    }
+                                    return null;
+                                }));
+            }
+            // Saving takes a snapshot while the other threads are still writing
+            results.add(
+                    executor.submit(
+                            () -> {
+                                start.await();
+                                while (writing.get()) {
+                                    config.snapshot();
+                                }
+                                return null;
+                            }));
+            start.countDown();
+            for (Future<?> result : results.subList(0, threads)) {
+                assertDoesNotThrow(() -> result.get(30, TimeUnit.SECONDS));
+            }
+            writing.set(false);
+            assertDoesNotThrow(() -> results.get(threads).get(30, TimeUnit.SECONDS));
+        } finally {
+            executor.shutdownNow();
+        }
+
+        for (int i = 0; i < threads; ++i) {
+            for (int j = 0; j < valuesPerThread; ++j) {
+                assertEquals(j, config.getInt("thread" + i + ".value" + j));
+            }
+        }
+    }
+
+    @Test
+    void testGetReturnsCopies() {
+        Map<String, Object> section = config.get("section");
+        assertThrows(UnsupportedOperationException.class, () -> section.put("nested", "changed"));
+        List<Object> numbers = config.get("numbers");
+        assertThrows(UnsupportedOperationException.class, () -> numbers.add(4));
+
+        assertEquals("inner", config.getString("section.nested"));
+        assertEquals(List.of(1, 2, 3), config.getIntList("numbers"));
+    }
+
+    @Test
+    void testSetCopiesValues() {
+        List<Object> values = new ArrayList<>(List.of(1, 2));
+        Map<String, Object> section = new HashMap<>(Map.of("key", "value"));
+        config.set("values", values);
+        config.set("new-section", section);
+
+        // Changing the originals afterward doesn't change the config
+        values.add(3);
+        section.put("key", "changed");
+
+        assertEquals(List.of(1, 2), config.getIntList("values"));
+        assertEquals("value", config.getString("new-section.key"));
+        // The copy can still be changed through the config
+        config.set("new-section.other", 1);
+        assertEquals(1, config.getInt("new-section.other"));
     }
 
     @Test
