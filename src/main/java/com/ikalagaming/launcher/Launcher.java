@@ -347,11 +347,7 @@ public class Launcher {
     /** Sets up the folders used by the system if they don't exist. */
     private static void setupMainFolders() {
         File pluginFolder = new File(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
-        try {
-            if (!pluginFolder.exists()) {
-                pluginFolder.mkdirs();
-            }
-        } catch (SecurityException e) {
+        if (!pluginFolder.exists() && !pluginFolder.mkdirs()) {
             log.warn(SafeResourceLoader.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
         }
     }

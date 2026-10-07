@@ -46,7 +46,7 @@ public class FileUtils {
                 return false;
             }
             return f.createNewFile();
-        } catch (IOException | SecurityException e) {
+        } catch (IOException e) {
             log.warn(
                     SafeResourceLoader.getStringFormatted(
                             "COULD_NOT_CREATE_FILE",
@@ -67,21 +67,19 @@ public class FileUtils {
      * @return true if the folder was created, otherwise false
      */
     public static boolean createFolder(@NonNull String path, @NonNull String folderName) {
-        try {
-            File f = new File(combinePath(path, folderName));
-            if (f.exists()) {
-                return false;
-            }
-            return f.mkdirs();
-        } catch (SecurityException e) {
+        File f = new File(combinePath(path, folderName));
+        if (f.exists()) {
+            return false;
+        }
+        if (!f.mkdirs()) {
             log.warn(
                     SafeResourceLoader.getStringFormatted(
                             "COULD_NOT_CREATE_FOLDER",
                             Utilities.getResourceBundle(),
-                            combinePath(path, folderName)),
-                    e);
+                            combinePath(path, folderName)));
             return false;
         }
+        return true;
     }
 
     /**
@@ -97,19 +95,14 @@ public class FileUtils {
             return false;
         }
         File f = new File(path);
-        try {
-            if (!f.exists() || !f.canRead() || !f.canWrite()) {
-                return false;
-            }
-            /*
-             * This is less informative than Files.delete, but we throw away
-             * information anyway so this will not help us. Ignoring
-             * java:S4042.
-             */
-            return f.delete(); // NOSONAR
-        } catch (SecurityException e) {
-            return false; // if it can't be accessed, then it can't be deleted.
+        if (!f.exists() || !f.canRead() || !f.canWrite()) {
+            return false;
         }
+        /*
+         * This is less informative than Files.delete, but we throw away
+         * information anyway so this will not help us. Ignoring java:S4042.
+         */
+        return f.delete(); // NOSONAR
     }
 
     /**
@@ -119,16 +112,7 @@ public class FileUtils {
      * @return true if the supplied file/directory exists
      */
     public static boolean fileExists(@NonNull String path) {
-        File f = new File(path);
-        try {
-            return f.exists();
-        } catch (SecurityException e) {
-            /*
-             * Cannot read that location due to security manager, so just assume
-             * it does not exist.
-             */
-            return false;
-        }
+        return new File(path).exists();
     }
 
     /**

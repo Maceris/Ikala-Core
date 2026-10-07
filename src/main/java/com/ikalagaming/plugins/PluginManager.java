@@ -1158,18 +1158,10 @@ public class PluginManager {
         }
 
         for (File file : files) {
-            try {
-                if (!file.exists()
-                        || !file.canRead()
-                        || file.isDirectory()
-                        || !file.getName().endsWith(".jar")) {
-                    continue;
-                }
-            } catch (SecurityException secExcep) {
-                String msg =
-                        SafeResourceLoader.getString("PLUGIN_FILE_SECURITY_ERR", resourceBundle);
-                log.debug(msg, file.getName());
-                // Maybe one or more files can't be read
+            if (!file.exists()
+                    || !file.canRead()
+                    || file.isDirectory()
+                    || !file.getName().endsWith(".jar")) {
                 continue;
             }
             jars.add(file);
@@ -1195,29 +1187,19 @@ public class PluginManager {
             log.warn(msg);
             return Optional.empty();
         }
-        try {
-            if (!pluginFolder.exists()) {
-                String msg =
-                        SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND", resourceBundle);
-                log.warn(msg, pluginFolder.getAbsolutePath());
-                return Optional.empty();
-            }
-            if (!pluginFolder.isDirectory()) {
-                String msg =
-                        SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOLDER", resourceBundle);
-                log.warn(msg, pluginFolder.getAbsolutePath());
-                return Optional.empty();
-            }
-            if (!pluginFolder.canRead()) {
-                String msg =
-                        SafeResourceLoader.getString("PLUGIN_FOLDER_UNREADABLE", resourceBundle);
-                log.warn(msg, pluginFolder.getAbsolutePath());
-                return Optional.empty();
-            }
-        } catch (SecurityException securExcep) {
-            String msg =
-                    SafeResourceLoader.getString("PLUGIN_FOLDER_ACCESS_DENIED", resourceBundle);
-            log.warn(msg, path);
+        if (!pluginFolder.exists()) {
+            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND", resourceBundle);
+            log.warn(msg, pluginFolder.getAbsolutePath());
+            return Optional.empty();
+        }
+        if (!pluginFolder.isDirectory()) {
+            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOLDER", resourceBundle);
+            log.warn(msg, pluginFolder.getAbsolutePath());
+            return Optional.empty();
+        }
+        if (!pluginFolder.canRead()) {
+            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_UNREADABLE", resourceBundle);
+            log.warn(msg, pluginFolder.getAbsolutePath());
             return Optional.empty();
         }
         return Optional.of(pluginFolder);
@@ -1274,10 +1256,6 @@ public class PluginManager {
             throw new InvalidPluginException(err);
         } catch (NoSuchMethodException e) {
             String err = SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
-        } catch (SecurityException e) {
-            String err = SafeResourceLoader.getString("PLUGIN_MAIN_SECURITY", resourceBundle);
             log.warn(err, pluginInfo.getName());
             throw new InvalidPluginException(err);
         }
