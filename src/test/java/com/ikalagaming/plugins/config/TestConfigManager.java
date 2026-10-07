@@ -3,17 +3,21 @@ package com.ikalagaming.plugins.config;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.launcher.PluginFolder;
 import com.ikalagaming.launcher.PluginFolder.ResourceType;
+import com.ikalagaming.plugins.PluginJars;
 import com.ikalagaming.plugins.PluginManager;
+import com.ikalagaming.plugins.RecordingPlugin;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -35,6 +39,8 @@ class TestConfigManager {
     private static final String PLUGIN = "TestConfigManagerPlugin";
 
     @Mock private EventManager eventManager;
+
+    @TempDir Path jarFolder;
 
     @AfterEach
     void afterTest() {
@@ -72,6 +78,30 @@ class TestConfigManager {
         Files.createDirectories(file.getParent());
         Files.writeString(file, contents);
         return file;
+    }
+
+    @Test
+    void testCacheClearedWhenPluginUnloads() throws IOException {
+        PluginJars.write(jarFolder, PLUGIN, RecordingPlugin.class);
+        PluginManager pluginManager = PluginManager.getInstance(eventManager);
+        pluginManager.setEnableOnLoad(false);
+        pluginManager.loadAllPlugins(jarFolder.toString());
+        ConfigManager.loadConfig(PLUGIN, "unload.yml").set("value", 1);
+
+        assertTrue(pluginManager.unloadPlugin(PLUGIN));
+
+        assertFalse(ConfigManager.loadConfig(PLUGIN, "unload.yml").isPresent("value"));
+    }
+
+    @Test
+    void testClearCache() {
+        PluginConfig config = ConfigManager.reloadConfig(PLUGIN, "cache.yml");
+        config.set("value", 1);
+        assertSame(config, ConfigManager.loadConfig(PLUGIN, "cache.yml"));
+
+        ConfigManager.clearCache(PLUGIN);
+
+        assertFalse(ConfigManager.loadConfig(PLUGIN, "cache.yml").isPresent("value"));
     }
 
     @Test

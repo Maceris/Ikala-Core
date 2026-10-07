@@ -48,6 +48,18 @@ public class ConfigManager {
     }
 
     /**
+     * Forget all the cached configurations for a plugin, so they are read from disk the next time
+     * they are loaded. The plugin manager does this when a plugin is unloaded, so a reloaded or
+     * upgraded plugin doesn't get stale settings. Changes that were not saved are lost.
+     *
+     * @param pluginName The plugin to forget configurations for.
+     */
+    public static void clearCache(@NonNull String pluginName) {
+        final String prefix = ConfigManager.getCacheName(pluginName, "");
+        ConfigManager.configCache.keySet().removeIf(cacheName -> cacheName.startsWith(prefix));
+    }
+
+    /**
      * Load the default configuration for a plugin. If no configuration exists on disk, a blank one
      * will be returned.
      *

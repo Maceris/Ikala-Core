@@ -25,7 +25,7 @@ import javax.tools.ToolProvider;
  *
  * @author Ches Burks
  */
-final class PluginJars {
+public final class PluginJars {
 
     /**
      * Compile Java sources against the engine classes.
@@ -35,7 +35,7 @@ final class PluginJars {
      * @return The compiled class files, keyed by their path in a jar, like "a/b/C.class".
      * @throws IOException If there is a problem reading or writing files.
      */
-    static Map<String, byte[]> compile(Path workFolder, Map<String, String> sources)
+    public static Map<String, byte[]> compile(Path workFolder, Map<String, String> sources)
             throws IOException {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         assumeTrue(compiler != null, "Compiling test plugins requires a JDK");
@@ -105,7 +105,7 @@ final class PluginJars {
      * @param dependencies The hard dependencies of the plugin.
      * @throws IOException If the jar could not be written.
      */
-    static void write(
+    public static void write(
             Path folder, String name, Class<? extends Plugin> mainClass, String... dependencies)
             throws IOException {
         write(folder, name, mainClass.getName(), List.of(dependencies), List.of(), Map.of());
@@ -122,7 +122,7 @@ final class PluginJars {
      * @param entries Other files to put in the jar, keyed by their path in the jar.
      * @throws IOException If the jar could not be written.
      */
-    static void write(
+    public static void write(
             Path folder,
             String name,
             String mainClass,
@@ -152,7 +152,7 @@ final class PluginJars {
      * @param dependencies The hard dependencies of the plugin.
      * @throws IOException If the jar could not be written.
      */
-    static void writeVersion(
+    public static void writeVersion(
             Path folder,
             String fileName,
             String name,

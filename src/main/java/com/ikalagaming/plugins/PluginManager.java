@@ -5,6 +5,7 @@ import com.ikalagaming.event.Listener;
 import com.ikalagaming.launcher.Constants;
 import com.ikalagaming.launcher.PluginFolder;
 import com.ikalagaming.localization.Localization;
+import com.ikalagaming.plugins.config.ConfigManager;
 import com.ikalagaming.plugins.events.PluginDisabled;
 import com.ikalagaming.plugins.events.PluginEnabled;
 import com.ikalagaming.plugins.events.PluginLoaded;
@@ -1998,6 +1999,7 @@ public class PluginManager {
             pluginDetails.remove(toUnload);
             details.dispose();
             unregisterPluginCommands(toUnload);
+            ConfigManager.clearCache(toUnload);
             logAlert("ALERT_UNLOADED", toUnload);
             return true;
         }
@@ -2037,6 +2039,7 @@ public class PluginManager {
         details = pluginDetails.remove(toUnload);
         details.dispose();
         unregisterPluginCommands(toUnload);
+        ConfigManager.clearCache(toUnload);
 
         logAlert("ALERT_UNLOADED", toUnload);
         return true;
