@@ -30,12 +30,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,6 +52,14 @@ import java.util.zip.ZipEntry;
  * Handles loading, unloading and storage of plugins. This is considered a plugin, but is always
  * enabled and never loaded.
  *
+ * <p>Changes to plugins (loading, enabling, and so on) happen one at a time, holding a lock. The
+ * plugin lifecycle methods, like {@link Plugin#onEnable()}, are called while holding that lock. So
+ * plugins must not block in those methods waiting for another thread that uses the plugin manager,
+ * or they will deadlock. Calling the plugin manager from the same thread is fine.
+ *
+ * <p>Exceptions thrown by plugins from their lifecycle methods are logged and treated as that step
+ * failing, so a broken plugin can't take down the plugin manager.
+ *
  * @author Ches Burks
  */
 @Slf4j
@@ -59,6 +68,13 @@ public class PluginManager {
     private static PluginManager instance;
 
     private static final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
+
+    /**
+     * The system property that sets the seed used to shuffle the plugin load order, so that a
+     * problem that only happens with some load orders can be reproduced. The seed used is logged at
+     * the debug level.
+     */
+    public static final String LOAD_ORDER_SEED_PROPERTY = "ikala.plugins.loadOrderSeed";
 
     /** The name of the core system, since it is not technically a plugin. */
     public static final String PLUGIN_NAME = "Ikala-Core";
@@ -135,6 +151,36 @@ public class PluginManager {
                             + " event manager that was passed in is ignored");
         }
         return PluginManager.instance;
+    }
+
+    /** How a dependency in some state affects a plugin that depends on it. */
+    private enum DependencyStatus {
+        /** The dependency exists, or will after it loads. */
+        SATISFIED,
+        /** The dependency hasn't finished having its own dependencies checked. */
+        PENDING,
+        /** The dependency doesn't exist, or won't be usable. */
+        MISSING
+    }
+
+    /**
+     * Classify how a dependency in the given state affects plugins that depend on it.
+     *
+     * @param state The state of the dependency.
+     * @return How the dependency affects plugins that depend on it.
+     */
+    private static DependencyStatus dependencyStatus(@NonNull PluginState state) {
+        return switch (state) {
+            case DEPS_SATISFIED, DISABLED, DISABLING, ENABLED, ENABLING, LOADING ->
+                    DependencyStatus.SATISFIED;
+                /*
+                 * A DISCOVERED dependency hasn't been checked yet, and might still
+                 * turn out to be missing its own dependencies.
+                 */
+            case DEPS_CHECKING, DISCOVERED -> DependencyStatus.PENDING;
+            case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL, UNLOADING ->
+                    DependencyStatus.MISSING;
+        };
     }
 
     /**
@@ -281,29 +327,20 @@ public class PluginManager {
          */
         boolean stillEvaluatingChildren = false;
         for (String dependencyName : pluginInfo.getDependencies()) {
-            PluginState state = getPluginState(dependencyName);
-            switch (state) {
-                case DEPS_CHECKING, DISCOVERED:
-                    /*
-                     * Not yet confirmed until children nodes are validated, so
-                     * set the flag and keep checking children. A DISCOVERED
-                     * dependency hasn't been checked yet, and might still turn
-                     * out to be missing its own dependencies.
-                     */
-                    stillEvaluatingChildren = true;
-                    break;
-                case DEPS_SATISFIED, DISABLED, DISABLING, ENABLED, ENABLING, LOADING:
+            switch (PluginManager.dependencyStatus(getPluginState(dependencyName))) {
+                case SATISFIED -> {
                     // satisfied, we can keep going
-                    break;
-                case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL, UNLOADING:
-                    // propagate the failure up
-                    /*
-                     * Not satisfied or won't be, impossible to load so we just
-                     * bail out of the method immediately
-                     */
+                }
+                case PENDING ->
+                        /*
+                         * Not yet confirmed until children nodes are validated,
+                         * so set the flag and keep checking children.
+                         */
+                        stillEvaluatingChildren = true;
+                case MISSING -> {
+                    // Impossible to load, so we can stop checking immediately
                     return PluginState.DEPS_MISSING;
-                default:
-                    break;
+                }
             }
         }
         /*
@@ -577,37 +614,31 @@ public class PluginManager {
      * @return an optional containing the plugin info, or an empty optional on failure.
      */
     protected Optional<PluginInfo> extractPluginInfo(@NonNull final File jar) {
-        ZipEntry config;
-
         final String fileName = jar.getName();
 
-        /*
-         * Check for being a jar file check for plugin info file load and check
-         * for valid info load the file if necessary
-         */
-        try (JarFile jfile = new JarFile(jar)) {
-            config = jfile.getEntry(PluginManager.PLUGIN_CONFIG_FILENAME);
+        try (JarFile jarFile = new JarFile(jar)) {
+            ZipEntry config = jarFile.getEntry(PluginManager.PLUGIN_CONFIG_FILENAME);
             if (config == null) {
                 String msg = SafeResourceLoader.getString("PLUGIN_CONFIG_MISSING", resourceBundle);
-                log.warn(msg, PluginManager.PLUGIN_CONFIG_FILENAME);
+                log.warn(msg, fileName, PluginManager.PLUGIN_CONFIG_FILENAME);
                 return Optional.empty();
             }
-
-            InputStream configIStream = jfile.getInputStream(config);
-            PluginInfo info = new PluginInfo(configIStream);
-            return Optional.ofNullable(info);
-        } catch (IOException e1) {
+            try (InputStream configStream = jarFile.getInputStream(config)) {
+                return Optional.of(new PluginInfo(configStream));
+            }
+        } catch (IOException e) {
             String msg = SafeResourceLoader.getString("PLUGIN_CONFIG_READ_ERROR", resourceBundle);
-            log.warn(msg, fileName);
+            log.warn(msg, fileName, e);
             return Optional.empty();
-        } catch (InvalidDescriptionException e1) {
+        } catch (InvalidDescriptionException e) {
             String msg = SafeResourceLoader.getString("PLUGIN_INVALID_DESCRIPTION", resourceBundle);
             log.warn(msg, fileName);
-            log.warn(e1.getMessage());
+            log.warn(e.getMessage());
             return Optional.empty();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            // For example, malformed YAML
             String msg = SafeResourceLoader.getString("PLUGIN_JAR_ERROR", resourceBundle);
-            log.warn(msg, fileName);
+            log.warn(msg, fileName, e);
             return Optional.empty();
         }
     }
@@ -619,9 +650,10 @@ public class PluginManager {
      * @return The names of plugins with that given state.
      */
     private List<String> findPluginsByState(@NonNull PluginState state) {
-        return pluginDetails.keySet().stream()
-                .filter(name -> state.equals(pluginDetails.get(name).getState()))
-                .collect(Collectors.toCollection(ArrayList::new));
+        return pluginDetails.entrySet().stream()
+                .filter(entry -> state.equals(entry.getValue().getState()))
+                .map(Entry::getKey)
+                .toList();
     }
 
     /**
@@ -803,22 +835,20 @@ public class PluginManager {
         if (details == null) {
             return false;
         }
-        switch (details.getState()) {
+        return switch (details.getState()) {
             case CORRUPTED,
-                    DEPS_CHECKING,
-                    DEPS_MISSING,
-                    DEPS_SATISFIED,
-                    DISABLED,
-                    DISABLING,
-                    DISCOVERED,
-                    ENABLED,
-                    ENABLING,
-                    LOADING:
-                return true;
-            case UNLOADING, PENDING_REMOVAL, NOT_LOADED:
-            default:
-                return false;
-        }
+                            DEPS_CHECKING,
+                            DEPS_MISSING,
+                            DEPS_SATISFIED,
+                            DISABLED,
+                            DISABLING,
+                            DISCOVERED,
+                            ENABLED,
+                            ENABLING,
+                            LOADING ->
+                    true;
+            case UNLOADING, PENDING_REMOVAL, NOT_LOADED -> false;
+        };
     }
 
     /**
@@ -853,34 +883,12 @@ public class PluginManager {
      */
     @Synchronized("pluginLock")
     public boolean loadPlugin(@NonNull String path, @NonNull String pluginName) {
-        Optional<File> folderMaybe = this.plGetFolder(path);
-        if (folderMaybe.isEmpty()) {
+        List<File> jars = plFindJars(path, List.of(pluginName));
+        if (jars.isEmpty()) {
             return false;
         }
-        File pluginFolder = folderMaybe.get();
-
-        ArrayList<File> jars = this.plGetAllJars(pluginFolder);
-
-        File jar = null;
-        for (File jarFile : jars) {
-            Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
-            if (!info.isPresent()) {
-                /*
-                 * We don't have a valid plugin, the error was already logged
-                 * when extracting plugin info
-                 */
-                continue;
-            }
-            if (pluginName.equals(info.get().getName())) {
-                jar = jarFile;
-                break;
-            }
-        }
-        if (null == jar) {
-            return false;
-        }
-
-        plLoadPlugins(Collections.singletonList(jar));
+        // If there are several versions, the newest one is loaded
+        plLoadPlugins(jars);
         return true;
     }
 
@@ -892,33 +900,33 @@ public class PluginManager {
      */
     @Synchronized("pluginLock")
     public void loadPlugins(@NonNull String path, @NonNull List<String> pluginNames) {
-        Optional<File> folderMaybe = this.plGetFolder(path);
-        if (folderMaybe.isEmpty()) {
-            return;
-        }
         if (pluginNames.isEmpty()) {
             return;
         }
-        File pluginFolder = folderMaybe.get();
+        plLoadPlugins(plFindJars(path, pluginNames));
+    }
 
-        ArrayList<File> jars = this.plGetAllJars(pluginFolder);
-
-        Map<File, PluginInfo> jarInfoMap = new HashMap<>();
-        for (File jarFile : jars) {
-            Optional<PluginInfo> info = this.extractPluginInfo(jarFile);
-            if (!info.isPresent()) {
-                /*
-                 * We don't have a valid plugin, the error was already logged
-                 * when extracting plugin info
-                 */
-                continue;
-            }
-            jarInfoMap.put(jarFile, info.get());
+    /**
+     * Find the jars in a folder that contain any of the given plugins.
+     *
+     * @param path The path to the folder containing the jars.
+     * @param pluginNames The names of the plugins we are looking for.
+     * @return The jars for those plugins, possibly more than one per plugin. Empty if the folder
+     *     can't be read.
+     */
+    private List<File> plFindJars(@NonNull String path, @NonNull List<String> pluginNames) {
+        Optional<File> folder = plGetFolder(path);
+        if (folder.isEmpty()) {
+            return List.of();
         }
-
-        jarInfoMap.entrySet().removeIf(entry -> !pluginNames.contains(entry.getValue().getName()));
-        jars.removeIf(file -> !jarInfoMap.keySet().contains(file));
-        plLoadPlugins(jars);
+        // Any problems are logged when extracting the info
+        return plGetAllJars(folder.get()).stream()
+                .filter(
+                        jar ->
+                                extractPluginInfo(jar)
+                                        .map(info -> pluginNames.contains(info.getName()))
+                                        .orElse(false))
+                .toList();
     }
 
     /**
@@ -1152,16 +1160,9 @@ public class PluginManager {
      */
     private void plDiscardInvalidPlugins(List<File> jars, Map<File, PluginInfo> jarInfoMap) {
         // grab all the plugin info from them, discard invalid plugins
+        // Any problems are logged when extracting the info
         for (File jarFile : jars) {
-            Optional<PluginInfo> info = extractPluginInfo(jarFile);
-            if (!info.isPresent()) {
-                /*
-                 * We don't have a valid plugin, the error was already logged
-                 * when extracting plugin info
-                 */
-                continue;
-            }
-            jarInfoMap.put(jarFile, info.get());
+            extractPluginInfo(jarFile).ifPresent(info -> jarInfoMap.put(jarFile, info));
         }
     }
 
@@ -1208,15 +1209,8 @@ public class PluginManager {
      * @param path the path of the folder to return as a File
      * @return an optional containing the folder or empty if there was an error
      */
-    private Optional<File> plGetFolder(final String path) {
-        File pluginFolder;
-        try {
-            pluginFolder = new File(path);
-        } catch (NullPointerException nullExcept) {
-            String msg = SafeResourceLoader.getString("PLUGIN_PATH_NULL", resourceBundle);
-            log.warn(msg);
-            return Optional.empty();
-        }
+    private Optional<File> plGetFolder(@NonNull final String path) {
+        File pluginFolder = new File(path);
         if (!pluginFolder.exists()) {
             String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND", resourceBundle);
             log.warn(msg, pluginFolder.getAbsolutePath());
@@ -1405,18 +1399,25 @@ public class PluginManager {
          * the onLoad() method, plugins should deal with connecting to plugins
          * that may be in a dependency loop.
          */
-        List<String> toLoad = findPluginsByState(PluginState.DEPS_SATISFIED);
+        List<String> toLoad = new ArrayList<>(findPluginsByState(PluginState.DEPS_SATISFIED));
 
-        // we don't want people making assumptions about load order
-        Collections.shuffle(toLoad);
+        /*
+         * We don't want people making assumptions about load order. The seed
+         * is logged, and can be set with a system property, so that a problem
+         * that only happens in some orders can be reproduced.
+         */
+        long seed = Long.getLong(PluginManager.LOAD_ORDER_SEED_PROPERTY, new Random().nextLong());
+        String seedMessage = SafeResourceLoader.getString("ALERT_LOAD_ORDER_SEED", resourceBundle);
+        log.debug(seedMessage, seed, PluginManager.LOAD_ORDER_SEED_PROPERTY);
+        Collections.shuffle(toLoad, new Random(seed));
 
-        // we want to be able to quickly remove arbitrary elements
-        LinkedList<String> unchecked = new LinkedList<>(toLoad);
+        // Keeps the shuffled order, and lets us quickly remove arbitrary elements
+        Set<String> unchecked = new LinkedHashSet<>(toLoad);
 
         ArrayDeque<String> loadQueue = new ArrayDeque<>();
 
         while (!unchecked.isEmpty()) {
-            String current = unchecked.poll();
+            String current = unchecked.iterator().next();
             plTraverseDependencies(unchecked, current, loadQueue);
         }
 
@@ -1626,9 +1627,11 @@ public class PluginManager {
 
             PluginInfo info = pluginDetails.get(currentNode.getName()).getInfo();
             for (String dependencyName : info.getDependencies()) {
-                PluginState state = getPluginState(dependencyName);
-                switch (state) {
-                    case DEPS_CHECKING:
+                switch (PluginManager.dependencyStatus(getPluginState(dependencyName))) {
+                    case SATISFIED -> {
+                        // satisfied, we don't need to do anything here
+                    }
+                    case PENDING -> {
                         if (!namesInTheTree.contains(dependencyName)) {
                             namesInTheTree.add(dependencyName);
                             PluginDependencyNode child = new PluginDependencyNode(dependencyName);
@@ -1636,8 +1639,8 @@ public class PluginManager {
                             currentNode.getChildren().add(child);
                             queue.add(child);
                         }
-                        break;
-                    case DEPS_MISSING, CORRUPTED, NOT_LOADED, PENDING_REMOVAL, UNLOADING:
+                    }
+                    case MISSING -> {
                         // propagate failure up to the root and bail
                         setPluginState(currentNode.getName(), PluginState.DEPS_MISSING);
                         PluginDependencyNode parent = currentNode.getParent();
@@ -1646,16 +1649,7 @@ public class PluginManager {
                             parent = parent.getParent();
                         }
                         return;
-                    case DEPS_SATISFIED,
-                            DISABLED,
-                            DISABLING,
-                            DISCOVERED,
-                            ENABLED,
-                            ENABLING,
-                            LOADING:
-                    default:
-                        // satisfied, we don't need to do anything here
-                        break;
+                    }
                 }
             }
         }
@@ -1674,19 +1668,17 @@ public class PluginManager {
      *     be modified.
      */
     private void plTraverseDependencies(
-            List<String> unchecked, String root, ArrayDeque<String> loadQueue) {
+            Set<String> unchecked, String root, ArrayDeque<String> loadQueue) {
 
         // we immediately remove the nodes we have seen before
         unchecked.remove(root);
-        List<String> dependencies = new ArrayList<>();
 
         PluginInfo info = pluginDetails.get(root).getInfo();
         if (null == info) {
             // wasn't a real plugin.
             return;
         }
-
-        dependencies.addAll(info.getDependencies());
+        List<String> dependencies = new ArrayList<>(info.getDependencies());
         dependencies.addAll(info.getSoftDependencies());
 
         for (String dependency : dependencies) {

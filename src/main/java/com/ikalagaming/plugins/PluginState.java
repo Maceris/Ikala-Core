@@ -42,8 +42,10 @@ public enum PluginState {
     PENDING_REMOVAL,
     /**
      * There was a problem and the plugin is now in an unstable state. It may be partially
-     * loaded/enabled or unloaded/disabled. The system will attempt to fix the problem, but if it
-     * cannot then the plugin will be removed.
+     * loaded/enabled or unloaded/disabled. This happens when one of its lifecycle methods fails or
+     * throws an exception. A corrupted plugin can't be used as a dependency, but it can be enabled
+     * or unloaded again to try to recover it. If it still fails to unload when the plugin manager
+     * shuts down, it is removed anyway.
      */
     CORRUPTED,
     /**

@@ -4,6 +4,7 @@ import com.ikalagaming.event.Event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Fired when (after) a plugin is enabled.
@@ -11,15 +12,14 @@ import lombok.Getter;
  * @author Ches Burks
  */
 @AllArgsConstructor
+@Getter
 public class PluginEnabled extends Event {
 
     /**
      * The plugin that was just enabled.
      *
-     * @param plugin The name of the plugin that was enabled.
      * @return The name of the plugin that was enabled.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private String plugin;
+    @NonNull private final String plugin;
 }

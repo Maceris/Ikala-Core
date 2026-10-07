@@ -23,6 +23,7 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Tests that the Plugin Manager copes with plugins that misbehave, and with more than one version
@@ -143,6 +144,54 @@ class TestPluginRobustness {
         }
         assertTrue(RecordingPlugin.indexOf("onLoad", "Loader") >= 0);
         assertTrue(pluginManager.isEnabled(STANDALONE));
+    }
+
+    @Test
+    void testLoadOrderSeedIsRepeatable() throws IOException {
+        for (int i = 0; i < 10; ++i) {
+            PluginJars.write(folder, "Independent" + i, RecordingPlugin.class);
+        }
+        System.setProperty(PluginManager.LOAD_ORDER_SEED_PROPERTY, "12345");
+        try {
+            pluginManager.loadAllPlugins(folder.toString());
+            List<String> firstOrder = List.copyOf(RecordingPlugin.CALLS);
+
+            PluginManager.destroyInstance();
+            RecordingPlugin.CALLS.clear();
+            pluginManager = PluginManager.getInstance(eventManager);
+            pluginManager.setEnableOnLoad(false);
+            pluginManager.loadAllPlugins(folder.toString());
+
+            assertEquals(firstOrder, List.copyOf(RecordingPlugin.CALLS));
+        } finally {
+            System.clearProperty(PluginManager.LOAD_ORDER_SEED_PROPERTY);
+        }
+    }
+
+    @Test
+    void testLoadPluginPicksNewest() throws IOException {
+        PluginJars.writeVersion(folder, "Target-1.jar", TARGET, "1.0.0", RecordingPlugin.class);
+        PluginJars.writeVersion(folder, "Target-3.jar", TARGET, "3.0.0", RecordingPlugin.class);
+        PluginJars.writeVersion(folder, "Target-2.jar", TARGET, "2.0.0", RecordingPlugin.class);
+
+        assertTrue(pluginManager.loadPlugin(folder.toString(), TARGET));
+
+        assertEquals("3.0.0", pluginManager.getInfo(TARGET).orElseThrow().getVersion());
+    }
+
+    @Test
+    void testPrereleaseUpgrade() throws IOException {
+        PluginJars.writeVersion(
+                folder, "Target-rc.jar", TARGET, "1.0.0-rc.1", RecordingPlugin.class);
+        PluginJars.writeVersion(
+                upgradeFolder, "Target-1.jar", TARGET, "1.0.0", RecordingPlugin.class);
+        pluginManager.loadAllPlugins(folder.toString());
+        // The full version is kept, including the pre-release part
+        assertEquals("1.0.0-rc.1", pluginManager.getInfo(TARGET).orElseThrow().getVersion());
+
+        pluginManager.loadPlugin(upgradeFolder.toString(), TARGET);
+
+        assertEquals("1.0.0", pluginManager.getInfo(TARGET).orElseThrow().getVersion());
     }
 
     @Test

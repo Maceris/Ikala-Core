@@ -1,6 +1,5 @@
 package com.ikalagaming.plugins;
 
-import com.github.zafarkhaja.semver.ParseException;
 import com.github.zafarkhaja.semver.Version;
 import lombok.Getter;
 import lombok.NonNull;
@@ -9,52 +8,100 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
- * Contains data about a particular plugin. This info can be loaded from code or from a file.
+ * Contains data about a particular plugin, loaded from the plugin.yml file in its jar. The tags
+ * that are required or possible are listed on the wiki.
  *
  * @author Ches Burks
  */
+@Getter
 public class PluginInfo {
 
     /** The regular expression describing what a valid plugin name looks like. */
     private static final String NAME_REGEX = "^[a-zA-Z0-9_-]+$";
 
     /**
-     * Pull a list of dependencies from the plugin info and return it.
+     * Cast to a map, throw a custom exception if it is not.
+     *
+     * @param object The object to cast to a map.
+     * @return The resulting map object.
+     * @throws InvalidDescriptionException If the object is not a map.
+     */
+    private static Map<?, ?> asMap(Object object) throws InvalidDescriptionException {
+        if (object instanceof Map<?, ?> map) {
+            return map;
+        }
+        throw new InvalidDescriptionException(object + " is not properly structured.");
+    }
+
+    /**
+     * Pull a list of strings from the plugin info.
      *
      * @param map The map loaded from the plugin info yaml file.
      * @param key The entry in the configuration we are interested in.
-     * @return The contents of that entry, as a list.
-     * @throws InvalidDescriptionException If the entry is not present, not a list, or has invalid
-     *     dependency names.
+     * @return The contents of that entry, as an unmodifiable list. Empty if it is not present.
+     * @throws InvalidDescriptionException If the entry is not a list.
+     */
+    private static List<String> makeList(final Map<?, ?> map, final String key)
+            throws InvalidDescriptionException {
+        final Object value = map.get(key);
+        if (value == null) {
+            return List.of();
+        }
+        if (!(value instanceof List<?> list)) {
+            throw new InvalidDescriptionException(key + " is of the wrong type");
+        }
+        List<String> result = new ArrayList<>();
+        for (Object entry : list) {
+            if (entry == null) {
+                throw new InvalidDescriptionException("invalid " + key + " format");
+            }
+            result.add(entry.toString());
+        }
+        return List.copyOf(result);
+    }
+
+    /**
+     * Pull a list of plugin names from the plugin info.
+     *
+     * @param map The map loaded from the plugin info yaml file.
+     * @param key The entry in the configuration we are interested in.
+     * @return The contents of that entry, as an unmodifiable list. Empty if it is not present.
+     * @throws InvalidDescriptionException If the entry is not a list, or has invalid names.
      */
     private static List<String> makePluginNameList(final Map<?, ?> map, final String key)
             throws InvalidDescriptionException {
-        final Object value = map.get(key);
-        final ArrayList<String> pluginNameList = new ArrayList<>();
-        if (value == null) {
-            return pluginNameList;
-        }
-
-        try {
-            for (final Object entry : (Iterable<?>) value) {
-                String dependency = entry.toString();
-                if (!dependency.matches(PluginInfo.NAME_REGEX)) {
-                    throw new InvalidDescriptionException(
-                            "Dependency '" + dependency + "' contains invalid characters.");
-                }
-
-                pluginNameList.add(dependency);
+        List<String> names = PluginInfo.makeList(map, key);
+        for (String name : names) {
+            if (!name.matches(PluginInfo.NAME_REGEX)) {
+                throw new InvalidDescriptionException(
+                        "Dependency '" + name + "' contains invalid characters.");
             }
-        } catch (ClassCastException ex) {
-            throw new InvalidDescriptionException(key + " is of the wrong type", ex);
-        } catch (NullPointerException ex) {
-            throw new InvalidDescriptionException("invalid " + key + " format", ex);
         }
-        return pluginNameList;
+        return names;
+    }
+
+    /**
+     * Get a required value from the plugin info.
+     *
+     * @param map The map loaded from the plugin info yaml file.
+     * @param key The entry in the configuration we are interested in.
+     * @param description What the value is, for error messages.
+     * @return The value, as a string.
+     * @throws InvalidDescriptionException If the value is missing, or not a single value.
+     */
+    private static String required(final Map<?, ?> map, final String key, String description)
+            throws InvalidDescriptionException {
+        return switch (map.get(key)) {
+            case null -> throw new InvalidDescriptionException(description + " is not defined");
+            case Map<?, ?> ignored ->
+                    throw new InvalidDescriptionException(description + " is of the wrong type");
+            case List<?> ignored ->
+                    throw new InvalidDescriptionException(description + " is of the wrong type");
+            case Object value -> value.toString();
+        };
     }
 
     /**
@@ -63,8 +110,7 @@ public class PluginInfo {
      * @return The list of plugin authors.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private List<String> authors = new ArrayList<>();
+    private final List<String> authors;
 
     /**
      * Returns a list of plugins this plugin requires in order to run. Use the value of {@link
@@ -74,8 +120,7 @@ public class PluginInfo {
      * @return The list of plugin dependencies.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private List<String> dependencies = new ArrayList<>();
+    private final List<String> dependencies;
 
     /**
      * This is a short human-friendly description of what the plugin does. It may be multiple lines.
@@ -83,8 +128,7 @@ public class PluginInfo {
      * @return The brief description of this plugin.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private String description = "";
+    private final String description;
 
     /**
      * The fully qualified name of the class that extends {@link Plugin} for this plugin. The format
@@ -93,8 +137,7 @@ public class PluginInfo {
      * @return The absolute path to the main plugin class.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private String mainClass = null;
+    private final String mainClass;
 
     /**
      * The name of the plugin. Names are unique for each plugin. The name can contain the following
@@ -111,8 +154,7 @@ public class PluginInfo {
      * @return The name of the plugin.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private String name = null;
+    private final String name;
 
     /**
      * Returns a list of dependencies that are desired but not needed to run
@@ -120,10 +162,16 @@ public class PluginInfo {
      * @return Soft dependencies for this plugin.
      */
     @SuppressWarnings("javadoc")
-    @Getter
-    private List<String> softDependencies = new ArrayList<>();
+    private final List<String> softDependencies;
 
-    private Version version = Version.parse("0.0.0");
+    /**
+     * The version of the plugin, as a semantic version string like {@code 1.2.3} or {@code
+     * 1.0.0-beta.1+build.5}, including any pre-release and build information.
+     *
+     * @return The version of the plugin.
+     */
+    @SuppressWarnings("javadoc")
+    private final String version;
 
     /**
      * Returns a plugin description loaded by the given InputStream, from a Yaml file. The tags that
@@ -133,63 +181,31 @@ public class PluginInfo {
      * @throws InvalidDescriptionException if the description is not valid
      */
     public PluginInfo(@NonNull final InputStream stream) throws InvalidDescriptionException {
+        Map<?, ?> map = PluginInfo.asMap(new Yaml().load(stream));
 
-        Yaml yaml = new Yaml();
-        loadMap(asMap(yaml.load(stream)));
-    }
-
-    /**
-     * Cast to a map, throw a custom exception if it is not.
-     *
-     * @param object The object to cast to a map.
-     * @return The resulting map object.
-     * @throws InvalidDescriptionException If the object is not a map.
-     */
-    private Map<?, ?> asMap(Object object) throws InvalidDescriptionException {
-        if (object instanceof Map) {
-            return (Map<?, ?>) object;
-        }
-        throw new InvalidDescriptionException(object + " is not properly structured.");
-    }
-
-    /**
-     * Extract the required fields as part of {@link #loadMap(Map)}.
-     *
-     * @param map The map we are loading from.
-     * @throws InvalidDescriptionException If the description is invalid.
-     */
-    private void extractRequiredFields(Map<?, ?> map) throws InvalidDescriptionException {
-        try {
-            name = map.get("name").toString();
-            if (!name.matches(PluginInfo.NAME_REGEX)) {
-                throw new InvalidDescriptionException(
-                        "name '" + name + "' contains invalid characters.");
-            }
-        } catch (NullPointerException ex) {
-            throw new InvalidDescriptionException("name is not defined", ex);
-        } catch (ClassCastException ex) {
-            throw new InvalidDescriptionException("name is of wrong type", ex);
+        name = PluginInfo.required(map, "name", "name");
+        if (!name.matches(PluginInfo.NAME_REGEX)) {
+            throw new InvalidDescriptionException(
+                    "name '" + name + "' contains invalid characters.");
         }
 
-        try {
-            version = Version.parse((String) map.get("version"));
-        } catch (NullPointerException ex) {
-            throw new InvalidDescriptionException("version is not defined", ex);
-        } catch (ClassCastException ex) {
-            throw new InvalidDescriptionException("version is of wrong type", ex);
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidDescriptionException("version is not there", ex);
-        } catch (ParseException ex) {
-            throw new InvalidDescriptionException("version is in an invalid format", ex);
+        if (!(map.get("version") instanceof String versionString)) {
+            throw new InvalidDescriptionException(
+                    map.get("version") == null
+                            ? "version is not defined"
+                            : "version is of wrong type, it may need quotes");
         }
+        if (!Version.isValid(versionString)) {
+            throw new InvalidDescriptionException("version is in an invalid format");
+        }
+        // Normalized, so equivalent versions are written the same way
+        version = Version.parse(versionString).toString();
 
-        try {
-            mainClass = map.get("main-class").toString();
-        } catch (NullPointerException ex) {
-            throw new InvalidDescriptionException("main class is not defined", ex);
-        } catch (ClassCastException ex) {
-            throw new InvalidDescriptionException("main is of the wrong type", ex);
-        }
+        mainClass = PluginInfo.required(map, "main-class", "main class");
+        dependencies = PluginInfo.makePluginNameList(map, "dependencies");
+        softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies");
+        authors = PluginInfo.makeList(map, "authors");
+        description = map.get("description") == null ? "" : map.get("description").toString();
     }
 
     /**
@@ -200,50 +216,5 @@ public class PluginInfo {
      */
     public String getFullName() {
         return name + "-" + version;
-    }
-
-    /**
-     * The version of the plugin. This value is a string that follows the
-     * MajorVersion.MinorVersion.PatchVersion format. It should be increased when new features are
-     * added or bugs are fixed.
-     *
-     * @return the version of the plugin
-     */
-    public String getVersion() {
-        return String.format(
-                Locale.ROOT,
-                "%d.%d.%d",
-                version.majorVersion(),
-                version.minorVersion(),
-                version.patchVersion());
-    }
-
-    /**
-     * Load fields from a map, and throw an exception if the contents of the map are not valid.
-     *
-     * @param map The map generated by loading the plugin yaml file.
-     * @throws InvalidDescriptionException If the plugin info is not valid.
-     */
-    private void loadMap(Map<?, ?> map) throws InvalidDescriptionException {
-        extractRequiredFields(map);
-
-        dependencies = PluginInfo.makePluginNameList(map, "dependencies");
-        softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies");
-
-        if (map.get("description") != null) {
-            description = map.get("description").toString();
-        }
-
-        if (map.get("authors") != null) {
-            try {
-                for (Object o : (Iterable<?>) map.get("authors")) {
-                    authors.add(o.toString());
-                }
-            } catch (ClassCastException ex) {
-                throw new InvalidDescriptionException("authors are of the wrong type", ex);
-            } catch (NullPointerException ex) {
-                throw new InvalidDescriptionException("authors are not defined properly", ex);
-            }
-        }
     }
 }

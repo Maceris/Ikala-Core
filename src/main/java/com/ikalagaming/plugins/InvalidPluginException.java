@@ -1,5 +1,7 @@
 package com.ikalagaming.plugins;
 
+import java.io.Serial;
+
 /**
  * A plugin could not be loaded correctly.
  *
@@ -8,7 +10,7 @@ package com.ikalagaming.plugins;
 public class InvalidPluginException extends Exception {
 
     /** The serial version ID. */
-    private static final long serialVersionUID = -2146772321497139914L;
+    @Serial private static final long serialVersionUID = -2146772321497139914L;
 
     /**
      * Constructs a new exception with {@code null} as its detail message. The cause is not
@@ -38,7 +40,6 @@ public class InvalidPluginException extends Exception {
      * @param cause the cause (which is saved for later retrieval by the {@link #getCause()}
      *     method). (A <code>null</code> value is permitted, and indicates that the cause is
      *     nonexistent or unknown.)
-     * @since 1.4
      */
     public InvalidPluginException(String message, Throwable cause) {
         super(message, cause);

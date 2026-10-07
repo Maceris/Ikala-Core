@@ -4,6 +4,7 @@ import com.ikalagaming.event.Event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
  * Fired when (after) a plugin is loaded.
@@ -17,9 +18,8 @@ public class PluginLoaded extends Event {
     /**
      * The plugin that was just loaded.
      *
-     * @param The name of the plugin that was loaded.
      * @return The name of the plugin that was loaded.
      */
     @SuppressWarnings("javadoc")
-    private String plugin;
+    @NonNull private final String plugin;
 }

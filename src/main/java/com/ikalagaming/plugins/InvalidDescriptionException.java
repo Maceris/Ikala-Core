@@ -1,5 +1,7 @@
 package com.ikalagaming.plugins;
 
+import java.io.Serial;
+
 /**
  * A description could not be created correctly.
  *
@@ -7,7 +9,7 @@ package com.ikalagaming.plugins;
  */
 public class InvalidDescriptionException extends Exception {
 
-    private static final long serialVersionUID = 6707156764213508832L;
+    @Serial private static final long serialVersionUID = 6707156764213508832L;
 
     /**
      * Constructs a new exception with {@code null} as its detail message. The cause is not
@@ -37,7 +39,6 @@ public class InvalidDescriptionException extends Exception {
      * @param cause the cause (which is saved for later retrieval by the {@link #getCause()}
      *     method). (A <code>null</code> value is permitted, and indicates that the cause is
      *     nonexistent or unknown.)
-     * @since 1.4
      */
     public InvalidDescriptionException(String message, Throwable cause) {
         super(message, cause);
