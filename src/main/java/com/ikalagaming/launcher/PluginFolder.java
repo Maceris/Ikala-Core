@@ -2,12 +2,14 @@ package com.ikalagaming.launcher;
 
 import com.ikalagaming.util.FileUtils;
 
+import com.github.zafarkhaja.semver.Version;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -15,6 +17,7 @@ import java.util.Optional;
  *
  * @author Ches Burks
  */
+@Slf4j
 public class PluginFolder {
 
     /**
@@ -154,7 +157,15 @@ public class PluginFolder {
         }
 
         try {
-            return new String(Files.readAllBytes(file.get().toPath()));
+            String lastVersion = Files.readString(file.get().toPath()).strip();
+            if (!Version.isValid(lastVersion)) {
+                log.warn(
+                        "Ignoring invalid last used version '{}' for plugin {}",
+                        lastVersion,
+                        pluginName);
+                return version;
+            }
+            return lastVersion;
         } catch (IOException e) {
             return version;
         }
@@ -211,20 +222,8 @@ public class PluginFolder {
                 PluginFolder.getFolderForPlugin(pluginName)
                         + File.separator
                         + Constants.PLUGIN_VERSION_FILE;
-        File versionFile = new File(pathToVersionFile);
-        if (!versionFile.exists()) {
-            try {
-                boolean created = versionFile.createNewFile();
-                if (!created) {
-                    return false;
-                }
-            } catch (IOException e) {
-                return false;
-            }
-        }
-
-        try (FileWriter writer = new FileWriter(versionFile)) {
-            writer.write(version);
+        try {
+            Files.writeString(Path.of(pathToVersionFile), version);
         } catch (IOException e) {
             return false;
         }

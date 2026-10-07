@@ -5,7 +5,6 @@ import com.ikalagaming.plugins.config.ConfigManager;
 
 import lombok.NonNull;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -16,11 +15,8 @@ import java.util.Set;
  */
 public abstract class Plugin {
 
-    /**
-     * Created so we have something to return in {@link #getListeners()} without creating a new set
-     * every time. Private since we want subclasses to handle the listeners themselves.
-     */
-    private Set<Listener> emptyListenerSet = new HashSet<>();
+    /** The name from the plugin info, set by the plugin manager after creating the plugin. */
+    private String name;
 
     /**
      * Returns a list of listeners for this plugin. These listeners will be used with the event
@@ -30,15 +26,30 @@ public abstract class Plugin {
      * @return a list of listeners for the plugin.
      */
     public Set<Listener> getListeners() {
-        return emptyListenerSet;
+        return Set.of();
     }
 
     /**
-     * Returns the name of the plugin.
+     * Returns the name of the plugin, which is the name from its plugin.yml. This is set by the
+     * plugin manager right after the plugin is created, so it is null inside the constructor.
+     *
+     * <p>Plugins may override this, for example to return a constant, but the plugin will fail to
+     * load if it doesn't match the name in the plugin.yml.
      *
      * @return The unique name of the plugin.
      */
-    public abstract String getName();
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Set the name of the plugin, from its plugin info.
+     *
+     * @param name The name of the plugin.
+     */
+    void setName(@NonNull String name) {
+        this.name = name;
+    }
 
     /**
      * This method is called when the plugin is disabled, and gives the plugin the chance to shut

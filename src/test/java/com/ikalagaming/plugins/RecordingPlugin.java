@@ -3,7 +3,6 @@ package com.ikalagaming.plugins;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A plugin that records every lifecycle method called on it, so tests can check the order things
@@ -34,20 +33,6 @@ public class RecordingPlugin extends Plugin {
      */
     protected void record(String callback) {
         CALLS.add(callback + ":" + getName());
-    }
-
-    /**
-     * Every instance shares this class, so look up the name the plugin was loaded under.
-     *
-     * @return The name of the plugin from its plugin.yml.
-     */
-    @Override
-    public String getName() {
-        return PluginManager.getInstance().getLoadedPlugins().entrySet().stream()
-                .filter(entry -> entry.getValue() == this)
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse("?");
     }
 
     @Override

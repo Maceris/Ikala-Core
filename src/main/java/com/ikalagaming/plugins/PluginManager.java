@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
@@ -487,7 +489,7 @@ public class PluginManager {
         // Stop sending events before the plugin starts shutting down
         plUnregisterListeners(target, details);
 
-        boolean success = details.getPlugin().onDisable();
+        boolean success = plCallPlugin(target, "onDisable", details.getPlugin()::onDisable);
         if (success) {
             setPluginState(target, PluginState.DISABLED);
             new PluginDisabled(target).fire();
@@ -565,10 +567,11 @@ public class PluginManager {
             return false;
         }
 
-        boolean success = details.getPlugin().onEnable();
+        boolean success =
+                plCallPlugin(target, "onEnable", details.getPlugin()::onEnable)
+                        && plRegisterListeners(target, details);
         if (success) {
             this.setPluginState(target, PluginState.ENABLED);
-            plRegisterListeners(target, details);
             new PluginEnabled(target).fire();
             logAlert("ALERT_ENABLED", target);
         } else {
@@ -989,47 +992,61 @@ public class PluginManager {
      * @param loaders The map of loaders for each file that should be populated by this method.
      */
     private void plCreateClassloaders(
-            Map<File, PluginInfo> jarInfoMap,
-            List<File> skipped,
-            Map<File, PluginClassLoader> loaders) {
+            Map<File, PluginInfo> jarInfoMap, Map<File, PluginClassLoader> loaders) {
         plResetSharedClassLoader();
 
-        for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
-            PluginInfo info = entry.getValue();
-
-            String pluginName = info.getName();
+        Iterator<Map.Entry<File, PluginInfo>> entries = jarInfoMap.entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<File, PluginInfo> entry = entries.next();
+            String pluginName = entry.getValue().getName();
             if (isLoaded(pluginName)) {
+                // Older versions were already unloaded, so it must have failed to unload
                 logAlert("ALERT_PLUGIN_ALREADY_LOADED", pluginName);
-
-                boolean lowerVersion =
-                        PluginManager.isNewerVersion(
-                                info.getVersion(),
-                                pluginDetails.get(pluginName).getInfo().getVersion());
-
-                if (lowerVersion) {
-                    unloadPlugin(pluginName);
-                    // unload the old plugin and continue loading the new one
-                } else {
-                    logAlert("ALERT_PLUGIN_OUTDATED", pluginName);
-                    skipped.add(entry.getKey());
-                    continue;
-                }
-            }
-
-            PluginClassLoader loader = null;
-            try {
-                loader =
-                        new PluginClassLoader(
-                                this, pluginName, this.getClass().getClassLoader(), entry.getKey());
-            } catch (MalformedURLException e) {
-                logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
-            }
-
-            if (loader == null) {
+                entries.remove();
                 continue;
             }
-            loaders.put(entry.getKey(), loader);
+
+            try {
+                loaders.put(
+                        entry.getKey(),
+                        new PluginClassLoader(
+                                this,
+                                pluginName,
+                                this.getClass().getClassLoader(),
+                                entry.getKey()));
+            } catch (MalformedURLException e) {
+                logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
+                entries.remove();
+            }
         }
+    }
+
+    /**
+     * If the same plugin shows up more than once in a set of jars we are loading, only keep the
+     * newest version. If versions are equal, which one is kept is arbitrary.
+     *
+     * @param jarInfoMap The info for each jar we are loading. This will be modified.
+     */
+    private void plDiscardDuplicates(Map<File, PluginInfo> jarInfoMap) {
+        Map<String, Map.Entry<File, PluginInfo>> newest = new HashMap<>();
+        for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
+            PluginInfo info = entry.getValue();
+            Map.Entry<File, PluginInfo> existing = newest.get(info.getName());
+            if (existing == null) {
+                newest.put(info.getName(), entry);
+                continue;
+            }
+            PluginInfo discarded = info;
+            if (PluginManager.isNewerVersion(info.getVersion(), existing.getValue().getVersion())) {
+                discarded = existing.getValue();
+                newest.put(info.getName(), entry);
+            }
+            String msg = SafeResourceLoader.getString("PLUGIN_DUPLICATE_JAR", resourceBundle);
+            log.warn(msg, discarded.getName(), discarded.getVersion());
+        }
+        Set<File> keep =
+                newest.values().stream().map(Map.Entry::getKey).collect(Collectors.toSet());
+        jarInfoMap.keySet().retainAll(keep);
     }
 
     /**
@@ -1045,6 +1062,39 @@ public class PluginManager {
         List<String> order = new ArrayList<>();
         plVisitDependencies(target, new HashSet<>(), order);
         return order;
+    }
+
+    /**
+     * Call one of a plugin's lifecycle methods. Any exception it throws is logged and counted as a
+     * failure, so that one broken plugin can't take down the plugin manager or stop other plugins
+     * from loading. Errors that aren't linkage problems, like running out of memory, are not
+     * caught.
+     *
+     * @param pluginName The name of the plugin.
+     * @param callbackName The name of the method being called, for logging.
+     * @param callback The method to call.
+     * @return The result of the method, or false if it threw an exception.
+     */
+    private boolean plCallPlugin(String pluginName, String callbackName, BooleanSupplier callback) {
+        try {
+            return callback.getAsBoolean();
+        } catch (RuntimeException | LinkageError e) {
+            plLogCallbackException(pluginName, callbackName, e);
+            return false;
+        }
+    }
+
+    /**
+     * Log that a plugin threw an exception from one of its methods, including the stack trace.
+     *
+     * @param pluginName The name of the plugin.
+     * @param callbackName The name of the method that threw.
+     * @param exception What was thrown.
+     */
+    private void plLogCallbackException(
+            String pluginName, String callbackName, Throwable exception) {
+        String msg = SafeResourceLoader.getString("PLUGIN_CALLBACK_EXCEPTION", resourceBundle);
+        log.warn(msg, pluginName, callbackName, exception);
     }
 
     /**
@@ -1217,48 +1267,81 @@ public class PluginManager {
     private Plugin plInstantiatePluginClass(
             final PluginInfo pluginInfo, PluginClassLoader classLoader)
             throws InvalidPluginException {
+        final String name = pluginInfo.getName();
+        final String mainClass = pluginInfo.getMainClass();
 
         Class<?> clazz;
         try {
-            clazz = Class.forName(pluginInfo.getMainClass(), true, classLoader);
+            clazz = Class.forName(mainClass, true, classLoader);
         } catch (ClassNotFoundException e) {
-            String err = SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
+            throw plInvalidPlugin(e, false, "PLUGIN_MAIN_CLASS_MISSING", mainClass, name);
+        } catch (LinkageError e) {
+            // Includes static initializers throwing, and classes the main class needs not existing
+            throw plInvalidPlugin(e, true, "PLUGIN_MAIN_CLASS_LINKAGE", mainClass, name);
         }
 
-        Class<? extends Plugin> pluginClass;
+        Plugin plugin;
         try {
-            pluginClass = clazz.asSubclass(Plugin.class);
-            return pluginClass.getDeclaredConstructor().newInstance();
-        } catch (ClassCastException ex) {
-            String err = SafeResourceLoader.getString("PLUGIN_MAIN_NOT_A_PLUGIN", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
-        } catch (InstantiationException e) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_CANT_INSTANTIATE_MAIN", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
-        } catch (IllegalAccessException e) {
-            String err = SafeResourceLoader.getString("PLUGIN_MAIN_ILLEGAL_ACCESS", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
-        } catch (IllegalArgumentException e) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_MAIN_ILLEGAL_ARGUMENT", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
-        } catch (InvocationTargetException e) {
-            String err =
-                    SafeResourceLoader.getString("PLUGIN_MAIN_INVOCATION_TARGET", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
+            plugin = clazz.asSubclass(Plugin.class).getDeclaredConstructor().newInstance();
+        } catch (ClassCastException e) {
+            throw plInvalidPlugin(e, false, "PLUGIN_MAIN_NOT_A_PLUGIN", name);
         } catch (NoSuchMethodException e) {
-            String err = SafeResourceLoader.getString("PLUGIN_MAIN_METHOD_MISSING", resourceBundle);
-            log.warn(err, pluginInfo.getName());
-            throw new InvalidPluginException(err);
+            throw plInvalidPlugin(e, false, "PLUGIN_MAIN_NO_CONSTRUCTOR", name);
+        } catch (InvocationTargetException e) {
+            // The constructor threw something
+            throw plInvalidPlugin(e.getCause(), true, "PLUGIN_MAIN_INVOCATION_TARGET", name);
+        } catch (InstantiationException e) {
+            throw plInvalidPlugin(e, false, "PLUGIN_CANT_INSTANTIATE_MAIN", name);
+        } catch (IllegalAccessException e) {
+            throw plInvalidPlugin(e, false, "PLUGIN_MAIN_ILLEGAL_ACCESS", name);
+        } catch (LinkageError e) {
+            throw plInvalidPlugin(e, true, "PLUGIN_MAIN_CLASS_LINKAGE", mainClass, name);
         }
+        return plugin;
+    }
+
+    /**
+     * Make sure the plugin's {@link Plugin#getName()} matches the name in its plugin info, in case
+     * the plugin overrides it. Things like the config folder use getName(), so they have to agree.
+     *
+     * @param pluginInfo The plugin info for the plugin.
+     * @param plugin The plugin object.
+     * @throws InvalidPluginException If the names don't match.
+     */
+    private void plCheckPluginName(final PluginInfo pluginInfo, Plugin plugin)
+            throws InvalidPluginException {
+        final String name = pluginInfo.getName();
+        String reportedName;
+        try {
+            reportedName = plugin.getName();
+        } catch (RuntimeException | LinkageError e) {
+            plLogCallbackException(name, "getName", e);
+            throw plInvalidPlugin(e, false, "PLUGIN_NAME_MISMATCH", name, null);
+        }
+        if (!name.equals(reportedName)) {
+            throw plInvalidPlugin(null, false, "PLUGIN_NAME_MISMATCH", name, reportedName);
+        }
+    }
+
+    /**
+     * Log a problem creating a plugin, and create the exception to throw for it.
+     *
+     * @param cause What caused the problem, may be null.
+     * @param logCause Whether to include the cause's stack trace in the log, which is useful when
+     *     the plugin's own code threw.
+     * @param key The message to look up in the resource bundle.
+     * @param args The values to fill into the message.
+     * @return The exception to throw.
+     */
+    private InvalidPluginException plInvalidPlugin(
+            Throwable cause, boolean logCause, String key, Object... args) {
+        String message = SafeResourceLoader.getStringFormatted(key, resourceBundle, args);
+        if (logCause && cause != null) {
+            log.warn(message, cause);
+        } else {
+            log.warn(message);
+        }
+        return new InvalidPluginException(message, cause);
     }
 
     /**
@@ -1281,18 +1364,14 @@ public class PluginManager {
         Map<File, PluginInfo> jarInfoMap = new HashMap<>();
 
         plDiscardInvalidPlugins(jars, jarInfoMap);
-
-        // Plugins that were already had a newer version loaded
-        List<File> skipped = new ArrayList<>();
+        plDiscardDuplicates(jarInfoMap);
+        Set<String> restoreEnabled = plPrepareUpgrades(jarInfoMap);
 
         Map<File, PluginClassLoader> loaders = new HashMap<>();
 
-        plCreateClassloaders(jarInfoMap, skipped, loaders);
+        plCreateClassloaders(jarInfoMap, loaders);
 
         for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
-            if (skipped.contains(entry.getKey())) {
-                continue;
-            }
             PluginInfo info = entry.getValue();
             PluginClassLoader loader = loaders.get(entry.getKey());
             PluginDetails details =
@@ -1303,9 +1382,6 @@ public class PluginManager {
         }
 
         for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
-            if (skipped.contains(entry.getKey())) {
-                continue;
-            }
             PluginInfo info = entry.getValue();
 
             PluginDetails details = pluginDetails.get(info.getName());
@@ -1313,7 +1389,9 @@ public class PluginManager {
             Plugin plugin;
             try {
                 plugin = plInstantiatePluginClass(entry.getValue(), details.getClassLoader());
+                plugin.setName(info.getName());
                 details.setPlugin(plugin);
+                plCheckPluginName(info, plugin);
             } catch (InvalidPluginException e) {
                 // The method already logs the problem
                 loaders.remove(entry.getKey());
@@ -1327,6 +1405,13 @@ public class PluginManager {
 
         plDependencyResolutionStage();
         plLoadSatisfiedDependencies(enableAfterLoad);
+
+        // Plugins that were enabled before an upgrade replaced them, or a dependency of theirs
+        for (String plugin : restoreEnabled) {
+            if (PluginState.DISABLED.equals(getPluginState(plugin))) {
+                enable(plugin);
+            }
+        }
     }
 
     /**
@@ -1390,21 +1475,34 @@ public class PluginManager {
 
         Plugin plugin = details.getPlugin();
 
+        String newVersion = details.getInfo().getVersion();
+        boolean upgraded = false;
+        boolean success = true;
         if (isCommandLine()) {
             String lastVersion = PluginFolder.getLastVersionUsed(pluginName);
-            String newVersion = details.getInfo().getVersion();
-
             if (PluginManager.isNewerVersion(newVersion, lastVersion)) {
-                plugin.onUpgrade(lastVersion);
-                PluginFolder.setLastVersionUsed(pluginName, newVersion);
+                upgraded = true;
+                success =
+                        plCallPlugin(
+                                pluginName,
+                                "onUpgrade",
+                                () -> {
+                                    plugin.onUpgrade(lastVersion);
+                                    return true;
+                                });
             }
         }
 
-        if (!plugin.onLoad()) {
+        success = success && plCallPlugin(pluginName, "onLoad", plugin::onLoad);
+        if (!success) {
             logAlert("PLUGIN_LOAD_FAIL", pluginName);
             // Also removes anything depending on it, loaded yet or not
             unloadPlugin(pluginName);
             return;
+        }
+        if (upgraded) {
+            // Only once it loaded, so a failed upgrade is attempted again next time
+            PluginFolder.setLastVersionUsed(pluginName, newVersion);
         }
         // Listeners are registered when the plugin is enabled, not here
         setPluginState(pluginName, PluginState.DISABLED);
@@ -1437,18 +1535,79 @@ public class PluginManager {
     }
 
     /**
+     * Handle plugins we are about to load that already have a version loaded. If the version we are
+     * loading is newer, the old one is unloaded, which also unloads everything depending on it.
+     * Those dependents are added to the set of jars to load, so they come back along with the
+     * upgraded plugin. If the version we are loading is not newer, it is skipped.
+     *
+     * @param jarInfoMap The info for each jar we are loading. This will be modified.
+     * @return The plugins that were enabled before being unloaded for the upgrade, and should be
+     *     enabled again after loading.
+     */
+    private Set<String> plPrepareUpgrades(Map<File, PluginInfo> jarInfoMap) {
+        Set<String> wasEnabled = new HashSet<>();
+        Map<String, File> dependentJars = new HashMap<>();
+
+        for (Map.Entry<File, PluginInfo> entry : List.copyOf(jarInfoMap.entrySet())) {
+            PluginInfo info = entry.getValue();
+            String name = info.getName();
+            if (!isLoaded(name)) {
+                continue;
+            }
+            logAlert("ALERT_PLUGIN_ALREADY_LOADED", name);
+            String loadedVersion = pluginDetails.get(name).getInfo().getVersion();
+            if (!PluginManager.isNewerVersion(info.getVersion(), loadedVersion)) {
+                logAlert("ALERT_PLUGIN_OUTDATED", name);
+                jarInfoMap.remove(entry.getKey());
+                continue;
+            }
+
+            for (String plugin : plDependentsFirst(name)) {
+                PluginDetails details = pluginDetails.get(plugin);
+                if (PluginState.ENABLED.equals(details.getState())) {
+                    wasEnabled.add(plugin);
+                }
+                if (!plugin.equals(name)) {
+                    dependentJars.put(plugin, details.getJar());
+                }
+            }
+            unloadPlugin(name);
+        }
+
+        // Reload dependents from their current jars, unless we're already loading a new version
+        Set<String> loading =
+                jarInfoMap.values().stream().map(PluginInfo::getName).collect(Collectors.toSet());
+        dependentJars.forEach(
+                (plugin, jar) -> {
+                    if (!loading.contains(plugin) && !isLoaded(plugin)) {
+                        extractPluginInfo(jar).ifPresent(info -> jarInfoMap.put(jar, info));
+                    }
+                });
+        return wasEnabled;
+    }
+
+    /**
      * Register the plugin's event listeners, and remember them so that exactly the same listeners
      * are unregistered later, even if the plugin returns different ones by then.
      *
      * @param pluginName The name of the plugin.
      * @param details The details for the plugin.
+     * @return True if the listeners were registered, false if the plugin failed to provide them.
      */
-    private void plRegisterListeners(String pluginName, PluginDetails details) {
-        Set<Listener> listeners = Set.copyOf(details.getPlugin().getListeners());
+    private boolean plRegisterListeners(String pluginName, PluginDetails details) {
+        Set<Listener> listeners;
+        try {
+            listeners = Set.copyOf(details.getPlugin().getListeners());
+        } catch (RuntimeException | LinkageError e) {
+            // Includes a null set or null listeners, which Set.copyOf rejects
+            plLogCallbackException(pluginName, "getListeners", e);
+            return false;
+        }
         listeners.forEach(eventManager::registerEventListeners);
         details.setListeners(listeners);
         String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS", resourceBundle);
         log.debug(msg, pluginName);
+        return true;
     }
 
     /**
@@ -1789,6 +1948,18 @@ public class PluginManager {
             for (String s : toUnload) {
                 unloadPlugin(s);
             }
+            /*
+             * Anything that failed to unload is removed anyway, since we're
+             * shutting down. Otherwise its listeners and jar file would stay
+             * around forever.
+             */
+            for (String s : List.copyOf(pluginDetails.keySet())) {
+                String msg = SafeResourceLoader.getString("PLUGIN_FORCED_REMOVAL", resourceBundle);
+                log.warn(msg, s);
+                PluginDetails details = pluginDetails.remove(s);
+                plUnregisterListeners(s, details);
+                details.dispose();
+            }
         }
         synchronized (commandLock) {
             clearCommands();
@@ -1873,7 +2044,7 @@ public class PluginManager {
         }
         setPluginState(toUnload, PluginState.UNLOADING);
 
-        if (!plugin.onUnload()) {
+        if (!plCallPlugin(toUnload, "onUnload", plugin::onUnload)) {
             String notLoaded = SafeResourceLoader.getString("PLUGIN_UNLOAD_FAIL", resourceBundle);
             log.warn(notLoaded, toUnload);
             setPluginState(toUnload, PluginState.CORRUPTED);

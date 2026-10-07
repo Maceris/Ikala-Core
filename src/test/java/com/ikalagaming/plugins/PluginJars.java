@@ -130,15 +130,77 @@ final class PluginJars {
             List<String> softDependencies,
             Map<String, byte[]> entries)
             throws IOException {
+        writeJar(
+                folder.resolve(name + ".jar"),
+                name,
+                "0.0.1",
+                mainClass,
+                dependencies,
+                softDependencies,
+                entries);
+    }
+
+    /**
+     * Write a specific version of a plugin jar to the given folder, containing only a plugin.yml.
+     * The main class must be on the test classpath.
+     *
+     * @param folder The folder to write the jar into.
+     * @param fileName The file name of the jar, so that several versions can be side by side.
+     * @param name The name of the plugin.
+     * @param version The version of the plugin.
+     * @param mainClass The main class of the plugin.
+     * @param dependencies The hard dependencies of the plugin.
+     * @throws IOException If the jar could not be written.
+     */
+    static void writeVersion(
+            Path folder,
+            String fileName,
+            String name,
+            String version,
+            Class<? extends Plugin> mainClass,
+            String... dependencies)
+            throws IOException {
+        writeJar(
+                folder.resolve(fileName),
+                name,
+                version,
+                mainClass.getName(),
+                List.of(dependencies),
+                List.of(),
+                Map.of());
+    }
+
+    /**
+     * Write a plugin jar.
+     *
+     * @param jarFile The jar file to write.
+     * @param name The name of the plugin.
+     * @param version The version of the plugin.
+     * @param mainClass The fully qualified name of the main class of the plugin.
+     * @param dependencies The hard dependencies of the plugin.
+     * @param softDependencies The soft dependencies of the plugin.
+     * @param entries Other files to put in the jar, keyed by their path in the jar.
+     * @throws IOException If the jar could not be written.
+     */
+    private static void writeJar(
+            Path jarFile,
+            String name,
+            String version,
+            String mainClass,
+            List<String> dependencies,
+            List<String> softDependencies,
+            Map<String, byte[]> entries)
+            throws IOException {
         String info =
-                "name: %s\nversion: 0.0.1\nmain-class: %s\ndependencies: [%s]\nsoft-dependencies: [%s]\n"
+                "name: %s\nversion: %s\nmain-class: %s\ndependencies: [%s]\nsoft-dependencies: [%s]\n"
                         .formatted(
                                 name,
+                                version,
                                 mainClass,
                                 String.join(", ", dependencies),
                                 String.join(", ", softDependencies));
 
-        try (OutputStream file = Files.newOutputStream(folder.resolve(name + ".jar"));
+        try (OutputStream file = Files.newOutputStream(jarFile);
                 JarOutputStream jar = new JarOutputStream(file)) {
             jar.putNextEntry(new JarEntry("plugin.yml"));
             jar.write(info.getBytes(StandardCharsets.UTF_8));
