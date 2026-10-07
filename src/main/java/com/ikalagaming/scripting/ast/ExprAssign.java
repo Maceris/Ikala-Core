@@ -59,6 +59,13 @@ public class ExprAssign extends Node {
 
     private Operator operator;
 
+    /**
+     * Used to signify that the result of this assignment is not used for anything, and does not
+     * need to be stored on the stack. Assignments are usually statements, but can be used as
+     * expressions like {@code a = b = 1}.
+     */
+    private boolean ignoreResult;
+
     @Override
     public void process(ASTVisitor visitor) {
         visitor.visit(this);

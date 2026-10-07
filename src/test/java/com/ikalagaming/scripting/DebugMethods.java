@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,8 +41,8 @@ public class DebugMethods {
         }
     }
 
-    /** The output from the program. */
-    @Getter private static List<String> output = new ArrayList<>();
+    /** The output from the program. Synchronized since scripts may run on the script runner. */
+    @Getter private static List<String> output = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Checks if we have successfully validated the values in {@link #TEST_checkValues(String, int,
@@ -145,6 +146,121 @@ public class DebugMethods {
      */
     public static void TEST_printString(String string) {
         DebugMethods.output.add(string);
+    }
+
+    /**
+     * Records an integer as if printing.
+     *
+     * @param value The value to record.
+     */
+    public static void TEST_printInt(int value) {
+        DebugMethods.output.add(String.valueOf(value));
+    }
+
+    /**
+     * Records a double as if printing.
+     *
+     * @param value The value to record.
+     */
+    public static void TEST_printDouble(double value) {
+        DebugMethods.output.add(String.valueOf(value));
+    }
+
+    /**
+     * Records a character as if printing.
+     *
+     * @param value The value to record.
+     */
+    public static void TEST_printChar(char value) {
+        DebugMethods.output.add(String.valueOf(value));
+    }
+
+    /**
+     * Records a boolean as if printing.
+     *
+     * @param value The value to record.
+     */
+    public static void TEST_printBool(boolean value) {
+        DebugMethods.output.add(String.valueOf(value));
+    }
+
+    /**
+     * Records any object as if printing, using its string representation.
+     *
+     * @param value The value to record, may be null.
+     */
+    public static void TEST_printObject(Object value) {
+        DebugMethods.output.add(String.valueOf(value));
+    }
+
+    /**
+     * Fetches a null object.
+     *
+     * @return Null.
+     */
+    public static Object TEST_getNull() {
+        return null;
+    }
+
+    /**
+     * Records that it was called, used to check whether expressions with side effects are
+     * evaluated.
+     *
+     * @return False, always.
+     */
+    public static boolean TEST_sideEffect() {
+        DebugMethods.output.add("side effect");
+        return false;
+    }
+
+    /**
+     * Used to check that the most specific overload is chosen.
+     *
+     * @param value The value.
+     * @return Which overload was called.
+     */
+    public static String TEST_overload(Object value) {
+        return "Object";
+    }
+
+    /**
+     * Used to check that the most specific overload is chosen.
+     *
+     * @param value The value.
+     * @return Which overload was called.
+     */
+    public static String TEST_overload(String value) {
+        return "String";
+    }
+
+    /**
+     * Used to check that the most specific overload is chosen.
+     *
+     * @param value The value.
+     * @return Which overload was called.
+     */
+    public static String TEST_overload(int value) {
+        return "int";
+    }
+
+    /**
+     * Used to check that the most specific overload is chosen.
+     *
+     * @param value The value.
+     * @return Which overload was called.
+     */
+    public static String TEST_overload(double value) {
+        return "double";
+    }
+
+    /**
+     * Has the same signature as {@link DuplicateMethods#TEST_duplicate()}, to check that methods
+     * from different classes don't overwrite each other.
+     *
+     * @return The name of this class.
+     */
+    public static String TEST_duplicate() {
+        return "DebugMethods";
     }
 
     /** Private constructor so that this class is not instantiated. */

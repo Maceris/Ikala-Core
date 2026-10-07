@@ -18,10 +18,12 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 /**
  * Handles scripting.
@@ -46,8 +48,8 @@ public class ScriptManager {
     private static List<Class<?>> registeredClasses =
             Collections.synchronizedList(new ArrayList<>());
 
-    /** Maps from class name to registrations. */
-    private static Map<String, List<FunctionRegistration>> classMethods =
+    /** Maps from class to registrations. */
+    private static Map<Class<?>, List<FunctionRegistration>> classMethods =
             Collections.synchronizedMap(new HashMap<>());
 
     /** A list of all methods that are registered for easy searching. */
@@ -65,15 +67,18 @@ public class ScriptManager {
      * @return A list containing all matching registered methods, which may be empty.
      */
     public static List<Method> getMethods(@NonNull String name, int parameterCount) {
-        List<Method> methods = new ArrayList<>();
-        for (var entry : ScriptManager.registeredMethods.entrySet()) {
-            if (!name.equals(entry.getKey().name())
-                    || (parameterCount != entry.getKey().parameterTypes().size())) {
-                continue;
+        // The same method might be registered through multiple classes if it's inherited
+        Set<Method> methods = new LinkedHashSet<>();
+        synchronized (ScriptManager.registeredMethods) {
+            for (var entry : ScriptManager.registeredMethods.entrySet()) {
+                if (!name.equals(entry.getKey().name())
+                        || (parameterCount != entry.getKey().parameterTypes().size())) {
+                    continue;
+                }
+                methods.add(entry.getValue());
             }
-            methods.add(entry.getValue());
         }
-        return methods;
+        return new ArrayList<>(methods);
     }
 
     /**
@@ -92,16 +97,15 @@ public class ScriptManager {
 
         for (Method method : clazz.getMethods()) {
             final int modifiers = method.getModifiers();
-            if (!(Modifier.isStatic(modifiers) || Modifier.isPublic(modifiers))
-                    || Modifier.isAbstract(modifiers)
-                    || Modifier.isInterface(modifiers)) {
+            if (!(Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers))
+                    || Modifier.isAbstract(modifiers)) {
                 continue;
             }
-            FunctionRegistration registration = FunctionRegistration.fromMethod(method);
+            FunctionRegistration registration = FunctionRegistration.fromMethod(clazz, method);
             funcs.add(registration);
             ScriptManager.registeredMethods.put(registration, method);
         }
-        ScriptManager.classMethods.put(clazz.getSimpleName(), List.copyOf(funcs));
+        ScriptManager.classMethods.put(clazz, List.copyOf(funcs));
     }
 
     /**
@@ -183,9 +187,12 @@ public class ScriptManager {
      * Stop executing scripts, shut down the runner thread. This should be called while the program
      * is shutting down.
      */
+    @Synchronized
     public static void shutdown() {
         if (ScriptManager.runner != null) {
             ScriptManager.runner.terminate();
+            // Otherwise we would keep adding scripts to a thread that is no longer running
+            ScriptManager.runner = null;
         }
     }
 
@@ -200,10 +207,8 @@ public class ScriptManager {
             return;
         }
         ScriptManager.registeredClasses.remove(clazz);
-        ScriptManager.classMethods
-                .get(clazz.getSimpleName())
-                .forEach(ScriptManager.registeredMethods::remove);
-        ScriptManager.classMethods.remove(clazz.getSimpleName());
+        ScriptManager.classMethods.get(clazz).forEach(ScriptManager.registeredMethods::remove);
+        ScriptManager.classMethods.remove(clazz);
     }
 
     /**

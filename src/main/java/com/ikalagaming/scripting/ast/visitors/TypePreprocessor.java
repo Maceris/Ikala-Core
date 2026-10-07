@@ -49,7 +49,12 @@ public class TypePreprocessor implements ASTVisitor {
     private void calculateFourFunctionType(
             ExprArithmetic node, final Type firstType, final Type secondType) {
         if (node.getChildren().size() < 2) {
-            node.setType(firstType);
+            // Unary minus only makes sense for numbers
+            if (firstType.anyOf(Base.CHAR, Base.DOUBLE, Base.INT, Base.UNKNOWN)) {
+                node.setType(firstType);
+            } else {
+                node.setType(Type.voidType());
+            }
             return;
         }
         // invalid types
@@ -159,6 +164,10 @@ public class TypePreprocessor implements ASTVisitor {
      * @param root The current root node.
      */
     private void processTypes(Node root) {
+        if (root instanceof VarDeclarationList list) {
+            processDeclarations(list);
+            return;
+        }
         final boolean newContext = (root instanceof Block || root instanceof ForLoop);
 
         if (newContext) {
@@ -219,7 +228,8 @@ public class TypePreprocessor implements ASTVisitor {
                     node.setType(Type.voidType());
                     return;
                 }
-                // fallthrough
+                calculateFourFunctionType(node, firstType, secondType);
+                break;
             case ADD:
                 if (node.getChildren().size() > 1
                         && firstType.anyOf(Base.STRING)
@@ -322,16 +332,30 @@ public class TypePreprocessor implements ASTVisitor {
         node.setType(variableMaps.peek().get(node.getName()));
     }
 
-    @Override
-    public void visit(VarDeclarationList node) {
+    /**
+     * Process a list of variable declarations. Each variable is defined as soon as it is declared,
+     * so later declarations in the same list can refer to earlier ones, like {@code int a = 1, b =
+     * a;}.
+     *
+     * @param node The declaration list.
+     */
+    private void processDeclarations(VarDeclarationList node) {
         Type declaredType = node.getChildren().get(0).getType();
 
         for (int i = 1; i < node.getChildren().size(); ++i) {
             VarDeclaration decl = (VarDeclaration) node.getChildren().get(i);
+            // Process the initializer before the variable exists
+            for (int j = 1; j < decl.getChildren().size(); ++j) {
+                processTypes(decl.getChildren().get(j));
+            }
             decl.setType(declaredType);
             Identifier id = (Identifier) decl.getChildren().get(0);
-            id.setType(declaredType);
-            variableMaps.peek().put(id.getName(), declaredType);
+            if (variableMaps.peek().put(id.getName(), declaredType)) {
+                id.setType(declaredType);
+            } else {
+                // Redefinition, marked void so the validator catches it
+                id.setType(Type.voidType());
+            }
         }
     }
 }

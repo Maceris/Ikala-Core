@@ -1,9 +1,10 @@
+// Generated from IkalaScriptParser.g4 by ANTLR 4.13.2
 package com.ikalagaming.scripting;
 
-// Generated from IkalaScriptParser.g4 by ANTLR 4.13.2
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.*;
 import org.antlr.v4.runtime.tree.*;
 
 import java.util.List;

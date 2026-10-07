@@ -49,7 +49,13 @@ public class IkalaScriptCompiler {
         }
 
         // Convert parse tree to an Abstract Syntax Tree
-        CompilationUnit ast = AbstractSyntaxTree.process(context);
+        CompilationUnit ast;
+        try {
+            ast = AbstractSyntaxTree.process(context);
+        } catch (IllegalArgumentException e) {
+            // Invalid types or literals, which have already been logged
+            return Optional.empty();
+        }
         if (ast.isInvalid()) {
             return Optional.empty();
         }

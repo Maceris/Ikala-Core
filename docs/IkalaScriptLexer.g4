@@ -38,11 +38,23 @@ BooleanLiteral
 	;
 
 CharacterLiteral
-	: '\'' ( ~['\r\n] ) '\'' 
+	: '\'' ( ~['\\\r\n] | EscapeSequence ) '\''
 	;
 
 StringLiteral
-	: '"' ( ~[\r\n\\"] )* '"' 
+	: '"' ( ~[\r\n\\"] | EscapeSequence )* '"'
+	;
+
+// The same escape sequences as Java, except octal escapes
+fragment
+EscapeSequence
+	: '\\' [btnfrs"'\\]
+	| '\\' 'u'+ HexDigit HexDigit HexDigit HexDigit
+	;
+
+fragment
+HexDigit
+	: [0-9a-fA-F]
 	;
 
 NullLiteral

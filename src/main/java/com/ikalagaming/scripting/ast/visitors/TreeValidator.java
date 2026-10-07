@@ -2,17 +2,25 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
+import com.ikalagaming.scripting.ast.Block;
 import com.ikalagaming.scripting.ast.Break;
 import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.CompilationUnit;
+import com.ikalagaming.scripting.ast.ConstBool;
+import com.ikalagaming.scripting.ast.ConstChar;
+import com.ikalagaming.scripting.ast.ConstDouble;
+import com.ikalagaming.scripting.ast.ConstInt;
+import com.ikalagaming.scripting.ast.ConstString;
 import com.ikalagaming.scripting.ast.Continue;
 import com.ikalagaming.scripting.ast.DoWhile;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
 import com.ikalagaming.scripting.ast.ExprAssign;
+import com.ikalagaming.scripting.ast.ExprEquality;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.ForLoop;
+import com.ikalagaming.scripting.ast.Goto;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.If;
 import com.ikalagaming.scripting.ast.Label;
@@ -22,7 +30,9 @@ import com.ikalagaming.scripting.ast.SwitchLabel;
 import com.ikalagaming.scripting.ast.SwitchStatement;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
+import com.ikalagaming.scripting.ast.TypeNode;
 import com.ikalagaming.scripting.ast.VarDeclaration;
+import com.ikalagaming.scripting.ast.VarDeclarationList;
 import com.ikalagaming.scripting.ast.While;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -30,7 +40,14 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Perform validations on the tree. Things like basic type checking, or semantic analysis.
@@ -251,7 +268,180 @@ public class TreeValidator implements ASTVisitor {
         valid = true;
         check(ast);
         checkLabels(ast, new ArrayList<>());
+        if (valid) {
+            checkGotoScopes(ast);
+        }
+        checkFinals(ast, new HashSet<>());
         return valid;
+    }
+
+    /**
+     * Check that final variables are never modified after being declared. Every declaration gives
+     * the variable a value, even if it's just the default, so there are no blank finals that can be
+     * assigned later like in Java.
+     *
+     * @param node The node we are currently checking.
+     * @param finals The names of final variables that are in scope. Names are unique among
+     *     variables in scope, since shadowing is not allowed.
+     */
+    private void checkFinals(Node node, Set<String> finals) {
+        if (node instanceof VarDeclarationList list) {
+            final boolean isFinal = ((TypeNode) list.getChildren().get(0)).isFinal();
+            for (int i = 1; i < list.getChildren().size(); ++i) {
+                VarDeclaration declaration = (VarDeclaration) list.getChildren().get(i);
+                // Initializers can't refer to the variable itself, so check them first
+                for (int j = 1; j < declaration.getChildren().size(); ++j) {
+                    checkFinals(declaration.getChildren().get(j), finals);
+                }
+                if (isFinal) {
+                    finals.add(((Identifier) declaration.getChildren().get(0)).getName());
+                }
+            }
+            return;
+        }
+
+        if (node instanceof ExprAssign assign
+                && assign.getChildren().get(0) instanceof Identifier id
+                && finals.contains(id.getName())) {
+            markInvalid(node, "ASSIGN_TO_FINAL");
+        }
+        if (node instanceof ExprArithmetic arithmetic
+                && !arithmetic.getChildren().isEmpty()
+                && arithmetic.getChildren().get(0) instanceof Identifier id
+                && finals.contains(id.getName())) {
+            switch (arithmetic.getOperator()) {
+                case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+                    markInvalid(node, "ASSIGN_TO_FINAL");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Same scoping rules as the type preprocessor
+        final boolean newScope = node instanceof Block || node instanceof ForLoop;
+        Set<String> scopeFinals = newScope ? new HashSet<>(finals) : finals;
+        for (Node child : node.getChildren()) {
+            checkFinals(child, scopeFinals);
+        }
+    }
+
+    /**
+     * Fetch the value of a constant case label, so we can check for duplicates. Numbers are all
+     * converted to doubles, since a character and integer with the same value would match the same
+     * thing.
+     *
+     * @param node The expression for the case label.
+     * @return The constant value, or null if it's not a simple constant.
+     */
+    private Object constantValue(Node node) {
+        if (node instanceof ConstInt constant) {
+            return (double) constant.getValue();
+        }
+        if (node instanceof ConstChar constant) {
+            return (double) constant.getValue();
+        }
+        if (node instanceof ConstDouble constant) {
+            return constant.getValue();
+        }
+        if (node instanceof ConstString constant) {
+            return constant.getValue();
+        }
+        if (node instanceof ConstBool constant) {
+            return constant.isValue();
+        }
+        if (node instanceof ExprArithmetic arithmetic
+                && arithmetic.getOperator() == ExprArithmetic.Operator.SUB
+                && arithmetic.getChildren().size() == 1
+                && constantValue(arithmetic.getChildren().get(0)) instanceof Double value) {
+            // Negative numbers
+            return -value;
+        }
+        return null;
+    }
+
+    /**
+     * Check if a type is a reference type, which can be compared with other references or null.
+     *
+     * @param type The type to check.
+     * @return True if the type is a string, object, array, or null.
+     */
+    private boolean isReference(Type type) {
+        return type.getDimensions() > 0 || type.anyOf(Base.STRING, Base.IDENTIFIER, Base.VOID);
+    }
+
+    /**
+     * Check that no goto jumps into the scope of a variable while skipping over its declaration,
+     * which is the same rule C++ has. Unlike C++, every declaration here initializes the variable
+     * (to a default value if nothing else), so there are no declarations that are safe to skip.
+     *
+     * <p>Jumping into a block is fine as long as no declarations are skipped, and so is jumping out
+     * of the scope of a variable.
+     *
+     * @param ast The tree to check, which should already have valid labels.
+     */
+    private void checkGotoScopes(CompilationUnit ast) {
+        Map<String, List<VarDeclaration>> labelScopes = new HashMap<>();
+        Map<Goto, List<VarDeclaration>> gotoScopes = new LinkedHashMap<>();
+        findScopes(ast, new ArrayList<>(), labelScopes, gotoScopes);
+
+        for (var entry : gotoScopes.entrySet()) {
+            final String target = ((Identifier) entry.getKey().getChildren().get(0)).getName();
+            final List<VarDeclaration> labelScope = labelScopes.get(target);
+            if (labelScope == null) {
+                // Missing labels are reported elsewhere
+                continue;
+            }
+            // Compare by identity, different scopes can reuse a variable name
+            Set<VarDeclaration> gotoScope = Collections.newSetFromMap(new IdentityHashMap<>());
+            gotoScope.addAll(entry.getValue());
+            for (VarDeclaration declaration : labelScope) {
+                if (!gotoScope.contains(declaration)) {
+                    markInvalid(declaration, "GOTO_SKIPS_DECLARATION");
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Record which variable declarations are in scope at every label and goto.
+     *
+     * @param node The node we are currently looking at.
+     * @param inScope The declarations currently in scope, in the order they were declared. This is
+     *     modified as we go, but restored when leaving a scope.
+     * @param labelScopes Where to store the declarations in scope for each label name.
+     * @param gotoScopes Where to store the declarations in scope for each goto.
+     */
+    private void findScopes(
+            Node node,
+            List<VarDeclaration> inScope,
+            Map<String, List<VarDeclaration>> labelScopes,
+            Map<Goto, List<VarDeclaration>> gotoScopes) {
+        if (node instanceof Label label) {
+            labelScopes.put(label.getName(), List.copyOf(inScope));
+            return;
+        }
+        if (node instanceof Goto gotoNode) {
+            gotoScopes.put(gotoNode, List.copyOf(inScope));
+            return;
+        }
+
+        // Same scoping rules as the type preprocessor
+        final boolean newScope = node instanceof Block || node instanceof ForLoop;
+        final int outerSize = inScope.size();
+
+        for (Node child : node.getChildren()) {
+            findScopes(child, inScope, labelScopes, gotoScopes);
+        }
+        if (node instanceof VarDeclaration declaration) {
+            // In scope from here until the end of the enclosing block
+            inScope.add(declaration);
+        }
+
+        if (newScope) {
+            inScope.subList(outerSize, inScope.size()).clear();
+        }
     }
 
     @Override
@@ -265,7 +455,8 @@ public class TreeValidator implements ASTVisitor {
     public void visit(Call node) {
         if (node.isPrimary()) {
             Node expression = node.getChildren().get(0);
-            if (!expression.getType().anyOf(Base.IDENTIFIER, Base.UNKNOWN)) {
+            // Strings are objects in Java, so "abc".length() is fine, unlike other primitives
+            if (!expression.getType().anyOf(Base.IDENTIFIER, Base.STRING, Base.UNKNOWN)) {
                 markInvalid(expression, "INVALID_METHOD_CALL");
             }
         }
@@ -296,12 +487,18 @@ public class TreeValidator implements ASTVisitor {
             return;
         }
         final Node firstChild = node.getChildren().get(0);
-        if (firstChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
+        // String concatenation can include booleans, like "a" + true
+        final boolean concatenation =
+                node.getOperator() == ExprArithmetic.Operator.ADD
+                        && node.getType().anyOf(Base.STRING);
+        final Base[] invalidBases =
+                concatenation ? new Base[] {Base.VOID} : new Base[] {Base.VOID, Base.BOOLEAN};
+        if (firstChild.getType().anyOf(invalidBases)) {
             markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
         }
         if (node.getChildren().size() == 2) {
             final Node secondChild = node.getChildren().get(1);
-            if (secondChild.getType().anyOf(Base.VOID, Base.BOOLEAN)) {
+            if (secondChild.getType().anyOf(invalidBases)) {
                 markInvalid(secondChild, TreeValidator.INVALID_SECOND_CHILD);
             }
         }
@@ -316,20 +513,8 @@ public class TreeValidator implements ASTVisitor {
                 if (firstChild instanceof Identifier id
                         && id.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
                     // Fine
-                } else if (firstChild instanceof ExprArithmetic arith) {
-                    switch (arith.getOperator()) {
-                        case SUB, ADD, DIV, MUL, MOD:
-                            log.warn(
-                                    SafeResourceLoader.getString(
-                                            "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
-                                    node.getOperator().toString(),
-                                    firstChild.getClass().getSimpleName());
-                            valid = false;
-                            break;
-                        case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-                        default:
-                    }
                 } else {
+                    // We can only modify variables, not values like the result of x++
                     log.warn(
                             SafeResourceLoader.getString(
                                     "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
@@ -356,7 +541,71 @@ public class TreeValidator implements ASTVisitor {
         final Node firstChild = node.getChildren().get(0);
         final Node secondChild = node.getChildren().get(1);
 
+        if (firstChild.getType().anyOf(Base.LABEL, Base.VOID)) {
+            markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
+            return;
+        }
+
+        if (node.getOperator() == ExprAssign.Operator.ADD_ASSIGN
+                && firstChild.getType().anyOf(Base.STRING)
+                && !secondChild.getType().anyOf(Base.IDENTIFIER, Base.LABEL, Base.VOID)) {
+            // String concatenation, same rules as the + operator
+            return;
+        }
+
+        if (node.getOperator() != ExprAssign.Operator.ASSIGN
+                && (!firstChild.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
+                        || !secondChild
+                                .getType()
+                                .anyOf(Base.CHAR, Base.INT, Base.DOUBLE, Base.UNKNOWN))) {
+            // Things like -= only work on numbers
+            markInvalid(node, TreeValidator.INVALID_TYPE);
+            return;
+        }
+
         checkMoveTypes(node, firstChild, secondChild);
+    }
+
+    @Override
+    public void visit(ExprEquality node) {
+        if (!hasAtLeastTwoChildren(node)) {
+            return;
+        }
+        final Type first = node.getChildren().get(0).getType();
+        final Type second = node.getChildren().get(1).getType();
+
+        if (first.anyOf(Base.LABEL) || second.anyOf(Base.LABEL)) {
+            markInvalid(node, "INCOMPARABLE_TYPES");
+            return;
+        }
+
+        if (first.anyOf(Base.UNKNOWN)
+                || second.anyOf(Base.UNKNOWN)
+                || (first.getDimensions() == 0 && first.anyOf(Base.IDENTIFIER))
+                || (second.getDimensions() == 0 && second.anyOf(Base.IDENTIFIER))) {
+            /*
+             * We don't know the type until runtime, or it's an object that might be something
+             * like an Integer, so we can't rule anything out.
+             */
+            return;
+        }
+
+        final boolean bothNumeric =
+                first.getDimensions() == 0
+                        && second.getDimensions() == 0
+                        && first.anyOf(Base.CHAR, Base.INT, Base.DOUBLE)
+                        && second.anyOf(Base.CHAR, Base.INT, Base.DOUBLE);
+        final boolean bothBoolean =
+                first.getDimensions() == 0
+                        && second.getDimensions() == 0
+                        && first.anyOf(Base.BOOLEAN)
+                        && second.anyOf(Base.BOOLEAN);
+        final boolean bothReferences = isReference(first) && isReference(second);
+
+        if (!(bothNumeric || bothBoolean || bothReferences)) {
+            // Same rules as Java, like no comparing numbers to strings or booleans
+            markInvalid(node, "INCOMPARABLE_TYPES");
+        }
     }
 
     @Override
@@ -371,6 +620,11 @@ public class TreeValidator implements ASTVisitor {
         final Node firstChild = node.getChildren().get(0);
         if (!firstChild.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
             markInvalid(firstChild, TreeValidator.INVALID_FIRST_CHILD);
+            return;
+        }
+
+        if (node.getOperator() == ExprLogic.Operator.NOT) {
+            // Unary
             return;
         }
 
@@ -447,6 +701,14 @@ public class TreeValidator implements ASTVisitor {
     }
 
     @Override
+    public void visit(Goto node) {
+        final Node target = node.getChildren().get(0);
+        if (!target.getType().anyOf(Base.LABEL)) {
+            markInvalid(target, "GOTO_NOT_LABEL");
+        }
+    }
+
+    @Override
     public void visit(If node) {
         final Node expression = node.getChildren().get(0);
         if (!expression.getType().anyOf(Base.BOOLEAN, Base.UNKNOWN)) {
@@ -461,12 +723,19 @@ public class TreeValidator implements ASTVisitor {
         int defaultCount = 0;
 
         List<SwitchLabel> labels = getSwitchLabels(block);
+        Set<Object> caseValues = new HashSet<>();
 
         for (SwitchLabel label : labels) {
             if (label.isDefault()) {
                 ++defaultCount;
+            } else {
+                final Object value = constantValue(label.getChildren().get(0));
+                if (value != null && !caseValues.add(value)) {
+                    markInvalid(label, "DUPLICATE_CASE");
+                }
             }
             if (!label.isDefault()
+                    && !expressionType.anyOf(Base.UNKNOWN)
                     && !label.getChildren().get(0).getType().equals(expressionType)) {
                 markInvalid(label, "SWITCH_TYPE_MISMATCH");
             }

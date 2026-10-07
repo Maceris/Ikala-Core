@@ -21,6 +21,12 @@ public class Call extends Node {
      */
     private boolean primary = false;
 
+    /**
+     * Used to signify that the return value of this call is not used for anything, and does not
+     * need to be stored on the stack.
+     */
+    private boolean ignoreResult;
+
     @Override
     public void process(ASTVisitor visitor) {
         visitor.visit(this);

@@ -15,6 +15,16 @@ public enum InstructionType {
      */
     ADD_CHAR,
     /**
+     * Add two values whose types were not known until runtime, following the same rules as the +
+     * operator in Java. If either value is a string, they are concatenated, otherwise they are
+     * added as numbers. <br>
+     * <br>
+     * <b>Input 1:</b> Any value.<br>
+     * <b>Input 2:</b> Any value.<br>
+     * <b>Output:</b> The resulting string or number.
+     */
+    ADD_DYNAMIC,
+    /**
      * Add one double to another. <br>
      * <br>
      * <b>Input 1:</b> A double value.<br>
@@ -75,6 +85,15 @@ public enum InstructionType {
      * <b>Output:</b> The resulting string.
      */
     CONCAT_STRING,
+    /**
+     * Declare a variable and give it an initial value. Variables remember the type they were
+     * declared with, and only values of that type can be stored in them afterwards. <br>
+     * <br>
+     * <b>Input 1:</b> The initial value.<br>
+     * <b>Input 2:</b> Unused.<br>
+     * <b>Output:</b> The variable, with the declared type.
+     */
+    DECLARE,
     /**
      * Divide one character by another. <br>
      * <br>

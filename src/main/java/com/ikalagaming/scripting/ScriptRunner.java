@@ -43,7 +43,7 @@ class ScriptRunner extends Thread {
     /** The actual scripts that are halted. */
     private Map<ScriptRuntime, String> haltedScripts;
 
-    private boolean running;
+    private volatile boolean running;
 
     /** Used to handle synchronization and waiting for events */
     private Object syncObject;

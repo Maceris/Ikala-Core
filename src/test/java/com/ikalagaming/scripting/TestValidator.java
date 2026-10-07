@@ -1,2088 +1,699 @@
 package com.ikalagaming.scripting;
 
-import com.ikalagaming.scripting.IkalaScriptParser.CompilationUnitContext;
-import com.ikalagaming.scripting.ast.AbstractSyntaxTree;
-import com.ikalagaming.scripting.ast.CompilationUnit;
-import com.ikalagaming.scripting.ast.visitors.TreeValidator;
-import com.ikalagaming.scripting.ast.visitors.TypePreprocessor;
+import com.ikalagaming.scripting.ScriptTestHelper.Validity;
 
-import lombok.NonNull;
-import org.antlr.v4.runtime.BufferedTokenStream;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.TokenStream;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
- * Tests the functionality of the validator. This is testing syntactically valid, but semantically
- * invalid programs.
+ * Tests the validator, which rejects programs that are syntactically valid, but semantically
+ * invalid. Each test is a list of programs and whether they should pass validation.
  *
  * @author Ches Burks
  */
 class TestValidator {
-    private static IkalaScriptLexer lexer;
-    private static IkalaScriptParser parser;
-    private static ParserErrorListener errorListener;
-    private static TypePreprocessor processor = new TypePreprocessor();
-    private static TreeValidator validator = new TreeValidator();
 
-    /** Sets up the lexer and parser with a dummy string. */
-    @BeforeAll
-    static void beforeAll() {
-        CharStream stream = CharStreams.fromString("");
-        TestValidator.errorListener = new ParserErrorListener();
+    /** Operands that are never valid for arithmetic. */
+    private static final List<String> NOT_NUMBERS = List.of("\"test\"", "null", "true");
 
-        TestValidator.lexer = new IkalaScriptLexer(stream);
-        TestValidator.lexer.removeErrorListeners();
-        TestValidator.lexer.addErrorListener(TestValidator.errorListener);
-        TokenStream tokenStream = new BufferedTokenStream(TestValidator.lexer);
-        TestValidator.parser = new IkalaScriptParser(tokenStream);
-        TestValidator.parser.removeErrorListeners();
-        TestValidator.parser.addErrorListener(TestValidator.errorListener);
-    }
-
-    /** Test the arithmetic expressions. */
-    @Test
-    void testArithmetic() {
-        final String[] validChar = {"'a'", "'x'", "TEST_getChar()", "a"};
-
-        final String[] validInt = {"1", "-2", "'a'", "1 + 2", "TEST_getInt()", "a", "b"};
-
-        final String[] validDouble = {
-            "1", "-2", "'a'", "4.1", "-4.1", "1 + 2", "(9 % 5)", "TEST_getDouble()", "a", "b", "c"
-        };
-
-        final String[] invalid = {"\"test\"", "null", "true"};
-
-        final String[] operators = {"+", "-", "*", "/", "%%"};
-
-        for (String operator : operators) {
-            this.testBinaryOperator("char a; char x = %s " + operator + " %s;", validChar, invalid);
-            this.testBinaryOperator(
-                    "char a; int b; int x = %s " + operator + " %s;", validInt, invalid);
-            this.testBinaryOperator(
-                    "char a; int b; double c; double x = %s " + operator + " %s;",
-                    validDouble,
-                    invalid);
-        }
-
-        final String[] prefix = {"-", "+"};
-        for (String operator : prefix) {
-            this.testUnaryOperator("char a; char x = " + operator + "(%s);", validChar, invalid);
-            this.testUnaryOperator(
-                    "char a; int b; int x = " + operator + "(%s);", validInt, invalid);
-            this.testUnaryOperator(
-                    "char a; int b; double c; double x = " + operator + "(%s);",
-                    validDouble,
-                    invalid);
-        }
-    }
-
-    /** Test the unary arithmetic increment and decrement expressions. */
-    @Test
-    void testArithmeticUnary() {
-        final String[] validChar = {"a"};
-        final String[] invalidChar = {"'x'", "TEST_getChar()", "\"test\"", "null", "true"};
-
-        final String[] validInt = {"a", "b"};
-        final String[] invalidInt = {
-            "1", "-2", "'a'", "1 + 2", "TEST_getInt()", "\"test\"", "null", "true"
-        };
-
-        final String[] validDouble = {"a", "b", "c"};
-        final String[] invalidDouble = {
-            "1",
-            "-2",
-            "'a'",
-            "4.1",
-            "-4.1",
-            "1 + 2",
-            "(9 % 5)",
-            "TEST_getDouble()",
-            "\"test\"",
-            "null",
-            "true"
-        };
-
-        final String[] operators = {"--", "++"};
-        for (String operator : operators) {
-            this.testUnaryOperator(
-                    "char a; char x = " + operator + "(%s);", validChar, invalidChar);
-            this.testUnaryOperator(
-                    "char a; char x = (%s)" + operator + ";", validChar, invalidChar);
-
-            this.testUnaryOperator(
-                    "char a; int b; int x = " + operator + "(%s);", validInt, invalidInt);
-            this.testUnaryOperator(
-                    "char a; int b; int x = (%s)" + operator + ";", validInt, invalidInt);
-
-            this.testUnaryOperator(
-                    "char a; int b; double c; double x = " + operator + "(%s);",
-                    validDouble,
-                    invalidDouble);
-            this.testUnaryOperator(
-                    "char a; int b; double c; double x = (%s)" + operator + ";",
-                    validDouble,
-                    invalidDouble);
-        }
+    /**
+     * Create test cases that should all pass validation.
+     *
+     * @param programs The programs.
+     * @return The test arguments.
+     */
+    private static Stream<Arguments> valid(String... programs) {
+        return Arrays.stream(programs).map(program -> Arguments.of(program, Validity.VALID));
     }
 
     /**
-     * Check exhaustive type casting with an arbitrary binary operator.
+     * Create test cases that should all fail validation.
      *
-     * @param format What to pass in to the string formatter to insert two string values.
-     * @param valid Values that are valid for that type.
-     * @param invalid Values that are invalid for that type.
+     * @param programs The programs.
+     * @return The test arguments.
      */
-    private void testBinaryOperator(
-            @NonNull String format, @NonNull String[] valid, @NonNull String[] invalid) {
-
-        // Both valid
-        for (String left : valid) {
-            for (String right : valid) {
-                final String program = String.format(format, left, right);
-                Assertions.assertTrue(
-                        this.validateProgram(program),
-                        String.format("We should be able to do %s", program));
-            }
-        }
-
-        // Mix of valid and invalid
-        for (String ok : valid) {
-            for (String nok : invalid) {
-                final String first = String.format(format, ok, nok);
-                Assertions.assertFalse(
-                        this.validateProgram(first),
-                        String.format("We should not be able to do %s", first));
-
-                final String second = String.format(format, nok, ok);
-                Assertions.assertFalse(
-                        this.validateProgram(second),
-                        String.format("We should not be able to do %s", first));
-            }
-        }
-
-        // Both invalid
-        for (String left : invalid) {
-            for (String right : invalid) {
-                final String program = String.format(format, left, right);
-                Assertions.assertFalse(
-                        this.validateProgram(program),
-                        String.format("We should not be able to do %s", program));
-            }
-        }
-    }
-
-    /** Validates that we can place blocks arbitrarily. */
-    @Test
-    void testBlocks() {
-        final String blockMess =
-                """
-			{}
-			{{{{{}}}}}
-			{
-			  {}
-			  {{{}{}}{{{}}}}
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(blockMess), "We should be able to have loose blocks");
-    }
-
-    /** Check boolean assignments. */
-    @Test
-    void testBooleanAssignment() {
-        final String trueCase =
-                """
-			boolean x;
-			x = true;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(trueCase), "Assignment to boolean using true should work");
-
-        final String falseCase =
-                """
-			boolean x;
-			x = false;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(falseCase), "Assignment to boolean using false should work");
-
-        final String otherBoolean =
-                """
-			boolean x = true;
-			boolean y;
-			y = x;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(otherBoolean),
-                "Assignment to boolean using another boolean should work");
-
-        final String implicitString =
-                """
-			boolean x;
-			x = "true";
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Assignment to boolean using string should not work");
-
-        final String implicitChar =
-                """
-			boolean x;
-			x = 'f';
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitChar),
-                "Assignment to boolean using char should not work");
-
-        final String implicitInt =
-                """
-			boolean x;
-			x = 0;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Assignment to boolean using int should not work");
-
-        final String implicitDouble =
-                """
-			boolean x;
-			x = 1.0;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Assignment to boolean using double should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			boolean x;
-			x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Assignment to boolean using object should not work");
-
-        final String implicitNull =
-                """
-			boolean x;
-			x = null;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Assignment to boolean using null should not work");
-    }
-
-    /** Check boolean declarations. */
-    @Test
-    void testBooleanDeclaration() {
-        final String minimum = "boolean x;";
-        Assertions.assertTrue(
-                this.validateProgram(minimum),
-                "Construction of plain boolean declaration should work");
-
-        final String trueCase = "boolean x = true;";
-        Assertions.assertTrue(
-                this.validateProgram(trueCase), "Construction of boolean using true should work");
-
-        final String falseCase = "boolean x = false;";
-        Assertions.assertTrue(
-                this.validateProgram(falseCase), "Construction of boolean using false should work");
-
-        final String otherBoolean =
-                """
-			boolean x = false;
-			boolean y = x;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(otherBoolean),
-                "Construction of boolean using another boolean should work");
-
-        final String implicitString = "boolean x = \"test\";";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Construction of boolean using string should not work");
-
-        final String implicitChar = "boolean x = 'a';";
-        Assertions.assertFalse(
-                this.validateProgram(implicitChar),
-                "Construction of boolean using char should not work");
-
-        final String implicitInt = "boolean x = 1;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Construction of boolean using int should not work");
-
-        final String implicitDouble = "boolean x = 1.0;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Construction of boolean using double should not work");
-
-        final String implicitNull = "boolean x = null;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Construction of boolean using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			boolean x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Construction of boolean using object should not work");
-
-        final String recursive = "boolean x = x;";
-        Assertions.assertFalse(
-                this.validateProgram(recursive),
-                "Initialization by self-reference should not work");
-    }
-
-    /** Test break statements. */
-    @Test
-    void testBreak() {
-        final String outsideLoop = "break;";
-        Assertions.assertFalse(
-                this.validateProgram(outsideLoop), "We should not be able to break outside a loop");
-
-        final String loop =
-                """
-			for(;;) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(this.validateProgram(loop), "We should be able to break from a loop");
-
-        final String loopNested =
-                """
-			while (true) {
-				for(;;) {
-					break;
-				}
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(loopNested), "We should be able to break in a nested loop");
-
-        final String loopNestedInSwitch =
-                """
-			int x = 55;
-			switch (x) {
-				case 45:
-					while (true) {
-						for(;;) {
-							break;
-						}
-						break;
-					}
-					break;
-				default:
-					break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(loopNestedInSwitch),
-                "We should be able to break in a loop in a switch");
-
-        final String switchNormal =
-                """
-			int i = 1;
-			switch (i) {
-				case 1:
-					break;
-				case 2:
-				default:
-					i = 100;
-					break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(switchNormal), "We should be able to break in a switch");
-
-        final String switchInLoop =
-                """
-			for (int i = 0; i <= 10; ++i) {
-				switch (i) {
-					case 1:
-						break;
-					case 2:
-					default:
-						i = 100;
-						break;
-				}
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(switchInLoop),
-                "We should be able to break in a switch in a loop");
-    }
-
-    /** Check character assignments. */
-    @Test
-    void testCharAssignment() {
-        final String letter =
-                """
-			char x;
-			x = 'a';
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(letter), "Assignment to char using char should work");
-
-        final String otherChar =
-                """
-			char x = 'x';
-			char y;
-			y = x;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(otherChar),
-                "Assignment to char using char using another char should work");
-
-        final String implicitString =
-                """
-			char x;
-			x = "test";
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Assignment to char using string should not work");
-
-        final String implicitInt =
-                """
-			char x;
-			x = 5;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Assignment to char using integer should not work");
-
-        final String implicitDouble =
-                """
-			char x;
-			x = 3.14;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Assignment to char using double should not work");
-
-        final String implicitNull =
-                """
-			char x;
-			x = null;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Assignment to char using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			char x;
-			x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Assignment to char using object should not work");
-    }
-
-    /** Check character declarations. */
-    @Test
-    void testCharDeclaration() {
-        final String minimum = "char x;";
-        Assertions.assertTrue(
-                this.validateProgram(minimum),
-                "Construction of plain char declaration should work");
-
-        final String letter = "char x = 'a';";
-        Assertions.assertTrue(
-                this.validateProgram(letter), "Construction of char using char should work");
-
-        final String implicitString = "char x = \"test\";";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Construction of char using string should not work");
-
-        final String implicitInt = "char x = 1;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Construction of char using integer should not work");
-
-        final String implicitDouble = "char x = 3.0;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Construction of char using double should not work");
-
-        final String implicitNull = "char x = null;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Construction of char using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			char x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Construction of char using object should not work");
-
-        final String recursive = "char x = x;";
-        Assertions.assertFalse(
-                this.validateProgram(recursive),
-                "Initialization by self-reference should not work");
-    }
-
-    /** Test the conditional expressions. */
-    @Test
-    void testConditional() {
-        final String formatOr = "boolean x = %s || %s;";
-
-        final String[] valid = {
-            "true",
-            "false",
-            "1 < 2",
-            "(3 >= 6)",
-            "0 != 3",
-            "4 == 4",
-            "(3 < 1 || 3 >= 1)",
-            "(!(3 < 1) && 3 >= 1)",
-            "TEST_getBoolean()"
-        };
-        final String[] invalid = {"'c'", "4", "4.1", "\"test\"", "null"};
-
-        this.testBinaryOperator(formatOr, valid, invalid);
-
-        final String formatAnd = "boolean x = %s && %s;";
-        this.testBinaryOperator(formatAnd, valid, invalid);
-
-        final String formatNot = "boolean x = !%s;";
-        this.testUnaryOperator(formatNot, valid, invalid);
-    }
-
-    /** Test continue statements. */
-    @Test
-    void testContinue() {
-        final String outsideLoop = "continue;";
-        Assertions.assertFalse(
-                this.validateProgram(outsideLoop),
-                "We should not be able to continue outside a loop");
-
-        final String loop =
-                """
-			for(;false;) {
-				continue;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(loop), "We should be able to continue from a loop");
-
-        final String loopNested =
-                """
-			while (false) {
-				for(;false;) {
-					continue;
-				}
-				continue;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(loopNested), "We should be able to continue in a nested loop");
-
-        final String loopNestedInSwitch =
-                """
-			int x = 55;
-			switch (x) {
-				case 45:
-					while (false) {
-						for(;false;) {
-							continue;
-						}
-						continue;
-					}
-					break;
-				default:
-					break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(loopNestedInSwitch),
-                "We should be able to continue in a loop in a switch");
-
-        final String switchNormal =
-                """
-			int i = 1;
-			switch (i) {
-				case 1:
-					continue;
-				case 2:
-				default:
-					i = 100;
-					break;
-			}
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(switchNormal),
-                "We should not be able to continue in a switch");
-
-        final String switchInLoop =
-                """
-			for (int i = 0; i <= 10; ++i) {
-				switch (i) {
-					case 1:
-						continue;
-					case 2:
-					default:
-						i = 100;
-						break;
-				}
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(switchInLoop),
-                "We should be able to continue in a switch in a loop");
-    }
-
-    /** Check double assignments. */
-    @Test
-    void testDoubleAssignment() {
-        final String implicitChar =
-                """
-			double x;
-			x = 'b';
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(implicitChar), "Assignment to double using char should work");
-
-        final String implicitInt =
-                """
-			double x;
-			x = 4;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(implicitInt), "Assignment to double using int should work");
-
-        final String number =
-                """
-			double x;
-			x = 7.340;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(number), "Assignment to double using double should work");
-
-        final String implicitString =
-                """
-			double x;
-			x = "4.21";
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Assignment to double using string should not work");
-
-        final String implicitNull =
-                """
-			double x;
-			x = null;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Assignment to double using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			double x;
-			x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Assignment to double using object should not work");
-    }
-
-    /** Check double declarations. */
-    @Test
-    void testDoubleDeclaration() {
-        final String minimum = "double x;";
-        Assertions.assertTrue(
-                this.validateProgram(minimum),
-                "Construction of plain double declaration should work");
-
-        final String implicitChar = "double x = 'a';";
-        Assertions.assertTrue(
-                this.validateProgram(implicitChar),
-                "Construction of double using char should work");
-
-        final String implicitInt = "double x = 1;";
-        Assertions.assertTrue(
-                this.validateProgram(implicitInt), "Construction of double using int should work");
-
-        final String number = "double x = 1.34;";
-        Assertions.assertTrue(
-                this.validateProgram(number), "Construction of double using double should work");
-
-        final String implicitString = "double x = \"test\";";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Construction of double using string should not work");
-
-        final String implicitNull = "double x = null;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Construction of double using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			double x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Construction of double using object should not work");
-
-        final String recursive = "double x = x;";
-        Assertions.assertFalse(
-                this.validateProgram(recursive),
-                "Initialization by self-reference should not work");
-    }
-
-    /** Test the while statement for equality expressions. */
-    @Test
-    void testDoWhileEquality() {
-        final String equalityExpression1 =
-                """
-			do {
-				break;
-			}
-			while(1 == 2);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression1),
-                "Do while should work with an equality expression");
-
-        final String equalityExpression2 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(1 == x);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression2),
-                "Do while should work with an equality expression");
-
-        final String equalityExpression3 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(x != 1);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression3),
-                "Do while should work with an equality expression");
-
-        final String equalityExpression4 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(x != x);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression4),
-                "Do while should work with an equality expression");
-    }
-
-    /** Test the while statement with logical expressions. */
-    @Test
-    void testDoWhileLogical() {
-        final String logicalExpression1 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(x <= 3 || 3 > x);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(logicalExpression1),
-                "Do while should work with a logical expression");
-
-        final String logicalExpression2 =
-                """
-			boolean x = true;
-			do {
-				break;
-			}
-			while(x && 1 > 3);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(logicalExpression2),
-                "Do while should work with a logical expression");
-
-        final String logicalExpression3 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(!(x <= x || x > x));
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(logicalExpression3),
-                "Do while should work with a logical expression");
-    }
-
-    /** Test the while statement with negative cases. */
-    @Test
-    void testDoWhileNegative() {
-        final String integer =
-                """
-			do {
-				break;
-			}
-			while(1);
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(integer), "Do while should not work with an integer");
-
-        final String character =
-                """
-			do {
-				break;
-			}
-			while('y');
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(character), "Do while should not work with a character");
-
-        final String string =
-                """
-			do {
-				break;
-			}
-			while("true");
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(string), "Do while should not work with a string");
-
-        final String nullValue =
-                """
-			do {
-				break;
-			}
-			while(null);
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(nullValue), "Do while should not work with a null");
-
-        final String numericExpression =
-                """
-			do {
-				break;
-			}
-			while(1 + 2);
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(numericExpression),
-                "Do while should not work with a numeric expression");
-    }
-
-    /** Test the while statement with relational expressions. */
-    @Test
-    void testDoWhileRelation() {
-        final String relationExpression1 =
-                """
-			do {
-				break;
-			}
-			while(3 < 2);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression1),
-                "Do while should work with an relational expression");
-
-        final String relationExpression2 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(x > 1);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression2),
-                "Do while should work with an relational expression");
-
-        final String relationExpression3 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(3 <= x);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression3),
-                "Do while should work with an relational expression");
-
-        final String relationExpression4 =
-                """
-			int x = 1;
-			do {
-				break;
-			}
-			while(x <= x);
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression4),
-                "Do while should work with an relational expression");
-    }
-
-    /** Check for empty statements. */
-    @Test
-    void testEmptyStatement() {
-        final String single = ";";
-        Assertions.assertTrue(this.validateProgram(single), "We should allow empty statements");
-
-        final String several =
-                """
-			;{
-			  ;
-			}
-			;
-			{
-			  ;;;
-			  {;}
-			  ;;;
-			;}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(several),
-                "We should allow empty statements in arbitrary places");
-    }
-
-    /** Test the equality expressions. */
-    @Test
-    void testEquality() {
-        final String formatEq = "boolean x = %s == %s;";
-
-        final String[] valid = {
-            "true",
-            "false",
-            "1 < 2",
-            "(3 >= 6)",
-            "(0 != 3)",
-            "(4 == 4)",
-            "(3 < 1 || 3 >= 1)",
-            "(!(3 < 1) && 3 >= 1)",
-            "TEST_getBoolean()",
-            "'c'",
-            "4",
-            "4.1",
-            "\"test\"",
-            "null"
-        };
-        final String[] invalid = {};
-
-        this.testBinaryOperator(formatEq, valid, invalid);
-
-        final String formatNeq = "boolean x = %s != %s;";
-        this.testBinaryOperator(formatNeq, valid, invalid);
-    }
-
-    /** Test the for statement only works with boolean conditionals. */
-    @Test
-    void testForExpressions() {
-        final String[] negativeCases = {"1", "'c'", "\"true\"", "4.2", "null", "43 % 1"};
-
-        for (String negativeCase : negativeCases) {
-            final String equalityExpression1 = String.format("for (;%s;){break;}", negativeCase);
-            Assertions.assertFalse(
-                    this.validateProgram(equalityExpression1),
-                    String.format(
-                            "For conditional should only accept a boolean, but accepted %s",
-                            negativeCase));
-        }
-        final String[] positiveCases = {"true", "false", "1  >= 3", "true || x < 3 && x <= 5", ""};
-
-        for (String positiveCase : positiveCases) {
-            final String equalityExpression1 =
-                    String.format("int x = 4; for (;%s;){break;}", positiveCase);
-            Assertions.assertTrue(
-                    this.validateProgram(equalityExpression1),
-                    String.format(
-                            "For conditional should accept a boolean, but did not accept %s",
-                            positiveCase));
-        }
-    }
-
-    /** Test the goto label logic. */
-    @Test
-    void testGoto() {
-        final String endLabel =
-                """
-			goto END;
-			END:
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(endLabel),
-                "We should be able to jump to a label at the end of the program");
-
-        final String labeledStatement =
-                """
-			goto before;
-			int x;
-			before:
-			x++;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(labeledStatement),
-                "We should be able to have a label before a statement");
-
-        final String moreComplex =
-                """
-			// Vary up case a bit
-			goto afterFor;
-
-			for (;;) {
-			  inside_for:
-			  goto End;
-			}
-
-			afterFor:
-			goto inside_for;
-
-			End:
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(moreComplex), "We should allow more complex jumps");
-
-        final String nonexistent =
-                """
-			goto nonexistent;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(nonexistent),
-                "We should not be able to goto a label that does not exist");
-    }
-
-    /** Test if statements. */
-    @Test
-    void testIfStatement() {
-        final String standard =
-                """
-			int x = 4;
-			if (x >= 4) {
-
-			}
-			""";
-        Assertions.assertTrue(this.validateProgram(standard), "If statements should work");
-
-        final String oneElse =
-                """
-			int x = 4;
-			if (x >= 4) {
-
-			} else {
-
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(oneElse), "If statements with one else should work");
-
-        final String elseIf =
-                """
-			int x = 4;
-			if (x == 4) {
-
-			} else if (x < 4) {
-
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(elseIf), "If statements with an else if should work");
-
-        final String elseIfElse =
-                """
-			int x = 4;
-			if (x >= 4) {
-
-			} else if (x < 4) {
-
-			} else {
-
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(elseIfElse),
-                "If statements with an else if and else should work");
-
-        final String withBooleanVar =
-                """
-			boolean x = true;
-			if (x) {
-
-			} else {
-
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(withBooleanVar),
-                "If statements with with a boolean variable should work");
-
-        final String notBoolean =
-                """
-			int x = 4;
-			if (x) {
-
-			} else if (x < 4) {
-
-			} else {
-
-			}
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(notBoolean),
-                "If statements with without a boolean should not work");
-
-        // extraneous else clauses is caught by the parser itself
-    }
-
-    /** Check integer assignments. */
-    @Test
-    void testIntAssignment() {
-        final String implicitChar =
-                """
-			int x;
-			x = 'f';
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(implicitChar), "Assignment to int using char should work");
-
-        final String number =
-                """
-			int x;
-			x = 4;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(number), "Assignment to int using int should work");
-
-        final String implicitDouble =
-                """
-			int x;
-			x = 6.6;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Assignment to int using double should not work");
-
-        final String implicitString =
-                """
-			int x;
-			x = "456";
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Assignment to int using string should not work");
-
-        final String implicitNull =
-                """
-			int x;
-			x = null;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull), "Assignment to int using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			int x;
-			x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Assignment to int using object should not work");
-    }
-
-    /** Check integer declarations. */
-    @Test
-    void testIntDeclaration() {
-        final String minimum = "int x;";
-        Assertions.assertTrue(
-                this.validateProgram(minimum), "Construction of plain int declaration should work");
-
-        final String implicitChar = "int x = 'a';";
-        Assertions.assertTrue(
-                this.validateProgram(implicitChar), "Construction of int using char should work");
-
-        final String number = "int x = 1;";
-        Assertions.assertTrue(
-                this.validateProgram(number), "Construction of int using int should work");
-
-        final String implicitDouble = "int x = 1.0;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Construction of int using double should not work");
-
-        final String implicitString = "int x = \"test\";";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Construction of int using string should not work");
-
-        final String implicitNull = "int x = null;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitNull),
-                "Construction of int using null should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			int x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Construction of int using object should not work");
-
-        final String recursive = "int x = x;";
-        Assertions.assertFalse(
-                this.validateProgram(recursive),
-                "Initialization by self-reference should not work");
-    }
-
-    /** Test the label logic. */
-    @Test
-    void testLabels() {
-        final String endLabel =
-                """
-			END:
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(endLabel),
-                "We should be able to have a label at the end of the program");
-
-        final String labeledStatement =
-                """
-			int x;
-			before:
-			x++;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(labeledStatement),
-                "We should be able to have a label before a statement");
-
-        final String duplicated =
-                """
-			duplicated:
-			int x;
-			duplicated:
-			x++;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(duplicated), "We should not be able to have duplicate labels");
-    }
-
-    /** Validates method calls. */
-    @Test
-    void testMethods() {
-        ScriptManager.registerClass(DebugMethods.class);
-
-        final String methodChain =
-                """
-			TestObject object = TEST_getObject();
-			object.getSelf().getSelf().getSelf();
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(methodChain),
-                "We should be able to call static and instance methods");
-
-        final String ternaryCall =
-                """
-			Object x = TEST_getObject(), y = TEST_getObject();
-			int z = 3;
-			(z > 2 ? x : y).getSelf();
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(ternaryCall),
-                "We should be able to call methods on objects from a ternary");
-
-        final String charCall =
-                """
-			char x = 'e';
-			x.toString();
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(charCall),
-                "We should not be able to call methods on characters");
-
-        final String intCall =
-                """
-			int x = 1;
-			x.toString();
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(intCall), "We should not be able to call methods on integers");
-
-        final String doubleCall =
-                """
-			double x = 3.12;
-			x.toString();
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(doubleCall),
-                "We should not be able to call methods on doubles");
-
-        final String booleanCall =
-                """
-			boolean x = true;
-			x.toString();
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(booleanCall),
-                "We should not be able to call methods on booleans");
-
-        final String stringCall =
-                """
-			string x = "test";
-			x.toString();
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(stringCall),
-                "We should not be able to call methods on strings");
-    }
-
-    /** Check object assignment. */
-    @Test
-    void testObjectAssignment() {
-        final String sameType =
-                """
-			Random obj1;
-			Random obj2;
-			obj2 = obj1;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(sameType),
-                "Assignment to object using another of the same type should work");
-
-        final String differentType =
-                """
-			Random obj1;
-			Another obj2;
-			obj2 = obj1;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(differentType),
-                "Assignment to object using another of different type should not work");
-
-        final String implicitChar =
-                """
-			Example object;
-			object = 'a';
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitChar),
-                "Assignment to object using char should not work");
-
-        final String implicitInt =
-                """
-			Example object;
-			object = 1;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Assignment to object using int should not work");
-
-        final String implicitDouble =
-                """
-			Example object;
-			object = 5.21;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Assignment to object using double should not work");
-
-        final String implicitBoolean =
-                """
-			Example object;
-			object = false;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitBoolean),
-                "Assignment to object using boolean should not work");
-
-        final String implicitString =
-                """
-			Example object;
-			object = "test";
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Assignment to object using string should not work");
-    }
-
-    /** Check object declaration. */
-    @Test
-    void testObjectDeclaration() {
-        final String minimum = "Random obj;";
-        Assertions.assertTrue(this.validateProgram(minimum), "Declaration of object should work");
-
-        final String sameType =
-                """
-			Random obj1 = null;
-			Random obj2 = obj1;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(sameType),
-                "Construction of object using another of the same type should work");
-
-        final String differentType =
-                """
-			Random obj1;
-			Another obj2 = obj1;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(differentType),
-                "Construction of object using another of different type should not work");
-
-        final String implicitChar =
-                """
-			Example object = 'd';
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitChar),
-                "Construction of object using char should not work");
-
-        final String implicitInt =
-                """
-			Example object = 1;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Construction of object using int should not work");
-
-        final String implicitDouble =
-                """
-			Example object = 5.21;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Construction of object using double should not work");
-
-        final String implicitBoolean =
-                """
-			Example object = false;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitBoolean),
-                "Construction of object using boolean should not work");
-
-        final String implicitString =
-                """
-			Example object = "test";
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitString),
-                "Construction of object using string should not work");
-    }
-
-    /** Test the relational expressions. */
-    @Test
-    void testRelational() {
-        final String[] valid = {
-            "1", "-2", "'a'", "4.1", "-4.1", "1 + 2", "(9 % 5)", "TEST_getInt()"
-        };
-
-        final String[] invalid = {"\"test\"", "null", "true"};
-
-        final String[] operators = {"<", "<=", ">", ">="};
-
-        for (String operator : operators) {
-            this.testBinaryOperator("boolean x = %s " + operator + " %s;", valid, invalid);
-        }
-    }
-
-    /** Check string assignments. */
-    @Test
-    void testStringAssignment() {
-        final String string =
-                """
-			string x;
-			x = "test";
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(string), "Construction of string using string should work");
-
-        final String implicitNull =
-                """
-			string x;
-			x = null;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(implicitNull),
-                "Construction of string using null should work");
-
-        final String implicitChar =
-                """
-			string x;
-			x = 'y';
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitChar),
-                "Construction of string using char should not work");
-
-        final String implicitInt =
-                """
-			string x;
-			x = 8;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Construction of string using int should not work");
-
-        final String implicitDouble =
-                """
-			string x;
-			x = 4.1;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Construction of string using double should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			string x;
-			x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Construction of string using object should not work");
-    }
-
-    /** Check string declarations. */
-    @Test
-    void testStringDeclaration() {
-        final String minimum = "string x;";
-        Assertions.assertTrue(
-                this.validateProgram(minimum),
-                "Construction of plain string declaration should work");
-
-        final String string = "string x = \"test\";";
-        Assertions.assertTrue(
-                this.validateProgram(string), "Construction of string using string should work");
-
-        final String implicitNull = "string x = null;";
-        Assertions.assertTrue(
-                this.validateProgram(implicitNull),
-                "Construction of string using null should work");
-
-        final String implicitChar = "string x = 'a';";
-        Assertions.assertFalse(
-                this.validateProgram(implicitChar),
-                "Construction of string using char should not work");
-
-        final String implicitInt = "string x = 1;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitInt),
-                "Construction of string using int should not work");
-
-        final String implicitDouble = "string x = 1.0;";
-        Assertions.assertFalse(
-                this.validateProgram(implicitDouble),
-                "Construction of string using double should not work");
-
-        final String implicitObject =
-                """
-			Random obj;
-			string x = obj;
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(implicitObject),
-                "Construction of string using object should not work");
-
-        final String recursive = "string x = x;";
-        Assertions.assertFalse(
-                this.validateProgram(recursive),
-                "Initialization by self-reference should not work");
-    }
-
-    /** Validates that we can only have 1 default label in a switch statement. */
-    @Test
-    void testSwitchDefault() {
-        final String zeroDefaults =
-                """
-			int x = 4;
-			switch (x) {
-			  case 1:
-			    break;
-			  case 2:
-			  case 3:
-			    break;
-			}
-			""";
-        Assertions.assertTrue(this.validateProgram(zeroDefaults), "Zero defaults should pass");
-
-        final String oneDefault =
-                """
-			int x = 4;
-			switch (x) {
-			  case 1:
-			    break;
-			  case 2:
-			  case 3:
-			    break;
-			  default:
-			    break;
-			}
-			""";
-        Assertions.assertTrue(this.validateProgram(oneDefault), "One default should pass");
-
-        final String twoDefaults =
-                """
-			int x = 4;
-			switch (x) {
-			  case 1:
-			  default:
-			    break;
-			  case 2:
-			  case 3:
-			    break;
-			  default:
-			    break;
-			}
-			""";
-        Assertions.assertFalse(this.validateProgram(twoDefaults), "Two defaults should fail");
-    }
-
-    /** Test the ternary operator. */
-    @Test
-    void testTernary() {
-        final String usingVariable =
-                """
-			boolean cond = true;
-			int x = cond ? 1 : 4;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(usingVariable),
-                "Ternary operators should work with boolean variables");
-        final String hardcoded =
-                """
-			double x = true ? 1.0 : 4.3;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(hardcoded),
-                "Ternary operators should work with boolean constants");
-
-        final String relationals =
-                """
-			double x = 4.45;
-			// It's testing types, don't @ me
-			boolean y = x <= 500 ? true : false;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationals),
-                "Ternary operators should work with relational operators");
-
-        final String equality =
-                """
-			int x = 45;
-			double y = x != 46 ? 4.1 : 2.1;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equality),
-                "Ternary operators should work with equality operators");
+    private static Stream<Arguments> invalid(String... programs) {
+        return Arrays.stream(programs).map(program -> Arguments.of(program, Validity.INVALID));
     }
 
     /**
-     * Check exhaustive type casting with the ternary operator.
+     * Combine several streams of test cases into one.
      *
-     * @param type The target type.
-     * @param valid Values that are valid for that type.
-     * @param invalid Values that are invalid for that type.
+     * @param groups The test cases.
+     * @return A stream of all of them.
      */
-    private void testTernary(
-            @NonNull String type, @NonNull String[] valid, @NonNull String[] invalid) {
+    @SafeVarargs
+    private static Stream<Arguments> concat(Stream<Arguments>... groups) {
+        return Arrays.stream(groups).flatMap(group -> group);
+    }
 
-        // Both valid
-        for (String left : valid) {
-            for (String right : valid) {
-                if (left.equals(right) && "null".equals(left)) {
-                    continue;
+    /**
+     * Generate test cases for a unary operator applied to each operand.
+     *
+     * @param before The program up to the operand.
+     * @param after The program after the operand.
+     * @param valid Operands that are allowed.
+     * @param invalid Operands that are not allowed.
+     * @return The test arguments.
+     */
+    private static Stream<Arguments> unaryCases(
+            String before, String after, List<String> valid, List<String> invalid) {
+        return Stream.concat(
+                valid.stream().map(v -> Arguments.of(before + v + after, Validity.VALID)),
+                invalid.stream().map(v -> Arguments.of(before + v + after, Validity.INVALID)));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void arithmetic(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> arithmetic() {
+        // The variable declarations, then the operands that are valid for that type
+        final Map<String, List<String>> targets =
+                Map.of(
+                        "char a; char x = ",
+                        List.of("'a'", "'x'", "TEST_getChar()", "a"),
+                        "char a; int b; int x = ",
+                        List.of("1", "-2", "'a'", "1 + 2", "TEST_getInt()", "a", "b"),
+                        "char a; int b; double c; double x = ",
+                        List.of(
+                                "1",
+                                "-2",
+                                "'a'",
+                                "4.1",
+                                "-4.1",
+                                "1 + 2",
+                                "(9 % 5)",
+                                "TEST_getDouble()",
+                                "a",
+                                "b",
+                                "c"));
+
+        List<Stream<Arguments>> cases = new ArrayList<>();
+        for (var target : targets.entrySet()) {
+            for (String operator : List.of("+", "-", "*", "/", "%")) {
+                cases.add(
+                        ScriptTestHelper.binaryOperatorCases(
+                                target.getKey(),
+                                operator,
+                                target.getValue(),
+                                TestValidator.NOT_NUMBERS));
+            }
+            for (String operator : List.of("-", "+")) {
+                cases.add(
+                        TestValidator.unaryCases(
+                                target.getKey() + operator + "(",
+                                ");",
+                                target.getValue(),
+                                TestValidator.NOT_NUMBERS));
+            }
+        }
+        cases.add(
+                TestValidator.concat(
+                        invalid(
+                                "string s = \"a\" * 2;",
+                                "string s = \"a\" / 2;",
+                                "string s = 2 * \"a\";",
+                                "string s = \"a\" - \"b\";",
+                                "string s = \"a\" % 2;",
+                                "string s = -\"abc\";",
+                                "int x = -true;",
+                                "int x = true + 1;"),
+                        valid(
+                                "string s = \"a\" + 1;",
+                                "string s = 1 + \"a\";",
+                                "string s = \"a\" + true;",
+                                "string s = \"a\" + 'c' + 1.5;")));
+        return cases.stream().flatMap(stream -> stream);
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void assignmentTypes(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> assignmentTypes() {
+        final List<String> values =
+                List.of("true", "'c'", "1", "1.5", "\"s\"", "null", "obj", "other");
+        // Which values each type accepts, like Java
+        final Map<String, List<String>> accepted =
+                Map.of(
+                        "boolean", List.of("true"),
+                        "char", List.of("'c'"),
+                        "int", List.of("'c'", "1"),
+                        "double", List.of("'c'", "1", "1.5"),
+                        "string", List.of("\"s\"", "null"),
+                        "Random", List.of("null", "obj"));
+        final String objects = "Random obj; Another other; ";
+
+        List<Arguments> cases = new ArrayList<>();
+        for (var type : accepted.entrySet()) {
+            for (String value : values) {
+                final Validity validity =
+                        type.getValue().contains(value) ? Validity.VALID : Validity.INVALID;
+                final String name = type.getKey();
+                cases.add(Arguments.of(objects + name + " x = " + value + ";", validity));
+                cases.add(Arguments.of(objects + name + " x; x = " + value + ";", validity));
+            }
+            cases.add(Arguments.of(type.getKey() + " x;", Validity.VALID));
+            cases.add(Arguments.of(type.getKey() + " x = x;", Validity.INVALID));
+        }
+        return cases.stream();
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void breakAndContinue(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> breakAndContinue() {
+        return TestValidator.concat(
+                invalid("break;", "continue;", "int i = 1; switch (i) { case 1: continue; }"),
+                valid(
+                        "for (;;) { break; }",
+                        "for (; false;) { continue; }",
+                        "while (true) { for (;;) { break; } break; }",
+                        "while (false) { for (; false;) { continue; } continue; }",
+                        """
+                        int x = 55;
+                        switch (x) {
+                            case 45:
+                                while (true) {
+                                    for (;;) {
+                                        break;
+                                    }
+                                    continue;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        """,
+                        "int i = 1; switch (i) { case 1: break; case 2: default: i = 100; break; }",
+                        """
+                        for (int i = 0; i <= 10; ++i) {
+                            switch (i) {
+                                case 1:
+                                    continue;
+                                case 2:
+                                default:
+                                    i = 100;
+                                    break;
+                            }
+                        }
+                        """));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void compoundAssignment(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> compoundAssignment() {
+        return TestValidator.concat(
+                valid(
+                        "int x = 1; x += 2; x -= 'a'; x *= TEST_getInt(); x /= 2; x %= 3;",
+                        "double d = 1; d += 1.5; d -= 1; d *= 'c';",
+                        "string s = \"a\"; s += 1; s += true; s += 'c'; s += 1.5; s += \"b\";"),
+                invalid(
+                        "string s = \"a\"; s -= \"b\";",
+                        "string s = \"a\"; s *= 2;",
+                        "boolean b = true; b += true;",
+                        "Random r; r += 1;",
+                        "int x = 1; x += \"a\";",
+                        "int x = 1; x += 1.5;"));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void conditions(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> conditions() {
+        final String variables = "int x = 1; boolean b = true; string s = \"true\"; Random obj; ";
+        final List<String> statements =
+                List.of(
+                        "if (COND) { }",
+                        "if (COND) { } else if (COND) { } else { }",
+                        "while (COND) { break; }",
+                        "do { break; } while (COND);",
+                        "for (; COND;) { break; }",
+                        "int y = COND ? 1 : 2;");
+        final List<String> booleans =
+                List.of(
+                        "true",
+                        "false",
+                        "b",
+                        "TEST_getBoolean()",
+                        "1 == 2",
+                        "1 == x",
+                        "x != x",
+                        "3 < 2",
+                        "x > 1",
+                        "3 <= x",
+                        "x <= x",
+                        "x <= 3 || 3 > x",
+                        "b && 1 > 3",
+                        "!(x <= x || x > x)",
+                        "true || x < 3 && x <= 5",
+                        "(x < 4 ? false : true)");
+        final List<String> notBooleans =
+                List.of("1", "'y'", "\"true\"", "null", "1 + 2", "4.2", "43 % 1", "x", "s", "obj");
+
+        List<Arguments> cases = new ArrayList<>();
+        for (String statement : statements) {
+            for (String condition : booleans) {
+                cases.add(
+                        Arguments.of(
+                                variables + statement.replace("COND", condition), Validity.VALID));
+            }
+            for (String condition : notBooleans) {
+                cases.add(
+                        Arguments.of(
+                                variables + statement.replace("COND", condition),
+                                Validity.INVALID));
+            }
+        }
+        // For loops are the only place a condition is optional
+        cases.add(Arguments.of("for (;;) { break; }", Validity.VALID));
+        return cases.stream();
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void equality(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> equality() {
+        // Values can only be compared with values of a compatible type, like Java
+        final List<List<String>> compatibleGroups =
+                List.of(
+                        List.of(
+                                "true",
+                                "(3 >= 6)",
+                                "(4 == 4)",
+                                "(3 < 1 || 3 >= 1)",
+                                "(!(3 < 1) && 3 >= 1)"),
+                        List.of("'c'", "4", "4.1", "-2"),
+                        List.of("\"test\"", "null"));
+        // We don't know the type until runtime, so these can be compared to anything
+        final List<String> unknown = List.of("TEST_getBoolean()", "obj");
+
+        List<Arguments> cases = new ArrayList<>();
+        for (String operator : List.of("==", "!=")) {
+            final String prefix = "Random obj; boolean x = ";
+            for (int group = 0; group < compatibleGroups.size(); ++group) {
+                for (String first : compatibleGroups.get(group)) {
+                    for (String other : unknown) {
+                        cases.add(
+                                Arguments.of(
+                                        prefix + first + " " + operator + " " + other + ";",
+                                        Validity.VALID));
+                    }
+                    for (int otherGroup = 0; otherGroup < compatibleGroups.size(); ++otherGroup) {
+                        for (String second : compatibleGroups.get(otherGroup)) {
+                            cases.add(
+                                    Arguments.of(
+                                            prefix + first + " " + operator + " " + second + ";",
+                                            group == otherGroup
+                                                    ? Validity.VALID
+                                                    : Validity.INVALID));
+                        }
+                    }
                 }
-                final String first = String.format("%s x = true ? %s : %s;", type, left, right);
-                Assertions.assertTrue(
-                        this.validateProgram(first),
-                        String.format(
-                                "We should be able to use %s and %s for %s ternary cases",
-                                left, right, type));
             }
         }
+        return cases.stream();
+    }
 
-        // Mix of valid and invalid
-        for (String ok : valid) {
-            for (String nok : invalid) {
-                if (ok.endsWith("()") && "null".equals(nok)) {
-                    continue;
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void finalVariables(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> finalVariables() {
+        return TestValidator.concat(
+                valid(
+                        "final int x = 1; int y = x + 1;",
+                        "final int x = 1; int y = 2; y = 3;",
+                        "{ final int x = 1; } { int x = 2; x = 3; }",
+                        "final string s = \"a\"; string t = s + \"b\";",
+                        "for (final int i = 0; i < 3;) { break; }"),
+                invalid(
+                        "final int x = 1; x = 2;",
+                        "final int x = 1; x++;",
+                        "final int x = 1; --x;",
+                        "final int x = 1; x += 1;",
+                        // Every declaration initializes, so there are no blank finals
+                        "final int x; x = 1;",
+                        "final int a = 1, b = 2; b = 3;",
+                        "final int x = 1; { x = 2; }",
+                        "for (final int i = 0; i < 3; i++) { }"));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void gotoAndLabels(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> gotoAndLabels() {
+        return TestValidator.concat(
+                valid(
+                        "END:",
+                        "goto END; END:",
+                        "int x; before: x++;",
+                        "int x; goto before; before: x++;",
+                        """
+                        goto afterFor;
+                        for (;;) {
+                            inside_for:
+                            goto End;
+                        }
+                        afterFor:
+                        goto inside_for;
+                        End:
+                        """),
+                invalid(
+                        "goto nonexistent;",
+                        "duplicated: int x; duplicated: x++;",
+                        "int x = 1; goto x;",
+                        // Labels and variables share names
+                        "x: int x = 1;",
+                        "int x = 1; x: ;",
+                        "x: ; x = 1;"));
+    }
+
+    /**
+     * A goto can't jump past a declaration into the scope of that variable, the same rule as C++.
+     * Every declaration initializes its variable, even if just to a default, so unlike C++ there
+     * are no declarations that are safe to skip.
+     */
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void gotoScopes(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> gotoScopes() {
+        return TestValidator.concat(
+                invalid(
+                        "goto L; int x = 1; L: ;",
+                        "goto L; int x; L: ;",
+                        "goto L; int a = 1, b = 2; L: ;",
+                        "goto in; for (int i = 0; i < 3; i++) { in: ; }",
+                        "goto in; { int x = 1; in: ; }",
+                        "goto in; { int a = 1; { in: ; } }",
+                        "{ int x = 1; in: ; } goto in;",
+                        "for (int i = 0; i < 1; i++) { goto L; int y = 1; L: ; }",
+                        "int z = 1; switch (z) { case 1: goto L; int y = 1; L: ; }",
+                        "goto L; int x = 1; L: x++;"),
+                valid(
+                        "int x = 1; goto L; L: x++;",
+                        "goto L; L: int x = 1;",
+                        "top: int x = 1; goto top;",
+                        "goto in; while (false) { in: ; }",
+                        "goto in; for (;;) { in: break; }",
+                        "for (int i = 0; i < 3; i++) { if (i == 1) goto out; } out: ;",
+                        "{ int x = 1; } goto L; { L: ; }",
+                        "int x = 1; { int y = 2; goto L; } L: x++;",
+                        "for (int i = 0; i < 3; i++) { int y = i; goto next; next: ; }",
+                        "goto L; { int x = 1; } L: ;",
+                        "int x = 1; switch (x) { case 1: int y = 2; goto L; case 2: L: ; }"));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void incrementDecrement(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> incrementDecrement() {
+        final List<String> notVariables =
+                List.of(
+                        "1",
+                        "-2",
+                        "'a'",
+                        "4.1",
+                        "1 + 2",
+                        "TEST_getInt()",
+                        "\"test\"",
+                        "null",
+                        "true",
+                        "x++",
+                        "++x");
+        final Map<String, List<String>> targets =
+                Map.of(
+                        "char a; char x = 'a'; char y = ", List.of("a"),
+                        "char a; int b; int x = 1; int y = ", List.of("a", "b"),
+                        "char a; int b; double c; int x = 1; double y = ", List.of("a", "b", "c"));
+
+        List<Stream<Arguments>> cases = new ArrayList<>();
+        for (var target : targets.entrySet()) {
+            for (String operator : List.of("--", "++")) {
+                cases.add(
+                        TestValidator.unaryCases(
+                                target.getKey() + operator + "(",
+                                ");",
+                                target.getValue(),
+                                notVariables));
+                cases.add(
+                        TestValidator.unaryCases(
+                                target.getKey() + "(",
+                                ")" + operator + ";",
+                                target.getValue(),
+                                notVariables));
+            }
+        }
+        cases.add(invalid("boolean b = true; b++;", "string s = \"a\"; s--;"));
+        return cases.stream().flatMap(stream -> stream);
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void logic(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> logic() {
+        final List<String> booleans =
+                List.of(
+                        "true",
+                        "false",
+                        "1 < 2",
+                        "(3 >= 6)",
+                        "0 != 3",
+                        "4 == 4",
+                        "(3 < 1 || 3 >= 1)",
+                        "(!(3 < 1) && 3 >= 1)",
+                        "TEST_getBoolean()");
+        final List<String> notBooleans = List.of("'c'", "4", "4.1", "\"test\"", "null");
+        return TestValidator.concat(
+                ScriptTestHelper.binaryOperatorCases("boolean x = ", "||", booleans, notBooleans),
+                ScriptTestHelper.binaryOperatorCases("boolean x = ", "&&", booleans, notBooleans),
+                // Parentheses are required, since ! binds tighter than relational operators
+                TestValidator.unaryCases("boolean x = !(", ");", booleans, notBooleans),
+                invalid("boolean x = !1 < 2;", "int x = 1; boolean b = !x;"));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void methodCalls(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> methodCalls() {
+        return TestValidator.concat(
+                valid(
+                        "TestObject object = TEST_getObject(); object.getSelf().getSelf();",
+                        """
+                        Object x = TEST_getObject(), y = TEST_getObject();
+                        int z = 3;
+                        (z > 2 ? x : y).getSelf();
+                        """,
+                        // Strings are objects in Java, unlike other primitives
+                        "string x = \"test\"; x.toString();",
+                        "int x = \"test\".length();",
+                        "int i = \"a\".concat(\"b\").length();",
+                        "int i = (\"a\" + 1).length();"),
+                invalid(
+                        "char x = 'e'; x.toString();",
+                        "int x = 1; x.toString();",
+                        "double x = 3.12; x.toString();",
+                        "boolean x = true; x.toString();",
+                        "true.toString();",
+                        "'c'.toString();",
+                        "int y = ++TEST_getInt();"));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void relational(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> relational() {
+        final List<String> numbers =
+                List.of("1", "-2", "'a'", "4.1", "-4.1", "1 + 2", "(9 % 5)", "TEST_getInt()");
+        return Stream.of("<", "<=", ">", ">=")
+                .flatMap(
+                        operator ->
+                                ScriptTestHelper.binaryOperatorCases(
+                                        "boolean x = ",
+                                        operator,
+                                        numbers,
+                                        TestValidator.NOT_NUMBERS));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void statements(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> statements() {
+        return valid(
+                ";",
+                "{} {{{{{}}}}} { {} {{{}{}}{{{}}}} }",
+                ";{ ; } ; { ;;; {;} ;;; ;}",
+                "if (true) ; else ;",
+                "while (false);",
+                "for (;;);",
+                "do ; while (false);",
+                "label: ;",
+                "int x = 4; if (x >= 4) { }",
+                "int x = 4; if (x >= 4) { } else { }",
+                "int x = 4; if (x == 4) { } else if (x < 4) { }",
+                "int x = 4; if (x >= 4) { } else if (x < 4) { } else { }");
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void switches(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> switches() {
+        return TestValidator.concat(
+                valid(
+                        "int x = 4; switch (x) { case 1: break; case 2: case 3: break; }",
+                        "int x = 4; switch (x) { case 1: break; case 2: default: break; }",
+                        "int x = 4; switch (x) { }",
+                        "int x = 4; switch (x) { case 1: case -1: case 2: }",
+                        "switch (TEST_getInt()) { case 1: break; }",
+                        "string s = \"a\"; switch (s) { case \"a\": case \"b\": }"),
+                invalid(
+                        "int x = 4; switch (x) { case 1: default: break; case 2: default: }",
+                        "int x = 4; switch (x) { case 1: break; case 1: break; }",
+                        "int x = 4; switch (x) { case -1: case 2: case -1: }",
+                        "char c = 'a'; switch (c) { case 'a': case 'a': }",
+                        "string s = \"a\"; switch (s) { case \"a\": case \"a\": }",
+                        "int x = 4; switch (x) { case \"a\": }"));
+    }
+
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void ternaryTypes(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
+    }
+
+    static Stream<Arguments> ternaryTypes() {
+        // The type, values that work for it, and values that don't
+        final List<List<List<String>>> types =
+                List.of(
+                        List.of(
+                                List.of("boolean"),
+                                List.of("true", "TEST_getBoolean()"),
+                                List.of("'c'", "4", "4.1", "\"test\"", "null")),
+                        List.of(
+                                List.of("char"),
+                                List.of("'c'", "TEST_getChar()"),
+                                List.of("true", "4", "4.1", "\"test\"", "null")),
+                        List.of(
+                                List.of("int"),
+                                List.of("'b'", "1", "TEST_getInt()"),
+                                List.of("true", "4.1", "\"test\"", "null")),
+                        List.of(
+                                List.of("double"),
+                                List.of("'b'", "1", "3.0", "TEST_getDouble()"),
+                                List.of("true", "\"test\"", "null")),
+                        List.of(
+                                List.of("string"),
+                                List.of("\"test\"", "null", "TEST_getString()"),
+                                List.of("true", "'b'", "1", "3.0")));
+
+        List<Arguments> cases = new ArrayList<>();
+        for (List<List<String>> type : types) {
+            final String prefix = type.get(0).get(0) + " x = true ? ";
+            List<String> all = new ArrayList<>(type.get(1));
+            all.addAll(type.get(2));
+            for (String left : all) {
+                for (String right : all) {
+                    final boolean nullAndUnknown =
+                            ("null".equals(left) && right.endsWith("()"))
+                                    || (left.endsWith("()") && "null".equals(right));
+                    if (nullAndUnknown || ("null".equals(left) && "null".equals(right))) {
+                        // Can't tell what type these are, so they're not useful to check
+                        continue;
+                    }
+                    final boolean bothValid =
+                            type.get(1).contains(left) && type.get(1).contains(right);
+                    cases.add(
+                            Arguments.of(
+                                    prefix + left + " : " + right + ";",
+                                    bothValid ? Validity.VALID : Validity.INVALID));
                 }
-                final String first = String.format("%s x = true ? %s : %s;", type, ok, nok);
-                Assertions.assertFalse(
-                        this.validateProgram(first),
-                        String.format(
-                                "We should not be able to use %s and %s for %s ternary cases",
-                                ok, nok, type));
-
-                final String second = String.format("%s x = true ? %s : %s;", type, nok, ok);
-                Assertions.assertFalse(
-                        this.validateProgram(second),
-                        String.format(
-                                "We should not be able to use %s and %s for %s ternary cases",
-                                nok, ok, type));
             }
         }
-
-        // Both invalid
-        for (String left : invalid) {
-            for (String right : invalid) {
-                final String first = String.format("%s x = true ? %s : %s;", type, left, right);
-                Assertions.assertFalse(
-                        this.validateProgram(first),
-                        String.format(
-                                "We should not be able to use %s and %s for %s ternary cases",
-                                left, right, type));
-            }
-        }
+        cases.addAll(
+                TestValidator.concat(
+                                valid(
+                                        "boolean cond = true; int x = cond ? 1 : 4;",
+                                        "double x = 4.45; boolean y = x <= 500 ? true : false;",
+                                        "int x = 45; double y = x != 46 ? 4.1 : 2.1;",
+                                        "int x = 5; int y = (x < 4 ? false : true) ? 5 : 6;"),
+                                invalid("int x = true ? 1 : \"a\";"))
+                        .toList());
+        return cases.stream();
     }
 
-    /** Validates ternary conditionals. */
-    @Test
-    void testTernaryConditional() {
-        final String plainBool =
-                """
-			int x = true ? 3 : 5;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(plainBool),
-                "We should be able to use a boolean for ternary operators condition");
-
-        final String boolVar =
-                """
-			boolean b = false;
-			int x = b ? 5 : 6;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(boolVar),
-                "We should be able to use a boolean variable for ternary operators condition");
-
-        final String nestedTernary =
-                """
-			int x = 5;
-			int y = (x < 4 ? false : true) ? 5 : 6;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(nestedTernary),
-                "We should be able to use a ternary in ternary operators condition");
-
-        final String methodCall =
-                """
-			int y = TEST_getBoolean() ? 5 : 6;
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(methodCall),
-                "We should be able to use a method call in ternary operators condition");
-
-        final String[] invalidTypes = {"'t'", "5", "5.2", "\"true\"", "null"};
-
-        for (String type : invalidTypes) {
-            final String invalid = String.format("int x = %s ? 2 : 1;", type);
-            Assertions.assertFalse(
-                    this.validateProgram(invalid),
-                    "We should not be able to use a constant "
-                            + type
-                            + " in ternary operators condition");
-        }
-
-        final String[] invalidObjects = {
-            "char x = 'c';",
-            "int x = 346;",
-            "double x = 0.01;",
-            "string x = \"true\";",
-            "TestObj x = null;"
-        };
-
-        for (String type : invalidObjects) {
-            final String invalid = String.format("%s int x = x ? 0 : 3;", type);
-            Assertions.assertFalse(
-                    this.validateProgram(invalid),
-                    "We should not be able to use a constant "
-                            + type
-                            + " in ternary operators condition");
-        }
+    @ParameterizedTest(name = ScriptTestHelper.NAME)
+    @MethodSource
+    void variableNames(String program, Validity validity) {
+        ScriptTestHelper.assertValidity(program, validity);
     }
 
-    /** Validates ternary types. */
-    @Test
-    void testTernaryTypes() {
-        final String[] booleanPositive = {"true", "TEST_getBoolean()"};
-        final String[] booleanNegative = {"'c'", "4", "4.1", "\"test\"", "null"};
-        this.testTernary("boolean", booleanPositive, booleanNegative);
-
-        final String[] charPositive = {"'c'", "TEST_getChar()"};
-        final String[] charNegative = {"true", "4", "4.1", "\"test\"", "null"};
-        this.testTernary("char", charPositive, charNegative);
-
-        final String[] intPositive = {"'b'", "1", "TEST_getInt()"};
-        final String[] intNegative = {"true", "4.1", "\"test\"", "null"};
-        this.testTernary("int", intPositive, intNegative);
-
-        final String[] doublePositive = {"'b'", "1", "3.0", "TEST_getDouble()"};
-        final String[] doubleNegative = {"true", "\"test\"", "null"};
-        this.testTernary("double", doublePositive, doubleNegative);
-
-        final String[] stringPositive = {"\"test\"", "null", "TEST_getString()"};
-        final String[] stringNegative = {"true", "'b'", "1", "3.0"};
-        this.testTernary("string", stringPositive, stringNegative);
-    }
-
-    /**
-     * Check exhaustive type casting with an arbitrary unary operator.
-     *
-     * @param format What to pass in to the string formatter to insert one string value.
-     * @param valid Values that are valid for that type.
-     * @param invalid Values that are invalid for that type.
-     */
-    private void testUnaryOperator(
-            @NonNull String format, @NonNull String[] valid, @NonNull String[] invalid) {
-        for (String left : valid) {
-            final String program = String.format(format, left);
-            Assertions.assertTrue(
-                    this.validateProgram(program),
-                    String.format("We should be able to do %s", program));
-        }
-
-        for (String left : invalid) {
-            final String program = String.format(format, left);
-            Assertions.assertFalse(
-                    this.validateProgram(program),
-                    String.format("We should not be able to do %s", program));
-        }
-    }
-
-    /** Test the while statement for equality expressions. */
-    @Test
-    void testWhileEquality() {
-        final String equalityExpression1 =
-                """
-			while(1 == 2) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression1),
-                "While should work with an equality expression");
-
-        final String equalityExpression2 =
-                """
-			int x = 1;
-			while(1 == x) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression2),
-                "While should work with an equality expression");
-
-        final String equalityExpression3 =
-                """
-			int x = 1;
-			while(x != 1) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression3),
-                "While should work with an equality expression");
-
-        final String equalityExpression4 =
-                """
-			int x = 1;
-			while(x != x) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(equalityExpression4),
-                "While should work with an equality expression");
-    }
-
-    /** Test the while statement with logical expressions. */
-    @Test
-    void testWhileLogical() {
-        final String logicalExpression1 =
-                """
-			int x = 1;
-			while(x <= 3 || 3 > x) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(logicalExpression1),
-                "While should work with a logical expression");
-
-        final String logicalExpression2 =
-                """
-			boolean x = true;
-			while(x && 1 > 3) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(logicalExpression2),
-                "While should work with a logical expression");
-
-        final String logicalExpression3 =
-                """
-			int x = 1;
-			while(!(x <= x || x > x)) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(logicalExpression3),
-                "While should work with a logical expression");
-    }
-
-    /** Test the while statement with negative cases. */
-    @Test
-    void testWhileNegative() {
-        final String integer =
-                """
-			while(1) {
-				break;
-			}
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(integer), "While should not work with an integer");
-
-        final String character =
-                """
-			while('y') {
-				break;
-			}
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(character), "While should not work with a character");
-
-        final String string =
-                """
-			while("true") {
-				break;
-			}
-			""";
-        Assertions.assertFalse(this.validateProgram(string), "While should not work with a string");
-
-        final String nullValue =
-                """
-			while(null) {
-				break;
-			}
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(nullValue), "While should not work with a null");
-
-        final String numericExpression =
-                """
-			while(1 + 2) {
-				break;
-			}
-			""";
-        Assertions.assertFalse(
-                this.validateProgram(numericExpression),
-                "While should not work with a numeric expression");
-    }
-
-    /** Test the while statement with relational expressions. */
-    @Test
-    void testWhileRelation() {
-        final String relationExpression1 =
-                """
-			while(3 < 2) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression1),
-                "While should work with an relational expression");
-
-        final String relationExpression2 =
-                """
-			int x = 1;
-			while(x > 1) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression2),
-                "While should work with an relational expression");
-
-        final String relationExpression3 =
-                """
-			int x = 1;
-			while(3 <= x) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression3),
-                "While should work with an relational expression");
-
-        final String relationExpression4 =
-                """
-			int x = 1;
-			while(x <= x) {
-				break;
-			}
-			""";
-        Assertions.assertTrue(
-                this.validateProgram(relationExpression4),
-                "While should work with an relational expression");
-    }
-
-    /**
-     * Validate a program and return what the results were.
-     *
-     * @param program The program to validate.
-     * @return The results from the tree validator.
-     */
-    private boolean validateProgram(@NonNull String program) {
-        TestValidator.errorListener.resetErrorCount();
-
-        CharStream stream = CharStreams.fromString(program);
-        TestValidator.lexer.setInputStream(stream);
-        TokenStream tokenStream = new BufferedTokenStream(TestValidator.lexer);
-        TestValidator.parser.setTokenStream(tokenStream);
-        CompilationUnitContext context = TestValidator.parser.compilationUnit();
-        if (TestValidator.errorListener.getErrorCount() > 0) {
-            Assertions.fail("There should be no errors parsing");
-        }
-
-        Assertions.assertEquals(
-                0,
-                TestValidator.parser.getNumberOfSyntaxErrors(),
-                "Parser should have no syntax errors");
-
-        CompilationUnit ast = AbstractSyntaxTree.process(context);
-        if (ast == null || ast.isInvalid()) {
-            Assertions.fail("There should be a valid syntax tree");
-        }
-
-        TestValidator.processor.processTreeTypes(ast);
-
-        return TestValidator.validator.validate(ast);
+    static Stream<Arguments> variableNames() {
+        return TestValidator.concat(
+                valid(
+                        "int a = 1, b = a;",
+                        "{ int x = 1; } { int x = 2; }",
+                        "for (int i = 0; i < 1; i++) { } for (int i = 0; i < 1; i++) { }",
+                        "Random obj1 = null; Random obj2 = obj1;"),
+                invalid(
+                        "int x = 1; int x = 2;",
+                        "int x = 1; string x = \"a\";",
+                        "int x, x;",
+                        "int x = 1; { int x = 2; }",
+                        "for (int i = 0; i < 1; i++) { int i = 2; }",
+                        "x = 1; int x;",
+                        "int y = x; int x = 1;",
+                        "{ int x = 1; } x = 2;",
+                        "Random obj1; Another obj2 = obj1;"));
     }
 }

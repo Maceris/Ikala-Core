@@ -79,6 +79,48 @@ public class AbstractSyntaxTree {
     private static final String UNKNOWN_STATEMENT = "UNKNOWN_STATEMENT";
     private static final String UNKNOWN_UNARY_EXPRESSION = "UNKNOWN_UNARY_EXPRESSION";
 
+    /** The digits of {@link Integer#MIN_VALUE}, without the negative sign. */
+    private static final String MIN_INT_MAGNITUDE = "2147483648";
+
+    /**
+     * Replace escape sequences in the contents of a string or character literal with the characters
+     * they represent. The lexer has already made sure they are valid.
+     *
+     * @param text The text between the quotes.
+     * @return The actual value.
+     */
+    private static String unescape(@NonNull String text) {
+        StringBuilder result = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); ++i) {
+            final char current = text.charAt(i);
+            if (current != '\\') {
+                result.append(current);
+                continue;
+            }
+            ++i;
+            final char escaped = text.charAt(i);
+            switch (escaped) {
+                case 'b' -> result.append('\b');
+                case 't' -> result.append('\t');
+                case 'n' -> result.append('\n');
+                case 'f' -> result.append('\f');
+                case 'r' -> result.append('\r');
+                case 's' -> result.append(' ');
+                case 'u' -> {
+                    // Java allows any number of u's
+                    while (text.charAt(i) == 'u') {
+                        ++i;
+                    }
+                    result.append((char) Integer.parseInt(text.substring(i, i + 4), 16));
+                    i += 3;
+                }
+                    // quotes and backslashes are just themselves
+                default -> result.append(escaped);
+            }
+        }
+        return result.toString();
+    }
+
     /**
      * Fetch the base type of a primitive type.
      *
@@ -743,10 +785,12 @@ public class AbstractSyntaxTree {
             try {
                 result.setValue(Integer.parseInt(node.IntegerLiteral().getText()));
             } catch (NumberFormatException e) {
-                log.warn(
+                final String error =
                         SafeResourceLoader.getString(
-                                "INVALID_INT", ScriptManager.getResourceBundle()),
-                        node.getText());
+                                "INVALID_INT", ScriptManager.getResourceBundle());
+                log.warn(error, node.getText());
+                throw new IllegalArgumentException(
+                        SafeResourceLoader.format(error, node.getText()));
             }
             result.setType(Type.primitive(Base.INT));
             return result;
@@ -756,10 +800,12 @@ public class AbstractSyntaxTree {
             try {
                 result.setValue(Double.parseDouble(node.FloatingPointLiteral().getText()));
             } catch (NumberFormatException e) {
-                log.warn(
+                final String error =
                         SafeResourceLoader.getString(
-                                "INVALID_FLOAT", ScriptManager.getResourceBundle()),
-                        node.getText());
+                                "INVALID_FLOAT", ScriptManager.getResourceBundle());
+                log.warn(error, node.getText());
+                throw new IllegalArgumentException(
+                        SafeResourceLoader.format(error, node.getText()));
             }
             result.setType(Type.primitive(Base.DOUBLE));
             return result;
@@ -772,14 +818,20 @@ public class AbstractSyntaxTree {
         }
         if (node.CharacterLiteral() != null) {
             ConstChar result = new ConstChar();
-            result.setValue(node.CharacterLiteral().getText().charAt(1));
+            final String includingQuotes = node.CharacterLiteral().getText();
+            result.setValue(
+                    AbstractSyntaxTree.unescape(
+                                    includingQuotes.substring(1, includingQuotes.length() - 1))
+                            .charAt(0));
             result.setType(Type.primitive(Base.CHAR));
             return result;
         }
         if (node.StringLiteral() != null) {
             ConstString result = new ConstString();
             String includingQuotes = node.StringLiteral().getText();
-            result.setValue(includingQuotes.substring(1, includingQuotes.length() - 1));
+            result.setValue(
+                    AbstractSyntaxTree.unescape(
+                            includingQuotes.substring(1, includingQuotes.length() - 1)));
             result.setType(Type.primitive(Base.STRING));
             return result;
         }
@@ -1291,6 +1343,18 @@ public class AbstractSyntaxTree {
                 // ignore unary plus prefix
                 return AbstractSyntaxTree.process(node.unaryExpression());
             }
+            if (node.SUB() != null
+                    && AbstractSyntaxTree.MIN_INT_MAGNITUDE.equals(
+                            node.unaryExpression().getText())) {
+                /*
+                 * Like Java, the smallest integer can only be written as a negative literal, since
+                 * the positive version is too large to fit in an int on its own.
+                 */
+                ConstInt result = new ConstInt();
+                result.setValue(Integer.MIN_VALUE);
+                result.setType(Type.primitive(Base.INT));
+                return result;
+            }
             ExprArithmetic result = new ExprArithmetic();
             if (node.SUB() != null) {
                 result.setOperator(ExprArithmetic.Operator.SUB);
@@ -1328,7 +1392,12 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.postfixExpression());
         }
         if (node.unaryExpression() != null) {
-            return AbstractSyntaxTree.process(node.unaryExpression());
+            // NOT unaryExpression
+            ExprLogic result = new ExprLogic();
+            result.setOperator(ExprLogic.Operator.NOT);
+            result.addChild(AbstractSyntaxTree.process(node.unaryExpression()));
+            result.setType(Type.primitive(Base.BOOLEAN));
+            return result;
         }
         if (node.castExpression() != null) {
             return AbstractSyntaxTree.process(node.castExpression());

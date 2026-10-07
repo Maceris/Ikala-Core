@@ -1,6 +1,5 @@
-package com.ikalagaming.scripting;
-
 // Generated from IkalaScriptParser.g4 by ANTLR 4.13.2
+package com.ikalagaming.scripting;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;

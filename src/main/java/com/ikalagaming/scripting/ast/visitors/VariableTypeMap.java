@@ -64,18 +64,19 @@ class VariableTypeMap {
      *
      * @param variable The name of the variable.
      * @param type The type of the variable.
+     * @return True if the variable was added, false if it was already defined.
      */
-    public void put(@NonNull String variable, @NonNull Type type) {
-        map.computeIfPresent(
-                variable,
-                (key, current) -> {
-                    log.warn(
-                            SafeResourceLoader.getString(
-                                    "VARIABLE_ALREADY_DEFINED", ScriptManager.getResourceBundle()),
-                            variable);
-                    return VariableTypeMap.DEFAULT;
-                });
+    public boolean put(@NonNull String variable, @NonNull Type type) {
+        if (map.containsKey(variable)) {
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "VARIABLE_ALREADY_DEFINED", ScriptManager.getResourceBundle()),
+                    variable);
+            map.put(variable, VariableTypeMap.DEFAULT);
+            return false;
+        }
         map.put(variable, type);
+        return true;
     }
 
     /**

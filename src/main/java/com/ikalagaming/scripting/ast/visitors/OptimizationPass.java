@@ -2,6 +2,8 @@ package com.ikalagaming.scripting.ast.visitors;
 
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
+import com.ikalagaming.scripting.ast.Block;
+import com.ikalagaming.scripting.ast.Call;
 import com.ikalagaming.scripting.ast.Cast;
 import com.ikalagaming.scripting.ast.CompilationUnit;
 import com.ikalagaming.scripting.ast.ConstBool;
@@ -10,12 +12,14 @@ import com.ikalagaming.scripting.ast.ConstDouble;
 import com.ikalagaming.scripting.ast.ConstInt;
 import com.ikalagaming.scripting.ast.EmptyStatement;
 import com.ikalagaming.scripting.ast.ExprArithmetic;
+import com.ikalagaming.scripting.ast.ExprAssign;
 import com.ikalagaming.scripting.ast.ExprLogic;
 import com.ikalagaming.scripting.ast.ExprRelation;
 import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.StatementList;
+import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.scripting.ast.VarDeclaration;
@@ -51,6 +55,51 @@ public class OptimizationPass implements ASTVisitor {
     }
 
     /**
+     * Check if a node is an integer or character division or modulo by a constant zero.
+     *
+     * @param node The arithmetic node.
+     * @param divisor The second child of the node.
+     * @return True if folding the node would throw an exception.
+     */
+    private boolean isIntegerDivisionByZero(ExprArithmetic node, Node divisor) {
+        if (!node.getType().anyOf(Base.INT, Base.CHAR)
+                || !(ExprArithmetic.Operator.DIV.equals(node.getOperator())
+                        || ExprArithmetic.Operator.MOD.equals(node.getOperator()))) {
+            return false;
+        }
+        return (divisor instanceof ConstInt constInt && constInt.getValue() == 0)
+                || (divisor instanceof ConstChar constChar && constChar.getValue() == 0)
+                || (divisor instanceof ConstDouble constDouble
+                        && (int) constDouble.getValue() == 0);
+    }
+
+    /**
+     * Check if evaluating a node definitely has no side effects, so it is safe to remove.
+     *
+     * @param node The node to check.
+     * @return True if we know there are no side effects, false if there might be.
+     */
+    private boolean isFreeOfSideEffects(Node node) {
+        if (node instanceof Call || node instanceof ExprAssign) {
+            return false;
+        }
+        if (node instanceof ExprArithmetic arithmetic) {
+            switch (arithmetic.getOperator()) {
+                case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+                    return false;
+                default:
+                    break;
+            }
+        }
+        for (Node child : node.getChildren()) {
+            if (!isFreeOfSideEffects(child)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Optimize the syntax tree.
      *
      * @param ast The tree to validate.
@@ -65,7 +114,15 @@ public class OptimizationPass implements ASTVisitor {
      * @param node The node we are processing.
      */
     private void processTree(Node node) {
-        node.getChildren().removeIf(EmptyStatement.class::isInstance);
+        if (node instanceof Block
+                || node instanceof CompilationUnit
+                || node instanceof SwitchBlockGroup) {
+            /*
+             * Only remove empty statements from lists of statements. Things like if statements and
+             * loops expect a body in a specific position, even if it's empty.
+             */
+            node.getChildren().removeIf(EmptyStatement.class::isInstance);
+        }
         for (int i = 0; i < node.getChildren().size(); ++i) {
             Node child = node.getChildren().get(i);
             processTree(child);
@@ -106,19 +163,28 @@ public class OptimizationPass implements ASTVisitor {
         final Node firstChild = node.getChildren().get(0);
         final Node secondChild = node.getChildren().get(1);
 
+        if (node.getType().anyOf(Base.UNKNOWN)) {
+            // We can't cast to a type we don't know yet, the runtime will figure it out
+            return node;
+        }
+
         // Implicit casts
+        boolean addedCast = false;
         if (!firstChild.getType().getBase().equals(node.getType().getBase())) {
             Cast cast = new Cast();
             cast.setType(node.getType());
             cast.addChild(firstChild);
             node.getChildren().set(0, cast);
-            return node;
+            addedCast = true;
         }
         if (!secondChild.getType().getBase().equals(node.getType().getBase())) {
             Cast cast = new Cast();
             cast.setType(node.getType());
             cast.addChild(secondChild);
             node.getChildren().set(1, cast);
+            addedCast = true;
+        }
+        if (addedCast) {
             return node;
         }
 
@@ -132,6 +198,11 @@ public class OptimizationPass implements ASTVisitor {
                                 || secondChild instanceof ConstDouble
                                 || secondChild instanceof ConstChar))) {
             // Bail if it's not the case that both children are constants
+            return node;
+        }
+
+        if (isIntegerDivisionByZero(node, secondChild)) {
+            // Leave it for the runtime to report, rather than crashing the compiler
             return node;
         }
 
@@ -155,6 +226,12 @@ public class OptimizationPass implements ASTVisitor {
      * @return The resulting node, which might be the same node.
      */
     private Node simplify(ExprLogic node) {
+        if (ExprLogic.Operator.NOT.equals(node.getOperator())) {
+            if (node.getChildren().get(0) instanceof ConstBool bool) {
+                return getBool(!bool.isValue());
+            }
+            return node;
+        }
         if (node.getChildren().size() < 2) {
             return node;
         }
@@ -184,12 +261,14 @@ public class OptimizationPass implements ASTVisitor {
 
         if (firstChild instanceof Identifier firstID
                 && secondChild instanceof Identifier secondID) {
-            if (firstID.getName().equals(secondID.getName())) {
+            // Doubles can be NaN, which is not equal to itself
+            if (firstID.getName().equals(secondID.getName())
+                    && firstID.getType().anyOf(Base.CHAR, Base.INT)) {
                 switch (node.getOperator()) {
                     case GT, LT:
                         return getBool(false);
                     case GTE, LTE:
-                        return getBool(false);
+                        return getBool(true);
                     default:
                         return node;
                 }
@@ -201,13 +280,13 @@ public class OptimizationPass implements ASTVisitor {
 
         if (firstChild instanceof ConstChar firstChar
                 && secondChild instanceof ConstChar secondChar) {
-            comparison = ((double) secondChar.getValue()) - firstChar.getValue();
+            comparison = ((double) firstChar.getValue()) - secondChar.getValue();
         } else if (firstChild instanceof ConstInt firstInt
                 && secondChild instanceof ConstInt secondInt) {
-            comparison = ((double) secondInt.getValue()) - firstInt.getValue();
+            comparison = ((double) firstInt.getValue()) - secondInt.getValue();
         } else if (firstChild instanceof ConstDouble firstDouble
                 && secondChild instanceof ConstDouble secondDouble) {
-            comparison = secondDouble.getValue() - firstDouble.getValue();
+            comparison = firstDouble.getValue() - secondDouble.getValue();
         }
 
         if (Double.isNaN(comparison)) {
@@ -239,8 +318,13 @@ public class OptimizationPass implements ASTVisitor {
      */
     private Node simplifyAnd(ExprLogic node, Node leftChild, Node rightChild) {
         if (leftChild instanceof ConstBool left && (!left.isValue())
-                || rightChild instanceof ConstBool right && (!right.isValue())) {
-            // if either side of an && is false, the result is always false
+                || rightChild instanceof ConstBool right
+                        && (!right.isValue())
+                        && isFreeOfSideEffects(leftChild)) {
+            /*
+             * If either side of an && is false, the result is always false. The left side is
+             * always evaluated though, so we can only drop it if doing so changes nothing.
+             */
             return getBool(false);
         }
         if (leftChild instanceof ConstBool bool && (bool.isValue())) {
@@ -526,8 +610,13 @@ public class OptimizationPass implements ASTVisitor {
      */
     private Node simplifyOr(ExprLogic node, Node leftChild, Node rightChild) {
         if (leftChild instanceof ConstBool left && (left.isValue())
-                || rightChild instanceof ConstBool right && (right.isValue())) {
-            // if either side of an || is true, the result is always true
+                || rightChild instanceof ConstBool right
+                        && (right.isValue())
+                        && isFreeOfSideEffects(leftChild)) {
+            /*
+             * If either side of an || is true, the result is always true. The left side is always
+             * evaluated though, so we can only drop it if doing so changes nothing.
+             */
             return getBool(true);
         }
         if (leftChild instanceof ConstBool bool && (!bool.isValue())) {
@@ -570,7 +659,27 @@ public class OptimizationPass implements ASTVisitor {
 
     /** Add in automatic casts to larger numerical types. */
     @Override
+    public void visit(ExprAssign node) {
+        if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
+            // The math instructions handle mixed types
+            return;
+        }
+        widenIfNeeded(node);
+    }
+
+    /** Add in automatic casts to larger numerical types. */
+    @Override
     public void visit(VarDeclaration node) {
+        widenIfNeeded(node);
+    }
+
+    /**
+     * Add in automatic casts to larger numerical types, for a node where the first child is the
+     * variable and the second is the value being stored in it.
+     *
+     * @param node The declaration or assignment.
+     */
+    private void widenIfNeeded(Node node) {
         if (node.getChildren().size() < 2) {
             return;
         }

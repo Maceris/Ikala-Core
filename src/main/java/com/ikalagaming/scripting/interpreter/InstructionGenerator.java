@@ -76,165 +76,85 @@ public class InstructionGenerator implements ASTVisitor {
     private List<Instruction> tempInstructions;
 
     /**
-     * Calculate and emit a jump based on the opposite expression provided. This does not emit the
-     * expression itself, only calculates which jump expression is appropriate based on what we
-     * predict the expression to emit.
+     * Evaluate a condition and emit a jump that depends on the result. Comparisons are turned into
+     * a comparison followed by the matching conditional jump, anything else is evaluated to a
+     * boolean on the stack and compared to true.
      *
      * <p>We do this because comparison and jumps are separate instructions, emitted by different
      * visitors, but we need them to cooperate.
      *
-     * <p>This specific method exists because if statements need to jump to the else clause or after
-     * the if, but fall through to the if.
-     *
-     * @param expression Any kind of expression according to the grammar, but must evaluate to a
-     *     boolean.
-     * @param targetLabel Where we are jumping to <i>unless</i> the condition is true.
-     * @see #calculateJump(Node, String)
-     */
-    private void calculateInvertedJump(@NonNull Node expression, @NonNull String targetLabel) {
-        /*
-         * These are arranged in descending order of how likely I think they are
-         * to show up in practice, because I have to pick an order so I may as
-         * well try to minimize the expected number of checks.
-         */
-        if (expression instanceof ExprRelation relation) {
-            InstructionType type;
-            switch (relation.getOperator()) {
-                case GT:
-                    type = InstructionType.JLE;
-                    break;
-                case GTE:
-                    type = InstructionType.JLT;
-                    break;
-                case LT:
-                    type = InstructionType.JGE;
-                    break;
-                case LTE:
-                    type = InstructionType.JGT;
-                    break;
-                default:
-                    type = InstructionType.NOP;
-                    break;
-            }
-            emitJump(type, targetLabel);
-            return;
-        }
-        if (expression instanceof ExprEquality equality) {
-            InstructionType type;
-            switch (equality.getOperator()) {
-                case EQUAL:
-                    type = InstructionType.JNE;
-                    break;
-                case NOT_EQUAL:
-                    type = InstructionType.JEQ;
-                    break;
-                default:
-                    type = InstructionType.NOP;
-                    break;
-            }
-            emitJump(type, targetLabel);
-            return;
-        }
-        if (expression instanceof ExprLogic
-                || expression instanceof ExprAssign
-                || expression instanceof ExprTernary
-                || expression instanceof Identifier) {
-            // Boolean values
-
-            // Convert the resulting boolean value to a flag, clean the stack
-            tempInstructions.add(
-                    new Instruction(
-                            InstructionType.CMP,
-                            new MemLocation(MemArea.STACK, Boolean.class),
-                            new MemLocation(MemArea.IMMEDIATE, Boolean.class, true),
-                            null));
-
-            emitJump(InstructionType.JNE, targetLabel);
-            return;
-        }
-        log.warn(
-                SafeResourceLoader.getString(
-                        "UNEXPECTED_EXPRESSION", ScriptManager.getResourceBundle()),
-                expression.toString());
-    }
-
-    /**
-     * Calculate and emit a jump based on the opposite expression provided. This does not emit the
-     * expression itself, only calculates which jump expression is appropriate based on what we
-     * predict the expression to emit.
-     *
-     * <p>We do this because comparison and jumps are separate instructions, emitted by different
-     * visitors, but we need them to cooperate.
-     *
-     * @param expression Any kind of expression according to the grammar, but must evaluate to a
+     * @param condition Any kind of expression according to the grammar, but must evaluate to a
      *     boolean.
      * @param targetLabel Where we are jumping to.
-     * @see #calculateInvertedJump(Node, String)
+     * @param jumpWhenTrue If true, we jump when the condition is true. If false, we jump when the
+     *     condition is false, which is what if statements need since they fall through to the body.
      */
-    private void calculateJump(@NonNull Node expression, @NonNull String targetLabel) {
-        /*
-         * These are arranged in descending order of how likely I think they are
-         * to show up in practice, because I have to pick an order so I may as
-         * well try to minimize the expected number of checks.
-         */
-        if (expression instanceof ExprRelation relation) {
+    private void emitConditionalJump(
+            @NonNull Node condition, @NonNull String targetLabel, boolean jumpWhenTrue) {
+        if (condition instanceof ExprRelation relation) {
+            // Emits a CMP
+            processTree(relation);
             InstructionType type;
             switch (relation.getOperator()) {
                 case GT:
-                    type = InstructionType.JGT;
+                    type = jumpWhenTrue ? InstructionType.JGT : InstructionType.JLE;
                     break;
                 case GTE:
-                    type = InstructionType.JGE;
+                    type = jumpWhenTrue ? InstructionType.JGE : InstructionType.JLT;
                     break;
                 case LT:
-                    type = InstructionType.JLT;
+                    type = jumpWhenTrue ? InstructionType.JLT : InstructionType.JGE;
                     break;
                 case LTE:
-                    type = InstructionType.JLE;
+                    type = jumpWhenTrue ? InstructionType.JLE : InstructionType.JGT;
                     break;
                 default:
+                    log.warn(
+                            SafeResourceLoader.getString(
+                                    "UNKNOWN_RELATIONAL_OPERATOR",
+                                    ScriptManager.getResourceBundle()),
+                            relation.getOperator().toString());
                     type = InstructionType.JMP;
                     break;
             }
             emitJump(type, targetLabel);
             return;
         }
-        if (expression instanceof ExprEquality equality) {
+        if (condition instanceof ExprEquality equality) {
+            // Emits a CMP
+            processTree(equality);
             InstructionType type;
             switch (equality.getOperator()) {
                 case EQUAL:
-                    type = InstructionType.JEQ;
+                    type = jumpWhenTrue ? InstructionType.JEQ : InstructionType.JNE;
                     break;
                 case NOT_EQUAL:
-                    type = InstructionType.JNE;
+                    type = jumpWhenTrue ? InstructionType.JNE : InstructionType.JEQ;
                     break;
                 default:
+                    log.warn(
+                            SafeResourceLoader.getString(
+                                    "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
+                            equality.getOperator().toString());
                     type = InstructionType.JMP;
                     break;
             }
             emitJump(type, targetLabel);
             return;
         }
-        if (expression instanceof ExprLogic
-                || expression instanceof ExprAssign
-                || expression instanceof ExprTernary) {
-            // Boolean values
 
-            // Convert the resulting boolean value to a flag, clean the stack
-            tempInstructions.add(
-                    new Instruction(
-                            InstructionType.CMP,
-                            new MemLocation(MemArea.STACK, Boolean.class),
-                            new MemLocation(MemArea.IMMEDIATE, Boolean.class, true),
-                            null));
+        // Boolean values like variables, constants, logic, method calls
+        pushExpression(condition);
 
-            emitJump(InstructionType.JEQ, targetLabel);
-            return;
-        }
-        log.warn(
-                SafeResourceLoader.getString(
-                        "UNEXPECTED_EXPRESSION", ScriptManager.getResourceBundle()),
-                expression.toString());
+        // Convert the resulting boolean value to a flag, clean the stack
+        tempInstructions.add(
+                new Instruction(
+                        InstructionType.CMP,
+                        new MemLocation(MemArea.STACK, Boolean.class),
+                        new MemLocation(MemArea.IMMEDIATE, Boolean.class, true),
+                        null));
+
+        emitJump(jumpWhenTrue ? InstructionType.JEQ : InstructionType.JNE, targetLabel);
     }
 
     /**
@@ -245,7 +165,11 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The location where the contents would be found.
      */
     private MemLocation calculateLocation(@NonNull Node node, Class<?> clazz) {
-        if (node instanceof ExprArithmetic) {
+        if (node instanceof ExprArithmetic
+                || node instanceof Call
+                || node instanceof Cast
+                || node instanceof ExprAssign
+                || node instanceof ExprTernary) {
             return new MemLocation(MemArea.STACK, clazz);
         }
         if (node instanceof ConstBool boolNode) {
@@ -271,26 +195,6 @@ public class InstructionGenerator implements ASTVisitor {
                         "UNHANDLED_EXPRESSION_MEMBER", ScriptManager.getResourceBundle()),
                 node.toString());
         return new MemLocation(MemArea.STACK, clazz);
-    }
-
-    /**
-     * Check if a loop contains a break without a label name. We will need a label to break to after
-     * the loop in that case.
-     *
-     * @param loop The loop we are interested in.
-     * @return Whether there is a generic break in that loop.
-     */
-    private boolean containsBreak(@NonNull Node loop) {
-        for (Node child : loop.getChildren()) {
-            if (child instanceof Break br) {
-                return br.getChildren().isEmpty();
-            }
-            // recurse
-            if (containsBreak(child)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -332,14 +236,28 @@ public class InstructionGenerator implements ASTVisitor {
      *     be used to generate actual labels and expressions to jump to.
      * @param expressionResult The name of the variable that contains the results of the switch
      *     expression.
+     * @param endLabel The label at the end of the switch statement, used for any labels that don't
+     *     have statements after them.
      * @return The name of the label that the default case jumps to, will be null if there is no
      *     default.
      */
     private String generateSwitchJumpTable(
-            @NonNull Node body, @NonNull List<Node> targetTable, @NonNull String expressionResult) {
+            @NonNull Node body,
+            @NonNull List<Node> targetTable,
+            @NonNull String expressionResult,
+            @NonNull String endLabel) {
         String defaultLabel = null;
         // statement groups are first, then loose switch labels
         for (Node child : body.getChildren()) {
+            if (child instanceof SwitchLabel label) {
+                // A trailing label with no statements, so it goes to the end
+                if (label.isDefault()) {
+                    defaultLabel = endLabel;
+                } else {
+                    emitSwitchCase(label, expressionResult, endLabel);
+                }
+                continue;
+            }
             if (!(child instanceof SwitchBlockGroup)) {
                 continue;
             }
@@ -355,21 +273,7 @@ public class InstructionGenerator implements ASTVisitor {
                     if (label.isDefault()) {
                         defaultLabel = sharedLabel;
                     } else {
-                        Node labelExpression = label.getChildren().get(0);
-                        processTree(labelExpression);
-                        tempInstructions.add(
-                                new Instruction(
-                                        InstructionType.CMP,
-                                        new MemLocation(
-                                                MemArea.STACK,
-                                                labelExpression
-                                                        .getType()
-                                                        .getBase()
-                                                        .getCorrespondingClass()),
-                                        new MemLocation(
-                                                MemArea.VARIABLE, String.class, expressionResult),
-                                        null));
-                        emitJump(InstructionType.JEQ, sharedLabel);
+                        emitSwitchCase(label, expressionResult, sharedLabel);
                     }
                 } else {
                     // block statement
@@ -378,6 +282,29 @@ public class InstructionGenerator implements ASTVisitor {
             }
         }
         return defaultLabel;
+    }
+
+    /**
+     * Emit the comparison and jump for a single case of a switch statement.
+     *
+     * @param label The case label.
+     * @param expressionResult The name of the variable that contains the results of the switch
+     *     expression.
+     * @param target The label to jump to if the case matches.
+     */
+    private void emitSwitchCase(
+            @NonNull SwitchLabel label, @NonNull String expressionResult, @NonNull String target) {
+        Node labelExpression = label.getChildren().get(0);
+        pushExpression(labelExpression);
+        tempInstructions.add(
+                new Instruction(
+                        InstructionType.CMP,
+                        new MemLocation(
+                                MemArea.STACK,
+                                labelExpression.getType().getBase().getCorrespondingClass()),
+                        new MemLocation(MemArea.VARIABLE, String.class, expressionResult),
+                        null));
+        emitJump(InstructionType.JEQ, target);
     }
 
     /**
@@ -432,7 +359,17 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionType(@NonNull ExprArithmetic node) {
-        if (node.getType().anyOf(Base.INT)) {
+        /*
+         * Unknown types, like method results, are assumed to be integers. The runtime promotes
+         * integer math to doubles if the values turn out to be doubles.
+         */
+        if (node.getType().anyOf(Base.UNKNOWN)
+                && node.getOperator() == ExprArithmetic.Operator.ADD
+                && node.getChildren().size() == 2) {
+            // Could be numbers or strings, which we can only tell at runtime
+            return InstructionType.ADD_DYNAMIC;
+        }
+        if (node.getType().anyOf(Base.INT, Base.UNKNOWN)) {
             return this.instructionTypeInt(node);
         }
         if (node.getType().anyOf(Base.DOUBLE)) {
@@ -465,6 +402,9 @@ public class InstructionGenerator implements ASTVisitor {
             @NonNull ExprAssign.Operator operator, Class<?> numericType) {
         if (operator == ExprAssign.Operator.ASSIGN) {
             return InstructionType.MOV;
+        }
+        if (numericType == String.class && operator == ExprAssign.Operator.ADD_ASSIGN) {
+            return InstructionType.CONCAT_STRING;
         }
         if (numericType == Integer.class) {
             return this.instructionTypeInt(operator);
@@ -688,12 +628,12 @@ public class InstructionGenerator implements ASTVisitor {
             second =
                     new MemLocation(
                             MemArea.VARIABLE,
-                            left.getType().getBase().getCorrespondingClass(),
+                            right.getType().getBase().getCorrespondingClass(),
                             rightID.getName());
         } else {
             second =
                     new MemLocation(
-                            MemArea.STACK, left.getType().getBase().getCorrespondingClass());
+                            MemArea.STACK, right.getType().getBase().getCorrespondingClass());
         }
 
         tempInstructions.add(new Instruction(InstructionType.CMP, first, second, null));
@@ -715,25 +655,20 @@ public class InstructionGenerator implements ASTVisitor {
     }
 
     /**
-     * Process an argument list's children in reverse order, pushing identifiers to the stack so
-     * they can be passed to methods.
+     * Process an argument list's children in reverse order, pushing each value to the stack so they
+     * can be passed to methods.
      *
      * @param node The argument list.
      */
     private void processArgumentList(Node node) {
         for (int i = node.getChildren().size() - 1; i >= 0; --i) {
-            Node child = node.getChildren().get(i);
-            if (child instanceof Identifier id) {
-                // more variable special handling
-                pushVarToStack(id);
-            }
-            processTree(child);
+            pushExpression(node.getChildren().get(i));
         }
     }
 
     /**
      * Process a boolean expression node, and push the results to the stack if it does not do that
-     * by default.
+     * by default. Identifiers are not pushed, since they can be accessed directly.
      *
      * @param node The node to process.
      */
@@ -744,6 +679,20 @@ public class InstructionGenerator implements ASTVisitor {
         } else if (node instanceof ExprEquality equality) {
             this.pushResultToStack(equality);
         }
+    }
+
+    /**
+     * Evaluate any expression so that its value ends up on top of the stack. Most expressions do
+     * this already, but variables are usually accessed directly and comparisons only set flags.
+     *
+     * @param node The expression to evaluate.
+     */
+    private void pushExpression(@NonNull Node node) {
+        if (node instanceof Identifier id) {
+            pushVarToStack(id);
+            return;
+        }
+        processBoolExpression(node);
     }
 
     /**
@@ -957,34 +906,6 @@ public class InstructionGenerator implements ASTVisitor {
                 || candidate instanceof While;
     }
 
-    /**
-     * Handle creating the jump table and calculating targets for the jump table, for switch
-     * statements.
-     *
-     * @param body The block that contains the statements.
-     * @param targetTable Where we store the labels and expressions to emit later.
-     * @param expressionResult The name of the variable where the expression result is stored.
-     */
-    private void switchBody(Node body, List<Node> targetTable, String expressionResult) {
-        String defaultLabel = generateSwitchJumpTable(body, targetTable, expressionResult);
-        /** Used for all trailing labels. */
-        final String endLabel = getNextLabelName();
-        for (Node child : body.getChildren()) {
-            if (child instanceof SwitchLabel label) {
-                if (label.isDefault()) {
-                    defaultLabel = endLabel;
-                } else {
-                    Node labelExpression = label.getChildren().get(0);
-                    processTree(labelExpression);
-                    emitJump(InstructionType.JEQ, endLabel);
-                }
-            }
-        }
-        if (defaultLabel != null) {
-            emitJump(InstructionType.JMP, defaultLabel);
-        }
-    }
-
     @Override
     public void visit(Break node) {
         emitJump(InstructionType.JMP, breakLabel);
@@ -1001,11 +922,7 @@ public class InstructionGenerator implements ASTVisitor {
         if (node.isPrimary()) {
             Identifier name = (Identifier) node.getChildren().get(1);
             String methodName = name.getName();
-            if (targetObject instanceof Identifier id) {
-                pushVarToStack(id);
-            } else {
-                processTree(targetObject);
-            }
+            pushExpression(targetObject);
             object = new MemLocation(MemArea.STACK, String.class, methodName);
 
             if (node.getChildren().size() > 2) {
@@ -1034,12 +951,11 @@ public class InstructionGenerator implements ASTVisitor {
                         Integer.class,
                         params == null ? 0 : params.getChildren().size());
 
-        tempInstructions.add(
-                new Instruction(
-                        InstructionType.CALL,
-                        object,
-                        paramCount,
-                        new MemLocation(MemArea.STACK, Void.class)));
+        // No target location means the return value is discarded
+        MemLocation result =
+                node.isIgnoreResult() ? null : new MemLocation(MemArea.STACK, Void.class);
+
+        tempInstructions.add(new Instruction(InstructionType.CALL, object, paramCount, result));
     }
 
     @Override
@@ -1139,23 +1055,23 @@ public class InstructionGenerator implements ASTVisitor {
 
         final String topOfLoopLabel = getNextLabelName();
         final String conditionLabel = getNextLabelName();
-        continueLabel = conditionLabel;
 
-        final boolean containsBreak = containsBreak(body);
-        if (containsBreak) {
-            breakLabel = getNextLabelName();
-        }
+        final String outerBreakLabel = breakLabel;
+        final String outerContinueLabel = continueLabel;
+        breakLabel = getNextLabelName();
+        continueLabel = conditionLabel;
 
         emitLabel(topOfLoopLabel);
 
         processTree(body);
 
-        processTree(conditional);
-        calculateJump(conditional, topOfLoopLabel);
+        emitLabel(conditionLabel);
+        emitConditionalJump(conditional, topOfLoopLabel, true);
 
-        if (containsBreak) {
-            emitLabel(breakLabel);
-        }
+        emitLabel(breakLabel);
+
+        breakLabel = outerBreakLabel;
+        continueLabel = outerContinueLabel;
     }
 
     @Override
@@ -1183,7 +1099,16 @@ public class InstructionGenerator implements ASTVisitor {
                 second = calculateLocation(node.getChildren().get(1), clazz);
                 break;
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-                second = new MemLocation(MemArea.IMMEDIATE, clazz, node.getUnaryCount());
+                // The immediate value needs to actually be the type we claim it is
+                Object delta;
+                if (clazz == Character.class) {
+                    delta = (char) node.getUnaryCount();
+                } else if (clazz == Double.class) {
+                    delta = (double) node.getUnaryCount();
+                } else {
+                    delta = node.getUnaryCount();
+                }
+                second = new MemLocation(MemArea.IMMEDIATE, clazz, delta);
                 break;
             default:
                 break;
@@ -1225,7 +1150,7 @@ public class InstructionGenerator implements ASTVisitor {
     public void visit(ExprAssign node) {
         final Node leftSide = node.getChildren().get(0);
         final Node rightSide = node.getChildren().get(1);
-        processBoolExpression(rightSide);
+        pushExpression(rightSide);
 
         Class<?> numericType = null;
         if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
@@ -1234,17 +1159,9 @@ public class InstructionGenerator implements ASTVisitor {
 
         InstructionType instruction = this.instructionType(node.getOperator(), numericType);
 
-        MemLocation first;
-        if (rightSide instanceof Identifier identifier) {
-            pushVarToStack(identifier);
-            first =
-                    new MemLocation(
-                            MemArea.STACK, rightSide.getType().getBase().getCorrespondingClass());
-        } else {
-            first =
-                    new MemLocation(
-                            MemArea.STACK, rightSide.getType().getBase().getCorrespondingClass());
-        }
+        final MemLocation value =
+                new MemLocation(
+                        MemArea.STACK, rightSide.getType().getBase().getCorrespondingClass());
 
         Class<?> clazz = node.getType().getBase().getCorrespondingClass();
 
@@ -1261,14 +1178,24 @@ public class InstructionGenerator implements ASTVisitor {
             target = new MemLocation(MemArea.IMMEDIATE, Void.class);
         }
 
-        MemLocation second = null;
-        if (node.getOperator() != ExprAssign.Operator.ASSIGN) {
-            // Handle somewhat in-place modification
-            // We want to do target _= right -> target for whatever operator _
-            second = new MemLocation(target.area(), target.type(), target.value());
+        if (node.getOperator() == ExprAssign.Operator.ASSIGN) {
+            tempInstructions.add(new Instruction(instruction, value, null, target));
+        } else {
+            // We want to do target = target _ value for whatever operator _, in that order
+            final MemLocation current =
+                    new MemLocation(target.area(), target.type(), target.value());
+            tempInstructions.add(new Instruction(instruction, current, value, target));
         }
 
-        tempInstructions.add(new Instruction(instruction, first, second, target));
+        if (!node.isIgnoreResult()) {
+            // Used as an expression, like a = b = 1, so the result needs to be available
+            tempInstructions.add(
+                    new Instruction(
+                            InstructionType.MOV,
+                            target,
+                            null,
+                            new MemLocation(MemArea.STACK, clazz)));
+        }
     }
 
     @Override
@@ -1279,44 +1206,47 @@ public class InstructionGenerator implements ASTVisitor {
     @Override
     public void visit(ExprLogic node) {
         Node left = node.getChildren().get(0);
-        MemLocation target = new MemLocation(MemArea.STACK, Boolean.class);
-
-        MemLocation first;
-        if (left instanceof Identifier leftID) {
-            first = new MemLocation(MemArea.VARIABLE, Boolean.class, leftID.getName());
-        } else {
-            first = new MemLocation(MemArea.STACK, Boolean.class);
-        }
+        final MemLocation stack = new MemLocation(MemArea.STACK, Boolean.class);
 
         if (node.getOperator() == ExprLogic.Operator.NOT) {
-            processBoolExpression(left);
-
-            tempInstructions.add(new Instruction(InstructionType.NOT, first, null, target));
+            pushExpression(left);
+            tempInstructions.add(new Instruction(InstructionType.NOT, stack, null, stack));
             return;
         }
         Node right = node.getChildren().get(1);
 
-        // We want to pop the left side first, so we have to push it last
-        processBoolExpression(right);
+        final boolean isAnd = node.getOperator() == ExprLogic.Operator.AND;
 
-        processBoolExpression(left);
+        /*
+         * Short circuit, so the right side is only evaluated if it can change the result. For &&
+         * that's when the left is true, and for || when the left is false.
+         */
+        final String shortCircuitLabel = getNextLabelName();
+        final String endLabel = getNextLabelName();
 
-        InstructionType type = InstructionType.NOP;
-        switch (node.getOperator()) {
-            case AND:
-                type = InstructionType.AND;
-                break;
-            case OR:
-                type = InstructionType.OR;
-                break;
-            case NOT:
-            default:
-                // Already handled
-                break;
-        }
+        pushExpression(left);
         tempInstructions.add(
                 new Instruction(
-                        type, first, new MemLocation(MemArea.STACK, Boolean.class), target));
+                        InstructionType.CMP,
+                        stack,
+                        new MemLocation(MemArea.IMMEDIATE, Boolean.class, true),
+                        null));
+        emitJump(isAnd ? InstructionType.JNE : InstructionType.JEQ, shortCircuitLabel);
+
+        // The result is whatever the right side is
+        pushExpression(right);
+        emitJump(InstructionType.JMP, endLabel);
+
+        // The result is the value of the left side, false for && and true for ||
+        emitLabel(shortCircuitLabel);
+        tempInstructions.add(
+                new Instruction(
+                        InstructionType.MOV,
+                        new MemLocation(MemArea.IMMEDIATE, Boolean.class, !isAnd),
+                        null,
+                        stack));
+
+        emitLabel(endLabel);
     }
 
     @Override
@@ -1331,32 +1261,16 @@ public class InstructionGenerator implements ASTVisitor {
         Node ifFalse = node.getChildren().get(2);
 
         final String end = getNextLabelName();
+        final String falseLabel = getNextLabelName();
 
-        if (conditional instanceof Identifier id) {
-            pushVarToStack(id);
-        } else {
-            processTree(conditional);
-        }
-
-        String falseLabel = getNextLabelName();
         // If not condition, goto else, otherwise we fall through to if
-        calculateInvertedJump(conditional, falseLabel);
-        processTree(ifTrue);
+        emitConditionalJump(conditional, falseLabel, false);
 
-        if (ifTrue instanceof ExprRelation relation) {
-            this.pushResultToStack(relation);
-        } else if (ifTrue instanceof ExprEquality equality) {
-            this.pushResultToStack(equality);
-        }
-
+        pushExpression(ifTrue);
         emitJump(InstructionType.JMP, end);
+
         emitLabel(falseLabel);
-        processTree(ifFalse);
-        if (ifFalse instanceof ExprRelation relation) {
-            this.pushResultToStack(relation);
-        } else if (ifFalse instanceof ExprEquality equality) {
-            this.pushResultToStack(equality);
-        }
+        pushExpression(ifFalse);
 
         emitLabel(end);
     }
@@ -1379,22 +1293,18 @@ public class InstructionGenerator implements ASTVisitor {
         if (node.isUpdate()) {
             update = node.getChildren().get(position);
             ++position;
-            if (update instanceof ExprArithmetic expr) {
-                // Handle post/pre-fix expressions being thrown away
-                expr.setIgnoreResult(true);
-            }
         }
         Node body = node.getChildren().get(position);
 
         final String topOfLoopLabel = getNextLabelName();
+        final String updateLabel = getNextLabelName();
         final String conditionLabel = getNextLabelName();
 
-        final boolean containsBreak = containsBreak(body);
-        if (containsBreak) {
-            breakLabel = getNextLabelName();
-        }
-
-        continueLabel = conditionLabel;
+        final String outerBreakLabel = breakLabel;
+        final String outerContinueLabel = continueLabel;
+        breakLabel = getNextLabelName();
+        // Continuing still runs the update
+        continueLabel = updateLabel;
 
         if (init != null) {
             processTree(init);
@@ -1402,19 +1312,20 @@ public class InstructionGenerator implements ASTVisitor {
         emitJump(InstructionType.JMP, conditionLabel);
         emitLabel(topOfLoopLabel);
         processTree(body);
+        emitLabel(updateLabel);
         if (update != null) {
             processTree(update);
         }
         emitLabel(conditionLabel);
         if (condition != null) {
-            processTree(condition);
-            calculateJump(condition, topOfLoopLabel);
+            emitConditionalJump(condition, topOfLoopLabel, true);
         } else {
             emitJump(InstructionType.JMP, topOfLoopLabel);
         }
-        if (containsBreak) {
-            emitLabel(breakLabel);
-        }
+        emitLabel(breakLabel);
+
+        breakLabel = outerBreakLabel;
+        continueLabel = outerContinueLabel;
     }
 
     @Override
@@ -1431,22 +1342,17 @@ public class InstructionGenerator implements ASTVisitor {
 
         final String end = getNextLabelName();
 
-        if (conditional instanceof Identifier id) {
-            pushVarToStack(id);
-        } else {
-            processTree(conditional);
-        }
         if (containsElse) {
             Node elsePart = node.getChildren().get(2);
             String elseLabel = getNextLabelName();
             // If not condition, goto else, otherwise we fall through to if
-            calculateInvertedJump(conditional, elseLabel);
+            emitConditionalJump(conditional, elseLabel, false);
             processTree(ifPart);
             emitJump(InstructionType.JMP, end);
             emitLabel(elseLabel);
             processTree(elsePart);
         } else {
-            calculateInvertedJump(conditional, end);
+            emitConditionalJump(conditional, end, false);
             processTree(ifPart);
         }
         emitLabel(end);
@@ -1469,21 +1375,16 @@ public class InstructionGenerator implements ASTVisitor {
 
         final String expressionResult = getNextVariableName();
 
-        final boolean containsBreak = containsBreak(body);
-        if (containsBreak) {
-            breakLabel = getNextLabelName();
-        }
+        // Switches can be broken out of, but continue still applies to the enclosing loop
+        final String outerBreakLabel = breakLabel;
+        breakLabel = getNextLabelName();
 
         /*
          * Emit the expression and store the result in a temporary variable. We
          * use a variable since we have many comparisons, and don't want to spam
          * the stack.
          */
-        if (expression instanceof Identifier id) {
-            pushVarToStack(id);
-        } else {
-            processTree(expression);
-        }
+        pushExpression(expression);
         tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
@@ -1500,7 +1401,11 @@ public class InstructionGenerator implements ASTVisitor {
          */
         List<Node> targetTable = new ArrayList<>();
 
-        switchBody(body, targetTable, expressionResult);
+        String defaultLabel =
+                generateSwitchJumpTable(body, targetTable, expressionResult, breakLabel);
+
+        // Nothing matched
+        emitJump(InstructionType.JMP, defaultLabel == null ? breakLabel : defaultLabel);
 
         // Then emit targets and contents
 
@@ -1512,9 +1417,8 @@ public class InstructionGenerator implements ASTVisitor {
             }
         }
 
-        if (containsBreak) {
-            emitLabel(breakLabel);
-        }
+        emitLabel(breakLabel);
+        breakLabel = outerBreakLabel;
     }
 
     @Override
@@ -1553,22 +1457,26 @@ public class InstructionGenerator implements ASTVisitor {
                 clazz = Object.class;
         }
 
+        if (dims > 0 || node.getType().getDimensions() > 0) {
+            // Arrays come from Java, we can't check what type they are
+            clazz = Object.class;
+        }
+
         MemLocation target = new MemLocation(MemArea.VARIABLE, clazz, varName);
         MemLocation defaultValue;
 
         if (node.getChildren().size() > 1) {
             Node rightSide = node.getChildren().get(1);
-            processTree(rightSide);
+            pushExpression(rightSide);
             defaultValue = new MemLocation(MemArea.STACK, clazz);
-            if (rightSide instanceof ExprRelation relation) {
-                this.pushResultToStack(relation);
-            } else if (rightSide instanceof ExprEquality equality) {
-                this.pushResultToStack(equality);
-            }
         } else if (dims == 0) {
             // Check for primitives, store defaults
 
-            if (node.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
+            if (node.getType().anyOf(Base.CHAR)) {
+                defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, (char) 0);
+            } else if (node.getType().anyOf(Base.DOUBLE)) {
+                defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, 0.0);
+            } else if (node.getType().anyOf(Base.INT)) {
                 defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, 0);
             } else if (node.getType().anyOf(Base.BOOLEAN)) {
                 defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, false);
@@ -1580,7 +1488,7 @@ public class InstructionGenerator implements ASTVisitor {
         } else {
             defaultValue = new MemLocation(MemArea.IMMEDIATE, clazz, null);
         }
-        tempInstructions.add(new Instruction(InstructionType.MOV, defaultValue, null, target));
+        tempInstructions.add(new Instruction(InstructionType.DECLARE, defaultValue, null, target));
     }
 
     @Override
@@ -1590,12 +1498,11 @@ public class InstructionGenerator implements ASTVisitor {
 
         final String topOfLoopLabel = getNextLabelName();
         final String conditionLabel = getNextLabelName();
-        continueLabel = conditionLabel;
 
-        final boolean containsBreak = containsBreak(body);
-        if (containsBreak) {
-            breakLabel = getNextLabelName();
-        }
+        final String outerBreakLabel = breakLabel;
+        final String outerContinueLabel = continueLabel;
+        breakLabel = getNextLabelName();
+        continueLabel = conditionLabel;
 
         emitJump(InstructionType.JMP, conditionLabel);
         emitLabel(topOfLoopLabel);
@@ -1603,11 +1510,11 @@ public class InstructionGenerator implements ASTVisitor {
         processTree(body);
 
         emitLabel(conditionLabel);
-        processTree(conditional);
-        calculateJump(conditional, topOfLoopLabel);
+        emitConditionalJump(conditional, topOfLoopLabel, true);
 
-        if (containsBreak) {
-            emitLabel(breakLabel);
-        }
+        emitLabel(breakLabel);
+
+        breakLabel = outerBreakLabel;
+        continueLabel = outerContinueLabel;
     }
 }

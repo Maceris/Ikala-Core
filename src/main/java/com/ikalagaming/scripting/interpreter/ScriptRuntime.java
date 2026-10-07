@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
+import java.util.Objects;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntBinaryOperator;
@@ -51,6 +51,16 @@ public class ScriptRuntime {
      * this will be 1.
      */
     private int lastComparison;
+
+    /**
+     * The value of {@link #lastComparison} when two values can't be ordered, like when comparing
+     * against NaN or values that are not equal and not numbers. Only != is true for these, which
+     * matches how Java handles NaN.
+     */
+    private static final int UNORDERED = 2;
+
+    /** The types that variables were declared with, so we can check what is stored in them. */
+    private Map<String, Class<?>> declaredTypes = new HashMap<>();
 
     /** Where we are in the program. */
     private int programCounter = 0;
@@ -134,8 +144,19 @@ public class ScriptRuntime {
 
         if (objectLocation != MemArea.IMMEDIATE) {
             final MemoryItem first = loadValue(i.firstLocation());
+            if (fatalError) {
+                return;
+            }
 
             object = first.value();
+            if (object == null) {
+                log.warn(
+                        SafeResourceLoader.getString(
+                                "METHOD_CALL_ON_NULL", ScriptManager.getResourceBundle()),
+                        methodName);
+                halt();
+                return;
+            }
 
             Method[] methods = object.getClass().getMethods();
 
@@ -158,7 +179,10 @@ public class ScriptRuntime {
             options = ScriptManager.getMethods(methodName, numParams);
         }
 
-        if (!this.call(options, parameters, object)) {
+        // There is no target location if the result is not used
+        final boolean keepResult = i.targetLocation() != null;
+
+        if (!this.call(options, parameters, object, keepResult)) {
             log.warn(
                     SafeResourceLoader.getString(
                             "UNKNOWN_METHOD", ScriptManager.getResourceBundle()),
@@ -173,48 +197,160 @@ public class ScriptRuntime {
      * @param options The potential options we have for method calls.
      * @param parameters The actual parameters we are trying to match.
      * @param target The object to invoke the method on, may be null for static methods.
+     * @param keepResult Whether the return value should be pushed onto the stack. Ignored for void
+     *     methods, which never push anything.
      * @return Whether we successfully called a method.
      */
     private boolean call(
-            @NonNull List<Method> options, @NonNull List<MemoryItem> parameters, Object target) {
+            @NonNull List<Method> options,
+            @NonNull List<MemoryItem> parameters,
+            Object target,
+            boolean keepResult) {
         if (options.isEmpty()) {
             return false;
         }
+        List<Method> viableOptions = new ArrayList<>();
         for (Method option : options) {
+            if (option.isBridge() || option.isSynthetic()) {
+                // Compiler generated duplicates of real methods
+                continue;
+            }
             Class<?>[] params = option.getParameterTypes();
             boolean viable = true;
             for (int i = 0; i < params.length; ++i) {
-                Class<?> expectedType = params[i];
-                Class<?> actualType = parameters.get(i).type();
-                viable = canAssign(expectedType, actualType);
+                viable = canAssign(params[i], parameters.get(i));
                 if (!viable) {
                     break;
                 }
             }
-            if (!viable) {
-                continue;
+            if (viable) {
+                viableOptions.add(option);
             }
-            Object[] actualParams = new Object[parameters.size()];
-            for (int i = 0; i < parameters.size(); ++i) {
-                actualParams[i] = parameters.get(i).value();
-            }
-            try {
-                Object result = option.invoke(target, actualParams);
-                if (result != null) {
-                    stack.push(new MemoryItem(result));
-                }
-                return true;
-            } catch (IllegalAccessException
-                    | IllegalArgumentException
-                    | InvocationTargetException e) {
+        }
+
+        final Method mostSpecific = ScriptRuntime.mostSpecific(viableOptions);
+        if (mostSpecific == null) {
+            if (viableOptions.size() > 1) {
                 log.warn(
                         SafeResourceLoader.getString(
-                                "METHOD_CALL_FAILED", ScriptManager.getResourceBundle()),
-                        option.getName());
+                                "AMBIGUOUS_METHOD", ScriptManager.getResourceBundle()),
+                        viableOptions.get(0).getName(),
+                        viableOptions.toString());
+            }
+            return false;
+        }
+
+        final Method option = mostSpecific;
+        Object[] actualParams = new Object[parameters.size()];
+        for (int i = 0; i < parameters.size(); ++i) {
+            actualParams[i] = parameters.get(i).value();
+        }
+        try {
+            Object result = option.invoke(target, actualParams);
+            final Class<?> returnType = option.getReturnType();
+            if (keepResult && returnType != void.class) {
+                /*
+                 * Null results still need to take up space on the stack, otherwise whatever
+                 * uses the result will pop something else.
+                 */
+                if (result == null) {
+                    stack.push(new MemoryItem(returnType, null));
+                } else {
+                    stack.push(new MemoryItem(result));
+                }
+            }
+            return true;
+        } catch (IllegalAccessException
+                | IllegalArgumentException
+                | NullPointerException
+                | InvocationTargetException e) {
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "METHOD_CALL_FAILED", ScriptManager.getResourceBundle()),
+                    option.getName());
+            return false;
+        }
+    }
+
+    /**
+     * Pick the most specific method out of the options, the same way Java chooses between
+     * overloads. A method is more specific than another if each of its parameters could be passed
+     * to the other method.
+     *
+     * @param options The methods we could call.
+     * @return The most specific method, or null if there are no options or it's ambiguous.
+     */
+    private static Method mostSpecific(@NonNull List<Method> options) {
+        for (Method candidate : options) {
+            boolean best = true;
+            for (Method other : options) {
+                if (other != candidate && !ScriptRuntime.isAtLeastAsSpecific(candidate, other)) {
+                    best = false;
+                    break;
+                }
+            }
+            if (best) {
+                // Identical signatures are only possible across classes, which is ambiguous
+                for (Method other : options) {
+                    if (other != candidate
+                            && ScriptRuntime.isAtLeastAsSpecific(other, candidate)
+                            && !other.getDeclaringClass()
+                                    .isAssignableFrom(candidate.getDeclaringClass())) {
+                        return null;
+                    }
+                }
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Convert a primitive class to its boxed equivalent.
+     *
+     * @param primitive The primitive class.
+     * @return The boxed class, or the original class if it is not one we handle.
+     */
+    private static Class<?> box(Class<?> primitive) {
+        if (primitive == int.class) {
+            return Integer.class;
+        }
+        if (primitive == double.class) {
+            return Double.class;
+        }
+        if (primitive == char.class) {
+            return Character.class;
+        }
+        if (primitive == boolean.class) {
+            return Boolean.class;
+        }
+        return primitive;
+    }
+
+    /**
+     * Check if every parameter of the first method could be passed to the second method.
+     *
+     * @param first The method we think might be more specific.
+     * @param second The method to compare against.
+     * @return True if the first is at least as specific as the second.
+     */
+    private static boolean isAtLeastAsSpecific(Method first, Method second) {
+        Class<?>[] firstParams = first.getParameterTypes();
+        Class<?>[] secondParams = second.getParameterTypes();
+        for (int i = 0; i < firstParams.length; ++i) {
+            final Class<?> from = firstParams[i];
+            final Class<?> to = secondParams[i];
+            final boolean widens =
+                    (to == double.class && (from == int.class || from == char.class))
+                            || (to == int.class && from == char.class);
+            // A primitive can be boxed to pass it to a reference, like int to Object
+            final boolean boxes =
+                    from.isPrimitive() && to.isAssignableFrom(ScriptRuntime.box(from));
+            if (!to.isAssignableFrom(from) && !widens && !boxes) {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -222,19 +358,29 @@ public class ScriptRuntime {
      * primitives.
      *
      * @param expected The expected type.
-     * @param actual The actual type we have.
+     * @param actual The actual parameter we have.
      * @return Whether this is a reasonable match.
      */
-    private boolean canAssign(Class<?> expected, Class<?> actual) {
-        if (expected.isPrimitive()) {
-            return ((expected == int.class && actual == Integer.class)
-                    || (expected == double.class && actual == Double.class)
-                    || (expected == boolean.class && actual == Boolean.class)
-                    || (expected == char.class && actual == Character.class));
-        } else if (!expected.isAssignableFrom(actual)) {
-            return false;
+    private boolean canAssign(Class<?> expected, MemoryItem actual) {
+        final Object value = actual.value();
+        if (value == null) {
+            // Null can be passed to anything but primitives
+            return !expected.isPrimitive();
         }
-        return true;
+        // The value is more accurate than the type stored in memory
+        final Class<?> actualType = value.getClass();
+        if (expected.isPrimitive()) {
+            // Includes widening primitive conversions, which reflection handles for us
+            return ((expected == int.class
+                            && (actualType == Integer.class || actualType == Character.class))
+                    || (expected == double.class
+                            && (actualType == Double.class
+                                    || actualType == Integer.class
+                                    || actualType == Character.class))
+                    || (expected == boolean.class && actualType == Boolean.class)
+                    || (expected == char.class && actualType == Character.class));
+        }
+        return expected.isAssignableFrom(actualType);
     }
 
     /**
@@ -264,7 +410,13 @@ public class ScriptRuntime {
         } else if (targetClass == Boolean.class) {
             target = castToBoolean(firstItem.value());
         } else if (targetClass == String.class) {
-            target = new MemoryItem(Character.class, firstItem.value().toString());
+            target = new MemoryItem(String.class, String.valueOf(firstItem.value()));
+        } else {
+            /*
+             * Reference types, and types we won't know until runtime. We have no way of checking
+             * or converting these, so pass them through and let method calls sort it out.
+             */
+            target = firstItem;
         }
 
         if (target == null) {
@@ -276,8 +428,7 @@ public class ScriptRuntime {
             return;
         }
 
-        MemLocation targetLocation = new MemLocation(i.targetLocation().area(), targetClass);
-        storeValue(target, targetLocation);
+        storeValue(target, i.targetLocation());
     }
 
     /**
@@ -290,15 +441,15 @@ public class ScriptRuntime {
         boolean value;
 
         if (o instanceof Integer integer) {
-            value = integer == 0;
+            value = integer != 0;
         } else if (o instanceof Double doub) {
-            value = doub == 0;
+            value = doub != 0;
         } else if (o instanceof Character character) {
-            value = character == 0;
+            value = character != 0;
         } else if (o instanceof Boolean bool) {
             value = bool;
         } else if (o instanceof String str) {
-            value = str.isEmpty();
+            value = !str.isEmpty();
         } else {
             return null;
         }
@@ -418,28 +569,93 @@ public class ScriptRuntime {
             return;
         }
 
-        char firstNumber;
-        char secondNumber;
-
-        if (firstLocation.isChar()) {
-            firstNumber = (Character) firstItem.value();
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            firstNumber = 0;
+        if (!ScriptRuntime.isIntegral(firstItem.value())
+                || !ScriptRuntime.isIntegral(secondItem.value())) {
+            valueTypeMismatch(Type.Base.CHAR);
+            return;
         }
 
-        if (secondLocation.isChar()) {
-            final char unboxed = (Character) secondItem.value();
-            secondNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            secondNumber = 0;
-        }
+        /*
+         * The values are checked rather than the locations, since the location type is what we
+         * expected at compile time, and immediate values like increments may be boxed integers.
+         */
+        final char firstNumber = (char) ScriptRuntime.toInt(firstItem.value());
+        final char secondNumber = (char) ScriptRuntime.toInt(secondItem.value());
 
-        MemoryItem result =
-                new MemoryItem(Character.class, operation.apply(firstNumber, secondNumber));
+        MemoryItem result;
+        try {
+            result = new MemoryItem(Character.class, operation.apply(firstNumber, secondNumber));
+        } catch (ArithmeticException e) {
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "ARITHMETIC_ERROR", ScriptManager.getResourceBundle()),
+                    e.getMessage());
+            halt();
+            return;
+        }
 
         storeValue(result, i.targetLocation());
+    }
+
+    /**
+     * Check if a value is a whole number we can do integer math on.
+     *
+     * @param value The value to check.
+     * @return True if the value is an integer or character.
+     */
+    private static boolean isIntegral(Object value) {
+        return value instanceof Integer || value instanceof Character;
+    }
+
+    /**
+     * Check if a value is any kind of number we can do math on.
+     *
+     * @param value The value to check.
+     * @return True if the value is an integer, character, or double.
+     */
+    private static boolean isNumeric(Object value) {
+        return ScriptRuntime.isIntegral(value) || value instanceof Double;
+    }
+
+    /**
+     * Convert a numeric value to a double. The value must be numeric.
+     *
+     * @param value The value to convert.
+     * @return The value as a double.
+     * @see #isNumeric(Object)
+     */
+    private static double toDouble(Object value) {
+        if (value instanceof Double doub) {
+            return doub;
+        }
+        return ScriptRuntime.toInt(value);
+    }
+
+    /**
+     * Convert an integral value to an integer. The value must be integral.
+     *
+     * @param value The value to convert.
+     * @return The value as an integer.
+     * @see #isIntegral(Object)
+     */
+    private static int toInt(Object value) {
+        if (value instanceof Character character) {
+            return character;
+        }
+        return (Integer) value;
+    }
+
+    /**
+     * Log that the actual value in memory did not match what we expected, and halt.
+     *
+     * @param intended The type we were expecting.
+     */
+    private void valueTypeMismatch(Type.Base intended) {
+        log.warn(
+                SafeResourceLoader.getString(
+                        "MEMORY_TYPE_MISMATCH", ScriptManager.getResourceBundle()),
+                intended.toString());
+        halt();
     }
 
     /**
@@ -518,35 +734,35 @@ public class ScriptRuntime {
             return;
         }
 
-        if ((firstLocation.isChar() || firstLocation.isDouble() || firstLocation.isInt())
-                && (secondLocation.isChar()
-                        || secondLocation.isDouble()
-                        || secondLocation.isInt())) {
+        Object first = firstItem.value();
+        Object second = secondItem.value();
 
-            doubleComparison(
-                    i,
-                    firstItem,
-                    secondItem,
-                    (a, b) -> {
-                        final double TOLERANCE = 0.000_01;
-                        if (Math.abs(a - b) < TOLERANCE) {
-                            lastComparison = 0;
-                        } else if (a < b) {
-                            lastComparison = -1;
-                        } else if (a > b) {
-                            lastComparison = 1;
-                        }
-                    });
+        /*
+         * We check the actual values instead of the locations, since things like method calls
+         * have types we don't know until runtime.
+         */
+        if (ScriptRuntime.isNumeric(first) && ScriptRuntime.isNumeric(second)) {
+            final double a = ScriptRuntime.toDouble(first);
+            final double b = ScriptRuntime.toDouble(second);
+            // Exact comparisons, the same as Java
+            if (a < b) {
+                lastComparison = -1;
+            } else if (a > b) {
+                lastComparison = 1;
+            } else if (a == b) {
+                lastComparison = 0;
+            } else {
+                // NaN
+                lastComparison = ScriptRuntime.UNORDERED;
+            }
             return;
         }
 
-        Object first = firstItem.value();
-        Object second = secondItem.value();
-        if (first.equals(second)) {
+        if (Objects.equals(first, second)) {
             lastComparison = 0;
         } else {
-            // Different types
-            lastComparison = 1;
+            // Different values that we can't put in order
+            lastComparison = ScriptRuntime.UNORDERED;
         }
     }
 
@@ -566,63 +782,12 @@ public class ScriptRuntime {
             return;
         }
 
-        String first = firstItem.value().toString();
-        String second = secondItem.value().toString();
+        String first = String.valueOf(firstItem.value());
+        String second = String.valueOf(secondItem.value());
 
         MemoryItem result = new MemoryItem(String.class, first + second);
 
         storeValue(result, i.targetLocation());
-    }
-
-    /**
-     * Compares the values of the given instruction as doubles using the provided function.
-     *
-     * @param i The instruction we are doing comparisons on.
-     * @param firstItem The first memory item.
-     * @param secondItem The second memory item.
-     * @param comparisonFunction The function to use for comparisons.
-     */
-    private void doubleComparison(
-            Instruction i,
-            MemoryItem firstItem,
-            MemoryItem secondItem,
-            BiConsumer<Double, Double> comparisonFunction) {
-        final MemLocation firstLocation = i.firstLocation();
-        final MemLocation secondLocation = i.secondLocation();
-
-        if (fatalError) {
-            return;
-        }
-
-        // Just cast all numbers to doubles.
-        double first;
-        double second;
-
-        if (firstLocation.isInt()) {
-            first = (int) firstItem.value();
-        } else if (firstLocation.isChar()) {
-            first = (char) firstItem.value();
-        } else if (firstLocation.isDouble()) {
-            first = (double) firstItem.value();
-        } else {
-            // Should not happen
-            halt();
-            return;
-        }
-
-        if (secondLocation.isInt()) {
-            second = (int) secondItem.value();
-        } else if (secondLocation.isChar()) {
-            second = (char) secondItem.value();
-        } else if (secondLocation.isDouble()) {
-            second = (double) secondItem.value();
-        } else {
-            // Should not happen
-            halt();
-            return;
-        }
-
-        comparisonFunction.accept(first, second);
     }
 
     /**
@@ -647,39 +812,111 @@ public class ScriptRuntime {
             return;
         }
 
-        double firstNumber;
-        double secondNumber;
-
-        if (firstLocation.isDouble()) {
-            firstNumber = (Double) firstItem.value();
-        } else if (firstLocation.isInt()) {
-            final int unboxed = (Integer) firstItem.value();
-            firstNumber = unboxed;
-        } else if (firstLocation.isChar()) {
-            final char unboxed = (Character) firstItem.value();
-            firstNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            firstNumber = 0;
+        if (!ScriptRuntime.isNumeric(firstItem.value())
+                || !ScriptRuntime.isNumeric(secondItem.value())) {
+            valueTypeMismatch(Type.Base.DOUBLE);
+            return;
         }
 
-        if (secondLocation.isDouble()) {
-            secondNumber = (Double) secondItem.value();
-        } else if (secondLocation.isInt()) {
-            final int unboxed = (Integer) secondItem.value();
-            secondNumber = unboxed;
-        } else if (secondLocation.isChar()) {
-            final char unboxed = (Character) secondItem.value();
-            secondNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            secondNumber = 0;
-        }
+        final double firstNumber = ScriptRuntime.toDouble(firstItem.value());
+        final double secondNumber = ScriptRuntime.toDouble(secondItem.value());
 
         MemoryItem result =
                 new MemoryItem(Double.class, operation.applyAsDouble(firstNumber, secondNumber));
 
         storeValue(result, i.targetLocation());
+    }
+
+    /**
+     * Declare a variable, which records its type and stores the initial value. Declaring a variable
+     * that already exists replaces it, since it's a new variable that happens to reuse a name, like
+     * a loop variable or a variable in a different block.
+     *
+     * @param i The instruction to execute.
+     */
+    private void declare(@NonNull Instruction i) {
+        MemoryItem memory = loadValue(i.firstLocation());
+        if (fatalError) {
+            return;
+        }
+        final String variable = (String) i.targetLocation().value();
+        declaredTypes.put(variable, i.targetLocation().type());
+        storeValue(memory, i.targetLocation());
+    }
+
+    /**
+     * Add two values whose types we did not know at compile time.
+     *
+     * @param i The instruction to execute.
+     * @see InstructionType#ADD_DYNAMIC
+     */
+    private void dynamicAdd(Instruction i) {
+        final MemoryItem firstItem = loadValue(i.firstLocation());
+        final MemoryItem secondItem = loadValue(i.secondLocation());
+        if (fatalError) {
+            return;
+        }
+        final Object first = firstItem.value();
+        final Object second = secondItem.value();
+
+        if (first instanceof String || second instanceof String) {
+            storeValue(
+                    new MemoryItem(String.class, String.valueOf(first) + String.valueOf(second)),
+                    i.targetLocation());
+            return;
+        }
+        if (!ScriptRuntime.isNumeric(first) || !ScriptRuntime.isNumeric(second)) {
+            valueTypeMismatch(Type.Base.UNKNOWN);
+            return;
+        }
+        if (first instanceof Double || second instanceof Double) {
+            storeValue(
+                    new MemoryItem(
+                            Double.class,
+                            ScriptRuntime.toDouble(first) + ScriptRuntime.toDouble(second)),
+                    i.targetLocation());
+            return;
+        }
+        // Like Java, adding characters results in an integer
+        storeValue(
+                new MemoryItem(
+                        Integer.class, ScriptRuntime.toInt(first) + ScriptRuntime.toInt(second)),
+                i.targetLocation());
+    }
+
+    /**
+     * Apply widening primitive conversions, like storing an integer in a double variable, the same
+     * as Java does for assignments.
+     *
+     * @param declaredType The type of the variable.
+     * @param item The value we want to store.
+     * @return The converted value, or the original if no conversion applies.
+     */
+    private static MemoryItem widen(@NonNull Class<?> declaredType, @NonNull MemoryItem item) {
+        final Object value = item.value();
+        if (declaredType == Double.class
+                && (value instanceof Integer || value instanceof Character)) {
+            return new MemoryItem(Double.class, ScriptRuntime.toDouble(value));
+        }
+        if (declaredType == Integer.class && value instanceof Character character) {
+            return new MemoryItem(Integer.class, (int) character);
+        }
+        return item;
+    }
+
+    /**
+     * Check if a value can be stored in a variable of the given type.
+     *
+     * @param declaredType The type the variable was declared with.
+     * @param value The value we want to store.
+     * @return True if the value is allowed.
+     */
+    private static boolean fitsType(@NonNull Class<?> declaredType, Object value) {
+        if (value == null) {
+            // Only references can be null, and Object covers identifiers and arrays
+            return declaredType == Object.class || declaredType == String.class;
+        }
+        return declaredType.isInstance(value);
     }
 
     private void execute(Instruction i) {
@@ -688,12 +925,16 @@ public class ScriptRuntime {
                 charMath(i, (a, b) -> (char) (a + b));
                 programCounter++;
                 break;
+            case ADD_DYNAMIC:
+                dynamicAdd(i);
+                programCounter++;
+                break;
             case ADD_DOUBLE:
                 doubleMath(i, (a, b) -> a + b);
                 programCounter++;
                 break;
             case ADD_INT:
-                intMath(i, (a, b) -> a + b);
+                intMath(i, (a, b) -> a + b, (a, b) -> a + b);
                 programCounter++;
                 break;
             case AND:
@@ -716,6 +957,10 @@ public class ScriptRuntime {
                 concatStrings(i);
                 programCounter++;
                 break;
+            case DECLARE:
+                declare(i);
+                programCounter++;
+                break;
             case DIV_CHAR:
                 charMath(i, (a, b) -> (char) (a / b));
                 programCounter++;
@@ -725,26 +970,27 @@ public class ScriptRuntime {
                 programCounter++;
                 break;
             case DIV_INT:
-                intMath(i, (a, b) -> a / b);
+                intMath(i, (a, b) -> a / b, (a, b) -> a / b);
                 programCounter++;
                 break;
             case HALT:
-                halt();
+                // A normal exit, not an error
+                programCounter = instructions.size();
                 break;
             case JEQ:
                 jump(i, comp -> comp == 0);
                 break;
             case JGE:
-                jump(i, comp -> comp >= 0);
+                jump(i, comp -> comp == 0 || comp == 1);
                 break;
             case JGT:
-                jump(i, comp -> comp > 0);
+                jump(i, comp -> comp == 1);
                 break;
             case JLE:
-                jump(i, comp -> comp <= 0);
+                jump(i, comp -> comp == 0 || comp == -1);
                 break;
             case JLT:
-                jump(i, comp -> comp < 0);
+                jump(i, comp -> comp == -1);
                 break;
             case JMP:
                 jump(i, comp -> true);
@@ -761,7 +1007,7 @@ public class ScriptRuntime {
                 programCounter++;
                 break;
             case MOD_INT:
-                intMath(i, (a, b) -> a % b);
+                intMath(i, (a, b) -> a % b, (a, b) -> a % b);
                 programCounter++;
                 break;
             case MOV:
@@ -777,7 +1023,7 @@ public class ScriptRuntime {
                 programCounter++;
                 break;
             case MUL_INT:
-                intMath(i, (a, b) -> a * b);
+                intMath(i, (a, b) -> a * b, (a, b) -> a * b);
                 programCounter++;
                 break;
             case NEG_CHAR:
@@ -813,7 +1059,7 @@ public class ScriptRuntime {
                 programCounter++;
                 break;
             case SUB_INT:
-                intMath(i, (a, b) -> a - b);
+                intMath(i, (a, b) -> a - b, (a, b) -> a - b);
                 programCounter++;
                 break;
             case SET_EQ:
@@ -821,19 +1067,19 @@ public class ScriptRuntime {
                 programCounter++;
                 break;
             case SET_GE:
-                set(i, cmp -> cmp >= 0);
+                set(i, cmp -> cmp == 0 || cmp == 1);
                 programCounter++;
                 break;
             case SET_GT:
-                set(i, cmp -> cmp > 0);
+                set(i, cmp -> cmp == 1);
                 programCounter++;
                 break;
             case SET_LE:
-                set(i, cmp -> cmp <= 0);
+                set(i, cmp -> cmp == 0 || cmp == -1);
                 programCounter++;
                 break;
             case SET_LT:
-                set(i, cmp -> cmp < 0);
+                set(i, cmp -> cmp == -1);
                 programCounter++;
                 break;
             case SET_NE:
@@ -862,7 +1108,11 @@ public class ScriptRuntime {
      * @return Whether we have terminated the program.
      */
     public boolean hasTerminated() {
-        return programCounter == instructions.size();
+        /*
+         * Instructions increment the program counter after executing, so a halt in the middle of
+         * an instruction can push it past the end of the program.
+         */
+        return fatalError || programCounter >= instructions.size();
     }
 
     /**
@@ -871,7 +1121,8 @@ public class ScriptRuntime {
      * @param i The instruction.
      * @param operation The operation to perform on the two numbers.
      */
-    private void intMath(Instruction i, IntBinaryOperator operation) {
+    private void intMath(
+            Instruction i, IntBinaryOperator operation, DoubleBinaryOperator doubleOperation) {
 
         final MemLocation firstLocation = i.firstLocation();
         final MemLocation secondLocation = i.secondLocation();
@@ -888,31 +1139,45 @@ public class ScriptRuntime {
             return;
         }
 
-        int firstNumber;
-        int secondNumber;
+        final Object firstValue = firstItem.value();
+        final Object secondValue = secondItem.value();
 
-        if (firstLocation.isInt()) {
-            firstNumber = (Integer) firstItem.value();
-        } else if (firstLocation.isChar()) {
-            final char unboxed = (Character) firstItem.value();
-            firstNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            firstNumber = 0;
+        if (!ScriptRuntime.isNumeric(firstValue) || !ScriptRuntime.isNumeric(secondValue)) {
+            valueTypeMismatch(Type.Base.INT);
+            return;
         }
 
-        if (secondLocation.isInt()) {
-            secondNumber = (Integer) secondItem.value();
-        } else if (secondLocation.isChar()) {
-            final char unboxed = (Character) secondItem.value();
-            secondNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            secondNumber = 0;
+        if (firstValue instanceof Double || secondValue instanceof Double) {
+            /*
+             * Integer math is assumed for expressions involving types we don't know until
+             * runtime, like method calls. If they turn out to be doubles, promote the operation.
+             */
+            MemoryItem result =
+                    new MemoryItem(
+                            Double.class,
+                            doubleOperation.applyAsDouble(
+                                    ScriptRuntime.toDouble(firstValue),
+                                    ScriptRuntime.toDouble(secondValue)));
+            storeValue(result, i.targetLocation());
+            return;
         }
 
-        MemoryItem result =
-                new MemoryItem(Integer.class, operation.applyAsInt(firstNumber, secondNumber));
+        MemoryItem result;
+        try {
+            result =
+                    new MemoryItem(
+                            Integer.class,
+                            operation.applyAsInt(
+                                    ScriptRuntime.toInt(firstValue),
+                                    ScriptRuntime.toInt(secondValue)));
+        } catch (ArithmeticException e) {
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "ARITHMETIC_ERROR", ScriptManager.getResourceBundle()),
+                    e.getMessage());
+            halt();
+            return;
+        }
 
         storeValue(result, i.targetLocation());
     }
@@ -1009,16 +1274,14 @@ public class ScriptRuntime {
             return;
         }
 
-        char firstNumber;
-
-        if (firstLocation.isChar()) {
-            firstNumber = (Character) firstItem.value();
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            firstNumber = 0;
+        if (!ScriptRuntime.isIntegral(firstItem.value())) {
+            valueTypeMismatch(Type.Base.CHAR);
+            return;
         }
 
-        MemoryItem result = new MemoryItem(Character.class, -firstNumber);
+        final char firstNumber = (char) ScriptRuntime.toInt(firstItem.value());
+
+        MemoryItem result = new MemoryItem(Character.class, (char) -firstNumber);
 
         storeValue(result, i.targetLocation());
     }
@@ -1040,20 +1303,12 @@ public class ScriptRuntime {
             return;
         }
 
-        double firstNumber;
-
-        if (firstLocation.isDouble()) {
-            firstNumber = (Double) firstItem.value();
-        } else if (firstLocation.isInt()) {
-            final int unboxed = (Integer) firstItem.value();
-            firstNumber = unboxed;
-        } else if (firstLocation.isChar()) {
-            final char unboxed = (Character) firstItem.value();
-            firstNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            firstNumber = 0;
+        if (!ScriptRuntime.isNumeric(firstItem.value())) {
+            valueTypeMismatch(Type.Base.DOUBLE);
+            return;
         }
+
+        final double firstNumber = ScriptRuntime.toDouble(firstItem.value());
 
         MemoryItem result = new MemoryItem(Double.class, -firstNumber);
 
@@ -1077,19 +1332,18 @@ public class ScriptRuntime {
             return;
         }
 
-        int firstNumber;
-
-        if (firstLocation.isInt()) {
-            firstNumber = (Integer) firstItem.value();
-        } else if (firstLocation.isChar()) {
-            final char unboxed = (Character) firstItem.value();
-            firstNumber = unboxed;
-        } else {
-            // Can't happen because of type checks, but just to be thorough
-            firstNumber = 0;
+        final Object value = firstItem.value();
+        if (value instanceof Double doub) {
+            // Unknown types are assumed to be integers, but might turn out to be doubles
+            storeValue(new MemoryItem(Double.class, -doub), i.targetLocation());
+            return;
+        }
+        if (!ScriptRuntime.isIntegral(value)) {
+            valueTypeMismatch(Type.Base.INT);
+            return;
         }
 
-        MemoryItem result = new MemoryItem(Integer.class, -firstNumber);
+        MemoryItem result = new MemoryItem(Integer.class, -ScriptRuntime.toInt(value));
 
         storeValue(result, i.targetLocation());
     }
@@ -1181,26 +1435,27 @@ public class ScriptRuntime {
      * @param item The item to store.
      * @param location The location to store the item in.
      */
-    private void storeValue(MemoryItem item, MemLocation location) {
+    private void storeValue(MemoryItem originalItem, MemLocation location) {
+        MemoryItem item = originalItem;
         switch (location.area()) {
             case STACK:
                 stack.push(item);
                 break;
             case VARIABLE:
                 final String variable = (String) location.value();
-                if (symbolTable.containsKey(variable)) {
-                    MemoryItem existingValue = symbolTable.get(variable);
-                    if (!existingValue.getClass().equals(item.getClass())) {
-                        log.warn(
-                                SafeResourceLoader.getString(
-                                        "VARIABLE_TYPE_MISMATCH",
-                                        ScriptManager.getResourceBundle()),
-                                item.getClass().getSimpleName(),
-                                variable,
-                                existingValue.getClass().getSimpleName());
-                        halt();
-                        break;
-                    }
+                final Class<?> declaredType = declaredTypes.get(variable);
+                if (declaredType != null) {
+                    item = ScriptRuntime.widen(declaredType, item);
+                }
+                if (declaredType != null && !ScriptRuntime.fitsType(declaredType, item.value())) {
+                    log.warn(
+                            SafeResourceLoader.getString(
+                                    "VARIABLE_TYPE_MISMATCH", ScriptManager.getResourceBundle()),
+                            item.value() == null ? "null" : item.value().getClass().getSimpleName(),
+                            variable,
+                            declaredType.getSimpleName());
+                    halt();
+                    break;
                 }
                 symbolTable.put(variable, item);
                 break;
