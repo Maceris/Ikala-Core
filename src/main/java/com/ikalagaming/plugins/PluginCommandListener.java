@@ -7,6 +7,7 @@ import com.ikalagaming.plugins.events.PluginCommandSent;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The event listener for the plugin command system.
@@ -19,19 +20,21 @@ class PluginCommandListener implements Listener {
     private final PluginManager manager;
 
     /**
-     * Handles processing of Plugin Commands.
+     * Handles processing of Plugin Commands. Command names are case-insensitive, matching how they
+     * are registered. If nobody registered the command, the help text is printed.
      *
      * @param event The plugin command that was sent.
      */
     @EventHandler
     public void onPluginCommand(PluginCommandSent event) {
-        List<PluginCommand> commands = manager.getCommands();
-        if (commands.stream().noneMatch(cmd -> event.getCommand().equals(cmd.getCommand()))) {
-            manager.callbackHelp(null);
+        Optional<PluginCommand> command =
+                manager.getCommands().stream()
+                        .filter(cmd -> cmd.command().equalsIgnoreCase(event.getCommand()))
+                        .findFirst();
+        if (command.isEmpty()) {
+            manager.callbackHelp(List.of());
+            return;
         }
-
-        commands.stream()
-                .filter(cmd -> event.getCommand().equals(cmd.getCommand()))
-                .forEach(cmd -> cmd.getCallback().accept(event.getArguments()));
+        command.get().callback().accept(event.getArguments());
     }
 }

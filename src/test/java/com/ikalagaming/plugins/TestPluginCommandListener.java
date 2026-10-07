@@ -24,57 +24,67 @@ import java.util.function.Consumer;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TestPluginCommandListener {
 
-    @Mock private PluginManager manager;
-    @Mock private PluginCommand intendedCommand;
-    @Mock private Consumer<List<String>> intendedConsumer;
+    private static final String INTENDED_COMMAND = "Expected";
+    private static final String OTHER_COMMAND = "Unexpected";
 
-    @Mock private PluginCommand otherCommand;
+    @Mock private PluginManager manager;
+    @Mock private Consumer<List<String>> intendedConsumer;
     @Mock private Consumer<List<String>> otherConsumer;
 
     private PluginCommandListener listener;
-    private String intendedCommandName;
-    private String otherCommandName;
 
-    /** Sets up before each test.. */
+    /** Sets up before each test. */
     @BeforeEach
     void setUp() {
         var owner = "UnitTests";
-
-        intendedCommandName = "Expected";
-        otherCommandName = "Unexpected";
-
-        given(manager.getCommands()).willReturn(List.of(otherCommand, intendedCommand));
-
-        given(otherCommand.getCommand()).willReturn(otherCommandName);
-        given(otherCommand.getCallback()).willReturn(otherConsumer);
-        given(otherCommand.getOwner()).willReturn(owner);
-        given(intendedCommand.getCallback()).willReturn(intendedConsumer);
-        given(intendedCommand.getCommand()).willReturn(intendedCommandName);
-        given(intendedCommand.getOwner()).willReturn(owner);
+        given(manager.getCommands())
+                .willReturn(
+                        List.of(
+                                new PluginCommand(OTHER_COMMAND, owner, otherConsumer),
+                                new PluginCommand(INTENDED_COMMAND, owner, intendedConsumer)));
 
         listener = new PluginCommandListener(manager);
+    }
+
+    /** Tests that command names are matched ignoring case, like they are registered. */
+    @Test
+    void testPluginCommandIgnoresCase() {
+        listener.onPluginCommand(new PluginCommandSent(INTENDED_COMMAND.toUpperCase()));
+
+        verify(intendedConsumer).accept(List.of());
+        verify(manager, never()).callbackHelp(any());
     }
 
     /** Tests that we properly forward commands with arguments. */
     @Test
     void testPluginCommandSentWithArguments() {
         var argument = "arg1";
-        var event = new PluginCommandSent(intendedCommandName, List.of(argument));
+        var event = new PluginCommandSent(INTENDED_COMMAND, List.of(argument));
 
         listener.onPluginCommand(event);
 
         verify(intendedConsumer).accept(List.of(argument));
-        verify(otherConsumer, never()).accept(List.of(argument));
+        verify(otherConsumer, never()).accept(any());
     }
 
     /** Tests that we properly forward commands without arguments. */
     @Test
     void testPluginCommandSentWithoutArguments() {
-        var event = new PluginCommandSent(intendedCommandName);
+        var event = new PluginCommandSent(INTENDED_COMMAND);
 
         listener.onPluginCommand(event);
 
         verify(intendedConsumer).accept(List.of());
-        verify(otherConsumer, never()).accept(List.of());
+        verify(otherConsumer, never()).accept(any());
+    }
+
+    /** Tests that an unknown command prints help instead of calling anything. */
+    @Test
+    void testUnknownCommandPrintsHelp() {
+        listener.onPluginCommand(new PluginCommandSent("NotACommand"));
+
+        verify(manager).callbackHelp(List.of());
+        verify(intendedConsumer, never()).accept(any());
+        verify(otherConsumer, never()).accept(any());
     }
 }
