@@ -68,6 +68,40 @@ public class ParserErrorListener implements ANTLRErrorListener {
         // ignored
     }
 
+    /** How many expected tokens to list in an error before leaving out the rest. */
+    private static final int MAX_EXPECTED_TOKENS = 6;
+
+    /**
+     * ANTLR lists every token it could have accepted, which can be dozens, so cut those lists
+     * short.
+     *
+     * @param message The error message from ANTLR.
+     * @return The message, with long lists of expected tokens shortened.
+     */
+    static String shortenMessage(String message) {
+        if (message == null) {
+            return "";
+        }
+        final int start = message.indexOf(" expecting {");
+        final int end = message.lastIndexOf('}');
+        if (start < 0 || end < start) {
+            return message;
+        }
+        final String[] tokens = message.substring(start + " expecting {".length(), end).split(", ");
+        if (tokens.length <= MAX_EXPECTED_TOKENS) {
+            return message;
+        }
+        final String shown =
+                String.join(", ", java.util.Arrays.copyOf(tokens, MAX_EXPECTED_TOKENS));
+        return message.substring(0, start)
+                + " expecting one of "
+                + shown
+                + ", or "
+                + (tokens.length - MAX_EXPECTED_TOKENS)
+                + " others"
+                + message.substring(end + 1);
+    }
+
     /** Reset the error count so that we can reuse this for multiple parse attempts. */
     public void resetErrorCount() {
         errorCount = 0;
@@ -81,11 +115,12 @@ public class ParserErrorListener implements ANTLRErrorListener {
             int charPositionInLine,
             String msg,
             RecognitionException e) {
-        log.warn(
-                SafeResourceLoader.getString("SYNTAX_ERROR", ScriptManager.getResourceBundle()),
+        ScriptDiagnostics.warnAt(
+                log,
                 line,
-                charPositionInLine,
-                msg);
+                charPositionInLine + 1,
+                SafeResourceLoader.getString("SYNTAX_ERROR", ScriptManager.getResourceBundle()),
+                ParserErrorListener.shortenMessage(msg));
         ++errorCount;
     }
 }

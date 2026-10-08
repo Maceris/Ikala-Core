@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.Block;
@@ -364,7 +365,8 @@ public class OptimizationPass implements ASTVisitor {
             // Already a char
             firstValue = value;
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     firstChild.toString());
@@ -384,7 +386,8 @@ public class OptimizationPass implements ASTVisitor {
             // Already a char
             secondValue = value;
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     secondChild.toString());
@@ -413,7 +416,8 @@ public class OptimizationPass implements ASTVisitor {
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
             default:
                 // Can't happen, but let's cover it anyway
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 OptimizationPass.INVALID_OPERATOR,
                                 ScriptManager.getResourceBundle()),
@@ -451,7 +455,8 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             firstValue = value;
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     firstChild.toString());
@@ -471,7 +476,8 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             secondValue = value;
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     secondChild.toString());
@@ -500,7 +506,8 @@ public class OptimizationPass implements ASTVisitor {
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
             default:
                 // Can't happen, but let's cover it anyway
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 OptimizationPass.INVALID_OPERATOR,
                                 ScriptManager.getResourceBundle()),
@@ -538,7 +545,8 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             firstValue = value;
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     firstChild.toString());
@@ -558,7 +566,8 @@ public class OptimizationPass implements ASTVisitor {
             // Fits fine
             secondValue = value;
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             OptimizationPass.INVALID_CONSTANT, ScriptManager.getResourceBundle()),
                     secondChild.toString());
@@ -587,7 +596,8 @@ public class OptimizationPass implements ASTVisitor {
             case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
             default:
                 // Can't happen, but let's cover it anyway
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 OptimizationPass.INVALID_OPERATOR,
                                 ScriptManager.getResourceBundle()),

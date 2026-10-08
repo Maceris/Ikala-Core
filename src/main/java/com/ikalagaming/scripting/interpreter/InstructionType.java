@@ -49,6 +49,16 @@ public enum InstructionType {
      */
     AND,
     /**
+     * A breakpoint, which calls the runtime's breakpoint handler. These are patched in over other
+     * instructions by {@link ScriptRuntime#setBreakpoint(int)}, and the original instruction runs
+     * when the script continues. <br>
+     * <br>
+     * <b>Input 1:</b> Ignored.<br>
+     * <b>Input 2:</b> Ignored.<br>
+     * <b>Output:</b> None.
+     */
+    BREAKPOINT,
+    /**
      * Call a method. Parameters are stored on the stack. If this is a static method, we use a
      * memory location of IMMEDIATE. Otherwise the location will reflect where we find the object to
      * call a method on, whether that be the stack or a variable. <br>

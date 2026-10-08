@@ -10,11 +10,14 @@ import com.ikalagaming.scripting.ast.visitors.TypePreprocessor;
 import com.ikalagaming.scripting.interpreter.Instruction;
 import com.ikalagaming.scripting.interpreter.InstructionGenerator;
 import com.ikalagaming.scripting.interpreter.ScriptRuntime;
+import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.NonNull;
 import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.TokenStream;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,12 +29,55 @@ import java.util.Optional;
 public class IkalaScriptCompiler {
 
     /**
-     * Handle the parsing of a character stream.
+     * The results of compiling a script.
+     *
+     * @param runtime The runtime for the script, if it compiled successfully.
+     * @param syntaxTree The abstract syntax tree, which may be null if parsing failed. If later
+     *     stages failed, this is the tree as of the stage that failed.
+     * @param errors Problems found while compiling, which is empty if it succeeded.
+     */
+    public record CompileResult(
+            Optional<ScriptRuntime> runtime,
+            CompilationUnit syntaxTree,
+            List<ScriptDiagnostics.Diagnostic> errors) {
+
+        /**
+         * Whether the script compiled successfully.
+         *
+         * @return True if there is a runtime.
+         */
+        public boolean succeeded() {
+            return runtime.isPresent();
+        }
+    }
+
+    /**
+     * Compile a script, collecting the syntax tree and any problems, for tools like debuggers.
+     * Problems are still logged.
      *
      * @param input The input stream.
-     * @return The corresponding runtime.
+     * @return The results of compiling.
      */
-    public static Optional<ScriptRuntime> parse(CharStream input) {
+    public static CompileResult compile(@NonNull CharStream input) {
+        final List<ScriptDiagnostics.Diagnostic> errors = new ArrayList<>();
+        final CompilationUnit[] tree = new CompilationUnit[1];
+        final Optional<ScriptRuntime> runtime =
+                ScriptDiagnostics.collect(errors, () -> compile(input, tree, errors));
+        return new CompileResult(runtime, tree[0], List.copyOf(errors));
+    }
+
+    /**
+     * Compile a script, storing the syntax tree as soon as it's created.
+     *
+     * @param input The input stream.
+     * @param tree A single element array to store the tree in.
+     * @param errors Errors reported so far, used to explain failures that didn't report anything.
+     * @return The runtime if compiling succeeded.
+     */
+    private static Optional<ScriptRuntime> compile(
+            @NonNull CharStream input,
+            CompilationUnit @NonNull [] tree,
+            List<ScriptDiagnostics.Diagnostic> errors) {
         // Generate parse tree
         ParserErrorListener errorListener = new ParserErrorListener();
 
@@ -45,7 +91,7 @@ public class IkalaScriptCompiler {
 
         CompilationUnitContext context = parser.compilationUnit();
         if (errorListener.getErrorCount() > 0) {
-            return Optional.empty();
+            return failed(errors, "COMPILE_FAILED_SYNTAX");
         }
 
         // Convert parse tree to an Abstract Syntax Tree
@@ -53,11 +99,12 @@ public class IkalaScriptCompiler {
         try {
             ast = AbstractSyntaxTree.process(context);
         } catch (IllegalArgumentException e) {
-            // Invalid types or literals, which have already been logged
-            return Optional.empty();
+            // Invalid types or literals, which have already been reported
+            return failed(errors, "COMPILE_FAILED_TREE");
         }
+        tree[0] = ast;
         if (ast.isInvalid()) {
-            return Optional.empty();
+            return failed(errors, "COMPILE_FAILED_TREE");
         }
 
         // Clean up types
@@ -67,7 +114,7 @@ public class IkalaScriptCompiler {
         // Validate the tree
         TreeValidator validator = new TreeValidator();
         if (!validator.validate(ast)) {
-            return Optional.empty();
+            return failed(errors, "COMPILE_FAILED_VALIDATION");
         }
 
         // Optimize the tree
@@ -83,9 +130,37 @@ public class IkalaScriptCompiler {
         List<Instruction> instructions = gen.process(ast);
 
         // Convert to a runtime
-        ScriptRuntime runtime = new ScriptRuntime(instructions);
+        return Optional.of(new ScriptRuntime(instructions));
+    }
 
-        return Optional.of(runtime);
+    /**
+     * Note that a compilation stage failed, if nothing more specific was reported.
+     *
+     * @param errors The errors reported so far.
+     * @param messageKey The key for the message to report if no errors were reported.
+     * @return An empty optional.
+     */
+    private static Optional<ScriptRuntime> failed(
+            @NonNull List<ScriptDiagnostics.Diagnostic> errors, @NonNull String messageKey) {
+        if (errors.isEmpty()) {
+            errors.add(
+                    new ScriptDiagnostics.Diagnostic(
+                            -1,
+                            -1,
+                            SafeResourceLoader.getString(
+                                    messageKey, ScriptManager.getResourceBundle())));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Handle the parsing of a character stream.
+     *
+     * @param input The input stream.
+     * @return The corresponding runtime.
+     */
+    public static Optional<ScriptRuntime> parse(CharStream input) {
+        return compile(input).runtime();
     }
 
     /** Private constructor so that this class is not instantiated. */

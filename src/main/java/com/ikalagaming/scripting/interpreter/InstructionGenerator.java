@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.interpreter;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.ArgumentList;
@@ -75,6 +76,9 @@ public class InstructionGenerator implements ASTVisitor {
      */
     private List<Instruction> tempInstructions;
 
+    /** The source line of the statement we are generating instructions for, -1 if unknown. */
+    private int currentLine = -1;
+
     /**
      * Evaluate a condition and emit a jump that depends on the result. Comparisons are turned into
      * a comparison followed by the matching conditional jump, anything else is evaluated to a
@@ -109,7 +113,8 @@ public class InstructionGenerator implements ASTVisitor {
                     type = jumpWhenTrue ? InstructionType.JLE : InstructionType.JGT;
                     break;
                 default:
-                    log.warn(
+                    ScriptDiagnostics.warn(
+                            log,
                             SafeResourceLoader.getString(
                                     "UNKNOWN_RELATIONAL_OPERATOR",
                                     ScriptManager.getResourceBundle()),
@@ -132,7 +137,8 @@ public class InstructionGenerator implements ASTVisitor {
                     type = jumpWhenTrue ? InstructionType.JNE : InstructionType.JEQ;
                     break;
                 default:
-                    log.warn(
+                    ScriptDiagnostics.warn(
+                            log,
                             SafeResourceLoader.getString(
                                     "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
                             equality.getOperator().toString());
@@ -190,7 +196,8 @@ public class InstructionGenerator implements ASTVisitor {
         if (node instanceof Identifier identifier) {
             return new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
         }
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNHANDLED_EXPRESSION_MEMBER", ScriptManager.getResourceBundle()),
                 node.toString());
@@ -302,7 +309,10 @@ public class InstructionGenerator implements ASTVisitor {
                         new MemLocation(
                                 MemArea.STACK,
                                 labelExpression.getType().getBase().getCorrespondingClass()),
-                        new MemLocation(MemArea.VARIABLE, String.class, expressionResult),
+                        new MemLocation(
+                                MemArea.VARIABLE,
+                                labelExpression.getType().getBase().getCorrespondingClass(),
+                                expressionResult),
                         null));
         emitJump(InstructionType.JEQ, target);
     }
@@ -344,7 +354,8 @@ public class InstructionGenerator implements ASTVisitor {
             case BOOLEAN, IDENTIFIER, LABEL, VOID:
             default:
                 // Fallback, but the tree verification should(tm) prevent this
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "INVALID_ARITHMETIC_TYPE", ScriptManager.getResourceBundle()),
                         node.getType().toString());
@@ -415,7 +426,8 @@ public class InstructionGenerator implements ASTVisitor {
         if (numericType == Character.class) {
             return this.instructionTypeChar(operator);
         }
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNONW_ASSIGN_OPERATOR", ScriptManager.getResourceBundle()),
                 operator.toString());
@@ -646,7 +658,18 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The list of instructions corresponding to the tree.
      */
     public List<Instruction> process(@NonNull CompilationUnit ast) {
-        tempInstructions = new LinkedList<>();
+        currentLine = -1;
+        // Tag every instruction with the line of the statement that generated it
+        tempInstructions =
+                new LinkedList<>() {
+                    @Override
+                    public boolean add(Instruction instruction) {
+                        return super.add(
+                                instruction.line() < 0
+                                        ? instruction.withLine(currentLine)
+                                        : instruction);
+                    }
+                };
         processTree(ast);
 
         // generate temporary instructions
@@ -776,7 +799,8 @@ public class InstructionGenerator implements ASTVisitor {
                                         Integer.class,
                                         labelLocations.get(current.firstLocation().value())),
                                 null,
-                                null);
+                                null,
+                                current.line());
                 result.set(i, replacement);
             }
         }
@@ -790,6 +814,24 @@ public class InstructionGenerator implements ASTVisitor {
      * @param node The node to start processing from.
      */
     private void processTree(Node node) {
+        final int previousLine = currentLine;
+        if (node.getLine() > 0) {
+            currentLine = node.getLine();
+        }
+        try {
+            processTreeOnLine(node);
+        } finally {
+            currentLine = previousLine;
+        }
+    }
+
+    /**
+     * Process a tree recursively, after we have updated the current line.
+     *
+     * @param node The node to start processing from.
+     * @see #processTree(Node)
+     */
+    private void processTreeOnLine(Node node) {
         if (shouldSkipChildren(node)) {
             /*
              * Skip processing children because the visitor handles processing
@@ -825,7 +867,8 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
             default:
                 type = InstructionType.NOP;
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
@@ -858,7 +901,8 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
             default:
                 type = InstructionType.NOP;
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_RELATIONAL_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
@@ -877,7 +921,10 @@ public class InstructionGenerator implements ASTVisitor {
         tempInstructions.add(
                 new Instruction(
                         InstructionType.MOV,
-                        new MemLocation(MemArea.VARIABLE, String.class, node.getName()),
+                        new MemLocation(
+                                MemArea.VARIABLE,
+                                node.getType().getBase().getCorrespondingClass(),
+                                node.getName()),
                         null,
                         new MemLocation(
                                 MemArea.STACK, node.getType().getBase().getCorrespondingClass())));
@@ -1171,7 +1218,8 @@ public class InstructionGenerator implements ASTVisitor {
             target = new MemLocation(MemArea.VARIABLE, clazz, identifier.getName());
         } else {
             // Impossible due to grammar.
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             "UNKNOWN_ASSIGN_LEFT_SIDE", ScriptManager.getResourceBundle()),
                     leftSide.toString());
@@ -1392,7 +1440,10 @@ public class InstructionGenerator implements ASTVisitor {
                                 MemArea.STACK,
                                 expression.getType().getBase().getCorrespondingClass()),
                         null,
-                        new MemLocation(MemArea.VARIABLE, String.class, expressionResult)));
+                        new MemLocation(
+                                MemArea.VARIABLE,
+                                expression.getType().getBase().getCorrespondingClass(),
+                                expressionResult)));
 
         // emit jump table
 
@@ -1450,7 +1501,8 @@ public class InstructionGenerator implements ASTVisitor {
                 break;
             case LABEL, VOID:
             default:
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
                         node.getType().getBase());

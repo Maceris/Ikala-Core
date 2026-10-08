@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.Block;
@@ -11,6 +12,7 @@ import com.ikalagaming.scripting.ast.ExprTernary;
 import com.ikalagaming.scripting.ast.ForLoop;
 import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.Node;
+import com.ikalagaming.scripting.ast.SourcePrinter;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.scripting.ast.VarDeclaration;
@@ -60,7 +62,9 @@ public class TypePreprocessor implements ASTVisitor {
         // invalid types
         if (firstType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID, Base.STRING)
                 || secondType.anyOf(Base.BOOLEAN, Base.IDENTIFIER, Base.VOID, Base.STRING)) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    node,
                     SafeResourceLoader.getString(
                             "INVALID_TYPES", ScriptManager.getResourceBundle()),
                     firstType.toString(),
@@ -95,7 +99,9 @@ public class TypePreprocessor implements ASTVisitor {
             node.setType(secondType);
             return;
         }
-        log.warn(
+        ScriptDiagnostics.warnAt(
+                log,
+                node,
                 SafeResourceLoader.getString("INVALID_CAST", ScriptManager.getResourceBundle()),
                 firstType.toString(),
                 secondType.toString());
@@ -202,10 +208,12 @@ public class TypePreprocessor implements ASTVisitor {
     @Override
     public void visit(ExprArithmetic node) {
         if (node.getChildren().isEmpty()) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    node,
                     SafeResourceLoader.getString(
                             "MISSING_FIRST_CHILD", ScriptManager.getResourceBundle()),
-                    toString());
+                    SourcePrinter.toSource(node));
             node.setType(Type.voidType());
             return;
         }
@@ -221,10 +229,12 @@ public class TypePreprocessor implements ASTVisitor {
         switch (node.getOperator()) {
             case DIV, MUL:
                 if (node.getChildren().size() < 2) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            node,
                             SafeResourceLoader.getString(
                                     "MISSING_SECOND_CHILD", ScriptManager.getResourceBundle()),
-                            toString());
+                            SourcePrinter.toSource(node));
                     node.setType(Type.voidType());
                     return;
                 }
@@ -253,7 +263,9 @@ public class TypePreprocessor implements ASTVisitor {
                 if (firstType.anyOf(Base.INT, Base.CHAR, Base.DOUBLE, Base.UNKNOWN)) {
                     node.setType(firstType);
                 } else {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            node,
                             SafeResourceLoader.getString(
                                     "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
                             node.getOperator().toString(),
@@ -262,7 +274,9 @@ public class TypePreprocessor implements ASTVisitor {
                 }
                 break;
             default:
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        node,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
@@ -319,7 +333,9 @@ public class TypePreprocessor implements ASTVisitor {
             return;
         }
 
-        log.warn(
+        ScriptDiagnostics.warnAt(
+                log,
+                node,
                 SafeResourceLoader.getString(
                         "NON_MATCHING_TYPES", ScriptManager.getResourceBundle()),
                 ifTrue,
@@ -350,7 +366,7 @@ public class TypePreprocessor implements ASTVisitor {
             }
             decl.setType(declaredType);
             Identifier id = (Identifier) decl.getChildren().get(0);
-            if (variableMaps.peek().put(id.getName(), declaredType)) {
+            if (variableMaps.peek().put(id.getName(), declaredType, id)) {
                 id.setType(declaredType);
             } else {
                 // Redefinition, marked void so the validator catches it

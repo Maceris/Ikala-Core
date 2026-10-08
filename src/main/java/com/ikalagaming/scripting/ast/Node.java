@@ -24,6 +24,12 @@ public abstract class Node {
     protected Type type;
 
     /**
+     * The line in the source file this node came from, starting at 1, or -1 if unknown. Only
+     * statements have lines, expressions are on the same line as their statement.
+     */
+    protected int line = -1;
+
+    /**
      * Add a child to the list of children.
      *
      * @param child The child to add.

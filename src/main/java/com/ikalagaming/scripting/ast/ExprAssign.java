@@ -22,6 +22,7 @@ public class ExprAssign extends Node {
      * @author Ches Burks
      */
     @AllArgsConstructor
+    @Getter
     public enum Operator {
         /** "=", plain assignment. */
         ASSIGN("="),

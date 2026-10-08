@@ -18,6 +18,7 @@ public class ExprEquality extends Node {
      * @author Ches Burks
      */
     @AllArgsConstructor
+    @Getter
     public enum Operator {
         /** If they are equal. */
         EQUAL("=="),

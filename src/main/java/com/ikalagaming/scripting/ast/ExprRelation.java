@@ -18,6 +18,7 @@ public class ExprRelation extends Node {
      * @author Ches Burks
      */
     @AllArgsConstructor
+    @Getter
     public enum Operator {
         /** Less than. */
         LT("<"),

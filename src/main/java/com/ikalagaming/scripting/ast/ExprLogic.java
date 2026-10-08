@@ -19,6 +19,7 @@ public class ExprLogic extends Node {
      * @author Ches Burks
      */
     @AllArgsConstructor
+    @Getter
     public enum Operator {
         /** And logic. */
         AND("&&"),

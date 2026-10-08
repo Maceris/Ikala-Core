@@ -1,6 +1,8 @@
 package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
+import com.ikalagaming.scripting.ast.Node;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -67,8 +69,37 @@ class VariableTypeMap {
      * @return True if the variable was added, false if it was already defined.
      */
     public boolean put(@NonNull String variable, @NonNull Type type) {
+        return put(variable, type, -1);
+    }
+
+    /**
+     * Add a variable to the map. If it already exists, that's a semantic error, and we will
+     * consider it void for this and all enclosing scopes.
+     *
+     * @param variable The name of the variable.
+     * @param type The type of the variable.
+     * @param declaration Where the variable is declared, for error messages.
+     * @return True if the variable was added, false if it was already defined.
+     */
+    public boolean put(@NonNull String variable, @NonNull Type type, @NonNull Node declaration) {
+        return put(variable, type, declaration.getLine());
+    }
+
+    /**
+     * Add a variable to the map. If it already exists, that's a semantic error, and we will
+     * consider it void for this and all enclosing scopes.
+     *
+     * @param variable The name of the variable.
+     * @param type The type of the variable.
+     * @param line The line the variable is declared on, for error messages, or -1 if unknown.
+     * @return True if the variable was added, false if it was already defined.
+     */
+    private boolean put(@NonNull String variable, @NonNull Type type, int line) {
         if (map.containsKey(variable)) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    line,
+                    -1,
                     SafeResourceLoader.getString(
                             "VARIABLE_ALREADY_DEFINED", ScriptManager.getResourceBundle()),
                     variable);

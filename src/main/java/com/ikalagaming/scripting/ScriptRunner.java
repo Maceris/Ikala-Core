@@ -10,13 +10,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
- * Holds a a list of scripts and handles their execution.
+ * Holds a list of scripts and handles their execution.
  *
  * @author Ches Burks
  */
@@ -57,6 +58,50 @@ class ScriptRunner extends Thread {
         haltedScripts = new HashMap<>();
         running = true;
         syncObject = new Object();
+    }
+
+    /**
+     * Fetch the scripts that are currently running, not including any that are about to yield.
+     *
+     * @return A copy of the list of running scripts.
+     */
+    @Synchronized
+    public List<ScriptRuntime> getRunningScripts() {
+        final List<ScriptRuntime> running = new ArrayList<>(scripts);
+        synchronized (yieldRequests) {
+            running.removeAll(yieldRequests.keySet());
+        }
+        return running;
+    }
+
+    /**
+     * Fetch the scripts that have yielded, including any that are about to yield.
+     *
+     * @return A copy of the yielded scripts, mapped to the tag they yielded with. The tag is an
+     *     empty string if they yielded without a tag.
+     */
+    @Synchronized
+    public Map<ScriptRuntime, String> getYieldedScripts() {
+        final Map<ScriptRuntime, String> yielded = new LinkedHashMap<>(haltedScripts);
+        synchronized (yieldRequests) {
+            yielded.putAll(yieldRequests);
+        }
+        return yielded;
+    }
+
+    /**
+     * Stop a script, whether it is running or yielded. It will not be resumed.
+     *
+     * @param runtime The script to stop.
+     * @return True if the script was running or yielded, false if we didn't know about it.
+     */
+    @Synchronized
+    public boolean terminate(@NonNull ScriptRuntime runtime) {
+        boolean found = scripts.remove(runtime);
+        found |= haltedScripts.remove(runtime) != null;
+        found |= yieldRequests.remove(runtime) != null;
+        runtime.halt();
+        return found;
     }
 
     /** Halt any scripts as required. */

@@ -61,12 +61,14 @@ import com.ikalagaming.scripting.IkalaScriptParser.VariableDeclaratorContext;
 import com.ikalagaming.scripting.IkalaScriptParser.VariableDeclaratorIdContext;
 import com.ikalagaming.scripting.IkalaScriptParser.WhileStatementContext;
 import com.ikalagaming.scripting.IkalaScriptParser.WhileStatementNoShortIfContext;
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.Type.Base;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
@@ -141,7 +143,7 @@ public class AbstractSyntaxTree {
             final String error =
                     SafeResourceLoader.getString(
                             "UNKNOWN_NON_NUMERIC_TYPE", ScriptManager.getResourceBundle());
-            log.warn(error, node.getText());
+            ScriptDiagnostics.warn(log, error, node.getText());
             throw new IllegalArgumentException(SafeResourceLoader.format(error, node.getText()));
         }
 
@@ -158,7 +160,7 @@ public class AbstractSyntaxTree {
                 SafeResourceLoader.getString(
                         "UNKNOWN_PRIMITIVE_TYPE", ScriptManager.getResourceBundle());
 
-        log.warn(error, node.getText());
+        ScriptDiagnostics.warn(log, error, node.getText());
         throw new IllegalArgumentException(SafeResourceLoader.format(error, node.getText()));
     }
 
@@ -192,7 +194,8 @@ public class AbstractSyntaxTree {
             if (arrayType.Identifier() != null) {
                 return Type.identifierArray(arrayType.Identifier().getText(), dims);
             }
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             "UNKNOWN_ARRAY_TYPE", ScriptManager.getResourceBundle()),
                     arrayType.getText());
@@ -200,7 +203,7 @@ public class AbstractSyntaxTree {
         final String error =
                 SafeResourceLoader.getString(
                         "UNKNOWN_REFERENCE_TYPE", ScriptManager.getResourceBundle());
-        log.warn(error, node.getText());
+        ScriptDiagnostics.warn(log, error, node.getText());
         throw new IllegalArgumentException(SafeResourceLoader.format(error, node.getText()));
     }
 
@@ -218,11 +221,43 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.getType(node.referenceType());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNOWN_TYPE_STATEMENT", ScriptManager.getResourceBundle()),
                 node.getText());
         return null;
+    }
+
+    /**
+     * Record the line a node is on, if it doesn't already have one. Inner statements are processed
+     * first, so they keep their own lines.
+     *
+     * @param result The node, which may be null.
+     * @param context The context the node was created from.
+     * @return The node.
+     */
+    private static Node withLine(Node result, @NonNull ParserRuleContext context) {
+        if (result != null && result.getLine() < 0 && context.getStart() != null) {
+            result.setLine(context.getStart().getLine());
+            AbstractSyntaxTree.fillLines(result);
+        }
+        return result;
+    }
+
+    /**
+     * Give the children of a node the same line as it, if they don't have one yet. Nested
+     * statements already have their own lines, so we stop there.
+     *
+     * @param node The node, which has a line.
+     */
+    private static void fillLines(@NonNull Node node) {
+        for (Node child : node.getChildren()) {
+            if (child != null && child.getLine() < 0) {
+                child.setLine(node.getLine());
+                AbstractSyntaxTree.fillLines(child);
+            }
+        }
     }
 
     /**
@@ -265,7 +300,8 @@ public class AbstractSyntaxTree {
             return newNode;
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNOWN_PRIMARY_EXTENSION", ScriptManager.getResourceBundle()),
                 extension.getText());
@@ -293,7 +329,8 @@ public class AbstractSyntaxTree {
         }
 
         // Should be impossible unless the grammar changes
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNOWN_PRIMARY_EXPRESSION", ScriptManager.getResourceBundle()),
                 lhs.getText());
@@ -317,7 +354,8 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprArithmetic.Operator.SUB);
             } else {
                 // Should be impossible unless the grammar changes
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_ADDITIVE_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -349,7 +387,8 @@ public class AbstractSyntaxTree {
         if (lhs.Identifier() != null) {
             result.addChild(AbstractSyntaxTree.identifierNode(lhs.Identifier()));
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString(
                             "UNKNOWN_ASSIGN_LEFT_SIDE", ScriptManager.getResourceBundle()),
                     lhs.getText());
@@ -386,6 +425,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(BlockStatementContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a BlockStatement without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(BlockStatementContext node) {
         if (node.localVariableDeclarationStatement() != null) {
             return AbstractSyntaxTree.process(
                     node.localVariableDeclarationStatement().localVariableDeclaration());
@@ -397,7 +446,8 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.label());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNOWN_BLOCK_STATEMENT", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -434,7 +484,8 @@ public class AbstractSyntaxTree {
             result.setType(AbstractSyntaxTree.getType(node.referenceType()));
             result.addChild(AbstractSyntaxTree.process(node.unaryExpressionNotPlusMinus()));
         } else {
-            log.warn(
+            ScriptDiagnostics.warn(
+                    log,
                     SafeResourceLoader.getString("UNKNOWN_CAST", ScriptManager.getResourceBundle()),
                     node.getText());
             return null;
@@ -458,7 +509,8 @@ public class AbstractSyntaxTree {
                 Node child = AbstractSyntaxTree.process(parserOutput.blockStatement(i));
                 if (child == null) {
                     root.setInvalid(true);
-                    log.warn(
+                    ScriptDiagnostics.warn(
+                            log,
                             SafeResourceLoader.getString(
                                     "INVALID_BLOCK_STATEMENT", ScriptManager.getResourceBundle()));
                     // Might as well immediately bail
@@ -568,7 +620,8 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprEquality.Operator.NOT_EQUAL);
             } else {
                 // Should be impossible unless the grammar changes
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -594,7 +647,8 @@ public class AbstractSyntaxTree {
         if (node.conditionalExpression() != null) {
             return AbstractSyntaxTree.process(node.conditionalExpression());
         }
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNOWN_EXPRESSION", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -614,7 +668,8 @@ public class AbstractSyntaxTree {
         if (node.localVariableDeclaration() != null) {
             return AbstractSyntaxTree.process(node.localVariableDeclaration());
         }
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString("UNKNOWN_FOR_INIT", ScriptManager.getResourceBundle()),
                 node.getText());
         return null;
@@ -752,6 +807,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(LabeledStatementContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a LabeledStatement without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(LabeledStatementContext node) {
         LabeledStatement result = new LabeledStatement();
         result.setType(Type.voidType());
         result.addChild(AbstractSyntaxTree.process(node.label()));
@@ -766,6 +831,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(LabeledStatementNoShortIfContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a LabeledStatementNoShortIf without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(LabeledStatementNoShortIfContext node) {
         LabeledStatement result = new LabeledStatement();
         result.setType(Type.voidType());
         result.addChild(AbstractSyntaxTree.process(node.label()));
@@ -788,7 +863,7 @@ public class AbstractSyntaxTree {
                 final String error =
                         SafeResourceLoader.getString(
                                 "INVALID_INT", ScriptManager.getResourceBundle());
-                log.warn(error, node.getText());
+                ScriptDiagnostics.warn(log, error, node.getText());
                 throw new IllegalArgumentException(
                         SafeResourceLoader.format(error, node.getText()));
             }
@@ -803,7 +878,7 @@ public class AbstractSyntaxTree {
                 final String error =
                         SafeResourceLoader.getString(
                                 "INVALID_FLOAT", ScriptManager.getResourceBundle());
-                log.warn(error, node.getText());
+                ScriptDiagnostics.warn(log, error, node.getText());
                 throw new IllegalArgumentException(
                         SafeResourceLoader.format(error, node.getText()));
             }
@@ -838,7 +913,8 @@ public class AbstractSyntaxTree {
         if (node.NullLiteral() != null) {
             return new ConstNull();
         }
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString("UNKNOWN_CONSTANT", ScriptManager.getResourceBundle()),
                 node.getText());
         return null;
@@ -851,6 +927,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(LocalVariableDeclarationContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a LocalVariableDeclaration without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(LocalVariableDeclarationContext node) {
         VarDeclarationList result = new VarDeclarationList();
         result.setType(Type.voidType());
 
@@ -935,7 +1021,8 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprArithmetic.Operator.MOD);
             } else {
                 // Should be impossible unless the grammar changes
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_MULTIPLICATIVE_OPERATOR",
                                 ScriptManager.getResourceBundle()),
@@ -1090,7 +1177,8 @@ public class AbstractSyntaxTree {
                 result.setOperator(ExprRelation.Operator.GTE);
             } else {
                 // Should be impossible unless the grammar changes
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_RELATIONAL_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getText());
@@ -1110,6 +1198,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(StatementContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a Statement without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(StatementContext node) {
         if (node.statementWithoutTrailingSubstatement() != null) {
             return AbstractSyntaxTree.process(node.statementWithoutTrailingSubstatement());
         }
@@ -1129,7 +1227,8 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.forStatement());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1143,6 +1242,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(StatementExpressionContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a StatementExpression without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(StatementExpressionContext node) {
         if (node.assignment() != null) {
             return AbstractSyntaxTree.process(node.assignment());
         }
@@ -1162,7 +1271,8 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.methodInvocation());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         "UNKNOWN_STATEMENT_EXPRESSION", ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1191,6 +1301,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(StatementNoShortIfContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a StatementNoShortIf without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(StatementNoShortIfContext node) {
         if (node.statementWithoutTrailingSubstatement() != null) {
             return AbstractSyntaxTree.process(node.statementWithoutTrailingSubstatement());
         }
@@ -1207,7 +1327,8 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.forStatementNoShortIf());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1221,6 +1342,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(StatementWithoutTrailingSubstatementContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a StatementWithoutTrailingSubstatement without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(StatementWithoutTrailingSubstatementContext node) {
         if (node.block() != null) {
             return AbstractSyntaxTree.process(node.block());
         }
@@ -1251,7 +1382,8 @@ public class AbstractSyntaxTree {
             return result;
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_STATEMENT, ScriptManager.getResourceBundle()),
                 node.getText());
@@ -1285,6 +1417,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(SwitchBlockStatementGroupContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a SwitchBlockStatementGroup without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(SwitchBlockStatementGroupContext node) {
         SwitchBlockGroup result = new SwitchBlockGroup();
         result.setType(Type.voidType());
         node.switchLabel().stream().map(AbstractSyntaxTree::process).forEach(result::addChild);
@@ -1301,6 +1443,16 @@ public class AbstractSyntaxTree {
      * @return The parsed version of the node.
      */
     private static Node process(SwitchLabelContext node) {
+        return AbstractSyntaxTree.withLine(AbstractSyntaxTree.processWithoutLine(node), node);
+    }
+
+    /**
+     * Process a SwitchLabel without recording which line it is on.
+     *
+     * @param node The context to parse.
+     * @return The parsed version of the node.
+     */
+    private static Node processWithoutLine(SwitchLabelContext node) {
         SwitchLabel result = new SwitchLabel();
         result.setType(Type.voidType());
         if (node.expression() != null) {
@@ -1359,7 +1511,8 @@ public class AbstractSyntaxTree {
             if (node.SUB() != null) {
                 result.setOperator(ExprArithmetic.Operator.SUB);
             } else {
-                log.warn(
+                ScriptDiagnostics.warn(
+                        log,
                         SafeResourceLoader.getString(
                                 AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
                                 ScriptManager.getResourceBundle()),
@@ -1372,7 +1525,8 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.unaryExpressionNotPlusMinus());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
                         ScriptManager.getResourceBundle()),
@@ -1403,7 +1557,8 @@ public class AbstractSyntaxTree {
             return AbstractSyntaxTree.process(node.castExpression());
         }
 
-        log.warn(
+        ScriptDiagnostics.warn(
+                log,
                 SafeResourceLoader.getString(
                         AbstractSyntaxTree.UNKNOWN_UNARY_EXPRESSION,
                         ScriptManager.getResourceBundle()),

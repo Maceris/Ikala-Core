@@ -98,13 +98,16 @@ class TestPluginConfig {
                                     return null;
                                 }));
             }
-            // Saving takes a snapshot while the other threads are still writing
+            // Saving takes a snapshot while the other threads are still writing. Pause between
+            // snapshots, since snapshotting in a tight loop holds the lock nearly all the time and
+            // starves the writers, which makes the test slow enough to time out on a busy machine.
             results.add(
                     executor.submit(
                             () -> {
                                 start.await();
                                 while (writing.get()) {
                                     config.snapshot();
+                                    Thread.sleep(1);
                                 }
                                 return null;
                             }));

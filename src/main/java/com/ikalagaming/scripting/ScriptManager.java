@@ -114,7 +114,10 @@ public class ScriptManager {
      * @see #yieldScript(ScriptRuntime)
      */
     public static void resume() {
-        ScriptManager.runner.requestResume();
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            currentRunner.requestResume();
+        }
     }
 
     /**
@@ -124,17 +127,55 @@ public class ScriptManager {
      * @see #yieldScript(ScriptRuntime, String)
      */
     public static void resume(@NonNull String tag) {
-        ScriptManager.runner.requestResume(tag);
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            currentRunner.requestResume(tag);
+        }
+    }
+
+    /**
+     * Stop a script that the script manager is running or has yielded. It will not be resumed.
+     *
+     * @param runtime The script to stop.
+     * @return True if the script was running or yielded, false if the script manager didn't know
+     *     about it.
+     */
+    public static boolean terminate(@NonNull ScriptRuntime runtime) {
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        return currentRunner != null && currentRunner.terminate(runtime);
+    }
+
+    /**
+     * Fetch the scripts that are currently running, not including yielded scripts.
+     *
+     * @return A snapshot of the running scripts.
+     */
+    public static List<ScriptRuntime> getRunningScripts() {
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        return currentRunner == null ? List.of() : currentRunner.getRunningScripts();
+    }
+
+    /**
+     * Fetch the scripts that have yielded and are waiting to be resumed.
+     *
+     * @return A snapshot of the yielded scripts, mapped to the tag they yielded with. The tag is an
+     *     empty string for scripts that yielded without a tag, which are resumed by {@link
+     *     #resume()}.
+     */
+    public static Map<ScriptRuntime, String> getYieldedScripts() {
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        return currentRunner == null ? Map.of() : currentRunner.getYieldedScripts();
     }
 
     /**
      * Actually run the script. Will start up a new thread if one does not exist.
      *
      * @param stream The stream to pass to the lexer.
+     * @param name The name of the script, which may be null.
      * @return Whether we actually got back a program.
      */
     @Synchronized
-    private static boolean runScript(@NonNull CharStream stream) {
+    private static boolean runScript(@NonNull CharStream stream, String name) {
         if (ScriptManager.runner == null) {
             ScriptManager.runner = new ScriptRunner();
             ScriptManager.runner.start();
@@ -143,6 +184,7 @@ public class ScriptManager {
         if (maybeScript.isEmpty()) {
             return false;
         }
+        maybeScript.get().setName(name);
         ScriptManager.runner.runScript(maybeScript.get());
         return true;
     }
@@ -169,7 +211,7 @@ public class ScriptManager {
                     script.getAbsolutePath());
             return false;
         }
-        return ScriptManager.runScript(stream);
+        return ScriptManager.runScript(stream, script.getName());
     }
 
     /**
@@ -179,8 +221,19 @@ public class ScriptManager {
      * @return Whether we successfully parsed and started to run the script.
      */
     public static boolean runScript(@NonNull String script) {
+        return ScriptManager.runScript(script, null);
+    }
+
+    /**
+     * Execute a script as as string, with a name to identify it while debugging.
+     *
+     * @param script The script to execute.
+     * @param name The name of the script, which may be null.
+     * @return Whether we successfully parsed and started to run the script.
+     */
+    public static boolean runScript(@NonNull String script, String name) {
         CharStream stream = CharStreams.fromString(script);
-        return ScriptManager.runScript(stream);
+        return ScriptManager.runScript(stream, name);
     }
 
     /**
@@ -220,7 +273,10 @@ public class ScriptManager {
      * @see #resume()
      */
     public static void yieldScript(@NonNull ScriptRuntime runtime) {
-        ScriptManager.runner.requestYield(runtime);
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            currentRunner.requestYield(runtime);
+        }
     }
 
     /**
@@ -233,7 +289,10 @@ public class ScriptManager {
      * @see #resume(String)
      */
     public static void yieldScript(@NonNull ScriptRuntime runtime, @NonNull String tag) {
-        ScriptManager.runner.requestYield(runtime, tag);
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            currentRunner.requestYield(runtime, tag);
+        }
     }
 
     /** Private constructor so that this class is not instantiated. */

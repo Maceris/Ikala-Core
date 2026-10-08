@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast.visitors;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.ASTVisitor;
 import com.ikalagaming.scripting.ast.Block;
@@ -25,6 +26,7 @@ import com.ikalagaming.scripting.ast.Identifier;
 import com.ikalagaming.scripting.ast.If;
 import com.ikalagaming.scripting.ast.Label;
 import com.ikalagaming.scripting.ast.Node;
+import com.ikalagaming.scripting.ast.SourcePrinter;
 import com.ikalagaming.scripting.ast.SwitchBlockGroup;
 import com.ikalagaming.scripting.ast.SwitchLabel;
 import com.ikalagaming.scripting.ast.SwitchStatement;
@@ -252,9 +254,11 @@ public class TreeValidator implements ASTVisitor {
      * @param errorMessage The key to look up the localize error message.
      */
     private void markInvalid(@NonNull Node node, @NonNull String errorMessage) {
-        log.warn(
+        ScriptDiagnostics.warnAt(
+                log,
+                node,
                 SafeResourceLoader.getString(errorMessage, ScriptManager.getResourceBundle()),
-                node.toString());
+                SourcePrinter.toSource(node));
         valid = false;
     }
 
@@ -515,7 +519,9 @@ public class TreeValidator implements ASTVisitor {
                     // Fine
                 } else {
                     // We can only modify variables, not values like the result of x++
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            node,
                             SafeResourceLoader.getString(
                                     "INVALID_OPERATOR", ScriptManager.getResourceBundle()),
                             node.getOperator().toString(),
@@ -524,7 +530,9 @@ public class TreeValidator implements ASTVisitor {
                 }
                 break;
             default:
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        node,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
@@ -692,7 +700,9 @@ public class TreeValidator implements ASTVisitor {
     @Override
     public void visit(Identifier node) {
         if (node.getType().anyOf(Base.VOID)) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    node,
                     SafeResourceLoader.getString(
                             "INVALID_VARIABLE_USE", ScriptManager.getResourceBundle()),
                     node.getName());

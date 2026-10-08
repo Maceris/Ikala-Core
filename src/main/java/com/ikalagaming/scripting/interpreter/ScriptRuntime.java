@@ -1,12 +1,14 @@
 package com.ikalagaming.scripting.interpreter;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.util.SafeResourceLoader;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntBinaryOperator;
@@ -29,8 +35,90 @@ import java.util.function.IntPredicate;
  */
 @Slf4j
 @Getter
-@RequiredArgsConstructor
 public class ScriptRuntime {
+
+    /**
+     * Handles a script yielding, instead of the script manager.
+     *
+     * @see ScriptRuntime#setYieldHandler(YieldHandler)
+     */
+    @FunctionalInterface
+    public interface YieldHandler {
+        /**
+         * Called when a script yields.
+         *
+         * @param runtime The script that yielded.
+         * @param tag The tag the script yielded with, or null if it did not use a tag.
+         */
+        void onYield(@NonNull ScriptRuntime runtime, String tag);
+    }
+
+    /**
+     * Handles a script hitting a breakpoint, like an interrupt handler.
+     *
+     * @see ScriptRuntime#setBreakpointHandler(BreakpointHandler)
+     */
+    @FunctionalInterface
+    public interface BreakpointHandler {
+        /**
+         * Called when a script hits a breakpoint. The script continues from the breakpoint the next
+         * time it steps, so a handler that wants to pause the script needs to stop stepping it.
+         *
+         * @param runtime The script that hit a breakpoint.
+         * @param instructionIndex The index of the instruction the breakpoint is on.
+         */
+        void onBreakpoint(@NonNull ScriptRuntime runtime, int instructionIndex);
+    }
+
+    /**
+     * The tag scripts yield with when they hit a breakpoint without a breakpoint handler, so they
+     * can be resumed with {@link ScriptManager#resume(String)}.
+     */
+    public static final String BREAKPOINT_TAG = "breakpoint";
+
+    /** Used to give each runtime a unique ID. */
+    private static final AtomicInteger NEXT_ID = new AtomicInteger(1);
+
+    /** A unique ID for this runtime, so it can be identified while debugging. */
+    private final int id = NEXT_ID.getAndIncrement();
+
+    /**
+     * A name for the script, like the file it came from, to make it easier to identify. May be
+     * null.
+     *
+     * @param name The new name.
+     * @return The name, which may be null.
+     */
+    @Setter private volatile String name;
+
+    /**
+     * Handles yields instead of the script manager, for running scripts outside of the script
+     * manager like in a debugger. If null, yields go to the script manager.
+     *
+     * @param yieldHandler The new yield handler, or null to use the script manager.
+     * @return The yield handler, which may be null.
+     */
+    @Setter private volatile YieldHandler yieldHandler;
+
+    /**
+     * Handles breakpoints. If null, scripts yield with {@link #BREAKPOINT_TAG} when they hit a
+     * breakpoint.
+     *
+     * @param breakpointHandler The new breakpoint handler, or null to yield.
+     * @return The breakpoint handler, which may be null.
+     */
+    @Setter private volatile BreakpointHandler breakpointHandler;
+
+    /** The original instructions that breakpoints were patched over, by instruction index. */
+    @Getter(AccessLevel.NONE)
+    private final Map<Integer, Instruction> patchedInstructions = new HashMap<>();
+
+    /**
+     * Whether we stopped at a breakpoint, so the next step should run the original instruction
+     * instead of hitting the breakpoint again.
+     */
+    @Getter(AccessLevel.NONE)
+    private boolean resumingFromBreakpoint;
 
     /** Used instead of null memory. */
     private static final MemoryItem VOID_MEMORY = new MemoryItem(Void.class, "void");
@@ -38,8 +126,20 @@ public class ScriptRuntime {
     /** If we should stop running the program. */
     private boolean fatalError;
 
-    /** The actual program, a list of instructions. */
+    /**
+     * The actual program, a list of instructions. Breakpoints are patched into this list, see
+     * {@link #getOriginalInstruction(int)} for the instructions without breakpoints.
+     */
     private final List<Instruction> instructions;
+
+    /**
+     * Create a runtime for a program.
+     *
+     * @param instructions The program, which is copied so breakpoints can be patched in.
+     */
+    public ScriptRuntime(@NonNull List<Instruction> instructions) {
+        this.instructions = new ArrayList<>(instructions);
+    }
 
     /**
      * An equivalent to a register where the result of the last comparison is stored.
@@ -100,7 +200,10 @@ public class ScriptRuntime {
             first = (Boolean) firstItem.value();
             second = (Boolean) secondItem.value();
         } catch (ClassCastException e) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString("CAST_FAILED", ScriptManager.getResourceBundle()),
                     firstItem.getClass(),
                     Boolean.class);
@@ -150,7 +253,10 @@ public class ScriptRuntime {
 
             object = first.value();
             if (object == null) {
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "METHOD_CALL_ON_NULL", ScriptManager.getResourceBundle()),
                         methodName);
@@ -168,7 +274,10 @@ public class ScriptRuntime {
                 }
             }
             if (options.isEmpty()) {
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_METHOD", ScriptManager.getResourceBundle()),
                         methodName);
@@ -183,7 +292,10 @@ public class ScriptRuntime {
         final boolean keepResult = i.targetLocation() != null;
 
         if (!this.call(options, parameters, object, keepResult)) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString(
                             "UNKNOWN_METHOD", ScriptManager.getResourceBundle()),
                     methodName);
@@ -231,7 +343,10 @@ public class ScriptRuntime {
         final Method mostSpecific = ScriptRuntime.mostSpecific(viableOptions);
         if (mostSpecific == null) {
             if (viableOptions.size() > 1) {
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "AMBIGUOUS_METHOD", ScriptManager.getResourceBundle()),
                         viableOptions.get(0).getName(),
@@ -264,7 +379,10 @@ public class ScriptRuntime {
                 | IllegalArgumentException
                 | NullPointerException
                 | InvocationTargetException e) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString(
                             "METHOD_CALL_FAILED", ScriptManager.getResourceBundle()),
                     option.getName());
@@ -420,7 +538,10 @@ public class ScriptRuntime {
         }
 
         if (target == null) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString(
                             "INVALID_CAST_TYPE", ScriptManager.getResourceBundle()),
                     targetClass);
@@ -586,7 +707,10 @@ public class ScriptRuntime {
         try {
             result = new MemoryItem(Character.class, operation.apply(firstNumber, secondNumber));
         } catch (ArithmeticException e) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString(
                             "ARITHMETIC_ERROR", ScriptManager.getResourceBundle()),
                     e.getMessage());
@@ -651,7 +775,10 @@ public class ScriptRuntime {
      * @param intended The type we were expecting.
      */
     private void valueTypeMismatch(Type.Base intended) {
-        log.warn(
+        ScriptDiagnostics.warnAt(
+                log,
+                getCurrentLine(),
+                -1,
                 SafeResourceLoader.getString(
                         "MEMORY_TYPE_MISMATCH", ScriptManager.getResourceBundle()),
                 intended.toString());
@@ -669,7 +796,10 @@ public class ScriptRuntime {
         switch (intended) {
             case BOOLEAN:
                 if (!memory.isBoolean()) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
@@ -678,7 +808,10 @@ public class ScriptRuntime {
                 break;
             case CHAR:
                 if (!memory.isChar()) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
@@ -687,7 +820,10 @@ public class ScriptRuntime {
                 break;
             case DOUBLE:
                 if (!(memory.isChar() || memory.isInt() || memory.isDouble())) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
@@ -696,7 +832,10 @@ public class ScriptRuntime {
                 break;
             case INT:
                 if (!(memory.isChar() || memory.isInt())) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     MEMORY_MISMATCH, ScriptManager.getResourceBundle()),
                             intended.toString());
@@ -708,7 +847,10 @@ public class ScriptRuntime {
                 break;
             case LABEL, IDENTIFIER, UNKNOWN, VOID:
             default:
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
                         intended.toString());
@@ -1086,8 +1228,16 @@ public class ScriptRuntime {
                 set(i, cmp -> cmp != 0);
                 programCounter++;
                 break;
+            case BREAKPOINT:
+                // A breakpoint that is part of the program, rather than patched in
+                programCounter++;
+                hitBreakpoint(programCounter - 1);
+                break;
             default:
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_INSTRUCTION", ScriptManager.getResourceBundle()),
                         i.type().toString());
@@ -1096,8 +1246,164 @@ public class ScriptRuntime {
         }
     }
 
+    /**
+     * A name to show for the script, using the name if there is one.
+     *
+     * @return The name to display.
+     */
+    public String getDisplayName() {
+        final String currentName = name;
+        return currentName == null ? "Script #" + id : currentName + " (#" + id + ")";
+    }
+
+    /**
+     * Patch a breakpoint in over an instruction. When the script reaches it, the breakpoint handler
+     * is called, and the original instruction runs when the script continues.
+     *
+     * @param index The index of the instruction.
+     * @return True if there is now a breakpoint there, false if the index is out of range.
+     */
+    public synchronized boolean setBreakpoint(int index) {
+        if (index < 0 || index >= instructions.size()) {
+            return false;
+        }
+        if (patchedInstructions.containsKey(index)) {
+            return true;
+        }
+        final Instruction original = instructions.get(index);
+        patchedInstructions.put(index, original);
+        instructions.set(
+                index,
+                new Instruction(InstructionType.BREAKPOINT, null, null, null, original.line()));
+        return true;
+    }
+
+    /**
+     * Patch the original instruction back in, removing a breakpoint.
+     *
+     * @param index The index of the instruction.
+     * @return True if there was a breakpoint to remove.
+     */
+    public synchronized boolean clearBreakpoint(int index) {
+        final Instruction original = patchedInstructions.remove(index);
+        if (original == null) {
+            return false;
+        }
+        instructions.set(index, original);
+        return true;
+    }
+
+    /** Remove all the breakpoints. */
+    public synchronized void clearBreakpoints() {
+        for (var entry : patchedInstructions.entrySet()) {
+            instructions.set(entry.getKey(), entry.getValue());
+        }
+        patchedInstructions.clear();
+    }
+
+    /**
+     * Check if there is a breakpoint on an instruction.
+     *
+     * @param index The index of the instruction.
+     * @return True if a breakpoint is patched in there.
+     */
+    public synchronized boolean hasBreakpoint(int index) {
+        return patchedInstructions.containsKey(index);
+    }
+
+    /**
+     * Fetch the instructions that have breakpoints.
+     *
+     * @return The sorted indices of instructions with breakpoints.
+     */
+    public synchronized Set<Integer> getBreakpoints() {
+        return new TreeSet<>(patchedInstructions.keySet());
+    }
+
+    /**
+     * Fetch an instruction as it was compiled, ignoring any breakpoint patched over it.
+     *
+     * @param index The index of the instruction.
+     * @return The original instruction.
+     */
+    public synchronized Instruction getOriginalInstruction(int index) {
+        final Instruction original = patchedInstructions.get(index);
+        return original != null ? original : instructions.get(index);
+    }
+
+    /**
+     * Find the first instruction generated from a line of source, which is where a breakpoint on
+     * that line goes.
+     *
+     * @param line The line in the source, starting at 1.
+     * @return The index of the first instruction for the line, or empty if no instructions came
+     *     from that line.
+     */
+    public synchronized OptionalInt getFirstInstructionOnLine(int line) {
+        for (int i = 0; i < instructions.size(); ++i) {
+            if (getOriginalInstruction(i).line() == line) {
+                return OptionalInt.of(i);
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    /**
+     * Find where execution enters a line of source, which is where breakpoints on the line go. A
+     * line can generate more than one group of instructions, like a for loop which has the
+     * initializer before the loop and the update at the end of each iteration, so this is the first
+     * instruction of each group of consecutive instructions from that line.
+     *
+     * @param line The line in the source, starting at 1.
+     * @return The indices of the first instruction in each group, in order, which is empty if no
+     *     instructions came from that line.
+     */
+    public synchronized List<Integer> getLineStartInstructions(int line) {
+        final List<Integer> starts = new ArrayList<>();
+        boolean previousOnLine = false;
+        for (int i = 0; i < instructions.size(); ++i) {
+            final boolean onLine = getOriginalInstruction(i).line() == line;
+            if (onLine && !previousOnLine) {
+                starts.add(i);
+            }
+            previousOnLine = onLine;
+        }
+        return starts;
+    }
+
+    /**
+     * Fetch the line of source the current instruction came from.
+     *
+     * @return The line, starting at 1, or -1 if unknown or the script has finished.
+     */
+    public synchronized int getCurrentLine() {
+        if (programCounter < 0 || programCounter >= instructions.size()) {
+            return -1;
+        }
+        return getOriginalInstruction(programCounter).line();
+    }
+
+    /**
+     * Call the breakpoint handler, or yield if there is none.
+     *
+     * @param index The index of the instruction with the breakpoint.
+     */
+    private void hitBreakpoint(int index) {
+        final BreakpointHandler handler = breakpointHandler;
+        if (handler != null) {
+            handler.onBreakpoint(this, index);
+            return;
+        }
+        final YieldHandler yielder = yieldHandler;
+        if (yielder != null) {
+            yielder.onYield(this, BREAKPOINT_TAG);
+        } else {
+            ScriptManager.yieldScript(this, BREAKPOINT_TAG);
+        }
+    }
+
     /** Stop running the program. Should only be called internally and by the script runner. */
-    public void halt() {
+    public synchronized void halt() {
         fatalError = true;
         programCounter = instructions.size();
     }
@@ -1171,7 +1477,10 @@ public class ScriptRuntime {
                                     ScriptRuntime.toInt(firstValue),
                                     ScriptRuntime.toInt(secondValue)));
         } catch (ArithmeticException e) {
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString(
                             "ARITHMETIC_ERROR", ScriptManager.getResourceBundle()),
                     e.getMessage());
@@ -1193,7 +1502,10 @@ public class ScriptRuntime {
         final int location = (Integer) instruction.firstLocation().value();
         if (location < 0 || location > instructions.size()) {
             // instructions.size is for when we want to bail on the program.
-            log.warn(
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
                     SafeResourceLoader.getString(
                             "INVALID_JUMP_LOCATION", ScriptManager.getResourceBundle()),
                     location);
@@ -1220,7 +1532,10 @@ public class ScriptRuntime {
                 return new MemoryItem(from.type(), from.value());
             case STACK:
                 if (stack.isEmpty()) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     "POPPING_TOO_FAR", ScriptManager.getResourceBundle()));
                     halt();
@@ -1229,7 +1544,10 @@ public class ScriptRuntime {
                 return stack.pop();
             case VARIABLE:
                 if (!symbolTable.containsKey(from.value())) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     "UNKNOWN_VARIABLE", ScriptManager.getResourceBundle()),
                             from.value());
@@ -1238,7 +1556,10 @@ public class ScriptRuntime {
                 }
                 return symbolTable.get(from.value());
             default:
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "UNKNOWN_MEMORY_AREA", ScriptManager.getResourceBundle()),
                         from.area().toString());
@@ -1388,19 +1709,35 @@ public class ScriptRuntime {
             final String methodName,
             final int numParams,
             List<MemoryItem> parameters) {
+        if (objectLocation == MemArea.IMMEDIATE
+                && "breakpoint".equals(methodName)
+                && numParams == 0) {
+            // Reserved method name, a breakpoint written in the script
+            hitBreakpoint(programCounter);
+            return true;
+        }
         if (objectLocation == MemArea.IMMEDIATE && "yield".equals(methodName) && numParams < 2) {
             // Reserved method name
             if (numParams == 1) {
                 Object tag = parameters.get(0).value();
                 if (!(tag instanceof String)) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     "YIELD_PARAMETER", ScriptManager.getResourceBundle()),
                             methodName);
                     halt();
                     return true;
                 }
-                ScriptManager.yieldScript(this, (String) tag);
+                if (yieldHandler != null) {
+                    yieldHandler.onYield(this, (String) tag);
+                } else {
+                    ScriptManager.yieldScript(this, (String) tag);
+                }
+            } else if (yieldHandler != null) {
+                yieldHandler.onYield(this, null);
             } else {
                 ScriptManager.yieldScript(this);
             }
@@ -1421,11 +1758,24 @@ public class ScriptRuntime {
     }
 
     /** Execute one instruction. */
-    public void step() {
+    public synchronized void step() {
         if (fatalError || (programCounter < 0) || (programCounter >= instructions.size())) {
             // Stop executing
             return;
         }
+        final Instruction original = patchedInstructions.get(programCounter);
+        if (original != null) {
+            if (resumingFromBreakpoint) {
+                // Continue past the breakpoint we stopped at
+                resumingFromBreakpoint = false;
+                execute(original);
+            } else {
+                resumingFromBreakpoint = true;
+                hitBreakpoint(programCounter);
+            }
+            return;
+        }
+        resumingFromBreakpoint = false;
         execute(instructions.get(programCounter));
     }
 
@@ -1448,7 +1798,10 @@ public class ScriptRuntime {
                     item = ScriptRuntime.widen(declaredType, item);
                 }
                 if (declaredType != null && !ScriptRuntime.fitsType(declaredType, item.value())) {
-                    log.warn(
+                    ScriptDiagnostics.warnAt(
+                            log,
+                            getCurrentLine(),
+                            -1,
                             SafeResourceLoader.getString(
                                     "VARIABLE_TYPE_MISMATCH", ScriptManager.getResourceBundle()),
                             item.value() == null ? "null" : item.value().getClass().getSimpleName(),
@@ -1461,7 +1814,10 @@ public class ScriptRuntime {
                 break;
             case IMMEDIATE:
             default:
-                log.warn(
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
                         SafeResourceLoader.getString(
                                 "INVALID_MEMORY_LOCATION", ScriptManager.getResourceBundle()),
                         location.area());

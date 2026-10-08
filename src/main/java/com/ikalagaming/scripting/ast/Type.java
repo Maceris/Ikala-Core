@@ -1,5 +1,6 @@
 package com.ikalagaming.scripting.ast;
 
+import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -220,7 +221,7 @@ public class Type {
             return Type.unknownType();
         }
         if (count > dimensions) {
-            log.warn("Dereferencing a {} by {} is invalid", toString(), count);
+            ScriptDiagnostics.warn(log, "Dereferencing a {} by {} is invalid", toString(), count);
             return Type.voidType();
         }
 
