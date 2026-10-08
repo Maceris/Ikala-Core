@@ -1,0 +1,153 @@
+// Checks that tricky code parses with the right meaning, not just that it parses. Each line that
+// prints has an "expect:" comment with what it should print, and the test runs the script and
+// compares the output.
+
+int x = 5;
+int y = 3;
+int z;
+boolean t = true;
+boolean f = false;
+
+// Precedence and associativity
+TEST_printInt(1 + 2 * 3); // expect: 7
+TEST_printInt((1 + 2) * 3); // expect: 9
+TEST_printInt(10 - 4 - 3); // expect: 3
+TEST_printInt(100 / 10 / 5); // expect: 2
+TEST_printInt(2 * 3 % 4); // expect: 2
+TEST_printInt(7 - 2 * 3 + 1); // expect: 2
+TEST_printBool(t || f && f); // expect: true
+TEST_printBool((t || f) && f); // expect: false
+TEST_printBool(!f && t); // expect: true
+TEST_printBool(1 < 2 == 3 > 4); // expect: false
+TEST_printBool(1 + 1 == 2); // expect: true
+
+// Unary operators, with and without spaces
+TEST_printInt(- -x); // expect: 5
+TEST_printInt(-(-x)); // expect: 5
+TEST_printInt(-x + 1); // expect: -4
+TEST_printInt(x - -1); // expect: 6
+TEST_printInt(x + +1); // expect: 6
+TEST_printBool(!!t); // expect: true
+TEST_printBool(!t || t); // expect: true
+
+// Increments and decrements packed together, which lex as x++ + y and x-- - y
+z = x+++y;
+TEST_printInt(z); // expect: 8
+TEST_printInt(x); // expect: 6
+z = x---y;
+TEST_printInt(z); // expect: 3
+TEST_printInt(x); // expect: 5
+z = x+ ++y;
+TEST_printInt(z); // expect: 9
+TEST_printInt(y); // expect: 4
+y = 3;
+TEST_printInt(x++); // expect: 5
+TEST_printInt(x); // expect: 6
+TEST_printInt(++x); // expect: 7
+x = 5;
+
+// Ternaries are right associative
+TEST_printInt(t ? 1 : t ? 2 : 3); // expect: 1
+TEST_printInt(f ? 1 : t ? 2 : 3); // expect: 2
+TEST_printInt(f ? 1 : f ? 2 : 3); // expect: 3
+TEST_printInt(t ? f ? 1 : 2 : 3); // expect: 2
+TEST_printInt((t ? 1 : 2) + (f ? 3 : 4)); // expect: 5
+
+// Assignments are right associative, and have a value
+z = y = 7;
+TEST_printInt(z); // expect: 7
+TEST_printInt(y); // expect: 7
+z = 1;
+z += y *= 2;
+TEST_printInt(z); // expect: 15
+TEST_printInt(y); // expect: 14
+TEST_printInt(z = 2); // expect: 2
+y = 3;
+
+// Casts only apply to what comes right after them
+double d = 2.5;
+TEST_printDouble((double) x / 2); // expect: 2.5
+TEST_printInt((int) d * 2); // expect: 4
+TEST_printInt((int) (d * 2)); // expect: 5
+TEST_printInt((int) -d); // expect: -2
+TEST_printInt((x) - 1); // expect: 4
+TEST_printInt((x) + 1); // expect: 6
+
+// A dangling else belongs to the closest if
+if (t)
+	if (f)
+		TEST_printString("wrong");
+	else
+		TEST_printString("inner else"); // expect: inner else
+
+if (f)
+	if (t)
+		TEST_printString("wrong");
+	else
+		TEST_printString("wrong");
+
+if (t) if (f) TEST_printString("wrong"); else TEST_printString("inner"); else TEST_printString("wrong"); // expect: inner
+
+// Loops without braces only loop the next statement
+z = 0;
+for (int i = 0; i < 3; i++)
+	z++;
+	z += 10;
+TEST_printInt(z); // expect: 13
+
+z = 0;
+while (z < 3) z++; z += 100;
+TEST_printInt(z); // expect: 103
+
+// Multiple variables in a for loop
+for (int i = 0, j = 3; i < j; i++, j--) {
+	TEST_printString(i + "," + j); // expect: 0,3
+	// expect: 1,2
+}
+
+// Strings and characters with escapes, and things that look like comments
+TEST_printString("a\"b"); // expect: a"b
+TEST_printString("// not a comment"); // expect: // not a comment
+TEST_printString("/* still not */"); // expect: /* still not */
+TEST_printInt("tab\there".length()); // expect: 8
+TEST_printChar('A'); // expect: A
+TEST_printChar('\''); // expect: '
+TEST_printString("x is " + x + y); // expect: x is 53
+TEST_printString("x is " + (x + y)); // expect: x is 8
+TEST_printString(x + y + " is the sum"); // expect: 8 is the sum
+
+// Literals
+TEST_printInt(007); // expect: 7
+TEST_printDouble(1.); // expect: 1.0
+TEST_printDouble(1.5e3); // expect: 1500.0
+TEST_printDouble(2E-2); // expect: 0.02
+TEST_printDouble(5e3); // expect: 5000.0
+TEST_printDouble(1e+2); // expect: 100.0
+TEST_printDouble(2.5E1); // expect: 25.0
+// The exponent ends at the last digit, so this is 10.0 - 1
+TEST_printDouble(1e1-1); // expect: 9.0
+int e1 = 3;
+TEST_printDouble(2*e1+1e0); // expect: 7.0
+
+// Switch fallthrough, and case labels that are expressions
+switch (x) {
+	case 2 + 3:
+		TEST_printString("five"); // expect: five
+	case 6:
+		TEST_printString("fell through"); // expect: fell through
+		break;
+	default:
+		TEST_printString("wrong");
+}
+switch (x) {
+	default:
+		TEST_printString("default first"); // expect: default first
+		break;
+	case 1:
+		TEST_printString("wrong");
+}
+
+// Labels in a row both work as goto targets
+goto second;
+TEST_printString("wrong");
+first: second: TEST_printString("after labels"); // expect: after labels

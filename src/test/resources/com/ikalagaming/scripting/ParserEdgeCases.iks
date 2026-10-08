@@ -1,0 +1,242 @@
+// Valid but unusual syntax that has tripped up parsers before. This only needs to compile, see
+// ParserSemantics.iks for checking that things parse with the right meaning.
+
+/* A block comment at the start of the file */
+int x = 1;
+int y = 2;
+boolean b = true;
+string s = "";
+double d = 1.0;
+char c = 'a';
+
+// Multiple declarators, some with initializers that use earlier ones
+int a1 = 1, a2, a3 = a1 + 1;
+final int constant = 7;
+final boolean flag = false, otherFlag = true;
+
+// Array dimensions on the type, the name, or both
+int[] arr1;
+int arr2[];
+int[] arr3[];
+string[][] grid;
+
+// Names that start with keywords, or look like literals
+int integer = 1;
+int forward = 2;
+int iffy = 3;
+int doing = 4;
+int trueValue = 5;
+int nullable = 6;
+int exitCode = 7;
+int defaultValue = 8;
+int casey = 9;
+int string2 = 10;
+int int_ = 11;
+int whileLoop = 12;
+int gotoTarget = 13;
+
+// No whitespace at all
+x=1+2*3-4/2%3;
+x+=-1;
+x-=-1;
+x*=+2;
+x=-x;
+x=- -x;
+x=-(-x);
+b=!b&&!b||b;
+b=!!b;
+x=x+++y;
+x=x---y;
+x=x+ ++y;
+x=x- --y;
+
+// Comments and whitespace in strange places
+int/* comment */commented/* another */=/**/1/**/;
+x = 1 // a comment right after the value
+	;
+x
+=
+2
+;
+	x	=	3	;
+
+// Literals
+d = 1.;
+d = 0.5;
+d = 1.5e3;
+d = 2E-2;
+d = 5e3;
+d = 1e+2;
+d = 1E1-1;
+d = 2.0E-2;
+// Names that look like exponents
+int e2 = 1;
+int E = 2;
+d = 2*e2 + E;
+d = 3.0e+2;
+x = 0;
+x = 007;
+c = '\n';
+c = '\'';
+c = '\\';
+c = '"';
+c = 'A';
+c = ' ';
+s = "with \"quotes\" inside";
+s = "with 'single quotes' inside";
+s = "// not a comment";
+s = "/* not a comment either */";
+s = "tab\tnewline\nbackslash\\";
+s = "unicode é";
+s = "";
+
+// Deeply nested parentheses
+x = ((((((((1))))))));
+x = (((x + 1) * (y - 1)) / ((2)));
+
+// Casts compared to parentheses
+d = (double) x / 2;
+x = (int) -1.5;
+x = (int) +1.5;
+x = (int) (d * 2);
+x = (x) + 1;
+x = (x) - 1;
+x = (x);
+b = (boolean) x;
+s = (string) (x + y);
+
+// Ternaries, nested both ways, and inside other expressions
+x = b ? 1 : 2;
+x = b ? b ? 1 : 2 : 3;
+x = b ? 1 : b ? 2 : 3;
+x = (b ? 1 : 2) + (b ? 3 : 4);
+TEST_printInt(b ? x : y);
+x = b ? (b ? 1 : 2) : (b ? 3 : 4);
+
+// Assignments are expressions
+x = y = 3;
+x += y *= 2;
+TEST_printInt(x = 5);
+
+// Comparisons and equality chained together
+b = 1 < 2 == 3 > 4;
+b = x == y == b;
+b = 1 <= 2 != 3 >= 4;
+
+// Method calls
+TEST_printString("a");
+TEST_printString(TEST_getString());
+TEST_printInt(TEST_getInt() + TEST_getInt());
+TEST_getObject().getSelf().getSelf();
+x = "a string".length();
+x = (TEST_getString()).length();
+TEST_printString(("nested" + "parens"));
+TEST_checkValues(TEST_getString(), TEST_getInt(), TEST_getDouble(), TEST_getObject());
+
+// Empty statements and blocks
+;
+;;
+{}
+{{{}}}
+{ ; }
+if (b);
+if (b) {} else {}
+while (false);
+
+// Dangling else, which belongs to the closest if
+if (b)
+	if (x > 0)
+		x = 1;
+	else
+		x = 2;
+
+// Statements without braces in every position that has a "no short if" form
+if (b) while (false) x++; else x--;
+if (b) for (;false;) x++; else x--;
+if (b) if (b) x++; else x--; else x++;
+if (b) label1: x++; else x--;
+while (false) if (b) x++; else x--;
+for (;false;) if (b) x++; else x--;
+do x++; while (false);
+do if (b) x++; else x--; while (false);
+
+// else if chains without braces
+if (x == 1) x = 2; else if (x == 2) x = 3; else if (x == 3) x = 4; else x = 5;
+
+// Labels in a row, at the end of a block, and before declarations
+first: second: x++;
+{
+	x++;
+	endOfBlock:
+}
+beforeDeclaration:
+int declaredAfterLabel = 1;
+
+// For loops with every combination of parts
+for (int i = 0, j = 10; i < j; i++, j--) {}
+for (x = 0, y = 1; x < 3; x++, y += 2, TEST_getInt()) {}
+for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) x++;
+for (;;) { break; }
+for (;;) break;
+for (;;) {
+	if (b) {
+		break;
+	}
+	continue;
+}
+
+// Switches
+switch (x) {}
+switch (x) { default: }
+switch (x) { case 1: }
+switch (x) {
+	default:
+		x = 0;
+		break;
+	case 1:
+		x = 1;
+}
+switch (x) {
+	case 1 + 1:
+	case 4 - 1:
+		{
+			x = 2;
+		}
+		break;
+	case 5:
+		switch (y) {
+			case 1:
+				break;
+		}
+	case 6:
+	default:
+}
+switch ('a') {
+	case 'a':
+		break;
+	case 'b':
+		break;
+}
+switch (x + y * 2) {
+	case 1:
+		x++;
+}
+
+// Increment and decrement as statements
+x++;
+x--;
+++x;
+--x;
+TEST_printInt(x++);
+TEST_printInt(--x);
+
+// Exit
+if (false) {
+	exit;
+}
+
+/* A block comment
+   that spans lines
+   * with stars
+*/
+// A comment on the very last line, with no newline after it

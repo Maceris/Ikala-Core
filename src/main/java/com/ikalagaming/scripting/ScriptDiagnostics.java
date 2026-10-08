@@ -3,6 +3,8 @@ package com.ikalagaming.scripting;
 import com.ikalagaming.scripting.ast.Node;
 
 import lombok.NonNull;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.slf4j.Logger;
 import org.slf4j.helpers.MessageFormatter;
 
@@ -114,6 +116,28 @@ public final class ScriptDiagnostics {
     public static void warnAt(
             @NonNull Logger log, @NonNull Node node, String format, Object... args) {
         warnAt(log, node.getLine(), -1, format, args);
+    }
+
+    /**
+     * Report a problem with part of the parsed script, before there is a syntax tree. This is
+     * logged as a warning, and collected if something is collecting problems on this thread.
+     *
+     * @param log The logger to log to.
+     * @param context The part of the parse tree with the problem, which provides the position.
+     * @param format The message format, using slf4j style {} placeholders.
+     * @param args The arguments for the message.
+     */
+    public static void warnAt(
+            @NonNull Logger log,
+            @NonNull ParserRuleContext context,
+            String format,
+            Object... args) {
+        final Token start = context.getStart();
+        if (start == null) {
+            warnAt(log, -1, -1, format, args);
+            return;
+        }
+        warnAt(log, start.getLine(), start.getCharPositionInLine() + 1, format, args);
     }
 
     /**

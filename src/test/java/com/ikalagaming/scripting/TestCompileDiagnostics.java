@@ -6,6 +6,8 @@ import com.ikalagaming.scripting.interpreter.ScriptRuntime;
 import org.antlr.v4.runtime.CharStreams;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,44 @@ class TestCompileDiagnostics {
         Assertions.assertEquals(2, error.line(), error.toString());
         Assertions.assertEquals(6, error.column(), error.toString());
         Assertions.assertTrue(error.toString().startsWith("Line 2, column 6: "), error.toString());
+    }
+
+    /**
+     * A missing semicolon is reported right after the end of the statement it's missing from,
+     * rather than at the start of the next statement.
+     *
+     * @param program The program, which is missing a semicolon on the first line.
+     */
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "int y = 1\nint z = 2;",
+                // Comments and whitespace are skipped
+                "int y = 1   // a comment\n\n\tint z = 2;",
+                "int y = 1 /* a\ncomment */ int z = 2;",
+                // At the end of the script
+                "int y = 1",
+                "int y = 1\n",
+            })
+    void missingSemicolon(String program) {
+        CompileResult result = compile(program);
+
+        Assertions.assertFalse(result.succeeded());
+        final ScriptDiagnostics.Diagnostic error = result.errors().getFirst();
+        Assertions.assertEquals(1, error.line(), error.toString());
+        Assertions.assertEquals(10, error.column(), error.toString());
+        Assertions.assertEquals("Syntax error, missing ';'", error.message(), error.toString());
+    }
+
+    /** A missing semicolon after a method call goes right after the closing parenthesis. */
+    @Test
+    void missingSemicolonAfterCall() {
+        CompileResult result = compile("TEST_printString(\"a\")\nint x;");
+
+        Assertions.assertFalse(result.succeeded());
+        final ScriptDiagnostics.Diagnostic error = result.errors().getFirst();
+        Assertions.assertEquals(1, error.line(), error.toString());
+        Assertions.assertEquals(22, error.column(), error.toString());
     }
 
     /** Long lists of expected tokens are shortened. */

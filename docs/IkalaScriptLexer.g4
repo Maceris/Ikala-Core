@@ -29,7 +29,14 @@ IntegerLiteral
 	;
 
 FloatingPointLiteral
-	: [0-9]+ '.' [0-9]* ([Ee][-+]?[0-9]+)?
+	: [0-9]+ '.' [0-9]* ExponentPart?
+	| [0-9]+ ExponentPart
+	;
+
+// Like Java, an exponent can be used with or without a decimal point, as in 1.5e3 or 2E-2
+fragment
+ExponentPart
+	: [Ee] [-+]? [0-9]+
 	;
 
 BooleanLiteral
