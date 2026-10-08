@@ -124,6 +124,8 @@ public class Launcher {
         Launcher.initialize();
         PluginManager.getInstance().setCommandLine(true);
         PluginManager.getInstance()
+                .loadAllLibraries(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
+        PluginManager.getInstance()
                 .loadAllPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
         new AllPluginsEnabled().fire();
         Launcher.setupPluginFolders();
@@ -349,6 +351,11 @@ public class Launcher {
         File pluginFolder = new File(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
         if (!pluginFolder.exists() && !pluginFolder.mkdirs()) {
             log.warn(SafeResourceLoader.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
+        }
+        File libraryFolder =
+                new File(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
+        if (!libraryFolder.exists() && !libraryFolder.mkdirs()) {
+            log.warn(SafeResourceLoader.getString("ERROR_CREATE_LIBRARY_FOLDER", Launcher.bundle));
         }
     }
 

@@ -17,14 +17,17 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Loads classes and resources for a single plugin. Lookups go, in order, to:
  *
  * <ol>
  *   <li>The Java platform, so that plugins can't replace JDK classes
- *   <li>The plugin's own jar, which takes precedence over everything else
- *   <li>The parent class loader, which has the engine and its libraries
+ *   <li>The shared {@link LibraryClassLoader libraries}, so that every plugin uses the same copy of
+ *       them, even if the plugin jar bundles its own
+ *   <li>The plugin's own jar, which takes precedence over the engine
+ *   <li>The engine and its libraries
  *   <li>The jars of plugins this plugin declares as dependencies or soft dependencies, including
  *       any libraries bundled in those jars
  * </ol>
@@ -47,6 +50,12 @@ public class PluginClassLoader extends URLClassLoader {
 
     private final PluginManager manager;
 
+    /** The shared libraries, which is also the parent of this class loader. */
+    private final LibraryClassLoader libraries;
+
+    /** Whether we have warned that this plugin bundles classes that a shared library provides. */
+    private final AtomicBoolean warnedAboutBundledLibrary = new AtomicBoolean(false);
+
     /**
      * The name of the plugin this loads classes for.
      *
@@ -61,19 +70,21 @@ public class PluginClassLoader extends URLClassLoader {
      *
      * @param manager The PluginManager handling this plugin loader.
      * @param pluginName The name of the plugin this loads classes for.
-     * @param parent The parent class loader, which should be able to load engine classes.
+     * @param libraries The shared libraries, used as the parent class loader. It should be able to
+     *     load engine classes.
      * @param file The file where the plugin is located.
      * @throws MalformedURLException If the file URL cannot be parsed.
      */
     public PluginClassLoader(
             @NonNull final PluginManager manager,
             @NonNull final String pluginName,
-            final ClassLoader parent,
+            @NonNull final LibraryClassLoader libraries,
             @NonNull final File file)
             throws MalformedURLException {
-        super(new URL[] {file.toURI().toURL()}, parent);
+        super(new URL[] {file.toURI().toURL()}, libraries);
         this.manager = manager;
         this.pluginName = pluginName;
+        this.libraries = libraries;
     }
 
     /**
@@ -142,7 +153,10 @@ public class PluginClassLoader extends URLClassLoader {
 
     @Override
     public URL getResource(String name) {
-        URL result = findResource(name);
+        URL result = libraries.findResource(name);
+        if (result == null) {
+            result = findResource(name);
+        }
         if (result == null && getParent() != null) {
             result = getParent().getResource(name);
         }
@@ -175,15 +189,22 @@ public class PluginClassLoader extends URLClassLoader {
         if (result == null) {
             result = loadFromPlatform(name);
         }
+        Class<?> engineClass = null;
+        if (result == null) {
+            // The parent checks the engine first, then the libraries
+            Class<?> fromParent = loadFromParent(name);
+            if (fromParent != null && libraries.isLibraryClass(fromParent)) {
+                result = fromParent;
+                warnIfBundled(name);
+            } else {
+                engineClass = fromParent;
+            }
+        }
         if (result == null) {
             result = findOwnClass(name);
         }
-        if (result == null && getParent() != null) {
-            try {
-                result = getParent().loadClass(name);
-            } catch (ClassNotFoundException e) {
-                // Not an engine class, try dependencies next
-            }
+        if (result == null) {
+            result = engineClass;
         }
         if (result == null) {
             for (PluginClassLoader dependency : manager.getDependencyClassLoaders(pluginName)) {
@@ -200,6 +221,40 @@ public class PluginClassLoader extends URLClassLoader {
             resolveClass(result);
         }
         return result;
+    }
+
+    /**
+     * Load a class from the parent class loader, which can see the engine and the libraries.
+     *
+     * @param name The binary name of the class.
+     * @return The class, or null if neither the engine nor the libraries have it.
+     */
+    private Class<?> loadFromParent(String name) {
+        try {
+            return getParent().loadClass(name);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Log a warning, once per plugin, if the plugin jar contains a class that we loaded from the
+     * libraries instead. The plugin's copy is ignored, and is probably a library it bundled before
+     * libraries were shared, which should be removed from the jar.
+     *
+     * @param name The binary name of the library class.
+     */
+    private void warnIfBundled(String name) {
+        if (warnedAboutBundledLibrary.get()) {
+            return;
+        }
+        String classFile = name.replace('.', '/') + ".class";
+        if (findResource(classFile) != null && !warnedAboutBundledLibrary.getAndSet(true)) {
+            String msg =
+                    SafeResourceLoader.getString(
+                            "PLUGIN_BUNDLES_LIBRARY", manager.getResourceBundle());
+            log.warn(msg, pluginName, name);
+        }
     }
 
     /**

@@ -24,6 +24,14 @@ public class Constants {
     public static final String DATA_PATH = File.separator + "data" + File.separator;
 
     /**
+     * The path to the shared libraries that plugins use from the current folder. This should be set
+     * up with path separators so that you can do something like {@code
+     * System.getProperty("user.dir") + LIBRARY_FOLDER_PATH + "example.jar"} and get a valid path to
+     * a library.
+     */
+    public static final String LIBRARY_FOLDER_PATH = File.separator + "libs" + File.separator;
+
+    /**
      * The path to the plugins from the current folder. This should be set up with path separators
      * so that you can do something like {@code System.getProperty("user.dir") + PLUGIN_FOLDER_PATH
      * + "Example.jar"} and get a valid path to a plugin.

@@ -26,6 +26,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -250,6 +251,17 @@ public class PluginManager {
 
     private PluginCommandListener commandListener;
 
+    /**
+     * The class loader for the shared libraries that plugins use. It is the parent of every plugin
+     * class loader, and lives as long as the plugin manager.
+     *
+     * @return The class loader for shared libraries.
+     */
+    @Getter private final LibraryClassLoader libraryClassLoader;
+
+    /** The folders libraries have been loaded from, to check again for newly added libraries. */
+    private final Set<File> libraryFolders = ConcurrentHashMap.newKeySet();
+
     /** Stores all the classes loaded by plugins. Keys are the unique class names. */
     private final Map<String, Class<?>> pluginClassCache;
 
@@ -289,6 +301,7 @@ public class PluginManager {
         this.eventManager = eventManager;
         pluginDetails = new ConcurrentHashMap<>();
         pluginClassCache = new ConcurrentHashMap<>();
+        libraryClassLoader = new LibraryClassLoader(this.getClass().getClassLoader());
         resourceBundle =
                 ResourceBundle.getBundle(
                         "com.ikalagaming.plugins.PluginManager", Localization.getLocale());
@@ -405,6 +418,23 @@ public class PluginManager {
             return;
         }
         loadPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH, args);
+    }
+
+    private void callbackLoadLibraries(@SuppressWarnings("unused") List<String> args) {
+        loadAllLibraries(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
+    }
+
+    private void callbackPrintLibraries(@SuppressWarnings("unused") List<String> args) {
+        libraryClassLoader
+                .getLibraryNames()
+                .forEach(
+                        name ->
+                                /*
+                                 * This should show on the command line, as logs might be
+                                 * redirected to console and we want command line
+                                 * interaction.
+                                 */
+                                System.out.println(name)); // NOSONAR
     }
 
     private void callbackPrintPlugins(@SuppressWarnings("unused") List<String> args) {
@@ -852,6 +882,60 @@ public class PluginManager {
     }
 
     /**
+     * Add all the library jars in the given folder to the shared libraries, see {@link
+     * LibraryClassLoader}. Jars that were already added are skipped, so this can be called again to
+     * pick up libraries that were put in the folder later. The folder is remembered, and checked
+     * again whenever a plugin needs a library that we don't have yet.
+     *
+     * <p>Only one version of each library can be added, and libraries can't be removed without
+     * restarting.
+     *
+     * @param folder The folder that contains the library jars.
+     */
+    public void loadAllLibraries(@NonNull String folder) {
+        Optional<File> libraryFolder = plGetFolder(folder, "LIBRARY");
+        if (libraryFolder.isEmpty()) {
+            return;
+        }
+        libraryFolders.add(libraryFolder.get());
+        plAddLibraries(libraryFolder.get());
+    }
+
+    /**
+     * Add a library jar to the shared libraries, see {@link LibraryClassLoader}. Only one version
+     * of each library can be added, and libraries can't be removed without restarting.
+     *
+     * @param jar The library jar.
+     * @return True if the library was added, or the same version of it already was.
+     */
+    public boolean loadLibrary(@NonNull File jar) {
+        switch (libraryClassLoader.addLibrary(jar)) {
+            case ADDED -> {
+                String msg = SafeResourceLoader.getString("LIBRARY_ADDED", resourceBundle);
+                log.info(msg, jar.getName());
+                return true;
+            }
+            case ALREADY_ADDED -> {
+                return true;
+            }
+            case CONFLICTING_VERSION -> {
+                LibraryClassLoader.LibraryJar existing =
+                        libraryClassLoader.getJar(LibraryClassLoader.LibraryJar.of(jar).key());
+                String msg =
+                        SafeResourceLoader.getString("LIBRARY_CONFLICTING_VERSION", resourceBundle);
+                log.warn(msg, jar.getName(), existing.file().getName());
+                return false;
+            }
+            case INVALID -> {
+                String msg = SafeResourceLoader.getString("LIBRARY_INVALID", resourceBundle);
+                log.warn(msg, jar.getAbsolutePath());
+                return false;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Load all the plugins from .jar files that are located in the given folder.
      *
      * @param folder The folder that contains all the jar files we want to load.
@@ -998,10 +1082,7 @@ public class PluginManager {
                 loaders.put(
                         entry.getKey(),
                         new PluginClassLoader(
-                                this,
-                                pluginName,
-                                this.getClass().getClassLoader(),
-                                entry.getKey()));
+                                this, pluginName, libraryClassLoader, entry.getKey()));
             } catch (MalformedURLException e) {
                 logAlert("PLUGIN_URL_INVALID", entry.getKey().getName());
                 entries.remove();
@@ -1086,6 +1167,27 @@ public class PluginManager {
     }
 
     /**
+     * Add all the jars in a folder to the shared libraries, in file name order so that the same
+     * version wins every time if there are conflicting versions.
+     *
+     * @param folder The folder containing library jars.
+     */
+    private void plAddLibraries(@NonNull File folder) {
+        File[] files = folder.listFiles();
+        if (files == null) {
+            String msg = SafeResourceLoader.getString("LIBRARY_FILES_NULL", resourceBundle);
+            log.warn(msg, folder.getAbsolutePath());
+            return;
+        }
+        Arrays.sort(files);
+        for (File file : files) {
+            if (file.isFile() && file.getName().endsWith(".jar")) {
+                loadLibrary(file);
+            }
+        }
+    }
+
+    /**
      * Calculate the state of plugins that are being loaded based on their dependencies, and unload
      * the ones that are missing dependencies.
      */
@@ -1167,6 +1269,43 @@ public class PluginManager {
     }
 
     /**
+     * Remove plugins that require libraries we don't have. If any are missing, the library folders
+     * are checked again first, in case the libraries were added since then.
+     *
+     * @param jarInfoMap The map of info for each jar. This will be modified.
+     */
+    private void plDiscardMissingLibraries(Map<File, PluginInfo> jarInfoMap) {
+        boolean rescanned = false;
+        Iterator<Map.Entry<File, PluginInfo>> entries = jarInfoMap.entrySet().iterator();
+        while (entries.hasNext()) {
+            PluginInfo info = entries.next().getValue();
+            List<String> missing = plMissingLibraries(info);
+            if (!missing.isEmpty() && !rescanned) {
+                libraryFolders.forEach(this::plAddLibraries);
+                rescanned = true;
+                missing = plMissingLibraries(info);
+            }
+            if (!missing.isEmpty()) {
+                String msg = SafeResourceLoader.getString("PLUGIN_LIBRARY_MISSING", resourceBundle);
+                log.warn(msg, info.getName(), String.join(", ", missing));
+                entries.remove();
+            }
+        }
+    }
+
+    /**
+     * Find the libraries a plugin requires that haven't been added.
+     *
+     * @param info The plugin info.
+     * @return The names of the missing libraries.
+     */
+    private List<String> plMissingLibraries(PluginInfo info) {
+        return info.getLibraries().stream()
+                .filter(library -> !libraryClassLoader.hasLibrary(library))
+                .toList();
+    }
+
+    /**
      * Return all jar files in the specified folder. If none are found, an empty list is returned.
      *
      * @param folder a valid folder
@@ -1210,23 +1349,35 @@ public class PluginManager {
      * @return an optional containing the folder or empty if there was an error
      */
     private Optional<File> plGetFolder(@NonNull final String path) {
-        File pluginFolder = new File(path);
-        if (!pluginFolder.exists()) {
-            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOUND", resourceBundle);
-            log.warn(msg, pluginFolder.getAbsolutePath());
+        return plGetFolder(path, "PLUGIN");
+    }
+
+    /**
+     * Get a folder from a path. The return value is an empty optional if there was a problem
+     * accessing the folder from path. If there is a file in the optional it should be an existing
+     * folder that can be read.
+     *
+     * @param path the path of the folder to return as a File
+     * @param messagePrefix The start of the keys for the messages logged about problems, like
+     *     {@code PLUGIN} for {@code PLUGIN_FOLDER_NOT_FOUND}.
+     * @return an optional containing the folder or empty if there was an error
+     */
+    private Optional<File> plGetFolder(@NonNull final String path, String messagePrefix) {
+        File folder = new File(path);
+        String problem = null;
+        if (!folder.exists()) {
+            problem = "_FOLDER_NOT_FOUND";
+        } else if (!folder.isDirectory()) {
+            problem = "_FOLDER_NOT_FOLDER";
+        } else if (!folder.canRead()) {
+            problem = "_FOLDER_UNREADABLE";
+        }
+        if (problem != null) {
+            String msg = SafeResourceLoader.getString(messagePrefix + problem, resourceBundle);
+            log.warn(msg, folder.getAbsolutePath());
             return Optional.empty();
         }
-        if (!pluginFolder.isDirectory()) {
-            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_NOT_FOLDER", resourceBundle);
-            log.warn(msg, pluginFolder.getAbsolutePath());
-            return Optional.empty();
-        }
-        if (!pluginFolder.canRead()) {
-            String msg = SafeResourceLoader.getString("PLUGIN_FOLDER_UNREADABLE", resourceBundle);
-            log.warn(msg, pluginFolder.getAbsolutePath());
-            return Optional.empty();
-        }
-        return Optional.of(pluginFolder);
+        return Optional.of(folder);
     }
 
     /**
@@ -1339,6 +1490,7 @@ public class PluginManager {
 
         plDiscardInvalidPlugins(jars, jarInfoMap);
         plDiscardDuplicates(jarInfoMap);
+        plDiscardMissingLibraries(jarInfoMap);
         Set<String> restoreEnabled = plPrepareUpgrades(jarInfoMap);
 
         Map<File, PluginClassLoader> loaders = new HashMap<>();
@@ -1598,7 +1750,7 @@ public class PluginManager {
      * plugins that have since been unloaded.
      */
     private void plResetSharedClassLoader() {
-        sharedClassLoader = new SharedClassLoader(this, this.getClass().getClassLoader());
+        sharedClassLoader = new SharedClassLoader(this, libraryClassLoader);
         Thread.currentThread().setContextClassLoader(sharedClassLoader);
         eventManager.setThreadClassloader(sharedClassLoader);
     }
@@ -1823,6 +1975,14 @@ public class PluginManager {
                 this::callbackPrintPlugins,
                 PluginManager.PLUGIN_NAME);
         this.registerCommand(
+                SafeResourceLoader.getString("COMMAND_LOAD_LIBRARIES", this.resourceBundle),
+                this::callbackLoadLibraries,
+                PluginManager.PLUGIN_NAME);
+        this.registerCommand(
+                SafeResourceLoader.getString("COMMAND_LIST_LIBRARIES", this.resourceBundle),
+                this::callbackPrintLibraries,
+                PluginManager.PLUGIN_NAME);
+        this.registerCommand(
                 SafeResourceLoader.getString("COMMAND_HELP", this.resourceBundle),
                 this::callbackHelp,
                 PluginManager.PLUGIN_NAME);
@@ -1929,6 +2089,13 @@ public class PluginManager {
                 PluginDetails details = pluginDetails.remove(s);
                 plUnregisterListeners(s, details);
                 details.dispose();
+            }
+            // Nothing is left to use the libraries, so release the jar files
+            try {
+                libraryClassLoader.close();
+            } catch (IOException e) {
+                String msg = SafeResourceLoader.getString("LIBRARY_CLOSE_ERROR", resourceBundle);
+                log.warn(msg, e);
             }
         }
         clearCommands();

@@ -22,6 +22,9 @@ public class PluginInfo {
     /** The regular expression describing what a valid plugin name looks like. */
     private static final String NAME_REGEX = "^[a-zA-Z0-9_-]+$";
 
+    /** The regular expression describing what a valid library name looks like. */
+    private static final String LIBRARY_REGEX = "^[a-zA-Z0-9._-]+$";
+
     /**
      * Cast to a map, throw a custom exception if it is not.
      *
@@ -84,6 +87,26 @@ public class PluginInfo {
     }
 
     /**
+     * Pull a list of library names from the plugin info.
+     *
+     * @param map The map loaded from the plugin info yaml file.
+     * @param key The entry in the configuration we are interested in.
+     * @return The contents of that entry, as an unmodifiable list. Empty if it is not present.
+     * @throws InvalidDescriptionException If the entry is not a list, or has invalid names.
+     */
+    private static List<String> makeLibraryList(final Map<?, ?> map, final String key)
+            throws InvalidDescriptionException {
+        List<String> names = PluginInfo.makeList(map, key);
+        for (String name : names) {
+            if (!name.matches(PluginInfo.LIBRARY_REGEX)) {
+                throw new InvalidDescriptionException(
+                        "Library '" + name + "' contains invalid characters.");
+            }
+        }
+        return names;
+    }
+
+    /**
      * Get a required value from the plugin info.
      *
      * @param map The map loaded from the plugin info yaml file.
@@ -129,6 +152,16 @@ public class PluginInfo {
      */
     @SuppressWarnings("javadoc")
     private final String description;
+
+    /**
+     * Returns a list of shared libraries this plugin requires, by name without a version, like
+     * {@code lwjgl-glfw}. These are jars in the library folder, see {@link LibraryClassLoader}. If
+     * any library in this list is not found, this plugin will fail to load.
+     *
+     * @return The list of required libraries.
+     */
+    @SuppressWarnings("javadoc")
+    private final List<String> libraries;
 
     /**
      * The fully qualified name of the class that extends {@link Plugin} for this plugin. The format
@@ -204,6 +237,7 @@ public class PluginInfo {
         mainClass = PluginInfo.required(map, "main-class", "main class");
         dependencies = PluginInfo.makePluginNameList(map, "dependencies");
         softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies");
+        libraries = PluginInfo.makeLibraryList(map, "libraries");
         authors = PluginInfo.makeList(map, "authors");
         description = map.get("description") == null ? "" : map.get("description").toString();
     }

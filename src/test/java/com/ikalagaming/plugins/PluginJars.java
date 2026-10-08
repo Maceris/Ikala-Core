@@ -130,6 +130,30 @@ public final class PluginJars {
             List<String> softDependencies,
             Map<String, byte[]> entries)
             throws IOException {
+        write(folder, name, mainClass, dependencies, softDependencies, List.of(), entries);
+    }
+
+    /**
+     * Write a plugin jar to the given folder, which requires shared libraries.
+     *
+     * @param folder The folder to write the jar into.
+     * @param name The name of the plugin.
+     * @param mainClass The fully qualified name of the main class of the plugin.
+     * @param dependencies The hard dependencies of the plugin.
+     * @param softDependencies The soft dependencies of the plugin.
+     * @param libraries The libraries the plugin requires.
+     * @param entries Other files to put in the jar, keyed by their path in the jar.
+     * @throws IOException If the jar could not be written.
+     */
+    public static void write(
+            Path folder,
+            String name,
+            String mainClass,
+            List<String> dependencies,
+            List<String> softDependencies,
+            List<String> libraries,
+            Map<String, byte[]> entries)
+            throws IOException {
         writeJar(
                 folder.resolve(name + ".jar"),
                 name,
@@ -137,7 +161,22 @@ public final class PluginJars {
                 mainClass,
                 dependencies,
                 softDependencies,
+                libraries,
                 entries);
+    }
+
+    /**
+     * Write a plain jar, like a library, with no plugin.yml.
+     *
+     * @param jarFile The jar file to write.
+     * @param entries The files to put in the jar, keyed by their path in the jar.
+     * @throws IOException If the jar could not be written.
+     */
+    public static void writeLibrary(Path jarFile, Map<String, byte[]> entries) throws IOException {
+        try (OutputStream file = Files.newOutputStream(jarFile);
+                JarOutputStream jar = new JarOutputStream(file)) {
+            writeEntries(jar, entries);
+        }
     }
 
     /**
@@ -167,6 +206,7 @@ public final class PluginJars {
                 mainClass.getName(),
                 List.of(dependencies),
                 List.of(),
+                List.of(),
                 Map.of());
     }
 
@@ -179,6 +219,7 @@ public final class PluginJars {
      * @param mainClass The fully qualified name of the main class of the plugin.
      * @param dependencies The hard dependencies of the plugin.
      * @param softDependencies The soft dependencies of the plugin.
+     * @param libraries The libraries the plugin requires, left out of the plugin.yml if empty.
      * @param entries Other files to put in the jar, keyed by their path in the jar.
      * @throws IOException If the jar could not be written.
      */
@@ -189,6 +230,7 @@ public final class PluginJars {
             String mainClass,
             List<String> dependencies,
             List<String> softDependencies,
+            List<String> libraries,
             Map<String, byte[]> entries)
             throws IOException {
         String info =
@@ -199,17 +241,32 @@ public final class PluginJars {
                                 mainClass,
                                 String.join(", ", dependencies),
                                 String.join(", ", softDependencies));
+        if (!libraries.isEmpty()) {
+            info += "libraries: [%s]\n".formatted(String.join(", ", libraries));
+        }
 
         try (OutputStream file = Files.newOutputStream(jarFile);
                 JarOutputStream jar = new JarOutputStream(file)) {
             jar.putNextEntry(new JarEntry("plugin.yml"));
             jar.write(info.getBytes(StandardCharsets.UTF_8));
             jar.closeEntry();
-            for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
-                jar.putNextEntry(new JarEntry(entry.getKey()));
-                jar.write(entry.getValue());
-                jar.closeEntry();
-            }
+            writeEntries(jar, entries);
+        }
+    }
+
+    /**
+     * Write files into a jar.
+     *
+     * @param jar The jar being written.
+     * @param entries The files to write, keyed by their path in the jar.
+     * @throws IOException If the files could not be written.
+     */
+    private static void writeEntries(JarOutputStream jar, Map<String, byte[]> entries)
+            throws IOException {
+        for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
+            jar.putNextEntry(new JarEntry(entry.getKey()));
+            jar.write(entry.getValue());
+            jar.closeEntry();
         }
     }
 
