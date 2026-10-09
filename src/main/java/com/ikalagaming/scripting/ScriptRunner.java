@@ -10,10 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,8 +40,11 @@ class ScriptRunner extends Thread {
     /** Tracks requests to halt scripts. */
     private Map<ScriptRuntime, String> yieldRequests;
 
-    /** Tracks requests to resume scripts. */
-    private List<String> resumeRequests;
+    /** Tracks requests to resume every script that yielded with a tag. */
+    private List<Resume> resumeRequests;
+
+    /** Tracks requests to resume one particular script. */
+    private List<Delivery> deliveries;
 
     /** The actual scripts that are halted. */
     private Map<ScriptRuntime, String> haltedScripts;
@@ -49,12 +54,30 @@ class ScriptRunner extends Thread {
     /** Used to handle synchronization and waiting for events */
     private Object syncObject;
 
+    /**
+     * A request to resume every script waiting on a tag.
+     *
+     * @param tag The tag.
+     * @param value The value awaits return.
+     */
+    private record Resume(@NonNull String tag, Object value) {}
+
+    /**
+     * A request to resume one script waiting on a tag.
+     *
+     * @param runtime The script.
+     * @param tag The tag.
+     * @param value The value its await returns.
+     */
+    private record Delivery(@NonNull ScriptRuntime runtime, @NonNull String tag, Object value) {}
+
     /** Creates and starts the thread. */
     public ScriptRunner() {
         setName("ScriptRunner");
         scripts = new ArrayList<>();
         yieldRequests = Collections.synchronizedMap(new HashMap<>());
         resumeRequests = Collections.synchronizedList(new ArrayList<>());
+        deliveries = new ArrayList<>();
         haltedScripts = new HashMap<>();
         running = true;
         syncObject = new Object();
@@ -104,6 +127,42 @@ class ScriptRunner extends Thread {
         return found;
     }
 
+    /**
+     * Stop every script a plugin owns, and drop everything they hold so they don't keep the
+     * plugin's objects alive.
+     *
+     * @param owner The plugin.
+     * @return The number of scripts that were stopped.
+     */
+    @Synchronized
+    public int terminateAllOwnedBy(@NonNull String owner) {
+        final Set<ScriptRuntime> owned = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (ScriptRuntime runtime : scripts) {
+            if (owner.equals(runtime.getOwner())) {
+                owned.add(runtime);
+            }
+        }
+        for (ScriptRuntime runtime : haltedScripts.keySet()) {
+            if (owner.equals(runtime.getOwner())) {
+                owned.add(runtime);
+            }
+        }
+        // Every use of the yield requests holds this object's lock
+        for (ScriptRuntime runtime : yieldRequests.keySet()) {
+            if (owner.equals(runtime.getOwner())) {
+                owned.add(runtime);
+            }
+        }
+        for (ScriptRuntime runtime : owned) {
+            scripts.remove(runtime);
+            haltedScripts.remove(runtime);
+            yieldRequests.remove(runtime);
+            runtime.release();
+        }
+        deliveries.removeIf(delivery -> owned.contains(delivery.runtime()));
+        return owned.size();
+    }
+
     /** Halt any scripts as required. */
     @Synchronized
     private void haltScripts() {
@@ -117,7 +176,7 @@ class ScriptRunner extends Thread {
     /** Request that we resume any scripts halted without a tag. */
     @Synchronized
     public void requestResume() {
-        this.resumeRequests.add(ScriptRunner.DEFAULT_TAG);
+        this.resumeRequests.add(new Resume(ScriptRunner.DEFAULT_TAG, null));
         this.wakeUp();
     }
 
@@ -128,8 +187,53 @@ class ScriptRunner extends Thread {
      */
     @Synchronized
     public void requestResume(@NonNull String tag) {
-        this.resumeRequests.add(tag);
+        requestResume(tag, null);
+    }
+
+    /**
+     * Request that we resume any scripts halted using the given tag, with a value for any of them
+     * that are awaiting.
+     *
+     * @param tag The tag to resume.
+     * @param value The value their awaits return.
+     */
+    @Synchronized
+    public void requestResume(@NonNull String tag, Object value) {
+        this.resumeRequests.add(new Resume(tag, value));
         this.wakeUp();
+    }
+
+    /**
+     * Request that we resume one script waiting on the tag, with a value for its await. If it isn't
+     * waiting on the tag yet, the value is kept for it, and its await on the tag returns straight
+     * away.
+     *
+     * <p>Scripts only yield while they are being stepped, which holds the same lock as this, so a
+     * script is either already waiting or will find the kept value.
+     *
+     * @param runtime The script.
+     * @param tag The tag.
+     * @param value The value its await returns.
+     */
+    @Synchronized
+    public void requestResume(@NonNull ScriptRuntime runtime, @NonNull String tag, Object value) {
+        if (tag.equals(waitingTag(runtime))) {
+            this.deliveries.add(new Delivery(runtime, tag, value));
+            this.wakeUp();
+        } else {
+            runtime.post(tag, value);
+        }
+    }
+
+    /**
+     * The tag a script is waiting on, including if it is about to yield.
+     *
+     * @param runtime The script.
+     * @return The tag, or null if it isn't waiting.
+     */
+    private String waitingTag(@NonNull ScriptRuntime runtime) {
+        final String halted = haltedScripts.get(runtime);
+        return halted != null ? halted : yieldRequests.get(runtime);
     }
 
     /**
@@ -161,16 +265,32 @@ class ScriptRunner extends Thread {
     /** Resume any scripts as required. */
     @Synchronized
     private void resumeScripts() {
-        for (String tag : resumeRequests) {
+        // Every use of the resume requests holds this object's lock
+        for (Resume request : resumeRequests) {
             List<ScriptRuntime> toResume =
                     this.haltedScripts.entrySet().stream()
-                            .filter(entry -> entry.getValue().equals(tag))
+                            .filter(entry -> entry.getValue().equals(request.tag()))
                             .map(Entry::getKey)
                             .collect(Collectors.toCollection(ArrayList::new));
-            this.scripts.addAll(toResume);
-            toResume.forEach(this.haltedScripts::remove);
+            for (ScriptRuntime runtime : toResume) {
+                this.haltedScripts.remove(runtime);
+                runtime.resumeWith(request.value());
+                this.scripts.add(runtime);
+            }
         }
         this.resumeRequests.clear();
+        for (Delivery delivery : deliveries) {
+            final ScriptRuntime runtime = delivery.runtime();
+            if (delivery.tag().equals(haltedScripts.get(runtime))) {
+                this.haltedScripts.remove(runtime);
+                runtime.resumeWith(delivery.value());
+                this.scripts.add(runtime);
+            } else {
+                // Resumed some other way first, so keep the value for its next await on the tag
+                runtime.post(delivery.tag(), delivery.value());
+            }
+        }
+        this.deliveries.clear();
     }
 
     /**

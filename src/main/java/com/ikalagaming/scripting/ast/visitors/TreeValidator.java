@@ -75,6 +75,12 @@ public class TreeValidator implements ASTVisitor {
     private int switchDepth;
 
     /**
+     * The labels a script can be started at, after the last validation: labels with no variable
+     * declarations in scope, so starting there skips nothing the script needs.
+     */
+    private Set<String> entryLabels = Set.of();
+
+    /**
      * Recursively process the tree from the leaves up.
      *
      * @param node The node we are checking.
@@ -269,14 +275,38 @@ public class TreeValidator implements ASTVisitor {
      * @return True if the tree is valid, false if anything was not.
      */
     public boolean validate(CompilationUnit ast) {
+        return validate(ast, Set.of());
+    }
+
+    /**
+     * Validates the tree and returns a result indicating if it is okay or had issues.
+     *
+     * @param ast The tree to validate.
+     * @param globals The names of globals the host provides, which the script can't assign to.
+     * @return True if the tree is valid, false if anything was not.
+     */
+    public boolean validate(CompilationUnit ast, @NonNull Set<String> globals) {
         valid = true;
+        entryLabels = Set.of();
         check(ast);
         checkLabels(ast, new ArrayList<>());
         if (valid) {
             checkGotoScopes(ast);
         }
-        checkFinals(ast, new HashSet<>());
+        // Globals behave like final variables declared before the script
+        checkFinals(ast, new HashSet<>(globals));
         return valid;
+    }
+
+    /**
+     * The labels the script can be started at, found by the last validation. A label can be an
+     * entry point if no variable declarations are in scope at it, the same rule as a goto from the
+     * start of the script.
+     *
+     * @return The names of the labels.
+     */
+    public Set<String> getEntryLabels() {
+        return entryLabels;
     }
 
     /**
@@ -388,6 +418,15 @@ public class TreeValidator implements ASTVisitor {
         Map<String, List<VarDeclaration>> labelScopes = new HashMap<>();
         Map<Goto, List<VarDeclaration>> gotoScopes = new LinkedHashMap<>();
         findScopes(ast, new ArrayList<>(), labelScopes, gotoScopes);
+
+        Set<String> entries = new HashSet<>();
+        labelScopes.forEach(
+                (label, scope) -> {
+                    if (scope.isEmpty()) {
+                        entries.add(label);
+                    }
+                });
+        entryLabels = Set.copyOf(entries);
 
         for (var entry : gotoScopes.entrySet()) {
             final String target = ((Identifier) entry.getKey().getChildren().get(0)).getName();

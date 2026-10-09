@@ -1,7 +1,9 @@
 package com.ikalagaming.scripting.interpreter;
 
+import com.ikalagaming.scripting.HostClass;
 import com.ikalagaming.scripting.ScriptDiagnostics;
 import com.ikalagaming.scripting.ScriptManager;
+import com.ikalagaming.scripting.ScriptValues;
 import com.ikalagaming.scripting.ast.Type;
 import com.ikalagaming.util.SafeResourceLoader;
 
@@ -11,22 +13,29 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BinaryOperator;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntBinaryOperator;
 import java.util.function.IntPredicate;
+import javax.annotation.Nullable;
 
 /**
  * A runtime environment for a script, equivalent to a small VM or Turing machine.
@@ -133,12 +142,208 @@ public class ScriptRuntime {
     private final List<Instruction> instructions;
 
     /**
+     * The name of the plugin that started the script, or null if it isn't owned. Owned scripts are
+     * terminated when their plugin unloads.
+     *
+     * @param owner The owner.
+     * @return The owner, which may be null.
+     */
+    @Setter private volatile String owner;
+
+    /**
+     * The labels the script can be started at, mapped to their instruction index.
+     *
+     * @return The entry points, which can't be modified.
+     */
+    private final Map<String, Integer> entryPoints;
+
+    /**
+     * The await the script is parked in, or null if it isn't waiting. Only used by the thread that
+     * steps the script.
+     */
+    @Getter(AccessLevel.NONE)
+    private volatile Await awaiting;
+
+    /**
+     * Values resumed for an await the script hadn't reached yet, by tag, so they aren't lost. The
+     * oldest value for a tag is delivered first.
+     */
+    @Getter(AccessLevel.NONE)
+    private final Map<String, ArrayDeque<Posted>> mailbox = new HashMap<>();
+
+    /** Guards the mailbox, which other threads post to. */
+    @Getter(AccessLevel.NONE)
+    private final ReentrantLock mailboxLock = new ReentrantLock();
+
+    /**
+     * An await the script is parked in.
+     *
+     * @param tag The tag it waits for.
+     * @param keepResult Whether the resumed value is pushed for the script to use.
+     */
+    private record Await(String tag, boolean keepResult) {}
+
+    /**
+     * A value posted for an await, wrapped so that null values can be posted too.
+     *
+     * @param value The value.
+     */
+    private record Posted(Object value) {}
+
+    /**
      * Create a runtime for a program.
      *
      * @param instructions The program, which is copied so breakpoints can be patched in.
      */
     public ScriptRuntime(@NonNull List<Instruction> instructions) {
+        this(instructions, Map.of());
+    }
+
+    /**
+     * Create a runtime for a program that has labels it can be started at.
+     *
+     * @param instructions The program, which is copied so breakpoints can be patched in.
+     * @param entryPoints The labels the script can start at, mapped to their instruction index.
+     */
+    public ScriptRuntime(
+            @NonNull List<Instruction> instructions, @NonNull Map<String, Integer> entryPoints) {
         this.instructions = new ArrayList<>(instructions);
+        this.entryPoints = Map.copyOf(entryPoints);
+    }
+
+    /**
+     * Create a fresh runtime for the same program, without any of this one's state or breakpoints.
+     *
+     * @return The new runtime.
+     */
+    public ScriptRuntime copyProgram() {
+        final List<Instruction> program = new ArrayList<>(instructions.size());
+        for (int i = 0; i < instructions.size(); ++i) {
+            program.add(getOriginalInstruction(i));
+        }
+        return new ScriptRuntime(program, entryPoints);
+    }
+
+    /**
+     * Give the script a global, a host object it can use by name, like {@code ui}. It has to be
+     * compiled with the name as a global. Set globals before the script starts, from the thread
+     * that created it.
+     *
+     * @param name The name the script uses.
+     * @param value The object.
+     */
+    public void setGlobal(@NonNull String name, Object value) {
+        declaredTypes.put(name, Object.class);
+        symbolTable.put(name, new MemoryItem(Object.class, value));
+    }
+
+    /**
+     * Start the script at a label instead of the beginning. Call this before it starts.
+     *
+     * @param label The label.
+     * @return True if the label is an entry point, false if there is no such label, in which case
+     *     nothing changes.
+     */
+    public boolean startAt(@NonNull String label) {
+        final Integer location = entryPoints.get(label);
+        if (location == null) {
+            return false;
+        }
+        programCounter = location;
+        return true;
+    }
+
+    /**
+     * Check whether the script is parked in an await.
+     *
+     * @return The tag it waits for, or null if it isn't awaiting.
+     */
+    public String getAwaitTag() {
+        final Await current = awaiting;
+        return current == null ? null : current.tag();
+    }
+
+    /**
+     * Hand a value to the await the script is parked in, before it continues. Called by whatever
+     * resumes the script, while it isn't being stepped. Does nothing if the script yielded instead
+     * of awaiting.
+     *
+     * @param value The value the await returns.
+     */
+    public void resumeWith(Object value) {
+        final Await current = awaiting;
+        awaiting = null;
+        if (current != null && current.keepResult()) {
+            stack.push(ScriptRuntime.memoryFor(ScriptValues.normalize(value)));
+        }
+    }
+
+    /**
+     * Keep a value for an await on the tag that the script hasn't reached yet. When it reaches it,
+     * it continues straight away with the value. Safe from any thread.
+     *
+     * @param tag The tag.
+     * @param value The value.
+     */
+    public void post(@NonNull String tag, Object value) {
+        mailboxLock.lock();
+        try {
+            mailbox.computeIfAbsent(tag, ignored -> new ArrayDeque<>()).add(new Posted(value));
+        } finally {
+            mailboxLock.unlock();
+        }
+    }
+
+    /**
+     * Take the oldest value posted for a tag.
+     *
+     * @param tag The tag.
+     * @return The posted value, or null if nothing was posted.
+     */
+    private Posted takePosted(@NonNull String tag) {
+        mailboxLock.lock();
+        try {
+            final ArrayDeque<Posted> values = mailbox.get(tag);
+            if (values == null) {
+                return null;
+            }
+            final Posted value = values.poll();
+            if (values.isEmpty()) {
+                mailbox.remove(tag);
+            }
+            return value;
+        } finally {
+            mailboxLock.unlock();
+        }
+    }
+
+    /**
+     * Stop the script and drop everything it holds: its variables, globals, stack and posted
+     * values. For scripts that are being thrown away, like when their plugin unloads, so they don't
+     * keep the plugin's objects alive. Call it while nothing is stepping the script.
+     */
+    public void release() {
+        halt();
+        awaiting = null;
+        symbolTable.clear();
+        declaredTypes.clear();
+        stack.clear();
+        mailboxLock.lock();
+        try {
+            mailbox.clear();
+        } finally {
+            mailboxLock.unlock();
+        }
+    }
+
+    /**
+     * Memory for a value, using the type of the value.
+     *
+     * @param value The value, which may be null.
+     * @return The memory.
+     */
+    private static MemoryItem memoryFor(Object value) {
+        return value == null ? new MemoryItem(Object.class, null) : new MemoryItem(value);
     }
 
     /**
@@ -241,7 +446,10 @@ public class ScriptRuntime {
             }
         }
 
-        if (reservedMethods(objectLocation, methodName, numParams, parameters)) {
+        // There is no target location if the result is not used
+        final boolean keepResult = i.targetLocation() != null;
+
+        if (reservedMethods(objectLocation, methodName, numParams, parameters, keepResult)) {
             return;
         }
 
@@ -264,14 +472,27 @@ public class ScriptRuntime {
                 return;
             }
 
-            Method[] methods = object.getClass().getMethods();
+            if ("getClass".equals(methodName) || ScriptRuntime.isReflective(object)) {
+                // Reflection would let scripts reach any class, past what the host gives them
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
+                        SafeResourceLoader.getString(
+                                "REFLECTION_BLOCKED", ScriptManager.getResourceBundle()),
+                        methodName);
+                halt();
+                return;
+            }
 
-            options = new ArrayList<>();
-
-            for (Method m : methods) {
-                if (m.getName().equals(methodName) && m.getParameterCount() == numParams) {
-                    options.add(m);
-                }
+            if (object instanceof HostClass host) {
+                // Static methods of a class, like Math.min
+                options = ScriptRuntime.staticMethods(host.type(), methodName, numParams);
+                object = null;
+            } else {
+                options =
+                        ScriptRuntime.accepting(
+                                object.getClass().getMethods(), methodName, numParams);
             }
             if (options.isEmpty()) {
                 ScriptDiagnostics.warnAt(
@@ -288,9 +509,6 @@ public class ScriptRuntime {
             options = ScriptManager.getMethods(methodName, numParams);
         }
 
-        // There is no target location if the result is not used
-        final boolean keepResult = i.targetLocation() != null;
-
         if (!this.call(options, parameters, object, keepResult)) {
             ScriptDiagnostics.warnAt(
                     log,
@@ -302,6 +520,105 @@ public class ScriptRuntime {
             halt();
         }
     }
+
+    /**
+     * Check if an object is part of reflection, like a class or a method, which scripts can't call
+     * methods on.
+     *
+     * @param object The object.
+     * @return True if it is reflective.
+     */
+    private static boolean isReflective(@NonNull Object object) {
+        if (object instanceof Class<?>
+                || object instanceof ClassLoader
+                || object instanceof Module
+                || object instanceof ModuleLayer
+                || object instanceof Package) {
+            return true;
+        }
+        final String packageName = object.getClass().getPackageName();
+        return "java.lang.reflect".equals(packageName) || "java.lang.invoke".equals(packageName);
+    }
+
+    /**
+     * Static methods that read system state, which scripts don't get even though their classes are
+     * otherwise available, like {@code Integer.getInteger} reading system properties.
+     */
+    private static final Set<String> HIDDEN_STATIC_METHODS =
+            Set.of("getInteger", "getLong", "getBoolean");
+
+    /**
+     * The methods that could take a number of parameters, either exactly or as variable arguments.
+     *
+     * @param methods The methods to pick from.
+     * @param name The method name.
+     * @param parameterCount The number of parameters.
+     * @return The methods that could be called.
+     */
+    private static List<Method> accepting(
+            @NonNull Method[] methods, @NonNull String name, int parameterCount) {
+        final List<Method> result = new ArrayList<>();
+        for (Method method : methods) {
+            if (method.getName().equals(name)
+                    && (method.getParameterCount() == parameterCount
+                            || (method.isVarArgs()
+                                    && parameterCount >= method.getParameterCount() - 1))) {
+                result.add(method);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * The public static methods of a class that could take a number of parameters.
+     *
+     * @param type The class.
+     * @param name The method name.
+     * @param parameterCount The number of parameters.
+     * @return The methods that could be called.
+     */
+    private static List<Method> staticMethods(
+            @NonNull Class<?> type, @NonNull String name, int parameterCount) {
+        final List<Method> result = new ArrayList<>();
+        for (Method method : ScriptRuntime.accepting(type.getMethods(), name, parameterCount)) {
+            final int modifiers = method.getModifiers();
+            final boolean hidden =
+                    "java.lang".equals(method.getDeclaringClass().getPackageName())
+                            && ScriptRuntime.HIDDEN_STATIC_METHODS.contains(name);
+            if (Modifier.isStatic(modifiers) && !hidden) {
+                result.add(method);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * A way of calling a method with the parameters we have.
+     *
+     * @param method The method.
+     * @param types The type each parameter is passed as, with variable arguments spread out.
+     * @param spread Whether the variable arguments are spread out, so they need to be collected
+     *     into an array.
+     */
+    private record Candidate(Method method, Class<?>[] types, boolean spread) {}
+
+    /**
+     * The order we look for a method in, like Java does: without variable arguments first, and only
+     * then with them. Passing a double as a float loses precision, so it is only considered when
+     * nothing else fits.
+     *
+     * @param spread Whether variable arguments are spread out.
+     * @param lossy Whether a double can be passed as a float.
+     */
+    private record Phase(boolean spread, boolean lossy) {}
+
+    /** The phases we look for methods in, in order. */
+    private static final List<Phase> PHASES =
+            List.of(
+                    new Phase(false, false),
+                    new Phase(false, true),
+                    new Phase(true, false),
+                    new Phase(true, true));
 
     /**
      * Actually try to execute the call.
@@ -318,48 +635,13 @@ public class ScriptRuntime {
             @NonNull List<MemoryItem> parameters,
             Object target,
             boolean keepResult) {
-        if (options.isEmpty()) {
-            return false;
-        }
-        List<Method> viableOptions = new ArrayList<>();
-        for (Method option : options) {
-            if (option.isBridge() || option.isSynthetic()) {
-                // Compiler generated duplicates of real methods
-                continue;
-            }
-            Class<?>[] params = option.getParameterTypes();
-            boolean viable = true;
-            for (int i = 0; i < params.length; ++i) {
-                viable = canAssign(params[i], parameters.get(i));
-                if (!viable) {
-                    break;
-                }
-            }
-            if (viable) {
-                viableOptions.add(option);
-            }
-        }
-
-        final Method mostSpecific = ScriptRuntime.mostSpecific(viableOptions);
-        if (mostSpecific == null) {
-            if (viableOptions.size() > 1) {
-                ScriptDiagnostics.warnAt(
-                        log,
-                        getCurrentLine(),
-                        -1,
-                        SafeResourceLoader.getString(
-                                "AMBIGUOUS_METHOD", ScriptManager.getResourceBundle()),
-                        viableOptions.get(0).getName(),
-                        viableOptions.toString());
-            }
+        final Candidate chosen = choose(options, parameters);
+        if (chosen == null) {
             return false;
         }
 
-        final Method option = mostSpecific;
-        Object[] actualParams = new Object[parameters.size()];
-        for (int i = 0; i < parameters.size(); ++i) {
-            actualParams[i] = parameters.get(i).value();
-        }
+        final Method option = ScriptRuntime.accessible(chosen.method(), target);
+        final Object[] actualParams = ScriptRuntime.arguments(chosen, parameters);
         try {
             Object result = option.invoke(target, actualParams);
             final Class<?> returnType = option.getReturnType();
@@ -371,7 +653,7 @@ public class ScriptRuntime {
                 if (result == null) {
                     stack.push(new MemoryItem(returnType, null));
                 } else {
-                    stack.push(new MemoryItem(result));
+                    stack.push(new MemoryItem(ScriptValues.normalize(result)));
                 }
             }
             return true;
@@ -385,9 +667,214 @@ public class ScriptRuntime {
                     -1,
                     SafeResourceLoader.getString(
                             "METHOD_CALL_FAILED", ScriptManager.getResourceBundle()),
-                    option.getName());
+                    option.getName(),
+                    ScriptRuntime.failureReason(e));
             return false;
         }
+    }
+
+    /**
+     * Why a method call failed, for messages: what the method threw, or the reflection problem.
+     *
+     * @param e The exception from invoking the method.
+     * @return The reason.
+     */
+    private static String failureReason(@NonNull Exception e) {
+        final Throwable cause =
+                e instanceof InvocationTargetException invocation ? invocation.getCause() : e;
+        return cause == null ? e.toString() : cause.toString();
+    }
+
+    /**
+     * Pick the method to call, the way Java picks between overloads.
+     *
+     * @param options The methods with the right name.
+     * @param parameters The parameters we have.
+     * @return The method and how to pass the parameters, or null if none fit or it's ambiguous.
+     */
+    private Candidate choose(@NonNull List<Method> options, @NonNull List<MemoryItem> parameters) {
+        for (Phase phase : ScriptRuntime.PHASES) {
+            final List<Candidate> viable = new ArrayList<>();
+            for (Method option : options) {
+                if (option.isBridge() || option.isSynthetic()) {
+                    // Compiler generated duplicates of real methods
+                    continue;
+                }
+                final Class<?>[] types =
+                        phase.spread()
+                                ? ScriptRuntime.spreadTypes(option, parameters.size())
+                                : ScriptRuntime.exactTypes(option, parameters.size());
+                if (types != null && ScriptRuntime.canAssignAll(types, parameters, phase.lossy())) {
+                    viable.add(new Candidate(option, types, phase.spread()));
+                }
+            }
+            if (viable.isEmpty()) {
+                continue;
+            }
+            final Candidate mostSpecific = ScriptRuntime.mostSpecific(viable);
+            if (mostSpecific == null) {
+                ScriptDiagnostics.warnAt(
+                        log,
+                        getCurrentLine(),
+                        -1,
+                        SafeResourceLoader.getString(
+                                "AMBIGUOUS_METHOD", ScriptManager.getResourceBundle()),
+                        viable.get(0).method().getName(),
+                        viable.stream().map(Candidate::method).toList().toString());
+            }
+            return mostSpecific;
+        }
+        return null;
+    }
+
+    /**
+     * The parameter types of a method, if it takes exactly this many parameters.
+     *
+     * @param method The method.
+     * @param count The number of parameters we have.
+     * @return The types, or null if the count is wrong.
+     */
+    private static Class<?>[] exactTypes(@NonNull Method method, int count) {
+        return method.getParameterCount() == count ? method.getParameterTypes() : null;
+    }
+
+    /**
+     * The parameter types of a variable argument method, with the variable arguments spread out to
+     * make up the count.
+     *
+     * @param method The method.
+     * @param count The number of parameters we have.
+     * @return The types, or null if the method doesn't take variable arguments or needs more
+     *     parameters.
+     */
+    private static @Nullable Class<?>[] spreadTypes(@NonNull Method method, int count) {
+        final int fixed = method.getParameterCount() - 1;
+        if (!method.isVarArgs() || count < fixed) {
+            return null;
+        }
+        final Class<?>[] declared = method.getParameterTypes();
+        final Class<?> component = declared[fixed].getComponentType();
+        final Class<?>[] types = new Class<?>[count];
+        for (int i = 0; i < count; ++i) {
+            types[i] = i < fixed ? declared[i] : component;
+        }
+        return types;
+    }
+
+    /**
+     * Check if every parameter could be passed as its type.
+     *
+     * @param types The types the parameters are passed as.
+     * @param parameters The parameters.
+     * @param lossy Whether a double can be passed as a float.
+     * @return True if they all fit.
+     */
+    private static boolean canAssignAll(
+            Class<?>[] types, List<MemoryItem> parameters, boolean lossy) {
+        for (int i = 0; i < types.length; ++i) {
+            if (!ScriptRuntime.canAssign(types[i], parameters.get(i), lossy)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Convert the parameters into what the method takes, collecting variable arguments into an
+     * array.
+     *
+     * @param chosen The method and how the parameters are passed.
+     * @param parameters The parameters.
+     * @return The arguments to invoke the method with.
+     */
+    private static Object[] arguments(
+            @NonNull Candidate chosen, @NonNull List<MemoryItem> parameters) {
+        final Class<?>[] types = chosen.types();
+        if (!chosen.spread()) {
+            final Object[] result = new Object[types.length];
+            for (int i = 0; i < types.length; ++i) {
+                result[i] = ScriptRuntime.coerce(types[i], parameters.get(i).value());
+            }
+            return result;
+        }
+        final int fixed = chosen.method().getParameterCount() - 1;
+        final Class<?> component = chosen.method().getParameterTypes()[fixed].getComponentType();
+        final Object[] result = new Object[fixed + 1];
+        for (int i = 0; i < fixed; ++i) {
+            result[i] = ScriptRuntime.coerce(types[i], parameters.get(i).value());
+        }
+        final Object rest = Array.newInstance(component, types.length - fixed);
+        for (int i = fixed; i < types.length; ++i) {
+            Array.set(rest, i - fixed, ScriptRuntime.coerce(component, parameters.get(i).value()));
+        }
+        result[fixed] = rest;
+        return result;
+    }
+
+    /**
+     * Convert a value to exactly the primitive type a parameter takes, like an int passed as a
+     * long. Values for reference types are left alone.
+     *
+     * @param type The parameter type.
+     * @param value The value.
+     * @return The converted value.
+     */
+    private static Object coerce(@NonNull Class<?> type, Object value) {
+        if (!type.isPrimitive() || value == null || type == boolean.class || type == char.class) {
+            return value;
+        }
+        final Number number =
+                value instanceof Character character ? Integer.valueOf(character) : (Number) value;
+        if (type == int.class) {
+            return number.intValue();
+        }
+        if (type == long.class) {
+            return number.longValue();
+        }
+        if (type == float.class) {
+            return number.floatValue();
+        }
+        if (type == double.class) {
+            return number.doubleValue();
+        }
+        return value;
+    }
+
+    /**
+     * Find a version of a method we are allowed to call. Methods of classes that aren't public,
+     * like the lists from {@code List.of}, are called through the public class or interface that
+     * declares them.
+     *
+     * @param method The method we found on the object's class.
+     * @param target The object, or null for static methods.
+     * @return A method we can call, or the original if there is nothing better.
+     */
+    private static Method accessible(@NonNull Method method, Object target) {
+        if (target == null || method.canAccess(target)) {
+            return method;
+        }
+        final ArrayDeque<Class<?>> types = new ArrayDeque<>();
+        final Set<Class<?>> seen = new HashSet<>();
+        types.add(target.getClass());
+        while (!types.isEmpty()) {
+            final Class<?> type = types.poll();
+            if (!seen.add(type)) {
+                continue;
+            }
+            try {
+                final Method found = type.getMethod(method.getName(), method.getParameterTypes());
+                if (found.canAccess(target)) {
+                    return found;
+                }
+            } catch (NoSuchMethodException e) {
+                // Not declared here, keep looking further up
+            }
+            if (type.getSuperclass() != null) {
+                types.add(type.getSuperclass());
+            }
+            types.addAll(List.of(type.getInterfaces()));
+        }
+        return method;
     }
 
     /**
@@ -398,22 +885,24 @@ public class ScriptRuntime {
      * @param options The methods we could call.
      * @return The most specific method, or null if there are no options or it's ambiguous.
      */
-    private static Method mostSpecific(@NonNull List<Method> options) {
-        for (Method candidate : options) {
+    private static Candidate mostSpecific(@NonNull List<Candidate> options) {
+        for (Candidate candidate : options) {
             boolean best = true;
-            for (Method other : options) {
-                if (other != candidate && !ScriptRuntime.isAtLeastAsSpecific(candidate, other)) {
+            for (Candidate other : options) {
+                if (other != candidate
+                        && !ScriptRuntime.isAtLeastAsSpecific(candidate.types(), other.types())) {
                     best = false;
                     break;
                 }
             }
             if (best) {
                 // Identical signatures are only possible across classes, which is ambiguous
-                for (Method other : options) {
+                for (Candidate other : options) {
                     if (other != candidate
-                            && ScriptRuntime.isAtLeastAsSpecific(other, candidate)
-                            && !other.getDeclaringClass()
-                                    .isAssignableFrom(candidate.getDeclaringClass())) {
+                            && ScriptRuntime.isAtLeastAsSpecific(other.types(), candidate.types())
+                            && !other.method()
+                                    .getDeclaringClass()
+                                    .isAssignableFrom(candidate.method().getDeclaringClass())) {
                         return null;
                     }
                 }
@@ -427,44 +916,62 @@ public class ScriptRuntime {
      * Convert a primitive class to its boxed equivalent.
      *
      * @param primitive The primitive class.
-     * @return The boxed class, or the original class if it is not one we handle.
+     * @return The boxed class, or the original class if it is not a primitive.
      */
     private static Class<?> box(Class<?> primitive) {
-        if (primitive == int.class) {
-            return Integer.class;
+        if (!primitive.isPrimitive()) {
+            return primitive;
         }
-        if (primitive == double.class) {
-            return Double.class;
+        return MethodType.methodType(primitive).wrap().returnType();
+    }
+
+    /**
+     * Convert a boxed class to its primitive equivalent.
+     *
+     * @param boxed The boxed class.
+     * @return The primitive class, or null if it is not a boxed primitive.
+     */
+    private static Class<?> unbox(Class<?> boxed) {
+        final Class<?> primitive = MethodType.methodType(boxed).unwrap().returnType();
+        return primitive.isPrimitive() ? primitive : null;
+    }
+
+    /**
+     * Check if Java would widen one primitive type to another without losing information, like an
+     * int to a long.
+     *
+     * @param from The type we have.
+     * @param to The type we want.
+     * @return True if it widens.
+     */
+    private static boolean widens(Class<?> from, Class<?> to) {
+        if (from == char.class || from == int.class) {
+            return (from == char.class && to == int.class)
+                    || to == long.class
+                    || to == float.class
+                    || to == double.class;
         }
-        if (primitive == char.class) {
-            return Character.class;
+        if (from == long.class) {
+            return to == float.class || to == double.class;
         }
-        if (primitive == boolean.class) {
-            return Boolean.class;
-        }
-        return primitive;
+        return from == float.class && to == double.class;
     }
 
     /**
      * Check if every parameter of the first method could be passed to the second method.
      *
-     * @param first The method we think might be more specific.
-     * @param second The method to compare against.
+     * @param firstParams The parameter types of the method we think might be more specific.
+     * @param secondParams The parameter types of the method to compare against.
      * @return True if the first is at least as specific as the second.
      */
-    private static boolean isAtLeastAsSpecific(Method first, Method second) {
-        Class<?>[] firstParams = first.getParameterTypes();
-        Class<?>[] secondParams = second.getParameterTypes();
+    private static boolean isAtLeastAsSpecific(Class<?>[] firstParams, Class<?>[] secondParams) {
         for (int i = 0; i < firstParams.length; ++i) {
             final Class<?> from = firstParams[i];
             final Class<?> to = secondParams[i];
-            final boolean widens =
-                    (to == double.class && (from == int.class || from == char.class))
-                            || (to == int.class && from == char.class);
             // A primitive can be boxed to pass it to a reference, like int to Object
             final boolean boxes =
                     from.isPrimitive() && to.isAssignableFrom(ScriptRuntime.box(from));
-            if (!to.isAssignableFrom(from) && !widens && !boxes) {
+            if (!to.isAssignableFrom(from) && !ScriptRuntime.widens(from, to) && !boxes) {
                 return false;
             }
         }
@@ -477,9 +984,10 @@ public class ScriptRuntime {
      *
      * @param expected The expected type.
      * @param actual The actual parameter we have.
+     * @param lossy Whether a double can be passed as a float.
      * @return Whether this is a reasonable match.
      */
-    private boolean canAssign(Class<?> expected, MemoryItem actual) {
+    private static boolean canAssign(Class<?> expected, MemoryItem actual, boolean lossy) {
         final Object value = actual.value();
         if (value == null) {
             // Null can be passed to anything but primitives
@@ -488,15 +996,13 @@ public class ScriptRuntime {
         // The value is more accurate than the type stored in memory
         final Class<?> actualType = value.getClass();
         if (expected.isPrimitive()) {
-            // Includes widening primitive conversions, which reflection handles for us
-            return ((expected == int.class
-                            && (actualType == Integer.class || actualType == Character.class))
-                    || (expected == double.class
-                            && (actualType == Double.class
-                                    || actualType == Integer.class
-                                    || actualType == Character.class))
-                    || (expected == boolean.class && actualType == Boolean.class)
-                    || (expected == char.class && actualType == Character.class));
+            final Class<?> from = ScriptRuntime.unbox(actualType);
+            if (from == null) {
+                return false;
+            }
+            return from == expected
+                    || ScriptRuntime.widens(from, expected)
+                    || (lossy && from == double.class && expected == float.class);
         }
         return expected.isAssignableFrom(actualType);
     }
@@ -1694,6 +2200,41 @@ public class ScriptRuntime {
     }
 
     /**
+     * Handle the reserved {@code await(tag)} method: yield until something resumes the script with
+     * the tag, and return the value it was resumed with. If a value was already posted for the tag,
+     * continue straight away with it.
+     *
+     * @param tag The tag, which has to be a string.
+     * @param keepResult Whether the value is used, so it has to be pushed.
+     */
+    private void awaitTag(Object tag, boolean keepResult) {
+        if (!(tag instanceof String text)) {
+            ScriptDiagnostics.warnAt(
+                    log,
+                    getCurrentLine(),
+                    -1,
+                    SafeResourceLoader.getString(
+                            "AWAIT_PARAMETER", ScriptManager.getResourceBundle()));
+            halt();
+            return;
+        }
+        final Posted posted = takePosted(text);
+        if (posted != null) {
+            if (keepResult) {
+                stack.push(ScriptRuntime.memoryFor(ScriptValues.normalize(posted.value())));
+            }
+            return;
+        }
+        awaiting = new Await(text, keepResult);
+        final YieldHandler yielder = yieldHandler;
+        if (yielder != null) {
+            yielder.onYield(this, text);
+        } else {
+            ScriptManager.yieldScript(this, text);
+        }
+    }
+
+    /**
      * Check for reserved methods that require special handling.
      *
      * @param objectLocation The memory area that the object we might be calling methods on is
@@ -1701,6 +2242,7 @@ public class ScriptRuntime {
      * @param methodName The name of the method.
      * @param numParams The number of parameters.
      * @param parameters The actual list of parameters to be passed.
+     * @param keepResult Whether the call's result is used.
      * @return Whether we should stop executing methods. False if we didn't match a reserved method
      *     and should keep looking.
      */
@@ -1708,7 +2250,12 @@ public class ScriptRuntime {
             final MemArea objectLocation,
             final String methodName,
             final int numParams,
-            List<MemoryItem> parameters) {
+            List<MemoryItem> parameters,
+            boolean keepResult) {
+        if (objectLocation == MemArea.IMMEDIATE && "await".equals(methodName) && numParams == 1) {
+            awaitTag(parameters.get(0).value(), keepResult);
+            return true;
+        }
         if (objectLocation == MemArea.IMMEDIATE
                 && "breakpoint".equals(methodName)
                 && numParams == 0) {
@@ -1757,12 +2304,42 @@ public class ScriptRuntime {
         storeValue(result, instruction.targetLocation());
     }
 
+    /**
+     * The script being stepped on this thread, so host methods can tell which script called them.
+     */
+    private static final ThreadLocal<ScriptRuntime> CURRENT = new ThreadLocal<>();
+
+    /**
+     * The script whose instruction is running on this thread, for host methods that need to know
+     * which script called them, like one that should resume the caller later.
+     *
+     * @return The calling script, or empty if no script is running on this thread.
+     */
+    public static Optional<ScriptRuntime> current() {
+        return Optional.ofNullable(CURRENT.get());
+    }
+
     /** Execute one instruction. */
     public synchronized void step() {
         if (fatalError || (programCounter < 0) || (programCounter >= instructions.size())) {
             // Stop executing
             return;
         }
+        final ScriptRuntime previous = CURRENT.get();
+        CURRENT.set(this);
+        try {
+            stepCurrent();
+        } finally {
+            if (previous == null) {
+                CURRENT.remove();
+            } else {
+                CURRENT.set(previous);
+            }
+        }
+    }
+
+    /** Execute one instruction, as the current script. */
+    private void stepCurrent() {
         final Instruction original = patchedInstructions.get(programCounter);
         if (original != null) {
             if (resumingFromBreakpoint) {
@@ -1782,7 +2359,7 @@ public class ScriptRuntime {
     /**
      * Store a value in the specified memory location. May halt the program if something goes wrong.
      *
-     * @param item The item to store.
+     * @param originalItem The item to store.
      * @param location The location to store the item in.
      */
     private void storeValue(MemoryItem originalItem, MemLocation location) {

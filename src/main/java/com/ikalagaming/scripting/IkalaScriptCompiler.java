@@ -18,8 +18,11 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.TokenStream;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Handle transforming a script into something that can execute.
@@ -59,10 +62,23 @@ public class IkalaScriptCompiler {
      * @return The results of compiling.
      */
     public static CompileResult compile(@NonNull CharStream input) {
+        return compile(input, Set.of());
+    }
+
+    /**
+     * Compile a script that uses globals the host provides, collecting the syntax tree and any
+     * problems. Problems are still logged. The runtime needs a value for each global before it
+     * runs, see {@link ScriptRuntime#setGlobal(String, Object)}.
+     *
+     * @param input The input stream.
+     * @param globals The names of the globals, like {@code ui} or {@code Math}.
+     * @return The results of compiling.
+     */
+    public static CompileResult compile(@NonNull CharStream input, @NonNull Set<String> globals) {
         final List<ScriptDiagnostics.Diagnostic> errors = new ArrayList<>();
         final CompilationUnit[] tree = new CompilationUnit[1];
         final Optional<ScriptRuntime> runtime =
-                ScriptDiagnostics.collect(errors, () -> compile(input, tree, errors));
+                ScriptDiagnostics.collect(errors, () -> compile(input, globals, tree, errors));
         return new CompileResult(runtime, tree[0], List.copyOf(errors));
     }
 
@@ -70,12 +86,14 @@ public class IkalaScriptCompiler {
      * Compile a script, storing the syntax tree as soon as it's created.
      *
      * @param input The input stream.
+     * @param globals The names of the globals the host provides.
      * @param tree A single element array to store the tree in.
      * @param errors Errors reported so far, used to explain failures that didn't report anything.
      * @return The runtime if compiling succeeded.
      */
     private static Optional<ScriptRuntime> compile(
             @NonNull CharStream input,
+            @NonNull Set<String> globals,
             CompilationUnit @NonNull [] tree,
             List<ScriptDiagnostics.Diagnostic> errors) {
         // Generate parse tree
@@ -109,11 +127,11 @@ public class IkalaScriptCompiler {
 
         // Clean up types
         TypePreprocessor processor = new TypePreprocessor();
-        processor.processTreeTypes(ast);
+        processor.processTreeTypes(ast, globals);
 
         // Validate the tree
         TreeValidator validator = new TreeValidator();
-        if (!validator.validate(ast)) {
+        if (!validator.validate(ast, globals)) {
             return failed(errors, "COMPILE_FAILED_VALIDATION");
         }
 
@@ -129,8 +147,10 @@ public class IkalaScriptCompiler {
         InstructionGenerator gen = new InstructionGenerator();
         List<Instruction> instructions = gen.process(ast);
 
-        // Convert to a runtime
-        return Optional.of(new ScriptRuntime(instructions));
+        // Convert to a runtime, which can start at labels that skip no declarations
+        Map<String, Integer> entryPoints = new HashMap<>(gen.getScriptLabels());
+        entryPoints.keySet().retainAll(validator.getEntryLabels());
+        return Optional.of(new ScriptRuntime(instructions, entryPoints));
     }
 
     /**

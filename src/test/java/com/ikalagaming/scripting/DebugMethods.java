@@ -203,6 +203,15 @@ public class DebugMethods {
     }
 
     /**
+     * Fetches a class object, as a host might hand one out by accident.
+     *
+     * @return A class.
+     */
+    public static Object TEST_getClassObject() {
+        return String.class;
+    }
+
+    /**
      * Records that it was called, used to check whether expressions with side effects are
      * evaluated.
      *

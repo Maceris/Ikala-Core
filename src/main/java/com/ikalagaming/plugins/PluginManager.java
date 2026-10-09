@@ -10,6 +10,7 @@ import com.ikalagaming.plugins.events.PluginDisabled;
 import com.ikalagaming.plugins.events.PluginEnabled;
 import com.ikalagaming.plugins.events.PluginLoaded;
 import com.ikalagaming.plugins.events.PluginUnloaded;
+import com.ikalagaming.scripting.ScriptManager;
 import com.ikalagaming.util.SafeResourceLoader;
 
 import com.github.zafarkhaja.semver.Version;
@@ -2143,6 +2144,8 @@ public class PluginManager {
      */
     private boolean unloadSingle(@NonNull final String toUnload) {
         logAlert("ALERT_UNLOADING", toUnload);
+        // Stop its scripts first, so none call into it while it shuts down
+        ScriptManager.terminateAllOwnedBy(toUnload);
 
         PluginDetails details = pluginDetails.get(toUnload);
 

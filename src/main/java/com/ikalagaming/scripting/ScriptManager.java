@@ -8,22 +8,28 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Handles scripting.
@@ -60,7 +66,59 @@ public class ScriptManager {
     private static ScriptRunner runner;
 
     /**
-     * Fetch a list of registered methods with the given name and parameter count.
+     * Classes every script can call static methods on, by their simple name. Only classes that
+     * can't reach the system, like files, threads or reflection, are included.
+     */
+    private static final Map<String, HostClass> STANDARD_CLASSES =
+            Map.ofEntries(
+                    Map.entry("Math", HostClass.of(Math.class)),
+                    Map.entry("Integer", HostClass.of(Integer.class)),
+                    Map.entry("Double", HostClass.of(Double.class)),
+                    Map.entry("Boolean", HostClass.of(Boolean.class)),
+                    Map.entry("Character", HostClass.of(Character.class)),
+                    Map.entry("String", HostClass.of(String.class)),
+                    Map.entry("Objects", HostClass.of(Objects.class)),
+                    Map.entry("List", HostClass.of(List.class)),
+                    Map.entry("Map", HostClass.of(Map.class)),
+                    Map.entry("Set", HostClass.of(Set.class)),
+                    Map.entry("Collections", HostClass.of(Collections.class)));
+
+    /**
+     * Gives each script its value of a global.
+     *
+     * @param owner The plugin that registered the global, which may be null.
+     * @param provider Makes the value for a script, given the plugin that owns the script, which
+     *     may be null.
+     */
+    private record GlobalProvider(String owner, @NonNull Function<String, Object> provider) {}
+
+    /** Globals that plugins provide to every script, by name. */
+    private static final Map<String, GlobalProvider> globalProviders = new ConcurrentHashMap<>();
+
+    /**
+     * A compiled script file.
+     *
+     * @param path The file.
+     * @param globals The globals it was compiled with.
+     */
+    private record CompiledKey(@NonNull Path path, @NonNull Set<String> globals) {}
+
+    /**
+     * A compiled script file, kept until the file changes.
+     *
+     * @param modified When the file was last modified when it was compiled.
+     * @param program The compiled program, which is copied for each run and never run itself.
+     * @param owner The plugin that last ran it, so it is dropped when the plugin unloads.
+     */
+    private record Compiled(
+            @NonNull FileTime modified, @NonNull ScriptRuntime program, String owner) {}
+
+    /** Compiled script files. */
+    private static final Map<CompiledKey, Compiled> compiledFiles = new ConcurrentHashMap<>();
+
+    /**
+     * Fetch a list of registered methods with the given name that can take the parameter count,
+     * either exactly or through variable arguments.
      *
      * @param name The name of the method.
      * @param parameterCount The number of parameters.
@@ -71,8 +129,11 @@ public class ScriptManager {
         Set<Method> methods = new LinkedHashSet<>();
         synchronized (ScriptManager.registeredMethods) {
             for (var entry : ScriptManager.registeredMethods.entrySet()) {
-                if (!name.equals(entry.getKey().name())
-                        || (parameterCount != entry.getKey().parameterTypes().size())) {
+                final int declared = entry.getKey().parameterTypes().size();
+                final boolean countFits =
+                        parameterCount == declared
+                                || (entry.getValue().isVarArgs() && parameterCount >= declared - 1);
+                if (!name.equals(entry.getKey().name()) || !countFits) {
                     continue;
                 }
                 methods.add(entry.getValue());
@@ -106,6 +167,180 @@ public class ScriptManager {
             ScriptManager.registeredMethods.put(registration, method);
         }
         ScriptManager.classMethods.put(clazz, List.copyOf(funcs));
+    }
+
+    /**
+     * Provide a global to every script started from now on, like {@code ui}. Each script gets the
+     * value the provider makes for the plugin that owns the script, so plugins don't share objects.
+     * The global is removed when its owner unloads.
+     *
+     * @param name The name scripts use.
+     * @param owner The plugin providing it, which may be null if it is never removed.
+     * @param provider Makes the value for a script, given the plugin that owns the script, which
+     *     may be null.
+     * @throws IllegalArgumentException If the name is already a global.
+     */
+    public static void registerGlobal(
+            @NonNull String name, String owner, @NonNull Function<String, Object> provider) {
+        if (STANDARD_CLASSES.containsKey(name)
+                || globalProviders.putIfAbsent(name, new GlobalProvider(owner, provider)) != null) {
+            throw new IllegalArgumentException(
+                    SafeResourceLoader.getString(
+                                    "GLOBAL_ALREADY_REGISTERED", ScriptManager.getResourceBundle())
+                            .replace("{}", name));
+        }
+    }
+
+    /**
+     * Stop providing a global. Scripts that already have it keep it.
+     *
+     * @param name The name of the global.
+     */
+    public static void unregisterGlobal(@NonNull String name) {
+        globalProviders.remove(name);
+    }
+
+    /**
+     * The globals a script owned by a plugin gets: the standard classes, then provided globals.
+     *
+     * @param owner The plugin that owns the script, which may be null.
+     * @return The globals by name, in a new map the caller can change.
+     */
+    public static Map<String, Object> globalsFor(String owner) {
+        final Map<String, Object> globals = new LinkedHashMap<>(STANDARD_CLASSES);
+        globalProviders.forEach(
+                (name, global) -> globals.put(name, global.provider().apply(owner)));
+        return globals;
+    }
+
+    /**
+     * Compile and start a script. It runs on the script thread, which also runs everything it
+     * calls.
+     *
+     * @param launch What to run.
+     * @return The running script, or empty if it failed to compile or the entry label isn't valid.
+     *     Problems are logged.
+     */
+    @Synchronized
+    public static Optional<ScriptRuntime> start(@NonNull ScriptLaunch launch) {
+        final Map<String, Object> globals = ScriptManager.globalsFor(launch.getOwner());
+        globals.putAll(launch.getGlobals());
+
+        final Optional<ScriptRuntime> program = ScriptManager.compile(launch, globals.keySet());
+        if (program.isEmpty()) {
+            return Optional.empty();
+        }
+        final ScriptRuntime runtime = program.get().copyProgram();
+        runtime.setName(launch.getName());
+        runtime.setOwner(launch.getOwner());
+        globals.forEach(runtime::setGlobal);
+        final String label = launch.getEntryLabel();
+        if (label != null && !runtime.startAt(label)) {
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "UNKNOWN_ENTRY_LABEL", ScriptManager.getResourceBundle()),
+                    label,
+                    runtime.getDisplayName());
+            return Optional.empty();
+        }
+
+        if (ScriptManager.runner == null) {
+            ScriptManager.runner = new ScriptRunner();
+            ScriptManager.runner.start();
+        }
+        ScriptManager.runner.runScript(runtime);
+        return Optional.of(runtime);
+    }
+
+    /**
+     * Compile a launch's script, using the cache for files.
+     *
+     * @param launch What to compile.
+     * @param globals The names of the globals.
+     * @return The compiled program, or empty if it failed.
+     */
+    private static Optional<ScriptRuntime> compile(
+            @NonNull ScriptLaunch launch, @NonNull Set<String> globals) {
+        if (launch.getFile() == null) {
+            return IkalaScriptCompiler.compile(CharStreams.fromString(launch.getSource()), globals)
+                    .runtime();
+        }
+        final Path path = launch.getFile().toAbsolutePath().normalize();
+        try {
+            final FileTime modified = Files.getLastModifiedTime(path);
+            final CompiledKey key = new CompiledKey(path, Set.copyOf(globals));
+            final Compiled cached = compiledFiles.get(key);
+            if (cached != null && cached.modified().equals(modified)) {
+                return Optional.of(cached.program());
+            }
+            final Optional<ScriptRuntime> program =
+                    IkalaScriptCompiler.compile(CharStreams.fromPath(path), globals).runtime();
+            program.ifPresent(
+                    compiled ->
+                            compiledFiles.put(
+                                    key, new Compiled(modified, compiled, launch.getOwner())));
+            return program;
+        } catch (IOException e) {
+            log.warn(
+                    SafeResourceLoader.getString(
+                            "FILE_READ_ERROR", ScriptManager.getResourceBundle()),
+                    path);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Stop every script a plugin owns, drop what they hold, and remove the globals it provides.
+     * Called when the plugin unloads.
+     *
+     * @param owner The plugin.
+     */
+    public static void terminateAllOwnedBy(@NonNull String owner) {
+        globalProviders.values().removeIf(global -> owner.equals(global.owner()));
+        compiledFiles.values().removeIf(compiled -> owner.equals(compiled.owner()));
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            final int stopped = currentRunner.terminateAllOwnedBy(owner);
+            if (stopped > 0) {
+                log.debug(
+                        SafeResourceLoader.getString(
+                                "TERMINATED_OWNED_SCRIPTS", ScriptManager.getResourceBundle()),
+                        stopped,
+                        owner);
+            }
+        }
+    }
+
+    /**
+     * Resume one script waiting on a tag, with the value its await returns. If it hasn't reached
+     * the await yet, the value is kept and the await returns it straight away, so a resume can't be
+     * missed by arriving early.
+     *
+     * @param runtime The script.
+     * @param tag The tag it awaits.
+     * @param value The value the await returns.
+     */
+    public static void resume(@NonNull ScriptRuntime runtime, @NonNull String tag, Object value) {
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            currentRunner.requestResume(runtime, tag, value);
+        } else {
+            runtime.post(tag, value);
+        }
+    }
+
+    /**
+     * Resume any scripts that were halted using the supplied tag, with the value their awaits
+     * return. Scripts that aren't waiting yet miss it.
+     *
+     * @param tag The tag to resume.
+     * @param value The value awaits on the tag return.
+     */
+    public static void resume(@NonNull String tag, Object value) {
+        final ScriptRunner currentRunner = ScriptManager.runner;
+        if (currentRunner != null) {
+            currentRunner.requestResume(tag, value);
+        }
     }
 
     /**
@@ -168,28 +403,6 @@ public class ScriptManager {
     }
 
     /**
-     * Actually run the script. Will start up a new thread if one does not exist.
-     *
-     * @param stream The stream to pass to the lexer.
-     * @param name The name of the script, which may be null.
-     * @return Whether we actually got back a program.
-     */
-    @Synchronized
-    private static boolean runScript(@NonNull CharStream stream, String name) {
-        if (ScriptManager.runner == null) {
-            ScriptManager.runner = new ScriptRunner();
-            ScriptManager.runner.start();
-        }
-        Optional<ScriptRuntime> maybeScript = IkalaScriptCompiler.parse(stream);
-        if (maybeScript.isEmpty()) {
-            return false;
-        }
-        maybeScript.get().setName(name);
-        ScriptManager.runner.runScript(maybeScript.get());
-        return true;
-    }
-
-    /**
      * Execute a script as as string.
      *
      * @param script The file containing the script.
@@ -200,18 +413,7 @@ public class ScriptManager {
         if (!script.exists() || !script.canRead()) {
             return false;
         }
-
-        CharStream stream;
-        try {
-            stream = CharStreams.fromPath(script.toPath());
-        } catch (IOException e) {
-            log.warn(
-                    SafeResourceLoader.getString(
-                            "FILE_READ_ERROR", ScriptManager.getResourceBundle()),
-                    script.getAbsolutePath());
-            return false;
-        }
-        return ScriptManager.runScript(stream, script.getName());
+        return ScriptManager.start(ScriptLaunch.file(script.toPath())).isPresent();
     }
 
     /**
@@ -232,8 +434,7 @@ public class ScriptManager {
      * @return Whether we successfully parsed and started to run the script.
      */
     public static boolean runScript(@NonNull String script, String name) {
-        CharStream stream = CharStreams.fromString(script);
-        return ScriptManager.runScript(stream, name);
+        return ScriptManager.start(ScriptLaunch.source(script).name(name)).isPresent();
     }
 
     /**

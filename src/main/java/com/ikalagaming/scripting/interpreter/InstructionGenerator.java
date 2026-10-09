@@ -80,6 +80,22 @@ public class InstructionGenerator implements ASTVisitor {
     private int currentLine = -1;
 
     /**
+     * Where each label written in the script ended up, by instruction index, after the last call to
+     * {@link #process(CompilationUnit)}. Labels generated for loops and conditionals are left out.
+     */
+    private Map<String, Integer> scriptLabels = Map.of();
+
+    /**
+     * Where each label written in the script ended up, after the last call to {@link
+     * #process(CompilationUnit)}. Labels generated for loops and conditionals are left out.
+     *
+     * @return The instruction index of each label.
+     */
+    public Map<String, Integer> getScriptLabels() {
+        return scriptLabels;
+    }
+
+    /**
      * Evaluate a condition and emit a jump that depends on the result. Comparisons are turned into
      * a comparison followed by the matching conditional jump, anything else is evaluated to a
      * boolean on the stack and compared to true.
@@ -777,6 +793,16 @@ public class InstructionGenerator implements ASTVisitor {
             }
             currentLabels.clear();
         }
+
+        // Generated labels start with a dot, which a label in the script can't
+        Map<String, Integer> written = new HashMap<>();
+        labelLocations.forEach(
+                (label, location) -> {
+                    if (!label.startsWith(".")) {
+                        written.put(label, location);
+                    }
+                });
+        scriptLabels = Map.copyOf(written);
 
         // Replace jumps label field with relative locations
         for (int i = 0; i < result.size(); ++i) {

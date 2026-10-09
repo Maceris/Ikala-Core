@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Set;
 
 /**
  * Processes the types for the tree, updating nodes if we can determine what they are based on their
@@ -40,6 +41,9 @@ public class TypePreprocessor implements ASTVisitor {
      * while still using the standard visitor pattern.
      */
     private Deque<VariableTypeMap> variableMaps = new ArrayDeque<>();
+
+    /** The type name globals have. They are objects, like any other identifier type. */
+    private static final String GLOBAL_TYPE = "Object";
 
     /**
      * Calculate the types for addition, subtraction, division, multiplication.
@@ -154,8 +158,23 @@ public class TypePreprocessor implements ASTVisitor {
      * @param ast The tree to process.
      */
     public void processTreeTypes(@NonNull CompilationUnit ast) {
+        processTreeTypes(ast, Set.of());
+    }
+
+    /**
+     * Process the types for the tree, with globals the host provides. Globals are objects, defined
+     * before anything in the script, so the script can't declare variables or labels with the same
+     * names. Intended for use only on the root node.
+     *
+     * @param ast The tree to process.
+     * @param globals The names of the globals.
+     */
+    public void processTreeTypes(@NonNull CompilationUnit ast, @NonNull Set<String> globals) {
         VariableTypeMap variables = new VariableTypeMap();
         variableMaps.clear();
+        for (String global : globals) {
+            variables.put(global, Type.identifier(TypePreprocessor.GLOBAL_TYPE));
+        }
 
         variableMaps.push(variables);
         LabelPass labels = new LabelPass(variables);
