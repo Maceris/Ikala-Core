@@ -16,21 +16,55 @@ public class EventManager {
 
     private static EventManager instance;
 
+    /** Whether the static instance is being destroyed, so it isn't destroyed twice. */
+    private static boolean destroying;
+
     /**
      * Shuts down the static instance if it exists, and then nullifies the reference to it. This
      * exists in case you wish to use your own instances of the Event Manager and not use the single
      * static instance provided. If the instance does not exist, nothing happens. Note that a new
      * static instance may be created if the instance is requested later.
      *
+     * <p>The shutdown waits for the dispatcher to finish the event it is handling, without holding
+     * the lock {@link #getInstance()} uses. Handlers that ask for the instance meanwhile get the
+     * one shutting down, instead of waiting forever on the thread that is waiting for them.
+     *
      * @see EventManager#getInstance()
      */
-    @Synchronized
     public static void destroyInstance() {
-        if (EventManager.instance == null) {
+        final EventManager toDestroy = EventManager.beginDestroying();
+        if (toDestroy == null) {
             return;
         }
-        EventManager.instance.shutdown();
-        EventManager.instance = null;
+        toDestroy.shutdown();
+        EventManager.finishDestroying(toDestroy);
+    }
+
+    /**
+     * Start destroying the static instance.
+     *
+     * @return The instance to shut down, or null if there is none or it is already being destroyed.
+     */
+    @Synchronized
+    private static EventManager beginDestroying() {
+        if (EventManager.instance == null || EventManager.destroying) {
+            return null;
+        }
+        EventManager.destroying = true;
+        return EventManager.instance;
+    }
+
+    /**
+     * Finish destroying the static instance, once it has shut down.
+     *
+     * @param destroyed The instance that was shut down.
+     */
+    @Synchronized
+    private static void finishDestroying(@NonNull EventManager destroyed) {
+        if (EventManager.instance == destroyed) {
+            EventManager.instance = null;
+        }
+        EventManager.destroying = false;
     }
 
     /**

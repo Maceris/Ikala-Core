@@ -69,6 +69,9 @@ public class PluginManager {
 
     private static PluginManager instance;
 
+    /** Whether the static instance is being destroyed, so it isn't destroyed twice. */
+    private static boolean destroying;
+
     private static final String PLUGIN_CONFIG_FILENAME = "plugin.yml";
 
     /**
@@ -106,15 +109,58 @@ public class PluginManager {
      * exist, nothing happens. Note that a new static instance may be created if the instance is
      * requested later.
      *
+     * <p>Shutting down unloads plugins, whose events are handled on the event thread, so it doesn't
+     * hold the lock {@link #getInstance()} uses. Handlers that ask for the instance meanwhile get
+     * the one shutting down.
+     *
      * @see #getInstance()
      */
-    @Synchronized
     public static void destroyInstance() {
-        if (PluginManager.instance == null) {
+        final PluginManager toDestroy = PluginManager.beginDestroying();
+        if (toDestroy == null) {
             return;
         }
-        PluginManager.instance.shutdown();
-        PluginManager.instance = null;
+        toDestroy.shutdown();
+        PluginManager.finishDestroying(toDestroy);
+    }
+
+    /**
+     * Start destroying the static instance.
+     *
+     * @return The instance to shut down, or null if there is none or it is already being destroyed.
+     */
+    @Synchronized
+    private static PluginManager beginDestroying() {
+        if (PluginManager.instance == null || PluginManager.destroying) {
+            return null;
+        }
+        PluginManager.destroying = true;
+        return PluginManager.instance;
+    }
+
+    /**
+     * Finish destroying the static instance, once it has shut down.
+     *
+     * @param destroyed The instance that was shut down.
+     */
+    @Synchronized
+    private static void finishDestroying(@NonNull PluginManager destroyed) {
+        if (PluginManager.instance == destroyed) {
+            PluginManager.instance = null;
+        }
+        PluginManager.destroying = false;
+    }
+
+    /**
+     * The static instance of the plugin manager, without creating one. For code that runs while
+     * shutting down, like event handlers, which shouldn't start a new plugin manager once the old
+     * one is gone.
+     *
+     * @return The instance, or empty if there is none.
+     */
+    @Synchronized
+    public static Optional<PluginManager> getExistingInstance() {
+        return Optional.ofNullable(PluginManager.instance);
     }
 
     /**
