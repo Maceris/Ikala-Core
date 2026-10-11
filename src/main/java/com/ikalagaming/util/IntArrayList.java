@@ -188,6 +188,15 @@ public class IntArrayList extends AbstractList<Integer>
     }
 
     /**
+     * Copy the values into a new primitive array, without boxing.
+     *
+     * @return The values, in order.
+     */
+    public int @NonNull [] toIntArray() {
+        return Arrays.copyOf(contents, size);
+    }
+
+    /**
      * Unsupported.
      *
      * @throws UnsupportedOperationException when called.
