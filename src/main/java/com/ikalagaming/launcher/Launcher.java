@@ -117,19 +117,27 @@ public class Launcher {
      * @param args Arguments to the program from command line.
      */
     public static void main(String[] args) {
+        log.trace("Starting application");
         if (!Launcher.processArguments(args)) {
             return;
         }
+        log.trace("Processed arguments");
         Launcher.setupMainFolders();
+        log.trace("Processed main folders");
         Launcher.initialize();
+        log.trace("Initialized globals");
         PluginManager.getInstance().setCommandLine(true);
         PluginManager.getInstance()
                 .loadAllLibraries(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
+        log.trace("Loaded libraries");
         PluginManager.getInstance()
                 .loadAllPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
         new AllPluginsEnabled().fire();
+        log.trace("Loaded plugins");
         Launcher.setupPluginFolders();
+        log.trace("Set up plugin folders");
         Launcher.setupPluginConfigs();
+        log.trace("Set up plugin configs");
 
         Launcher.stopCommand =
                 SafeResourceLoader.getString("STOP_COMMAND", Launcher.bundle, "stop");

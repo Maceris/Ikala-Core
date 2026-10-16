@@ -23,6 +23,23 @@ the scripts will need to be regenerated like
 java -jar antlr-4.13.2-complete.jar -Dlanguage=Java IkalaScriptLexer.g4 IkalaScriptParser.g4
 ```
 
+# Running
+
+The project can be run like this: `java -jar Ikala-Core-1.0.0.jar <arguments>` (where 1.0.0 is your jar version).
+See `--help` for more arguments after the jar.
+
+## System properties
+
+These are set with `-D` before `-jar`, for example
+`java -Dikala.logLevel=TRACE -Dikala.plugins.loadOrderSeed=12345 -jar Ikala-Core-1.0.0.jar`.
+
+| Property                      | Default | What it does                                                                                                                                                                                                                                                                                                                                                                                                         |
+|-------------------------------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ikala.logLevel`              | `DEBUG` | The log level for `com.ikalagaming` loggers, such as `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR` or `OFF`. Other libraries' log levels aren't affected. Read by `log4j2.xml` at startup, so it applies from the first log line.                                                                                                                                                                                        |
+| `ikala.plugins.loadOrderSeed` | random  | The seed used to shuffle the order plugins load in (dependencies still load before the plugins that need them), so no plugin can rely on an order by accident. Each run logs its seed at the debug level, as `Shuffling plugin load order with seed ...`; pass that seed back to reproduce a problem that only happens in that order. It must be a whole number; anything else is ignored and a random seed is used. |
+
+The `plugins` and `libs` folders are found in the working directory (the standard `user.dir` property), so run the jar from the folder that holds them.
+
 # Editing
 To set up a project for Eclipse you can run `./gradlew eclipse`, or for IntelliJ you can run `./gradlew idea`.
 
