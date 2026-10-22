@@ -232,7 +232,7 @@ public class IntArrayList extends AbstractList<Integer>
         return oldValue;
     }
 
-    private void add(Integer e, int[] data, int s) {
+    private void add(int e, int[] data, int s) {
         if (s == data.length) {
             data = grow();
         }

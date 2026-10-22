@@ -223,7 +223,7 @@ public class FloatArrayList extends AbstractList<Float>
         return oldValue;
     }
 
-    private void add(Float e, float[] data, int s) {
+    private void add(float e, float[] data, int s) {
         if (s == data.length) {
             data = grow();
         }
