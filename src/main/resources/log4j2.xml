@@ -19,19 +19,28 @@
 			</Policies>
 			<DefaultRolloverStrategy max="5" />
 		</RollingFile>
+		<!-- Logging threads only queue their events: a slow write to the console or the file, or the
+			file rolling over, would otherwise stall the thread that logs, as the render thread does.
+			Only a full queue makes them wait. -->
+		<Async name="AsyncConsole" bufferSize="8192" blocking="true">
+			<AppenderRef ref="Console" />
+		</Async>
+		<Async name="AsyncFile" bufferSize="8192" blocking="true">
+			<AppenderRef ref="RollingFile" />
+		</Async>
 	</Appenders>
 	<Loggers>
 		<logger name="org.hibernate" level="WARN" additivity="false">
-			<AppenderRef ref="Console" />
-			<AppenderRef ref="RollingFile" />
+			<AppenderRef ref="AsyncConsole" />
+			<AppenderRef ref="AsyncFile" />
 		</logger>
 		<logger name="com.ikalagaming" level="${sys:ikala.logLevel:-DEBUG}" additivity="false">
-			<AppenderRef ref="Console" />
-			<AppenderRef ref="RollingFile" />
+			<AppenderRef ref="AsyncConsole" />
+			<AppenderRef ref="AsyncFile" />
 		</logger>
 		<Root level="ERROR">
-			<AppenderRef ref="Console" />
-			<AppenderRef ref="RollingFile" />
+			<AppenderRef ref="AsyncConsole" />
+			<AppenderRef ref="AsyncFile" />
 		</Root>
 	</Loggers>
 </Configuration>
