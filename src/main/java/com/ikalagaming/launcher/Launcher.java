@@ -162,7 +162,10 @@ public class Launcher {
             }
             synchronized (Launcher.mainThreadStages) {
                 toRemove.clear();
-                for (LoopStage stage : Launcher.mainThreadStages) {
+                // By index: an iterator per tick was most of what the loop allocated, and it ticks
+                // thousands of times a second
+                for (int i = 0; i < Launcher.mainThreadStages.size(); ++i) {
+                    final LoopStage stage = Launcher.mainThreadStages.get(i);
                     int status = stage.execute();
                     switch (status) {
                         case STATUS_OK:
