@@ -81,10 +81,22 @@ public class PluginClassLoader extends URLClassLoader {
             @NonNull final LibraryClassLoader libraries,
             @NonNull final File file)
             throws MalformedURLException {
-        super(new URL[] {file.toURI().toURL()}, libraries);
+        // Named so stack traces, and the unload check, show which plugin a frame belongs to
+        super(loaderName(pluginName), new URL[] {file.toURI().toURL()}, libraries);
         this.manager = manager;
         this.pluginName = pluginName;
         this.libraries = libraries;
+    }
+
+    /**
+     * The name of a plugin's class loader, which stack frames of its classes carry.
+     *
+     * @param pluginName The plugin.
+     * @return The class loader name.
+     * @see StackTraceElement#getClassLoaderName()
+     */
+    static String loaderName(@NonNull String pluginName) {
+        return "plugin:" + pluginName;
     }
 
     /**

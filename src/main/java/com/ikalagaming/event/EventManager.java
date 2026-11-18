@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 /** Manages events and listeners. Based off lahwran's fevents. */
 @Slf4j
@@ -87,6 +88,12 @@ public class EventManager {
 
     private final Map<Class<? extends Event>, HandlerList> eventHandlers;
     private final Map<Class<? extends Command>, CommandListener> commandListeners;
+
+    /** Guards {@link #eventHandlers}. */
+    private final ReentrantLock handlerLock = new ReentrantLock();
+
+    /** Guards {@link #commandListeners}. */
+    private final ReentrantLock commandLock = new ReentrantLock();
 
     /**
      * Sets up the event managers handlers and event dispatching and starts the dispatching thread
@@ -247,9 +254,12 @@ public class EventManager {
      * @return the map of handlers for the given type
      */
     private HandlerList getEventListeners(@NonNull Class<? extends Event> type) {
-        synchronized (eventHandlers) {
+        handlerLock.lock();
+        try {
             eventHandlers.computeIfAbsent(type, ignored -> new HandlerList());
             return eventHandlers.get(type);
+        } finally {
+            handlerLock.unlock();
         }
     }
 
@@ -270,8 +280,11 @@ public class EventManager {
      * @return The command handler, or possibly null.
      */
     CommandListener getCommandHandler(@NonNull Command command) {
-        synchronized (commandListeners) {
+        commandLock.lock();
+        try {
             return commandListeners.get(command.getClass());
+        } finally {
+            commandLock.unlock();
         }
     }
 
@@ -296,9 +309,14 @@ public class EventManager {
                     }
                 };
 
-        HandlerList handlers = getEventListeners(monitor.getEventType());
         EventListener listener = new EventListener(monitor, executor, Order.MONITOR);
-        handlers.register(listener);
+        // Under the lock, so an unregister can't drop the list as empty before this is added
+        handlerLock.lock();
+        try {
+            getEventListeners(monitor.getEventType()).register(listener);
+        } finally {
+            handlerLock.unlock();
+        }
     }
 
     /**
@@ -307,11 +325,17 @@ public class EventManager {
      * @param listener The listener to register
      */
     public void registerEventListeners(@NonNull Listener listener) {
-        synchronized (eventHandlers) {
+        handlerLock.lock();
+        try {
             createEventListeners(listener);
+        } finally {
+            handlerLock.unlock();
         }
-        synchronized (commandListeners) {
+        commandLock.lock();
+        try {
             createCommandHandlers(listener);
+        } finally {
+            commandLock.unlock();
         }
     }
 
@@ -326,12 +350,18 @@ public class EventManager {
 
     /** Clears up the handlers and stops the dispatching thread. Acts like an onUnload method. */
     public void shutdown() {
-        synchronized (eventHandlers) {
+        handlerLock.lock();
+        try {
             eventHandlers.values().forEach(HandlerList::unregisterAll);
             eventHandlers.clear();
+        } finally {
+            handlerLock.unlock();
         }
-        synchronized (commandListeners) {
+        commandLock.lock();
+        try {
             commandListeners.clear();
+        } finally {
+            commandLock.unlock();
         }
 
         dispatcher.terminate();
@@ -350,13 +380,21 @@ public class EventManager {
      * @param listener The listener to unregister
      */
     public void unregisterEventListeners(@NonNull Listener listener) {
-        synchronized (eventHandlers) {
+        handlerLock.lock();
+        try {
             eventHandlers.values().forEach(list -> list.unregister(listener));
+            // Don't keep an unloaded plugin's event classes alive through empty lists
+            eventHandlers.values().removeIf(list -> list.getRegisteredListeners().length == 0);
+        } finally {
+            handlerLock.unlock();
         }
-        synchronized (commandListeners) {
+        commandLock.lock();
+        try {
             this.commandListeners
                     .entrySet()
                     .removeIf(entry -> entry.getValue().getListener().equals(listener));
+        } finally {
+            commandLock.unlock();
         }
     }
 }

@@ -2145,6 +2145,7 @@ public class PluginManager {
                 log.warn(msg, s);
                 PluginDetails details = pluginDetails.remove(s);
                 plUnregisterListeners(s, details);
+                PluginThreads.stopAll(s);
                 details.dispose();
             }
             // Nothing is left to use the libraries, so release the jar files
@@ -2239,7 +2240,10 @@ public class PluginManager {
         }
         setPluginState(toUnload, PluginState.UNLOADING);
 
-        if (!plCallPlugin(toUnload, "onUnload", plugin::onUnload)) {
+        boolean unloaded = plCallPlugin(toUnload, "onUnload", plugin::onUnload);
+        // Even when onUnload failed: its code shouldn't keep running in the background
+        PluginThreads.stopAll(toUnload);
+        if (!unloaded) {
             String notLoaded = SafeResourceLoader.getString("PLUGIN_UNLOAD_FAIL", resourceBundle);
             log.warn(notLoaded, toUnload);
             setPluginState(toUnload, PluginState.CORRUPTED);
@@ -2255,11 +2259,13 @@ public class PluginManager {
         plUnregisterListeners(toUnload, details);
 
         details = pluginDetails.remove(toUnload);
+        PluginClassLoader loader = details.getClassLoader();
         details.dispose();
         unregisterPluginCommands(toUnload);
         ConfigManager.clearCache(toUnload);
 
         logAlert("ALERT_UNLOADED", toUnload);
+        UnloadCheck.watch(toUnload, loader);
         return true;
     }
 
