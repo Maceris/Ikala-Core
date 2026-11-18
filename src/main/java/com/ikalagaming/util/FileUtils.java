@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -28,6 +31,89 @@ public class FileUtils {
     private static String combinePath(@NonNull String path, @NonNull String name) {
         final var terminatedPath = path.endsWith(File.separator) ? path : path + File.separator;
         return terminatedPath + name;
+    }
+
+    /**
+     * Resolve a relative path that came from data, like a texture name in a model file or an
+     * asset path in a content pack, so that it can't leave the folder it is meant to be in. Both
+     * / and \ count as separators. Rejected are: empty names, absolute paths, drive letters and
+     * UNC paths (which on Windows would reach out over the network), any {@code ..} part, and
+     * names that only stay inside by following a link out of the folder.
+     *
+     * @param root The folder the path must stay inside.
+     * @param name The relative path, as the data names it.
+     * @return The absolute, normalized path inside the root, or empty if the name is not allowed.
+     *     The file might not exist.
+     */
+    public static Optional<Path> resolveInside(@NonNull Path root, @NonNull String name) {
+        final String relative = name.replace('\\', '/');
+        if (relative.isEmpty()
+                || relative.charAt(0) == '/'
+                || relative.indexOf(':') >= 0
+                || relative.indexOf('\0') >= 0) {
+            return Optional.empty();
+        }
+        for (String part : relative.split("/")) {
+            if (FileUtils.isParentReference(part)) {
+                return Optional.empty();
+            }
+        }
+        final Path base = root.toAbsolutePath().normalize();
+        final Path resolved;
+        try {
+            resolved = base.resolve(relative).normalize();
+        } catch (InvalidPathException e) {
+            return Optional.empty();
+        }
+        if (!resolved.startsWith(base) || !FileUtils.staysInsideThroughLinks(base, resolved)) {
+            return Optional.empty();
+        }
+        return Optional.of(resolved);
+    }
+
+    /**
+     * Whether a part of a path could mean the parent folder. Windows drops trailing dots and spaces,
+     * so {@code ...} or {@code .. } can act like {@code ..} there.
+     *
+     * @param part One part of a path, between separators.
+     * @return True if it is made only of dots and spaces and has at least two dots.
+     */
+    private static boolean isParentReference(String part) {
+        int dots = 0;
+        for (int i = 0; i < part.length(); ++i) {
+            final char c = part.charAt(i);
+            if (c == '.') {
+                ++dots;
+            } else if (c != ' ') {
+                return false;
+            }
+        }
+        return dots >= 2;
+    }
+
+    /**
+     * Check that following links doesn't take a path outside its root. The path might not exist
+     * yet, like a file about to be written, so this checks the deepest part of it that does.
+     *
+     * @param base The absolute, normalized root.
+     * @param resolved The absolute, normalized path, which starts with the root.
+     * @return True if the real path of the part that exists is inside the real root, or if the
+     *     root doesn't exist so there is nothing to follow.
+     */
+    private static boolean staysInsideThroughLinks(Path base, Path resolved) {
+        Path existing = resolved;
+        while (existing != null && !Files.exists(existing, LinkOption.NOFOLLOW_LINKS)) {
+            existing = existing.getParent();
+        }
+        if (existing == null || !existing.startsWith(base)) {
+            return true;
+        }
+        try {
+            return existing.toRealPath().startsWith(base.toRealPath());
+        } catch (IOException e) {
+            // A broken link, or one we can't follow
+            return false;
+        }
     }
 
     /**
