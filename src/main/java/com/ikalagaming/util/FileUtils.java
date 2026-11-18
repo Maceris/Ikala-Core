@@ -34,11 +34,11 @@ public class FileUtils {
     }
 
     /**
-     * Resolve a relative path that came from data, like a texture name in a model file or an
-     * asset path in a content pack, so that it can't leave the folder it is meant to be in. Both
-     * / and \ count as separators. Rejected are: empty names, absolute paths, drive letters and
-     * UNC paths (which on Windows would reach out over the network), any {@code ..} part, and
-     * names that only stay inside by following a link out of the folder.
+     * Resolve a relative path that came from data, like a texture name in a model file or an asset
+     * path in a content pack, so that it can't leave the folder it is meant to be in. Both / and \
+     * count as separators. Rejected are: empty names, absolute paths, drive letters and UNC paths
+     * (which on Windows would reach out over the network), any {@code ..} part, and names that only
+     * stay inside by following a link out of the folder.
      *
      * @param root The folder the path must stay inside.
      * @param name The relative path, as the data names it.
@@ -72,8 +72,8 @@ public class FileUtils {
     }
 
     /**
-     * Whether a part of a path could mean the parent folder. Windows drops trailing dots and spaces,
-     * so {@code ...} or {@code .. } can act like {@code ..} there.
+     * Whether a part of a path could mean the parent folder. Windows drops trailing dots and
+     * spaces, so {@code ...} or {@code .. } can act like {@code ..} there.
      *
      * @param part One part of a path, between separators.
      * @return True if it is made only of dots and spaces and has at least two dots.
@@ -97,8 +97,8 @@ public class FileUtils {
      *
      * @param base The absolute, normalized root.
      * @param resolved The absolute, normalized path, which starts with the root.
-     * @return True if the real path of the part that exists is inside the real root, or if the
-     *     root doesn't exist so there is nothing to follow.
+     * @return True if the real path of the part that exists is inside the real root, or if the root
+     *     doesn't exist so there is nothing to follow.
      */
     private static boolean staysInsideThroughLinks(Path base, Path resolved) {
         Path existing = resolved;

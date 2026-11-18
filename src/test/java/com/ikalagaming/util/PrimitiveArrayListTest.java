@@ -15,8 +15,8 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
- * Tests for {@link IntArrayList} and {@link FloatArrayList}, run against an {@link ArrayList}
- * doing the same operations.
+ * Tests for {@link IntArrayList} and {@link FloatArrayList}, run against an {@link ArrayList} doing
+ * the same operations.
  */
 class PrimitiveArrayListTest {
 
@@ -60,8 +60,7 @@ class PrimitiveArrayListTest {
                 case 5 -> {
                     int index = random.nextInt(size + 1);
                     List<T> items = randomItems(random, value);
-                    assertEquals(
-                            expected.addAll(index, items), tested.addAll(index, items), what);
+                    assertEquals(expected.addAll(index, items), tested.addAll(index, items), what);
                 }
                 case 6 -> {
                     if (size > 0) {

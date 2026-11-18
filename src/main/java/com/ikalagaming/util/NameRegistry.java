@@ -148,7 +148,8 @@ public class NameRegistry {
         final int addition;
         mapLock.lock();
         try {
-            final IntegerTree tree = registeredNames.computeIfAbsent(baseName, k -> new IntegerTree());
+            final IntegerTree tree =
+                    registeredNames.computeIfAbsent(baseName, k -> new IntegerTree());
             addition = tree.getSmallestUnusedInt();
             tree.insert(addition);
         } catch (DuplicateEntry e) {
