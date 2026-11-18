@@ -840,10 +840,14 @@ public class PluginManager {
      * If a plugin of the given name exists ({@link #isLoaded(String)}), then that plugin is
      * returned. Otherwise, an empty optional is returned.
      *
+     * <p>Doesn't take the plugin lock: the details are in a concurrent map and the plugin field is
+     * volatile, and the render thread asks this every time a plugin's graphics are looked up, so it
+     * mustn't wait while another thread loads, enables or disables plugins. A disable that waits on
+     * the render thread would otherwise deadlock with it.
+     *
      * @param name The name of the plugin.
      * @return The Plugin with the given name
      */
-    @Synchronized("pluginLock")
     public Optional<Plugin> getPlugin(@NonNull final String name) {
         PluginDetails details = this.pluginDetails.get(name);
         if (details == null) {

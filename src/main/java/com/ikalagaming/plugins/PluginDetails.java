@@ -44,7 +44,7 @@ class PluginDetails {
      * @return The plugin object.
      */
     @SuppressWarnings("javadoc")
-    private Plugin plugin;
+    private volatile Plugin plugin;
 
     /**
      * The current state of the plugin.
