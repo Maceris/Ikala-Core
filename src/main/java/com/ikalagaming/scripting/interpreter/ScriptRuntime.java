@@ -11,7 +11,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.invoke.MethodType;
@@ -175,6 +174,22 @@ public class ScriptRuntime {
     /** Guards the mailbox, which other threads post to. */
     @Getter(AccessLevel.NONE)
     private final ReentrantLock mailboxLock = new ReentrantLock();
+
+    /**
+     * Held for the whole of a {@link #step()}, so only one thread steps the script at a time, even
+     * while {@link #stateLock} is let go for a host method.
+     */
+    @Getter(AccessLevel.NONE)
+    private final ReentrantLock stepLock = new ReentrantLock();
+
+    /**
+     * Guards the script's state for stepping and for the breakpoint, line and halt methods other
+     * threads call, like a debugger on the render thread. A step lets it go while a host method
+     * runs, so a host method that waits on another thread can't deadlock with that thread asking
+     * about the script.
+     */
+    @Getter(AccessLevel.NONE)
+    private final ReentrantLock stateLock = new ReentrantLock();
 
     /**
      * An await the script is parked in.
@@ -644,7 +659,7 @@ public class ScriptRuntime {
         final Method option = ScriptRuntime.accessible(chosen.method(), target);
         final Object[] actualParams = ScriptRuntime.arguments(chosen, parameters);
         try {
-            Object result = option.invoke(target, actualParams);
+            final Object result = invokeUnlocked(option, target, actualParams);
             final Class<?> returnType = option.getReturnType();
             if (keepResult && returnType != void.class) {
                 /*
@@ -671,6 +686,35 @@ public class ScriptRuntime {
                     option.getName(),
                     ScriptRuntime.failureReason(e));
             return false;
+        }
+    }
+
+    /**
+     * Invoke a host method with {@link #stateLock} let go, so the method can wait on a thread that
+     * asks about this script meanwhile. Stepping stays with this thread, which holds {@link
+     * #stepLock}.
+     *
+     * @param method The method.
+     * @param target The object to invoke it on, null for static methods.
+     * @param arguments The arguments.
+     * @return What it returned.
+     * @throws IllegalAccessException If the method can't be called.
+     * @throws InvocationTargetException If the method threw.
+     */
+    private Object invokeUnlocked(@NonNull Method method, Object target, Object[] arguments)
+            throws IllegalAccessException, InvocationTargetException {
+        // Only let go once: a host method stepping this same script again holds it twice, and
+        // keeps it, as before
+        final boolean release = stateLock.getHoldCount() == 1;
+        if (release) {
+            stateLock.unlock();
+        }
+        try {
+            return method.invoke(target, arguments);
+        } finally {
+            if (release) {
+                stateLock.lock();
+            }
         }
     }
 
@@ -1756,20 +1800,24 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return True if there is now a breakpoint there, false if the index is out of range.
      */
-    @Synchronized
     public boolean setBreakpoint(int index) {
-        if (index < 0 || index >= instructions.size()) {
-            return false;
-        }
-        if (patchedInstructions.containsKey(index)) {
+        stateLock.lock();
+        try {
+            if (index < 0 || index >= instructions.size()) {
+                return false;
+            }
+            if (patchedInstructions.containsKey(index)) {
+                return true;
+            }
+            final Instruction original = instructions.get(index);
+            patchedInstructions.put(index, original);
+            instructions.set(
+                    index,
+                    new Instruction(InstructionType.BREAKPOINT, null, null, null, original.line()));
             return true;
+        } finally {
+            stateLock.unlock();
         }
-        final Instruction original = instructions.get(index);
-        patchedInstructions.put(index, original);
-        instructions.set(
-                index,
-                new Instruction(InstructionType.BREAKPOINT, null, null, null, original.line()));
-        return true;
     }
 
     /**
@@ -1778,23 +1826,31 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return True if there was a breakpoint to remove.
      */
-    @Synchronized
     public boolean clearBreakpoint(int index) {
-        final Instruction original = patchedInstructions.remove(index);
-        if (original == null) {
-            return false;
+        stateLock.lock();
+        try {
+            final Instruction original = patchedInstructions.remove(index);
+            if (original == null) {
+                return false;
+            }
+            instructions.set(index, original);
+            return true;
+        } finally {
+            stateLock.unlock();
         }
-        instructions.set(index, original);
-        return true;
     }
 
     /** Remove all the breakpoints. */
-    @Synchronized
     public void clearBreakpoints() {
-        for (var entry : patchedInstructions.entrySet()) {
-            instructions.set(entry.getKey(), entry.getValue());
+        stateLock.lock();
+        try {
+            for (var entry : patchedInstructions.entrySet()) {
+                instructions.set(entry.getKey(), entry.getValue());
+            }
+            patchedInstructions.clear();
+        } finally {
+            stateLock.unlock();
         }
-        patchedInstructions.clear();
     }
 
     /**
@@ -1803,9 +1859,13 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return True if a breakpoint is patched in there.
      */
-    @Synchronized
     public boolean hasBreakpoint(int index) {
-        return patchedInstructions.containsKey(index);
+        stateLock.lock();
+        try {
+            return patchedInstructions.containsKey(index);
+        } finally {
+            stateLock.unlock();
+        }
     }
 
     /**
@@ -1813,9 +1873,13 @@ public class ScriptRuntime {
      *
      * @return The sorted indices of instructions with breakpoints.
      */
-    @Synchronized
     public Set<Integer> getBreakpoints() {
-        return new TreeSet<>(patchedInstructions.keySet());
+        stateLock.lock();
+        try {
+            return new TreeSet<>(patchedInstructions.keySet());
+        } finally {
+            stateLock.unlock();
+        }
     }
 
     /**
@@ -1824,10 +1888,14 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return The original instruction.
      */
-    @Synchronized
     public Instruction getOriginalInstruction(int index) {
-        final Instruction original = patchedInstructions.get(index);
-        return original != null ? original : instructions.get(index);
+        stateLock.lock();
+        try {
+            final Instruction original = patchedInstructions.get(index);
+            return original != null ? original : instructions.get(index);
+        } finally {
+            stateLock.unlock();
+        }
     }
 
     /**
@@ -1838,14 +1906,18 @@ public class ScriptRuntime {
      * @return The index of the first instruction for the line, or empty if no instructions came
      *     from that line.
      */
-    @Synchronized
     public OptionalInt getFirstInstructionOnLine(int line) {
-        for (int i = 0; i < instructions.size(); ++i) {
-            if (getOriginalInstruction(i).line() == line) {
-                return OptionalInt.of(i);
+        stateLock.lock();
+        try {
+            for (int i = 0; i < instructions.size(); ++i) {
+                if (getOriginalInstruction(i).line() == line) {
+                    return OptionalInt.of(i);
+                }
             }
+            return OptionalInt.empty();
+        } finally {
+            stateLock.unlock();
         }
-        return OptionalInt.empty();
     }
 
     /**
@@ -1858,18 +1930,22 @@ public class ScriptRuntime {
      * @return The indices of the first instruction in each group, in order, which is empty if no
      *     instructions came from that line.
      */
-    @Synchronized
     public List<Integer> getLineStartInstructions(int line) {
-        final List<Integer> starts = new ArrayList<>();
-        boolean previousOnLine = false;
-        for (int i = 0; i < instructions.size(); ++i) {
-            final boolean onLine = getOriginalInstruction(i).line() == line;
-            if (onLine && !previousOnLine) {
-                starts.add(i);
+        stateLock.lock();
+        try {
+            final List<Integer> starts = new ArrayList<>();
+            boolean previousOnLine = false;
+            for (int i = 0; i < instructions.size(); ++i) {
+                final boolean onLine = getOriginalInstruction(i).line() == line;
+                if (onLine && !previousOnLine) {
+                    starts.add(i);
+                }
+                previousOnLine = onLine;
             }
-            previousOnLine = onLine;
+            return starts;
+        } finally {
+            stateLock.unlock();
         }
-        return starts;
     }
 
     /**
@@ -1877,12 +1953,16 @@ public class ScriptRuntime {
      *
      * @return The line, starting at 1, or -1 if unknown or the script has finished.
      */
-    @Synchronized
     public int getCurrentLine() {
-        if (programCounter < 0 || programCounter >= instructions.size()) {
-            return -1;
+        stateLock.lock();
+        try {
+            if (programCounter < 0 || programCounter >= instructions.size()) {
+                return -1;
+            }
+            return getOriginalInstruction(programCounter).line();
+        } finally {
+            stateLock.unlock();
         }
-        return getOriginalInstruction(programCounter).line();
     }
 
     /**
@@ -1905,10 +1985,14 @@ public class ScriptRuntime {
     }
 
     /** Stop running the program. Should only be called internally and by the script runner. */
-    @Synchronized
     public void halt() {
-        fatalError = true;
-        programCounter = instructions.size();
+        stateLock.lock();
+        try {
+            fatalError = true;
+            programCounter = instructions.size();
+        } finally {
+            stateLock.unlock();
+        }
     }
 
     /**
@@ -2319,22 +2403,28 @@ public class ScriptRuntime {
     }
 
     /** Execute one instruction. */
-    @Synchronized
     public void step() {
-        if (fatalError || (programCounter < 0) || (programCounter >= instructions.size())) {
-            // Stop executing
-            return;
-        }
-        final ScriptRuntime previous = CURRENT.get();
-        CURRENT.set(this);
+        stepLock.lock();
+        stateLock.lock();
         try {
-            stepCurrent();
-        } finally {
-            if (previous == null) {
-                CURRENT.remove();
-            } else {
-                CURRENT.set(previous);
+            if (fatalError || (programCounter < 0) || (programCounter >= instructions.size())) {
+                // Stop executing
+                return;
             }
+            final ScriptRuntime previous = CURRENT.get();
+            CURRENT.set(this);
+            try {
+                stepCurrent();
+            } finally {
+                if (previous == null) {
+                    CURRENT.remove();
+                } else {
+                    CURRENT.set(previous);
+                }
+            }
+        } finally {
+            stateLock.unlock();
+            stepLock.unlock();
         }
     }
 

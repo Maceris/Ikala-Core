@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -27,6 +28,27 @@ class TestHostIntegration {
 
     /** The tags scripts yielded with, in order. */
     private final List<String> yields = new ArrayList<>();
+
+    /**
+     * A host object whose method waits on another thread that asks the calling script for its line,
+     * like a host method waiting on the render thread while a debugger there looks at the script.
+     */
+    public static final class OtherThreadProbe {
+        /**
+         * Ask the calling script for its line from another thread, and wait for the answer.
+         *
+         * @return True if the other thread got an answer within a few seconds.
+         * @throws InterruptedException If interrupted while waiting.
+         */
+        public boolean askFromOtherThread() throws InterruptedException {
+            final ScriptRuntime caller = ScriptRuntime.current().orElseThrow();
+            final Thread asker = new Thread(caller::getCurrentLine, "probe");
+            asker.setDaemon(true);
+            asker.start();
+            asker.join(TimeUnit.SECONDS.toMillis(5));
+            return !asker.isAlive();
+        }
+    }
 
     /** Register the debug methods. */
     @BeforeEach
@@ -124,6 +146,22 @@ class TestHostIntegration {
                 ScriptTestHelper.output("TEST_printBool(Boolean.parseBoolean(\"true\"));", "true"),
                 ScriptTestHelper.output("TEST_printDouble(Double.parseDouble(\"1.5\"));", "1.5"),
                 ScriptTestHelper.output("TEST_printInt(Collections.max(List.of(4, 9, 2)));", "9"));
+    }
+
+    /** A host method can wait on a thread asking about the script, which once deadlocked. */
+    @Test
+    void testHostCallDoesNotHoldTheScriptLock() {
+        final Set<String> names = new java.util.HashSet<>(ScriptManager.globalsFor(null).keySet());
+        names.add("probe");
+        final ScriptRuntime runtime =
+                IkalaScriptCompiler.compile(
+                                CharStreams.fromString(
+                                        "TEST_printBool(probe.askFromOtherThread());"),
+                                names)
+                        .runtime()
+                        .orElseThrow();
+        runtime.setGlobal("probe", new OtherThreadProbe());
+        Assertions.assertEquals(List.of("true"), finish(runtime));
     }
 
     /**

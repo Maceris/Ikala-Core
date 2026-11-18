@@ -745,7 +745,12 @@ public class PluginManager {
     Class<?> getClassByName(@NonNull final String name) {
         Class<?> cached = pluginClassCache.get(name);
         if (cached != null) {
-            return cached;
+            if (!(cached.getClassLoader() instanceof PluginClassLoader loader)
+                    || !loader.isDisposed()) {
+                return cached;
+            }
+            // Cached by a lookup that raced the plugin's unloading
+            pluginClassCache.remove(name, cached);
         }
         /*
          * No locking needed here, the plugin class loaders each lock themselves
@@ -757,9 +762,15 @@ public class PluginManager {
             if (details == null || details.getClassLoader() == null) {
                 continue;
             }
-            Class<?> result = details.getClassLoader().findOwnClass(name);
+            final PluginClassLoader loader = details.getClassLoader();
+            Class<?> result = loader.findOwnClass(name);
             if (result != null) {
                 pluginClassCache.put(name, result);
+                // Disposing marks the loader before clearing its classes from the cache, so if it
+                // started after this check, its clearing comes after the put and removes it
+                if (loader.isDisposed()) {
+                    pluginClassCache.remove(name, result);
+                }
                 return result;
             }
         }

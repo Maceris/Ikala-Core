@@ -57,6 +57,12 @@ public class PluginClassLoader extends URLClassLoader {
     private final AtomicBoolean warnedAboutBundledLibrary = new AtomicBoolean(false);
 
     /**
+     * Set when {@link #dispose()} starts, before it takes its classes out of the plugin manager's
+     * cache, so a lookup that cached one of them meanwhile can tell and take it out again.
+     */
+    private volatile boolean disposed;
+
+    /**
      * The name of the plugin this loads classes for.
      *
      * @return The name of the plugin.
@@ -104,6 +110,7 @@ public class PluginClassLoader extends URLClassLoader {
      * Also closes the files.
      */
     void dispose() {
+        disposed = true;
         definedClasses.forEach(manager::removeClass);
         definedClasses.clear();
         try {
@@ -138,6 +145,15 @@ public class PluginClassLoader extends URLClassLoader {
      * @param name The binary name of the class.
      * @return The class if it is defined in this plugin's jar, or null if it isn't.
      */
+    /**
+     * Whether {@link #dispose()} was called, after which its classes mustn't be cached.
+     *
+     * @return True once disposing started.
+     */
+    boolean isDisposed() {
+        return disposed;
+    }
+
     Class<?> findOwnClass(@NonNull String name) {
         synchronized (getClassLoadingLock(name)) {
             Class<?> loaded = findLoadedClass(name);
