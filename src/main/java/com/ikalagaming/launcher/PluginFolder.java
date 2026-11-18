@@ -60,21 +60,12 @@ public class PluginFolder {
             @NonNull final String pluginName, @NonNull ResourceType type) {
         PluginFolder.createFolder(pluginName);
         // should start with File.separator
-        String folderName = "";
-
-        switch (type) {
-            case CONFIG:
-                folderName = Constants.CONFIG_PATH;
-                break;
-            case DATA:
-                folderName = Constants.DATA_PATH;
-                break;
-            case SCRIPTS:
-                folderName = Constants.SCRIPTS_PATH;
-                break;
-            default:
-                break;
-        }
+        String folderName =
+                switch (type) {
+                    case CONFIG -> Constants.CONFIG_PATH;
+                    case DATA -> Constants.DATA_PATH;
+                    case SCRIPTS -> Constants.SCRIPTS_PATH;
+                };
 
         return FileUtils.createFolder(
                 PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH, pluginName + folderName);
@@ -187,21 +178,12 @@ public class PluginFolder {
             @NonNull final String pluginName,
             @NonNull ResourceType type,
             @NonNull final String path) {
-        String folderName = File.separator;
-
-        switch (type) {
-            case CONFIG:
-                folderName = Constants.CONFIG_PATH;
-                break;
-            case DATA:
-                folderName = Constants.DATA_PATH;
-                break;
-            case SCRIPTS:
-                folderName = Constants.SCRIPTS_PATH;
-                break;
-            default:
-                break;
-        }
+        String folderName =
+                switch (type) {
+                    case CONFIG -> Constants.CONFIG_PATH;
+                    case DATA -> Constants.DATA_PATH;
+                    case SCRIPTS -> Constants.SCRIPTS_PATH;
+                };
 
         return new File(
                 PluginFolder.RUNTIME_DIR + Constants.PLUGIN_FOLDER_PATH,

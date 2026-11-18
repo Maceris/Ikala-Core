@@ -344,11 +344,11 @@ public class TreeValidator implements ASTVisitor {
                 && arithmetic.getChildren().get(0) instanceof Identifier id
                 && finals.contains(id.getName())) {
             switch (arithmetic.getOperator()) {
-                case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-                    markInvalid(node, "ASSIGN_TO_FINAL");
-                    break;
-                default:
-                    break;
+                case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX ->
+                        markInvalid(node, "ASSIGN_TO_FINAL");
+                default -> {
+                    // only the increments and decrements assign
+                }
             }
         }
 
@@ -546,13 +546,13 @@ public class TreeValidator implements ASTVisitor {
             }
         }
         switch (node.getOperator()) {
-            case SUB:
-                break;
-            case ADD, DIV, MUL, MOD:
-                // Sets the flag if not
-                hasAtLeastTwoChildren(node);
-                break;
-            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+            case SUB -> {
+                // unary or binary, both are fine
+            }
+            case ADD, DIV, MUL, MOD ->
+                    // Sets the flag if not
+                    hasAtLeastTwoChildren(node);
+            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX -> {
                 if (firstChild instanceof Identifier id
                         && id.getType().anyOf(Base.CHAR, Base.INT, Base.DOUBLE)) {
                     // Fine
@@ -567,8 +567,8 @@ public class TreeValidator implements ASTVisitor {
                             firstChild.getClass().getSimpleName());
                     valid = false;
                 }
-                break;
-            default:
+            }
+            default -> {
                 ScriptDiagnostics.warnAt(
                         log,
                         node,
@@ -576,6 +576,7 @@ public class TreeValidator implements ASTVisitor {
                                 "UNKNOWN_OPERATOR", ScriptManager.getResourceBundle()),
                         node.getOperator().toString());
                 valid = false;
+            }
         }
     }
 

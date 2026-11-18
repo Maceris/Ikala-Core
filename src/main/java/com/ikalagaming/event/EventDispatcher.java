@@ -2,11 +2,11 @@ package com.ikalagaming.event;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.NoSuchElementException;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Holds an EventQueue and dispatches the events in order when possible.
+ * Holds the queue of events and commands, and dispatches them in the order they were fired.
  *
  * @author Ches Burks
  */
@@ -17,49 +17,44 @@ class EventDispatcher extends Thread {
     private static final String EVENT_MANAGER_MISSING = "There is no event manager!";
 
     /**
-     * The number of milliseconds to wait before timing out and checking if there are more items
-     * again.
+     * Something waiting to be dispatched.
+     *
+     * @param event The event or command, or null for {@link #STOP}.
+     * @param command Whether it was fired as a command, so its command handler runs. A command
+     *     fired as an event only reaches event listeners.
      */
-    private static final long WAIT_TIMEOUT = 1000;
+    private record Pending(Event event, boolean command) {}
 
-    private final ConcurrentLinkedDeque<Command> commandQueue;
-    private final ConcurrentLinkedDeque<Event> eventQueue;
+    /** Put on the queue to wake the thread when it should stop. */
+    private static final Pending STOP = new Pending(null, false);
 
-    private EventManager eventManager;
+    /** Events and commands waiting to be dispatched, and possibly {@link #STOP}. */
+    private final BlockingQueue<Pending> queue = new LinkedBlockingQueue<>();
 
-    private boolean running;
-    private boolean hasCommands;
-    private boolean hasEvents;
+    /** The manager that knows the listeners, or null once terminated. */
+    private volatile EventManager eventManager;
 
-    /** Used to handle synchronization and waiting for events */
-    private final Object syncObject;
+    /** Whether to keep dispatching. */
+    private volatile boolean running;
 
     /**
-     * Creates and starts the thread. It will begin attempting to dispatch events immediately if
-     * there are any available.
+     * Creates the thread. Once started, it dispatches events as they are fired.
      *
      * @param manager the event manager that this dispatcher belongs to
      */
     public EventDispatcher(EventManager manager) {
         setName("EventDispatcher");
-        commandQueue = new ConcurrentLinkedDeque<>();
-        eventQueue = new ConcurrentLinkedDeque<>();
         eventManager = manager;
-        hasCommands = false;
-        hasEvents = false;
         running = true;
-        syncObject = new Object();
     }
 
     private void actuallyDispatchCommand(Command command) {
-        if (command == null) {
-            return;
-        }
-        if (eventManager == null) {
+        final EventManager manager = eventManager;
+        if (manager == null) {
             log.error(EVENT_MANAGER_MISSING);
             return;
         }
-        HandlerList handlers = eventManager.getEventHandlers(command);
+        HandlerList handlers = manager.getEventHandlers(command);
         final boolean hasEventHandlers = handlers != null;
         EventListener[] listeners = null;
 
@@ -78,7 +73,7 @@ class EventDispatcher extends Thread {
         }
 
         // Handle the command
-        CommandListener commandHandler = eventManager.getCommandHandler(command);
+        CommandListener commandHandler = manager.getCommandHandler(command);
         if (commandHandler == null) {
             log.warn("No command handler registered for {}", command.getClass());
         } else {
@@ -104,14 +99,12 @@ class EventDispatcher extends Thread {
     }
 
     private void actuallyDispatchEvent(Event event) {
-        if (event == null) {
-            return;
-        }
-        if (eventManager == null) {
+        final EventManager manager = eventManager;
+        if (manager == null) {
             log.error(EVENT_MANAGER_MISSING);
             return;
         }
-        HandlerList handlers = eventManager.getEventHandlers(event);
+        HandlerList handlers = manager.getEventHandlers(event);
         if (handlers == null) {
             return;
         }
@@ -126,28 +119,16 @@ class EventDispatcher extends Thread {
     }
 
     /**
-     * Adds the {@link Command event} to the queue pending dispatch.
+     * Adds the {@link Command command} to the queue pending dispatch.
      *
      * @param command The command to send out
      * @throws IllegalStateException if the element cannot be added at this time due to capacity
      *     restrictions
      */
     public void dispatchCommand(Command command) throws IllegalStateException {
-        if (command == null) {
-            return;
+        if (command != null && running) {
+            queue.add(new Pending(command, true));
         }
-        try {
-            synchronized (commandQueue) {
-                commandQueue.add(command);
-            }
-            hasCommands = true;
-        } catch (IllegalStateException illegalState) {
-            throw illegalState;
-        } catch (Exception e) {
-            log.error(EVENT_EXCEPTION, e);
-            return; // don't wake up thread
-        }
-        wakeUp();
     }
 
     /**
@@ -160,112 +141,64 @@ class EventDispatcher extends Thread {
      *     restrictions
      */
     public void dispatchEvent(Event event) throws IllegalStateException {
-        if (event == null) {
-            return;
+        if (event != null && running) {
+            queue.add(new Pending(event, false));
         }
-        try {
-            synchronized (eventQueue) {
-                eventQueue.add(event);
-            }
-            hasEvents = true;
-        } catch (IllegalStateException illegalState) {
-            throw illegalState;
-        } catch (Exception e) {
-            log.error(EVENT_EXCEPTION, e);
-            return; // don't wake up thread
-        }
-        wakeUp();
-    }
-
-    private void handleCommand() {
-        synchronized (commandQueue) {
-            if (commandQueue.isEmpty()) {
-                hasCommands = false;
-                return;
-            }
-        }
-        Command command;
-        try {
-            command = commandQueue.remove();
-        } catch (NoSuchElementException noElement) {
-            // the queue is empty
-            hasCommands = false;
-            log.warn("The command queue was empty due to threading issues");
-            return;
-        }
-        actuallyDispatchCommand(command);
-    }
-
-    private void handleEvent() {
-        synchronized (eventQueue) {
-            if (eventQueue.isEmpty()) {
-                hasEvents = false;
-                return;
-            }
-        }
-        Event event;
-        try {
-            event = eventQueue.remove();
-        } catch (NoSuchElementException noElement) {
-            // the queue is empty
-            hasEvents = false;
-            log.warn("The event queue was empty due to threading issues");
-            return;
-        }
-        actuallyDispatchEvent(event);
     }
 
     /**
-     * Checks for events in the queue, and dispatches them if possible. Does not do anything if
-     * {@link #terminate()} has been called.
+     * Dispatch one item from the queue.
+     *
+     * @param item A command or an event.
+     */
+    private void dispatch(Pending item) {
+        try {
+            if (item.command()) {
+                actuallyDispatchCommand((Command) item.event());
+            } else {
+                actuallyDispatchEvent(item.event());
+            }
+        } catch (RuntimeException e) {
+            // A listener list or handler lookup failing must not stop every later event
+            log.error(EVENT_EXCEPTION, e);
+        }
+    }
+
+    /**
+     * Dispatches events and commands as they arrive, until {@link #terminate()} is called.
+     * Interrupts don't stop it; only terminating does.
      */
     @Override
     public void run() {
-        while (running) {
-            while (!hasEvents && !hasCommands) {
-                synchronized (syncObject) {
-                    try {
-                        // block this thread until an item is added
-                        syncObject.wait(WAIT_TIMEOUT);
-                    } catch (InterruptedException e) {
-                        log.warn("Thread interrupted while waiting for events");
-                        // Re-interrupt as per SonarLint java:S2142
-                        Thread.currentThread().interrupt();
-                    }
+        try {
+            while (running) {
+                final Pending item;
+                try {
+                    item = queue.take();
+                } catch (InterruptedException e) {
+                    // Only terminate() stops dispatching; carry on unless it was called
+                    continue;
                 }
-                // in case it was terminated while waiting
-                if (!running) {
+                if (item == STOP || !running) {
                     break;
                 }
+                dispatch(item);
             }
-            if (hasCommands) {
-                handleCommand();
-            }
-            if (hasEvents) {
-                handleEvent();
-            }
+        } catch (Error e) {
+            log.error("The event dispatcher stopped", e);
+            throw e;
+        } finally {
+            queue.clear();
         }
-        // Done running
-        eventQueue.clear();
-        commandQueue.clear();
     }
 
     /**
      * Stops the thread from executing its run method in preparation for shutting down the thread.
+     * Events still in the queue are dropped.
      */
     public void terminate() {
-        hasCommands = false;
-        hasEvents = false;
         running = false;
         eventManager = null;
-        wakeUp();
-    }
-
-    /** Wakes this thread up when it is sleeping */
-    private void wakeUp() {
-        synchronized (syncObject) {
-            // Wake the thread up as there is now an event
-            syncObject.notifyAll();
-        }
+        queue.add(STOP);
     }
 }

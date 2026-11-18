@@ -21,7 +21,7 @@ public class Localization {
      */
     @SuppressWarnings("javadoc")
     @Getter
-    private static Locale locale = new Locale("en", "US");
+    private static volatile Locale locale = Locale.of("en", "US");
 
     /**
      * Update the current locale.

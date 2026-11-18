@@ -59,15 +59,16 @@ public class Type {
      */
     private static void checkForPrimitives(@NonNull Base base) {
         switch (base) {
-            case BOOLEAN, CHAR, DOUBLE, INT, STRING:
-                break;
-            case IDENTIFIER, UNKNOWN, VOID:
-            default:
-                throw new IllegalArgumentException(
-                        SafeResourceLoader.getStringFormatted(
-                                "NOT_PRIMITIVE",
-                                ScriptManager.getResourceBundle(),
-                                base.toString()));
+            case BOOLEAN, CHAR, DOUBLE, INT, STRING -> {
+                // primitive, nothing to do
+            }
+                // IDENTIFIER, UNKNOWN, VOID
+            default ->
+                    throw new IllegalArgumentException(
+                            SafeResourceLoader.getStringFormatted(
+                                    "NOT_PRIMITIVE",
+                                    ScriptManager.getResourceBundle(),
+                                    base.toString()));
         }
     }
 

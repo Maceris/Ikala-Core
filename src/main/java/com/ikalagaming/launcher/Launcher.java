@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntSupplier;
 
 /**
@@ -63,6 +64,9 @@ public class Launcher {
 
     private static final List<LoopStage> mainThreadStages = new ArrayList<>();
 
+    /** Guards {@link #mainThreadStages}. Stages may add or remove stages while they run. */
+    private static final ReentrantLock STAGES_LOCK = new ReentrantLock();
+
     /** The status for a main thread stage indicating everything is fine. */
     public static final int STATUS_OK = 0;
 
@@ -86,8 +90,11 @@ public class Launcher {
      */
     public static UUID addMainThreadStage(@NonNull IntSupplier stage) {
         LoopStage newStage = new LoopStage(stage);
-        synchronized (Launcher.mainThreadStages) {
+        STAGES_LOCK.lock();
+        try {
             Launcher.mainThreadStages.add(newStage);
+        } finally {
+            STAGES_LOCK.unlock();
         }
         log.debug(SafeResourceLoader.getString("STAGE_ADDED", Launcher.bundle), newStage.getId());
         return newStage.getId();
@@ -160,33 +167,36 @@ public class Launcher {
             if (Launcher.shouldShutdown.get()) {
                 break;
             }
-            synchronized (Launcher.mainThreadStages) {
+            STAGES_LOCK.lock();
+            try {
                 toRemove.clear();
                 // By index: an iterator per tick was most of what the loop allocated, and it ticks
                 // thousands of times a second
                 for (int i = 0; i < Launcher.mainThreadStages.size(); ++i) {
                     final LoopStage stage = Launcher.mainThreadStages.get(i);
                     int status = stage.execute();
-                    switch (status) {
-                        case STATUS_OK:
-                            break;
-                        case STATUS_REQUEST_REMOVAL:
-                            toRemove.add(stage.getId());
-                            // fall through on purpose
-                        case STATUS_ERROR:
-                        default:
-                            String message =
-                                    SafeResourceLoader.getString(
-                                            "STAGE_CODE_NOT_OK", Launcher.bundle);
-                            log.warn(message, stage.getId(), status);
+                    if (status == STATUS_OK) {
+                        continue;
                     }
+                    if (status == STATUS_REQUEST_REMOVAL) {
+                        toRemove.add(stage.getId());
+                    }
+                    // Removal requests are logged too, like errors
+                    String message =
+                            SafeResourceLoader.getString("STAGE_CODE_NOT_OK", Launcher.bundle);
+                    log.warn(message, stage.getId(), status);
                 }
                 toRemove.forEach(Launcher::removeMainThreadStage);
+            } finally {
+                STAGES_LOCK.unlock();
             }
         }
-        synchronized (Launcher.mainThreadStages) {
+        STAGES_LOCK.lock();
+        try {
             Launcher.mainThreadStages.forEach(stage -> toRemove.add(stage.getId()));
             toRemove.forEach(Launcher::removeMainThreadStage);
+        } finally {
+            STAGES_LOCK.unlock();
         }
     }
 
@@ -281,6 +291,11 @@ public class Launcher {
                 Thread.currentThread().interrupt();
                 return;
             }
+            if (input == null) {
+                // Standard input closed, like a launch with nothing attached: no more commands,
+                // but the program keeps running until something else stops it
+                return;
+            }
             PluginCommandSent event;
             String[] parts = input.split("\\s+");
             if (1 == parts.length) {
@@ -301,8 +316,11 @@ public class Launcher {
      * @param stageID The ID of the stage to remove.
      */
     public static void removeMainThreadStage(UUID stageID) {
-        synchronized (Launcher.mainThreadStages) {
+        STAGES_LOCK.lock();
+        try {
             Launcher.mainThreadStages.removeIf(stage -> stage.getId().equals(stageID));
+        } finally {
+            STAGES_LOCK.unlock();
         }
         log.debug(SafeResourceLoader.getString("STAGE_REMOVED", Launcher.bundle), stageID);
     }

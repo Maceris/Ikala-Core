@@ -52,20 +52,21 @@ public class ExprLogic extends Node {
 
         result.append(" { ");
         switch (operator) {
-            case AND, OR:
+            case AND, OR -> {
                 result.append(children.get(0).toString());
                 result.append(' ');
                 result.append(operator.value);
                 result.append(' ');
                 result.append(children.get(1).toString());
-                break;
-            case NOT:
+            }
+            case NOT -> {
                 result.append(operator.value);
                 result.append(' ');
                 result.append(children.get(0).toString());
-                break;
-            default:
-                break;
+            }
+            default -> {
+                // nothing to print
+            }
         }
         result.append(" } ");
 

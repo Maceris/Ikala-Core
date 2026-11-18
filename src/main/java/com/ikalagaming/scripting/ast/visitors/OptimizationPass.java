@@ -86,10 +86,12 @@ public class OptimizationPass implements ASTVisitor {
         }
         if (node instanceof ExprArithmetic arithmetic) {
             switch (arithmetic.getOperator()) {
-                case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
+                case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX -> {
                     return false;
-                default:
-                    break;
+                }
+                default -> {
+                    // the operator itself has no side effects
+                }
             }
         }
         for (Node child : node.getChildren()) {
@@ -265,14 +267,10 @@ public class OptimizationPass implements ASTVisitor {
             // Doubles can be NaN, which is not equal to itself
             if (firstID.getName().equals(secondID.getName())
                     && firstID.getType().anyOf(Base.CHAR, Base.INT)) {
-                switch (node.getOperator()) {
-                    case GT, LT:
-                        return getBool(false);
-                    case GTE, LTE:
-                        return getBool(true);
-                    default:
-                        return node;
-                }
+                return switch (node.getOperator()) {
+                    case GT, LT -> getBool(false);
+                    case GTE, LTE -> getBool(true);
+                };
             }
             return node;
         }
@@ -294,17 +292,12 @@ public class OptimizationPass implements ASTVisitor {
             return node;
         }
 
-        switch (node.getOperator()) {
-            case GT:
-                return getBool(comparison > 0);
-            case GTE:
-                return getBool(comparison >= 0);
-            case LT:
-                return getBool(comparison < 0);
-            case LTE:
-                return getBool(comparison <= 0);
-        }
-        return node;
+        return switch (node.getOperator()) {
+            case GT -> getBool(comparison > 0);
+            case GTE -> getBool(comparison >= 0);
+            case LT -> getBool(comparison < 0);
+            case LTE -> getBool(comparison <= 0);
+        };
     }
 
     /**
@@ -398,23 +391,13 @@ public class OptimizationPass implements ASTVisitor {
         result.setType(Type.primitive(Base.CHAR));
 
         switch (node.getOperator()) {
-            case ADD:
-                result.setValue((char) (firstValue + secondValue));
-                break;
-            case DIV:
-                result.setValue((char) (firstValue / secondValue));
-                break;
-            case MOD:
-                result.setValue((char) (firstValue % secondValue));
-                break;
-            case MUL:
-                result.setValue((char) (firstValue * secondValue));
-                break;
-            case SUB:
-                result.setValue((char) (firstValue - secondValue));
-                break;
-            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-            default:
+            case ADD -> result.setValue((char) (firstValue + secondValue));
+            case DIV -> result.setValue((char) (firstValue / secondValue));
+            case MOD -> result.setValue((char) (firstValue % secondValue));
+            case MUL -> result.setValue((char) (firstValue * secondValue));
+            case SUB -> result.setValue((char) (firstValue - secondValue));
+            default -> {
+                // DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX
                 // Can't happen, but let's cover it anyway
                 ScriptDiagnostics.warn(
                         log,
@@ -424,6 +407,7 @@ public class OptimizationPass implements ASTVisitor {
                         node.getOperator().toString(),
                         firstChild.getClass().getSimpleName());
                 return node;
+            }
         }
 
         return result;
@@ -488,23 +472,13 @@ public class OptimizationPass implements ASTVisitor {
         result.setType(Type.primitive(Base.DOUBLE));
 
         switch (node.getOperator()) {
-            case ADD:
-                result.setValue(firstValue + secondValue);
-                break;
-            case DIV:
-                result.setValue(firstValue / secondValue);
-                break;
-            case MOD:
-                result.setValue(firstValue % secondValue);
-                break;
-            case MUL:
-                result.setValue(firstValue * secondValue);
-                break;
-            case SUB:
-                result.setValue(firstValue - secondValue);
-                break;
-            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-            default:
+            case ADD -> result.setValue(firstValue + secondValue);
+            case DIV -> result.setValue(firstValue / secondValue);
+            case MOD -> result.setValue(firstValue % secondValue);
+            case MUL -> result.setValue(firstValue * secondValue);
+            case SUB -> result.setValue(firstValue - secondValue);
+            default -> {
+                // DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX
                 // Can't happen, but let's cover it anyway
                 ScriptDiagnostics.warn(
                         log,
@@ -514,6 +488,7 @@ public class OptimizationPass implements ASTVisitor {
                         node.getOperator().toString(),
                         firstChild.getClass().getSimpleName());
                 return node;
+            }
         }
 
         return result;
@@ -578,23 +553,13 @@ public class OptimizationPass implements ASTVisitor {
         result.setType(Type.primitive(Base.INT));
 
         switch (node.getOperator()) {
-            case ADD:
-                result.setValue(firstValue + secondValue);
-                break;
-            case DIV:
-                result.setValue(firstValue / secondValue);
-                break;
-            case MOD:
-                result.setValue(firstValue % secondValue);
-                break;
-            case MUL:
-                result.setValue(firstValue * secondValue);
-                break;
-            case SUB:
-                result.setValue(firstValue - secondValue);
-                break;
-            case DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX:
-            default:
+            case ADD -> result.setValue(firstValue + secondValue);
+            case DIV -> result.setValue(firstValue / secondValue);
+            case MOD -> result.setValue(firstValue % secondValue);
+            case MUL -> result.setValue(firstValue * secondValue);
+            case SUB -> result.setValue(firstValue - secondValue);
+            default -> {
+                // DEC_PREFIX, DEC_SUFFIX, INC_PREFIX, INC_SUFFIX
                 // Can't happen, but let's cover it anyway
                 ScriptDiagnostics.warn(
                         log,
@@ -604,6 +569,7 @@ public class OptimizationPass implements ASTVisitor {
                         node.getOperator().toString(),
                         firstChild.getClass().getSimpleName());
                 return node;
+            }
         }
 
         return result;

@@ -1,6 +1,7 @@
 package com.ikalagaming.plugins;
 
 import lombok.NonNull;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -130,7 +131,8 @@ public class LibraryClassLoader extends URLClassLoader {
      * @param file The library jar.
      * @return What happened.
      */
-    public synchronized AddResult addLibrary(@NonNull File file) {
+    @Synchronized
+    public AddResult addLibrary(@NonNull File file) {
         if (!file.isFile() || !file.getName().endsWith(LibraryJar.JAR_EXTENSION)) {
             return AddResult.INVALID;
         }

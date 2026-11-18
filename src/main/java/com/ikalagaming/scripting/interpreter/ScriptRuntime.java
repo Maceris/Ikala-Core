@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.invoke.MethodType;
@@ -1300,7 +1301,7 @@ public class ScriptRuntime {
     private void checkType(MemLocation memory, Type.Base intended) {
         final String MEMORY_MISMATCH = "MEMORY_TYPE_MISMATCH";
         switch (intended) {
-            case BOOLEAN:
+            case BOOLEAN -> {
                 if (!memory.isBoolean()) {
                     ScriptDiagnostics.warnAt(
                             log,
@@ -1311,8 +1312,8 @@ public class ScriptRuntime {
                             intended.toString());
                     halt();
                 }
-                break;
-            case CHAR:
+            }
+            case CHAR -> {
                 if (!memory.isChar()) {
                     ScriptDiagnostics.warnAt(
                             log,
@@ -1323,8 +1324,8 @@ public class ScriptRuntime {
                             intended.toString());
                     halt();
                 }
-                break;
-            case DOUBLE:
+            }
+            case DOUBLE -> {
                 if (!(memory.isChar() || memory.isInt() || memory.isDouble())) {
                     ScriptDiagnostics.warnAt(
                             log,
@@ -1335,8 +1336,8 @@ public class ScriptRuntime {
                             intended.toString());
                     halt();
                 }
-                break;
-            case INT:
+            }
+            case INT -> {
                 if (!(memory.isChar() || memory.isInt())) {
                     ScriptDiagnostics.warnAt(
                             log,
@@ -1347,12 +1348,12 @@ public class ScriptRuntime {
                             intended.toString());
                     halt();
                 }
-                break;
-            case STRING:
+            }
+            case STRING -> {
                 // We can cast pretty much anything to string, so ignore this
-                break;
-            case LABEL, IDENTIFIER, UNKNOWN, VOID:
-            default:
+            }
+            default -> {
+                // LABEL, IDENTIFIER, UNKNOWN, VOID
                 ScriptDiagnostics.warnAt(
                         log,
                         getCurrentLine(),
@@ -1361,7 +1362,7 @@ public class ScriptRuntime {
                                 "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
                         intended.toString());
                 halt();
-                break;
+            }
         }
     }
 
@@ -1569,177 +1570,163 @@ public class ScriptRuntime {
 
     private void execute(Instruction i) {
         switch (i.type()) {
-            case ADD_CHAR:
+            case ADD_CHAR -> {
                 charMath(i, (a, b) -> (char) (a + b));
                 programCounter++;
-                break;
-            case ADD_DYNAMIC:
+            }
+            case ADD_DYNAMIC -> {
                 dynamicAdd(i);
                 programCounter++;
-                break;
-            case ADD_DOUBLE:
+            }
+            case ADD_DOUBLE -> {
                 doubleMath(i, (a, b) -> a + b);
                 programCounter++;
-                break;
-            case ADD_INT:
+            }
+            case ADD_INT -> {
                 intMath(i, (a, b) -> a + b, (a, b) -> a + b);
                 programCounter++;
-                break;
-            case AND:
+            }
+            case AND -> {
                 boolLogic(i, (a, b) -> a && b);
                 programCounter++;
-                break;
-            case CAST:
+            }
+            case CAST -> {
                 cast(i);
                 programCounter++;
-                break;
-            case CALL:
+            }
+            case CALL -> {
                 this.call(i);
                 programCounter++;
-                break;
-            case CMP:
+            }
+            case CMP -> {
                 compare(i);
                 programCounter++;
-                break;
-            case CONCAT_STRING:
+            }
+            case CONCAT_STRING -> {
                 concatStrings(i);
                 programCounter++;
-                break;
-            case DECLARE:
+            }
+            case DECLARE -> {
                 declare(i);
                 programCounter++;
-                break;
-            case DIV_CHAR:
+            }
+            case DIV_CHAR -> {
                 charMath(i, (a, b) -> (char) (a / b));
                 programCounter++;
-                break;
-            case DIV_DOUBLE:
+            }
+            case DIV_DOUBLE -> {
                 doubleMath(i, (a, b) -> a / b);
                 programCounter++;
-                break;
-            case DIV_INT:
+            }
+            case DIV_INT -> {
                 intMath(i, (a, b) -> a / b, (a, b) -> a / b);
                 programCounter++;
-                break;
-            case HALT:
+            }
+            case HALT -> {
                 // A normal exit, not an error
                 programCounter = instructions.size();
-                break;
-            case JEQ:
-                jump(i, comp -> comp == 0);
-                break;
-            case JGE:
-                jump(i, comp -> comp == 0 || comp == 1);
-                break;
-            case JGT:
-                jump(i, comp -> comp == 1);
-                break;
-            case JLE:
-                jump(i, comp -> comp == 0 || comp == -1);
-                break;
-            case JLT:
-                jump(i, comp -> comp == -1);
-                break;
-            case JMP:
-                jump(i, comp -> true);
-                break;
-            case JNE:
-                jump(i, comp -> comp != 0);
-                break;
-            case MOD_CHAR:
+            }
+            case JEQ -> jump(i, comp -> comp == 0);
+            case JGE -> jump(i, comp -> comp == 0 || comp == 1);
+            case JGT -> jump(i, comp -> comp == 1);
+            case JLE -> jump(i, comp -> comp == 0 || comp == -1);
+            case JLT -> jump(i, comp -> comp == -1);
+            case JMP -> jump(i, comp -> true);
+            case JNE -> jump(i, comp -> comp != 0);
+            case MOD_CHAR -> {
                 charMath(i, (a, b) -> (char) (a % b));
                 programCounter++;
-                break;
-            case MOD_DOUBLE:
+            }
+            case MOD_DOUBLE -> {
                 doubleMath(i, (a, b) -> a % b);
                 programCounter++;
-                break;
-            case MOD_INT:
+            }
+            case MOD_INT -> {
                 intMath(i, (a, b) -> a % b, (a, b) -> a % b);
                 programCounter++;
-                break;
-            case MOV:
+            }
+            case MOV -> {
                 move(i);
                 programCounter++;
-                break;
-            case MUL_CHAR:
+            }
+            case MUL_CHAR -> {
                 charMath(i, (a, b) -> (char) (a * b));
                 programCounter++;
-                break;
-            case MUL_DOUBLE:
+            }
+            case MUL_DOUBLE -> {
                 doubleMath(i, (a, b) -> a * b);
                 programCounter++;
-                break;
-            case MUL_INT:
+            }
+            case MUL_INT -> {
                 intMath(i, (a, b) -> a * b, (a, b) -> a * b);
                 programCounter++;
-                break;
-            case NEG_CHAR:
+            }
+            case NEG_CHAR -> {
                 negateChar(i);
                 programCounter++;
-                break;
-            case NEG_DOUBLE:
+            }
+            case NEG_DOUBLE -> {
                 negateDouble(i);
                 programCounter++;
-                break;
-            case NEG_INT:
+            }
+            case NEG_INT -> {
                 negateInt(i);
                 programCounter++;
-                break;
-            case NOP:
+            }
+            case NOP -> {
                 // No operation
                 programCounter++;
-                break;
-            case NOT:
+            }
+            case NOT -> {
                 not(i);
                 programCounter++;
-                break;
-            case OR:
+            }
+            case OR -> {
                 boolLogic(i, (a, b) -> a || b);
                 programCounter++;
-                break;
-            case SUB_CHAR:
+            }
+            case SUB_CHAR -> {
                 charMath(i, (a, b) -> (char) (a - b));
                 programCounter++;
-                break;
-            case SUB_DOUBLE:
+            }
+            case SUB_DOUBLE -> {
                 doubleMath(i, (a, b) -> a - b);
                 programCounter++;
-                break;
-            case SUB_INT:
+            }
+            case SUB_INT -> {
                 intMath(i, (a, b) -> a - b, (a, b) -> a - b);
                 programCounter++;
-                break;
-            case SET_EQ:
+            }
+            case SET_EQ -> {
                 set(i, cmp -> cmp == 0);
                 programCounter++;
-                break;
-            case SET_GE:
+            }
+            case SET_GE -> {
                 set(i, cmp -> cmp == 0 || cmp == 1);
                 programCounter++;
-                break;
-            case SET_GT:
+            }
+            case SET_GT -> {
                 set(i, cmp -> cmp == 1);
                 programCounter++;
-                break;
-            case SET_LE:
+            }
+            case SET_LE -> {
                 set(i, cmp -> cmp == 0 || cmp == -1);
                 programCounter++;
-                break;
-            case SET_LT:
+            }
+            case SET_LT -> {
                 set(i, cmp -> cmp == -1);
                 programCounter++;
-                break;
-            case SET_NE:
+            }
+            case SET_NE -> {
                 set(i, cmp -> cmp != 0);
                 programCounter++;
-                break;
-            case BREAKPOINT:
+            }
+            case BREAKPOINT -> {
                 // A breakpoint that is part of the program, rather than patched in
                 programCounter++;
                 hitBreakpoint(programCounter - 1);
-                break;
-            default:
+            }
+            default -> {
                 ScriptDiagnostics.warnAt(
                         log,
                         getCurrentLine(),
@@ -1748,7 +1735,7 @@ public class ScriptRuntime {
                                 "UNKNOWN_INSTRUCTION", ScriptManager.getResourceBundle()),
                         i.type().toString());
                 halt();
-                break;
+            }
         }
     }
 
@@ -1769,7 +1756,8 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return True if there is now a breakpoint there, false if the index is out of range.
      */
-    public synchronized boolean setBreakpoint(int index) {
+    @Synchronized
+    public boolean setBreakpoint(int index) {
         if (index < 0 || index >= instructions.size()) {
             return false;
         }
@@ -1790,7 +1778,8 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return True if there was a breakpoint to remove.
      */
-    public synchronized boolean clearBreakpoint(int index) {
+    @Synchronized
+    public boolean clearBreakpoint(int index) {
         final Instruction original = patchedInstructions.remove(index);
         if (original == null) {
             return false;
@@ -1800,7 +1789,8 @@ public class ScriptRuntime {
     }
 
     /** Remove all the breakpoints. */
-    public synchronized void clearBreakpoints() {
+    @Synchronized
+    public void clearBreakpoints() {
         for (var entry : patchedInstructions.entrySet()) {
             instructions.set(entry.getKey(), entry.getValue());
         }
@@ -1813,7 +1803,8 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return True if a breakpoint is patched in there.
      */
-    public synchronized boolean hasBreakpoint(int index) {
+    @Synchronized
+    public boolean hasBreakpoint(int index) {
         return patchedInstructions.containsKey(index);
     }
 
@@ -1822,7 +1813,8 @@ public class ScriptRuntime {
      *
      * @return The sorted indices of instructions with breakpoints.
      */
-    public synchronized Set<Integer> getBreakpoints() {
+    @Synchronized
+    public Set<Integer> getBreakpoints() {
         return new TreeSet<>(patchedInstructions.keySet());
     }
 
@@ -1832,7 +1824,8 @@ public class ScriptRuntime {
      * @param index The index of the instruction.
      * @return The original instruction.
      */
-    public synchronized Instruction getOriginalInstruction(int index) {
+    @Synchronized
+    public Instruction getOriginalInstruction(int index) {
         final Instruction original = patchedInstructions.get(index);
         return original != null ? original : instructions.get(index);
     }
@@ -1845,7 +1838,8 @@ public class ScriptRuntime {
      * @return The index of the first instruction for the line, or empty if no instructions came
      *     from that line.
      */
-    public synchronized OptionalInt getFirstInstructionOnLine(int line) {
+    @Synchronized
+    public OptionalInt getFirstInstructionOnLine(int line) {
         for (int i = 0; i < instructions.size(); ++i) {
             if (getOriginalInstruction(i).line() == line) {
                 return OptionalInt.of(i);
@@ -1864,7 +1858,8 @@ public class ScriptRuntime {
      * @return The indices of the first instruction in each group, in order, which is empty if no
      *     instructions came from that line.
      */
-    public synchronized List<Integer> getLineStartInstructions(int line) {
+    @Synchronized
+    public List<Integer> getLineStartInstructions(int line) {
         final List<Integer> starts = new ArrayList<>();
         boolean previousOnLine = false;
         for (int i = 0; i < instructions.size(); ++i) {
@@ -1882,7 +1877,8 @@ public class ScriptRuntime {
      *
      * @return The line, starting at 1, or -1 if unknown or the script has finished.
      */
-    public synchronized int getCurrentLine() {
+    @Synchronized
+    public int getCurrentLine() {
         if (programCounter < 0 || programCounter >= instructions.size()) {
             return -1;
         }
@@ -1909,7 +1905,8 @@ public class ScriptRuntime {
     }
 
     /** Stop running the program. Should only be called internally and by the script runner. */
-    public synchronized void halt() {
+    @Synchronized
+    public void halt() {
         fatalError = true;
         programCounter = instructions.size();
     }
@@ -2033,10 +2030,9 @@ public class ScriptRuntime {
      * @return The appropriate value, will be void memory if the location is invalid.
      */
     private MemoryItem loadValue(MemLocation from) {
-        switch (from.area()) {
-            case IMMEDIATE:
-                return new MemoryItem(from.type(), from.value());
-            case STACK:
+        return switch (from.area()) {
+            case IMMEDIATE -> new MemoryItem(from.type(), from.value());
+            case STACK -> {
                 if (stack.isEmpty()) {
                     ScriptDiagnostics.warnAt(
                             log,
@@ -2045,10 +2041,11 @@ public class ScriptRuntime {
                             SafeResourceLoader.getString(
                                     "POPPING_TOO_FAR", ScriptManager.getResourceBundle()));
                     halt();
-                    return ScriptRuntime.VOID_MEMORY;
+                    yield ScriptRuntime.VOID_MEMORY;
                 }
-                return stack.pop();
-            case VARIABLE:
+                yield stack.pop();
+            }
+            case VARIABLE -> {
                 if (!symbolTable.containsKey(from.value())) {
                     ScriptDiagnostics.warnAt(
                             log,
@@ -2058,10 +2055,11 @@ public class ScriptRuntime {
                                     "UNKNOWN_VARIABLE", ScriptManager.getResourceBundle()),
                             from.value());
                     halt();
-                    return ScriptRuntime.VOID_MEMORY;
+                    yield ScriptRuntime.VOID_MEMORY;
                 }
-                return symbolTable.get(from.value());
-            default:
+                yield symbolTable.get(from.value());
+            }
+            default -> {
                 ScriptDiagnostics.warnAt(
                         log,
                         getCurrentLine(),
@@ -2070,8 +2068,9 @@ public class ScriptRuntime {
                                 "UNKNOWN_MEMORY_AREA", ScriptManager.getResourceBundle()),
                         from.area().toString());
                 halt();
-                return ScriptRuntime.VOID_MEMORY;
-        }
+                yield ScriptRuntime.VOID_MEMORY;
+            }
+        };
     }
 
     /**
@@ -2320,7 +2319,8 @@ public class ScriptRuntime {
     }
 
     /** Execute one instruction. */
-    public synchronized void step() {
+    @Synchronized
+    public void step() {
         if (fatalError || (programCounter < 0) || (programCounter >= instructions.size())) {
             // Stop executing
             return;
@@ -2365,10 +2365,8 @@ public class ScriptRuntime {
     private void storeValue(MemoryItem originalItem, MemLocation location) {
         MemoryItem item = originalItem;
         switch (location.area()) {
-            case STACK:
-                stack.push(item);
-                break;
-            case VARIABLE:
+            case STACK -> stack.push(item);
+            case VARIABLE -> {
                 final String variable = (String) location.value();
                 final Class<?> declaredType = declaredTypes.get(variable);
                 if (declaredType != null) {
@@ -2388,9 +2386,9 @@ public class ScriptRuntime {
                     break;
                 }
                 symbolTable.put(variable, item);
-                break;
-            case IMMEDIATE:
-            default:
+            }
+            default -> {
+                // IMMEDIATE
                 ScriptDiagnostics.warnAt(
                         log,
                         getCurrentLine(),
@@ -2399,7 +2397,7 @@ public class ScriptRuntime {
                                 "INVALID_MEMORY_LOCATION", ScriptManager.getResourceBundle()),
                         location.area());
                 halt();
-                break;
+            }
         }
     }
 }

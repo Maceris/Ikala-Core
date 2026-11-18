@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 /**
@@ -206,7 +207,7 @@ public class PluginConfig {
     private final Map<String, Object> contents;
 
     /** Held while saving this configuration to disk, so only one save happens at a time. */
-    private final Object saveLock = new Object();
+    private final ReentrantLock saveLock = new ReentrantLock();
 
     /**
      * Create a configuration. It takes ownership of the contents, so nothing else should keep using
@@ -629,7 +630,7 @@ public class PluginConfig {
      *
      * @return The lock for saving.
      */
-    Object getSaveLock() {
+    ReentrantLock getSaveLock() {
         return saveLock;
     }
 

@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +28,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 /**
@@ -51,16 +51,17 @@ public class ScriptManager {
                     "com.ikalagaming.scripting.Scripting", Localization.getLocale());
 
     /** List of classes that are registered. */
-    private static List<Class<?>> registeredClasses =
-            Collections.synchronizedList(new ArrayList<>());
+    private static List<Class<?>> registeredClasses = new CopyOnWriteArrayList<>();
 
     /** Maps from class to registrations. */
     private static Map<Class<?>, List<FunctionRegistration>> classMethods =
-            Collections.synchronizedMap(new HashMap<>());
+            new ConcurrentHashMap<>();
 
-    /** A list of all methods that are registered for easy searching. */
-    private static Map<FunctionRegistration, Method> registeredMethods =
-            Collections.synchronizedMap(new HashMap<>());
+    /**
+     * A list of all methods that are registered for easy searching. Lookups iterate it while
+     * plugins may register or remove classes, which a concurrent map allows without a lock.
+     */
+    private static Map<FunctionRegistration, Method> registeredMethods = new ConcurrentHashMap<>();
 
     /** Runs scripts on a different thread. */
     private static ScriptRunner runner;
@@ -127,17 +128,15 @@ public class ScriptManager {
     public static List<Method> getMethods(@NonNull String name, int parameterCount) {
         // The same method might be registered through multiple classes if it's inherited
         Set<Method> methods = new LinkedHashSet<>();
-        synchronized (ScriptManager.registeredMethods) {
-            for (var entry : ScriptManager.registeredMethods.entrySet()) {
-                final int declared = entry.getKey().parameterTypes().size();
-                final boolean countFits =
-                        parameterCount == declared
-                                || (entry.getValue().isVarArgs() && parameterCount >= declared - 1);
-                if (!name.equals(entry.getKey().name()) || !countFits) {
-                    continue;
-                }
-                methods.add(entry.getValue());
+        for (var entry : ScriptManager.registeredMethods.entrySet()) {
+            final int declared = entry.getKey().parameterTypes().size();
+            final boolean countFits =
+                    parameterCount == declared
+                            || (entry.getValue().isVarArgs() && parameterCount >= declared - 1);
+            if (!name.equals(entry.getKey().name()) || !countFits) {
+                continue;
             }
+            methods.add(entry.getValue());
         }
         return new ArrayList<>(methods);
     }

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Handles reading, writing, and caching configurations. This is thread safe, and every thread that
@@ -221,12 +222,14 @@ public class ConfigManager {
         options.setIndent(2);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         options.setPrettyFlow(true);
-        String contents = new Yaml(options).dump(config.snapshot());
-
         Path configPath =
                 PluginFolder.getResource(pluginName, ResourceType.CONFIG, configName).toPath();
-        // One save at a time per config, so two saves can't mix in the file
-        synchronized (config.getSaveLock()) {
+        // One save at a time per config, so two saves can't mix in the file. The snapshot is
+        // taken inside the lock too, so a later save can't be overwritten by an earlier one.
+        ReentrantLock saveLock = config.getSaveLock();
+        saveLock.lock();
+        try {
+            String contents = new Yaml(options).dump(config.snapshot());
             try {
                 Files.createDirectories(configPath.getParent());
                 // Creates the file if missing, and truncates it if it already exists
@@ -239,6 +242,8 @@ public class ConfigManager {
                         pluginName,
                         e.getLocalizedMessage());
             }
+        } finally {
+            saveLock.unlock();
         }
     }
 

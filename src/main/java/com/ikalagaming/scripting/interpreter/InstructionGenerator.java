@@ -114,53 +114,42 @@ public class InstructionGenerator implements ASTVisitor {
         if (condition instanceof ExprRelation relation) {
             // Emits a CMP
             processTree(relation);
-            InstructionType type;
-            switch (relation.getOperator()) {
-                case GT:
-                    type = jumpWhenTrue ? InstructionType.JGT : InstructionType.JLE;
-                    break;
-                case GTE:
-                    type = jumpWhenTrue ? InstructionType.JGE : InstructionType.JLT;
-                    break;
-                case LT:
-                    type = jumpWhenTrue ? InstructionType.JLT : InstructionType.JGE;
-                    break;
-                case LTE:
-                    type = jumpWhenTrue ? InstructionType.JLE : InstructionType.JGT;
-                    break;
-                default:
-                    ScriptDiagnostics.warn(
-                            log,
-                            SafeResourceLoader.getString(
-                                    "UNKNOWN_RELATIONAL_OPERATOR",
-                                    ScriptManager.getResourceBundle()),
-                            relation.getOperator().toString());
-                    type = InstructionType.JMP;
-                    break;
-            }
+            InstructionType type =
+                    switch (relation.getOperator()) {
+                        case GT -> jumpWhenTrue ? InstructionType.JGT : InstructionType.JLE;
+                        case GTE -> jumpWhenTrue ? InstructionType.JGE : InstructionType.JLT;
+                        case LT -> jumpWhenTrue ? InstructionType.JLT : InstructionType.JGE;
+                        case LTE -> jumpWhenTrue ? InstructionType.JLE : InstructionType.JGT;
+                        default -> {
+                            ScriptDiagnostics.warn(
+                                    log,
+                                    SafeResourceLoader.getString(
+                                            "UNKNOWN_RELATIONAL_OPERATOR",
+                                            ScriptManager.getResourceBundle()),
+                                    relation.getOperator().toString());
+                            yield InstructionType.JMP;
+                        }
+                    };
             emitJump(type, targetLabel);
             return;
         }
         if (condition instanceof ExprEquality equality) {
             // Emits a CMP
             processTree(equality);
-            InstructionType type;
-            switch (equality.getOperator()) {
-                case EQUAL:
-                    type = jumpWhenTrue ? InstructionType.JEQ : InstructionType.JNE;
-                    break;
-                case NOT_EQUAL:
-                    type = jumpWhenTrue ? InstructionType.JNE : InstructionType.JEQ;
-                    break;
-                default:
-                    ScriptDiagnostics.warn(
-                            log,
-                            SafeResourceLoader.getString(
-                                    "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
-                            equality.getOperator().toString());
-                    type = InstructionType.JMP;
-                    break;
-            }
+            InstructionType type =
+                    switch (equality.getOperator()) {
+                        case EQUAL -> jumpWhenTrue ? InstructionType.JEQ : InstructionType.JNE;
+                        case NOT_EQUAL -> jumpWhenTrue ? InstructionType.JNE : InstructionType.JEQ;
+                        default -> {
+                            ScriptDiagnostics.warn(
+                                    log,
+                                    SafeResourceLoader.getString(
+                                            "UNKNOWN_EQUALITY_OPERATOR",
+                                            ScriptManager.getResourceBundle()),
+                                    equality.getOperator().toString());
+                            yield InstructionType.JMP;
+                        }
+                    };
             emitJump(type, targetLabel);
             return;
         }
@@ -361,22 +350,22 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The class that best represents that node's base type.
      */
     private Class<?> getNumericBase(@NonNull Node node) {
-        switch (node.getType().getBase()) {
-            case CHAR, DOUBLE, INT, STRING:
-                return node.getType().getBase().getCorrespondingClass();
-            case UNKNOWN:
-                // We assume it's an integer, as that's most common
-                return Integer.class;
-            case BOOLEAN, IDENTIFIER, LABEL, VOID:
-            default:
+        return switch (node.getType().getBase()) {
+            case CHAR, DOUBLE, INT, STRING -> node.getType().getBase().getCorrespondingClass();
+            case UNKNOWN ->
+                    // We assume it's an integer, as that's most common
+                    Integer.class;
+            default -> {
+                // BOOLEAN, IDENTIFIER, LABEL, VOID
                 // Fallback, but the tree verification should(tm) prevent this
                 ScriptDiagnostics.warn(
                         log,
                         SafeResourceLoader.getString(
                                 "INVALID_ARITHMETIC_TYPE", ScriptManager.getResourceBundle()),
                         node.getType().toString());
-                return Integer.class;
-        }
+                yield Integer.class;
+            }
+        };
     }
 
     /**
@@ -407,13 +396,11 @@ public class InstructionGenerator implements ASTVisitor {
         }
 
         // defaults
-        switch (node.getOperator()) {
-            case ADD:
-                return InstructionType.CONCAT_STRING;
-            case DEC_PREFIX, DEC_SUFFIX, DIV, INC_PREFIX, INC_SUFFIX, MOD, MUL, SUB:
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (node.getOperator()) {
+            case ADD -> InstructionType.CONCAT_STRING;
+                // DEC_PREFIX, DEC_SUFFIX, DIV, INC_PREFIX, INC_SUFFIX, MOD, MUL, SUB
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -458,27 +445,19 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionTypeChar(ExprArithmetic node) {
-        switch (node.getOperator()) {
-            case ADD:
-                return InstructionType.ADD_CHAR;
-            case DEC_PREFIX, DEC_SUFFIX:
-                return InstructionType.SUB_CHAR;
-            case DIV:
-                return InstructionType.DIV_CHAR;
-            case INC_PREFIX, INC_SUFFIX:
-                return InstructionType.ADD_CHAR;
-            case MOD:
-                return InstructionType.MOD_CHAR;
-            case MUL:
-                return InstructionType.MUL_CHAR;
-            case SUB:
-                if (node.getChildren().size() == 1) {
-                    return InstructionType.NEG_CHAR;
-                }
-                return InstructionType.SUB_CHAR;
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (node.getOperator()) {
+            case ADD -> InstructionType.ADD_CHAR;
+            case DEC_PREFIX, DEC_SUFFIX -> InstructionType.SUB_CHAR;
+            case DIV -> InstructionType.DIV_CHAR;
+            case INC_PREFIX, INC_SUFFIX -> InstructionType.ADD_CHAR;
+            case MOD -> InstructionType.MOD_CHAR;
+            case MUL -> InstructionType.MUL_CHAR;
+            case SUB ->
+                    node.getChildren().size() == 1
+                            ? InstructionType.NEG_CHAR
+                            : InstructionType.SUB_CHAR;
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -489,21 +468,15 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionTypeChar(ExprAssign.Operator operator) {
-        switch (operator) {
-            case ADD_ASSIGN:
-                return InstructionType.ADD_CHAR;
-            case DIV_ASSIGN:
-                return InstructionType.DIV_CHAR;
-            case MOD_ASSIGN:
-                return InstructionType.MOD_CHAR;
-            case MUL_ASSIGN:
-                return InstructionType.MUL_CHAR;
-            case SUB_ASSIGN:
-                return InstructionType.SUB_CHAR;
-            case ASSIGN:
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (operator) {
+            case ADD_ASSIGN -> InstructionType.ADD_CHAR;
+            case DIV_ASSIGN -> InstructionType.DIV_CHAR;
+            case MOD_ASSIGN -> InstructionType.MOD_CHAR;
+            case MUL_ASSIGN -> InstructionType.MUL_CHAR;
+            case SUB_ASSIGN -> InstructionType.SUB_CHAR;
+                // ASSIGN
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -514,27 +487,19 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionTypeDouble(ExprArithmetic node) {
-        switch (node.getOperator()) {
-            case ADD:
-                return InstructionType.ADD_DOUBLE;
-            case DEC_PREFIX, DEC_SUFFIX:
-                return InstructionType.SUB_DOUBLE;
-            case DIV:
-                return InstructionType.DIV_DOUBLE;
-            case INC_PREFIX, INC_SUFFIX:
-                return InstructionType.ADD_DOUBLE;
-            case MOD:
-                return InstructionType.MOD_DOUBLE;
-            case MUL:
-                return InstructionType.MUL_DOUBLE;
-            case SUB:
-                if (node.getChildren().size() == 1) {
-                    return InstructionType.NEG_DOUBLE;
-                }
-                return InstructionType.SUB_DOUBLE;
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (node.getOperator()) {
+            case ADD -> InstructionType.ADD_DOUBLE;
+            case DEC_PREFIX, DEC_SUFFIX -> InstructionType.SUB_DOUBLE;
+            case DIV -> InstructionType.DIV_DOUBLE;
+            case INC_PREFIX, INC_SUFFIX -> InstructionType.ADD_DOUBLE;
+            case MOD -> InstructionType.MOD_DOUBLE;
+            case MUL -> InstructionType.MUL_DOUBLE;
+            case SUB ->
+                    node.getChildren().size() == 1
+                            ? InstructionType.NEG_DOUBLE
+                            : InstructionType.SUB_DOUBLE;
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -545,21 +510,15 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionTypeDouble(ExprAssign.Operator operator) {
-        switch (operator) {
-            case ADD_ASSIGN:
-                return InstructionType.ADD_DOUBLE;
-            case DIV_ASSIGN:
-                return InstructionType.DIV_DOUBLE;
-            case MOD_ASSIGN:
-                return InstructionType.MOD_DOUBLE;
-            case MUL_ASSIGN:
-                return InstructionType.MUL_DOUBLE;
-            case SUB_ASSIGN:
-                return InstructionType.SUB_DOUBLE;
-            case ASSIGN:
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (operator) {
+            case ADD_ASSIGN -> InstructionType.ADD_DOUBLE;
+            case DIV_ASSIGN -> InstructionType.DIV_DOUBLE;
+            case MOD_ASSIGN -> InstructionType.MOD_DOUBLE;
+            case MUL_ASSIGN -> InstructionType.MUL_DOUBLE;
+            case SUB_ASSIGN -> InstructionType.SUB_DOUBLE;
+                // ASSIGN
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -570,27 +529,19 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionTypeInt(ExprArithmetic node) {
-        switch (node.getOperator()) {
-            case ADD:
-                return InstructionType.ADD_INT;
-            case DEC_PREFIX, DEC_SUFFIX:
-                return InstructionType.SUB_INT;
-            case DIV:
-                return InstructionType.DIV_INT;
-            case INC_PREFIX, INC_SUFFIX:
-                return InstructionType.ADD_INT;
-            case MOD:
-                return InstructionType.MOD_INT;
-            case MUL:
-                return InstructionType.MUL_INT;
-            case SUB:
-                if (node.getChildren().size() == 1) {
-                    return InstructionType.NEG_INT;
-                }
-                return InstructionType.SUB_INT;
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (node.getOperator()) {
+            case ADD -> InstructionType.ADD_INT;
+            case DEC_PREFIX, DEC_SUFFIX -> InstructionType.SUB_INT;
+            case DIV -> InstructionType.DIV_INT;
+            case INC_PREFIX, INC_SUFFIX -> InstructionType.ADD_INT;
+            case MOD -> InstructionType.MOD_INT;
+            case MUL -> InstructionType.MUL_INT;
+            case SUB ->
+                    node.getChildren().size() == 1
+                            ? InstructionType.NEG_INT
+                            : InstructionType.SUB_INT;
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -601,21 +552,15 @@ public class InstructionGenerator implements ASTVisitor {
      * @return The type of instruction we are generating.
      */
     private InstructionType instructionTypeInt(ExprAssign.Operator operator) {
-        switch (operator) {
-            case ADD_ASSIGN:
-                return InstructionType.ADD_INT;
-            case DIV_ASSIGN:
-                return InstructionType.DIV_INT;
-            case MOD_ASSIGN:
-                return InstructionType.MOD_INT;
-            case MUL_ASSIGN:
-                return InstructionType.MUL_INT;
-            case SUB_ASSIGN:
-                return InstructionType.SUB_INT;
-            case ASSIGN:
-            default:
-                return InstructionType.NOP;
-        }
+        return switch (operator) {
+            case ADD_ASSIGN -> InstructionType.ADD_INT;
+            case DIV_ASSIGN -> InstructionType.DIV_INT;
+            case MOD_ASSIGN -> InstructionType.MOD_INT;
+            case MUL_ASSIGN -> InstructionType.MUL_INT;
+            case SUB_ASSIGN -> InstructionType.SUB_INT;
+                // ASSIGN
+            default -> InstructionType.NOP;
+        };
     }
 
     /**
@@ -883,23 +828,20 @@ public class InstructionGenerator implements ASTVisitor {
      * @param node The node that had a comparison.
      */
     private void pushResultToStack(ExprEquality node) {
-        InstructionType type;
-        switch (node.getOperator()) {
-            case EQUAL:
-                type = InstructionType.SET_EQ;
-                break;
-            case NOT_EQUAL:
-                type = InstructionType.SET_NE;
-                break;
-            default:
-                type = InstructionType.NOP;
-                ScriptDiagnostics.warn(
-                        log,
-                        SafeResourceLoader.getString(
-                                "UNKNOWN_EQUALITY_OPERATOR", ScriptManager.getResourceBundle()),
-                        node.getOperator().toString());
-                break;
-        }
+        InstructionType type =
+                switch (node.getOperator()) {
+                    case EQUAL -> InstructionType.SET_EQ;
+                    case NOT_EQUAL -> InstructionType.SET_NE;
+                    default -> {
+                        ScriptDiagnostics.warn(
+                                log,
+                                SafeResourceLoader.getString(
+                                        "UNKNOWN_EQUALITY_OPERATOR",
+                                        ScriptManager.getResourceBundle()),
+                                node.getOperator().toString());
+                        yield InstructionType.NOP;
+                    }
+                };
         tempInstructions.add(
                 new Instruction(type, null, null, new MemLocation(MemArea.STACK, Boolean.class)));
     }
@@ -911,29 +853,22 @@ public class InstructionGenerator implements ASTVisitor {
      * @param node The node that had a comparison.
      */
     private void pushResultToStack(ExprRelation node) {
-        InstructionType type;
-        switch (node.getOperator()) {
-            case GT:
-                type = InstructionType.SET_GT;
-                break;
-            case GTE:
-                type = InstructionType.SET_GE;
-                break;
-            case LT:
-                type = InstructionType.SET_LT;
-                break;
-            case LTE:
-                type = InstructionType.SET_LE;
-                break;
-            default:
-                type = InstructionType.NOP;
-                ScriptDiagnostics.warn(
-                        log,
-                        SafeResourceLoader.getString(
-                                "UNKNOWN_RELATIONAL_OPERATOR", ScriptManager.getResourceBundle()),
-                        node.getOperator().toString());
-                break;
-        }
+        InstructionType type =
+                switch (node.getOperator()) {
+                    case GT -> InstructionType.SET_GT;
+                    case GTE -> InstructionType.SET_GE;
+                    case LT -> InstructionType.SET_LT;
+                    case LTE -> InstructionType.SET_LE;
+                    default -> {
+                        ScriptDiagnostics.warn(
+                                log,
+                                SafeResourceLoader.getString(
+                                        "UNKNOWN_RELATIONAL_OPERATOR",
+                                        ScriptManager.getResourceBundle()),
+                                node.getOperator().toString());
+                        yield InstructionType.NOP;
+                    }
+                };
         tempInstructions.add(
                 new Instruction(type, null, null, new MemLocation(MemArea.STACK, Boolean.class)));
     }
@@ -1505,35 +1440,24 @@ public class InstructionGenerator implements ASTVisitor {
         Identifier id = (Identifier) node.getChildren().get(0);
         final String varName = id.getName();
 
-        Class<?> clazz;
-        switch (node.getType().getBase()) {
-            case BOOLEAN:
-                clazz = Boolean.class;
-                break;
-            case CHAR:
-                clazz = Character.class;
-                break;
-            case DOUBLE:
-                clazz = Double.class;
-                break;
-            case INT:
-                clazz = Integer.class;
-                break;
-            case STRING:
-                clazz = String.class;
-                break;
-            case UNKNOWN, IDENTIFIER:
-                clazz = Object.class;
-                break;
-            case LABEL, VOID:
-            default:
-                ScriptDiagnostics.warn(
-                        log,
-                        SafeResourceLoader.getString(
-                                "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
-                        node.getType().getBase());
-                clazz = Object.class;
-        }
+        Class<?> clazz =
+                switch (node.getType().getBase()) {
+                    case BOOLEAN -> Boolean.class;
+                    case CHAR -> Character.class;
+                    case DOUBLE -> Double.class;
+                    case INT -> Integer.class;
+                    case STRING -> String.class;
+                    case UNKNOWN, IDENTIFIER -> Object.class;
+                    default -> {
+                        // LABEL, VOID
+                        ScriptDiagnostics.warn(
+                                log,
+                                SafeResourceLoader.getString(
+                                        "INVALID_MEMORY_TYPE", ScriptManager.getResourceBundle()),
+                                node.getType().getBase());
+                        yield Object.class;
+                    }
+                };
 
         if (dims > 0 || node.getType().getDimensions() > 0) {
             // Arrays come from Java, we can't check what type they are

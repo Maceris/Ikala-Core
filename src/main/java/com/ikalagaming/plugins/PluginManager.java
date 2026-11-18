@@ -2129,34 +2129,37 @@ public class PluginManager {
 
     private void shutdown() {
         eventManager.unregisterEventListeners(commandListener);
-
-        synchronized (pluginLock) {
-            List<String> toUnload = new ArrayList<>(pluginDetails.keySet());
-            for (String s : toUnload) {
-                unloadPlugin(s);
-            }
-            /*
-             * Anything that failed to unload is removed anyway, since we're
-             * shutting down. Otherwise its listeners and jar file would stay
-             * around forever.
-             */
-            for (String s : List.copyOf(pluginDetails.keySet())) {
-                String msg = SafeResourceLoader.getString("PLUGIN_FORCED_REMOVAL", resourceBundle);
-                log.warn(msg, s);
-                PluginDetails details = pluginDetails.remove(s);
-                plUnregisterListeners(s, details);
-                PluginThreads.stopAll(s);
-                details.dispose();
-            }
-            // Nothing is left to use the libraries, so release the jar files
-            try {
-                libraryClassLoader.close();
-            } catch (IOException e) {
-                String msg = SafeResourceLoader.getString("LIBRARY_CLOSE_ERROR", resourceBundle);
-                log.warn(msg, e);
-            }
-        }
+        unloadEverything();
         clearCommands();
+    }
+
+    /** Unload every plugin for shutdown, forcing out any that fail, then release the libraries. */
+    @Synchronized("pluginLock")
+    private void unloadEverything() {
+        List<String> toUnload = new ArrayList<>(pluginDetails.keySet());
+        for (String s : toUnload) {
+            unloadPlugin(s);
+        }
+        /*
+         * Anything that failed to unload is removed anyway, since we're
+         * shutting down. Otherwise its listeners and jar file would stay
+         * around forever.
+         */
+        for (String s : List.copyOf(pluginDetails.keySet())) {
+            String msg = SafeResourceLoader.getString("PLUGIN_FORCED_REMOVAL", resourceBundle);
+            log.warn(msg, s);
+            PluginDetails details = pluginDetails.remove(s);
+            plUnregisterListeners(s, details);
+            PluginThreads.stopAll(s);
+            details.dispose();
+        }
+        // Nothing is left to use the libraries, so release the jar files
+        try {
+            libraryClassLoader.close();
+        } catch (IOException e) {
+            String msg = SafeResourceLoader.getString("LIBRARY_CLOSE_ERROR", resourceBundle);
+            log.warn(msg, e);
+        }
     }
 
     /**

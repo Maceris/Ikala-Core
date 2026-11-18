@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -51,8 +54,14 @@ class ScriptRunner extends Thread {
 
     private volatile boolean running;
 
-    /** Used to handle synchronization and waiting for events */
-    private Object syncObject;
+    /** Guards {@link #woken}, for sleeping until there is work. */
+    private final ReentrantLock wakeLock = new ReentrantLock();
+
+    /** Signaled when there might be work. */
+    private final Condition work = wakeLock.newCondition();
+
+    /** Whether something happened since the thread last went to sleep. Guarded by wakeLock. */
+    private boolean woken;
 
     /**
      * A request to resume every script waiting on a tag.
@@ -75,12 +84,12 @@ class ScriptRunner extends Thread {
     public ScriptRunner() {
         setName("ScriptRunner");
         scripts = new ArrayList<>();
-        yieldRequests = Collections.synchronizedMap(new HashMap<>());
-        resumeRequests = Collections.synchronizedList(new ArrayList<>());
+        // Every use of these holds this object's lock (the methods are @Synchronized)
+        yieldRequests = new HashMap<>();
+        resumeRequests = new ArrayList<>();
         deliveries = new ArrayList<>();
         haltedScripts = new HashMap<>();
         running = true;
-        syncObject = new Object();
     }
 
     /**
@@ -91,9 +100,7 @@ class ScriptRunner extends Thread {
     @Synchronized
     public List<ScriptRuntime> getRunningScripts() {
         final List<ScriptRuntime> running = new ArrayList<>(scripts);
-        synchronized (yieldRequests) {
-            running.removeAll(yieldRequests.keySet());
-        }
+        running.removeAll(yieldRequests.keySet());
         return running;
     }
 
@@ -106,9 +113,7 @@ class ScriptRunner extends Thread {
     @Synchronized
     public Map<ScriptRuntime, String> getYieldedScripts() {
         final Map<ScriptRuntime, String> yielded = new LinkedHashMap<>(haltedScripts);
-        synchronized (yieldRequests) {
-            yielded.putAll(yieldRequests);
-        }
+        yielded.putAll(yieldRequests);
         return yielded;
     }
 
@@ -299,34 +304,65 @@ class ScriptRunner extends Thread {
      */
     @Override
     public void run() {
-        while (running) {
-            while (scripts.isEmpty()) {
-                synchronized (syncObject) {
-                    try {
-                        // block this thread until an item is added
-                        syncObject.wait(ScriptRunner.WAIT_TIMEOUT);
-                    } catch (InterruptedException e) {
-                        log.warn(
-                                SafeResourceLoader.getString(
-                                        "THREAD_INTERRUPTED", ScriptManager.getResourceBundle()));
-                        // Re-interrupt as per SonarLint java:S2142
-                        Thread.currentThread().interrupt();
+        try {
+            while (running) {
+                while (!hasScripts()) {
+                    awaitWork();
+                    // in case it was terminated while waiting
+                    if (!running) {
+                        break;
                     }
+                    resumeScripts();
                 }
-                // in case it was terminated while waiting
-                if (!running) {
-                    break;
+                if (hasScripts()) {
+                    stepScripts();
                 }
+                haltScripts();
                 resumeScripts();
             }
-            if (!scripts.isEmpty()) {
-                stepScripts();
-            }
-            haltScripts();
-            resumeScripts();
+        } catch (Error e) {
+            log.error("The script runner stopped", e);
+            throw e;
+        } finally {
+            // Done running
+            clearScripts();
         }
-        // Done running
+    }
+
+    /**
+     * Whether any scripts are running.
+     *
+     * @return True if there are scripts to step.
+     */
+    @Synchronized
+    private boolean hasScripts() {
+        return !scripts.isEmpty();
+    }
+
+    /** Forget the running scripts. */
+    @Synchronized
+    private void clearScripts() {
         scripts.clear();
+    }
+
+    /**
+     * Sleep until there might be work, or a while has passed. Interrupts only cut the sleep short;
+     * {@link #terminate()} is what stops the thread.
+     */
+    private void awaitWork() {
+        wakeLock.lock();
+        try {
+            if (!woken) {
+                work.await(ScriptRunner.WAIT_TIMEOUT, TimeUnit.MILLISECONDS);
+            }
+            woken = false;
+        } catch (InterruptedException e) {
+            log.debug(
+                    SafeResourceLoader.getString(
+                            "THREAD_INTERRUPTED", ScriptManager.getResourceBundle()));
+        } finally {
+            wakeLock.unlock();
+        }
     }
 
     /**
@@ -371,9 +407,13 @@ class ScriptRunner extends Thread {
 
     /** Wakes this thread up when it is sleeping */
     private void wakeUp() {
-        synchronized (syncObject) {
-            // Wake the thread up as there is now an event
-            syncObject.notifyAll();
+        wakeLock.lock();
+        try {
+            // Wake the thread up as there is now something to do
+            woken = true;
+            work.signalAll();
+        } finally {
+            wakeLock.unlock();
         }
     }
 }
