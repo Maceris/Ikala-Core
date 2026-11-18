@@ -14,26 +14,10 @@ public class IntegerTree extends BinaryTree<Integer> {
      * @return the smallest available int not in the tree.
      */
     public int getSmallestUnusedInt() {
-        if (treeRoot == null) {
-            return 0;
-        }
-        BinaryTreeNode<Integer> node = getSmallestSubnode(treeRoot);
         int smallest = 0;
-        boolean exitNextLoop = false;
-
-        while (true) {
-            if ((find(smallest, node) != null) || find(smallest, node.getParent()) != null) {
-                ++smallest;
-                exitNextLoop = false;
-            } else if (node.getParent() != null) {
-                node = node.getParent();
-                exitNextLoop = false;
-            } else {
-                if (exitNextLoop) {
-                    break;
-                }
-                exitNextLoop = true;
-            }
+        // Each value is in the tree once, so this stops after at most size + 1 lookups
+        while (contains(smallest)) {
+            ++smallest;
         }
         return smallest;
     }

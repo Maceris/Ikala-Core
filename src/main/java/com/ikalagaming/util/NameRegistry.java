@@ -28,9 +28,8 @@ public class NameRegistry {
     public void clear() {
         mapLock.lock();
         try {
-            for (String name : registeredNames.keySet()) {
-                this.clear(name);
-            }
+            registeredNames.values().forEach(IntegerTree::clear);
+            registeredNames.clear();
         } finally {
             mapLock.unlock();
         }
@@ -44,9 +43,9 @@ public class NameRegistry {
     public void clear(final String baseName) {
         mapLock.lock();
         try {
-            if (registeredNames.containsKey(baseName)) {
-                registeredNames.get(baseName).clear();
-                registeredNames.remove(baseName);
+            IntegerTree tree = registeredNames.remove(baseName);
+            if (tree != null) {
+                tree.clear();
             }
         } finally {
             mapLock.unlock();
@@ -54,45 +53,56 @@ public class NameRegistry {
     }
 
     /**
+     * A full name split into its base name and ID.
+     *
+     * @param name The base name.
+     * @param id The ID.
+     */
+    private record FullName(String name, int id) {}
+
+    /**
+     * Split a full name, formed as base name, dash, then ID.
+     *
+     * @param fullName The full name.
+     * @return The parts, or null if the name doesn't have that form.
+     */
+    private static FullName parse(final String fullName) {
+        if (fullName == null) {
+            return null;
+        }
+        final int dashPos = fullName.lastIndexOf('-');
+        if (dashPos <= 0) {
+            // No dash, or no base name before it
+            return null;
+        }
+        try {
+            return new FullName(
+                    fullName.substring(0, dashPos),
+                    Integer.parseInt(fullName.substring(dashPos + 1)));
+        } catch (NumberFormatException badNumber) {
+            return null;
+        }
+    }
+
+    /**
      * Returns true if the base name exists in the registry and has the given ID registered to
-     * itself. If the name is
+     * itself.
      *
      * @param fullName the entire name of the object, including base name, dash, and ID
      * @return true if that name and ID pair exists, otherwise false
      */
     public boolean contains(final String fullName) {
-        if (fullName == null || fullName.isEmpty()) {
-            return false; // invalid name
-        }
-        // when objects are deleted, unregister their id
-        final int dashPos = fullName.lastIndexOf('-');
-        if (dashPos == -1) {
-            return false; // invalid name
-        }
-        int id = Integer.MIN_VALUE;
-        try {
-            id = Integer.parseInt(fullName.substring(dashPos));
-        } catch (NumberFormatException badNumber) {
+        final FullName parts = parse(fullName);
+        if (parts == null) {
             return false;
         }
-        String name = "";
-        try {
-            name = fullName.substring(0, dashPos);
-        } catch (IndexOutOfBoundsException badName) {
-            return false;
-        }
-        if (name.isEmpty()) {
-            return false;
-        }
-
-        boolean doesContain = false;
         mapLock.lock();
         try {
-            doesContain = registeredNames.get(name).contains(id);
+            final IntegerTree tree = registeredNames.get(parts.name());
+            return tree != null && tree.contains(parts.id());
         } finally {
             mapLock.unlock();
         }
-        return doesContain;
     }
 
     /**
@@ -108,25 +118,13 @@ public class NameRegistry {
      * @return the next ID that will be registered for the given name
      */
     public int getNextID(final String baseName) {
-        boolean doesContain = false;
         mapLock.lock();
         try {
-            doesContain = registeredNames.containsKey(baseName);
+            final IntegerTree tree = registeredNames.get(baseName);
+            return tree == null ? 0 : tree.getSmallestUnusedInt();
         } finally {
             mapLock.unlock();
         }
-        if (!doesContain) {
-            return 0;
-        }
-        int smallest = 0;
-
-        mapLock.lock();
-        try {
-            smallest = registeredNames.get(baseName).getSmallestUnusedInt();
-        } finally {
-            mapLock.unlock();
-        }
-        return smallest;
     }
 
     /**
@@ -147,49 +145,19 @@ public class NameRegistry {
      * @return the newly created unique name for the object
      */
     public String registerName(final String baseName) {
-        StringBuilder ret = new StringBuilder(baseName);
-        IntegerTree tree;
-        int addition;
-
-        boolean doesContain = false;
-
+        final int addition;
         mapLock.lock();
         try {
-            doesContain = registeredNames.containsKey(baseName);
-        } finally {
-            mapLock.unlock();
-        }
-        if (doesContain) {
-            mapLock.lock();
-            try {
-                tree = registeredNames.get(baseName);
-                addition = tree.getSmallestUnusedInt();
-            } finally {
-                mapLock.unlock();
-            }
-        } else {
-            tree = new IntegerTree();
-            addition = 0;
-            mapLock.lock();
-            try {
-                registeredNames.put(baseName, tree);
-
-            } finally {
-                mapLock.unlock();
-            }
-        }
-
-        mapLock.lock();
-        try {
+            final IntegerTree tree = registeredNames.computeIfAbsent(baseName, k -> new IntegerTree());
+            addition = tree.getSmallestUnusedInt();
             tree.insert(addition);
         } catch (DuplicateEntry e) {
-            e.printStackTrace();
+            // The smallest unused ID can't already be in use while we hold the lock
+            throw new IllegalStateException(e);
         } finally {
             mapLock.unlock();
         }
-
-        ret.append("-").append(addition);
-        return ret.toString();
+        return baseName + "-" + addition;
     }
 
     /**
@@ -203,41 +171,20 @@ public class NameRegistry {
      * @return true if the name was unregistered, otherwise false
      */
     public boolean unregisterName(final String fullName) {
-        if (fullName == null || fullName.isEmpty()) {
-            return false; // invalid name
-        }
-        // when objects are deleted, unregister their id
-        final int dashPos = fullName.lastIndexOf('-');
-        if (dashPos == -1) {
-            return false; // invalid name
-        }
-        int id = Integer.MIN_VALUE;
-        try {
-            id = Integer.parseInt(fullName.substring(dashPos));
-        } catch (NumberFormatException badNumber) {
+        final FullName parts = parse(fullName);
+        if (parts == null) {
             return false;
         }
-        String name = "";
-        try {
-            name = fullName.substring(0, dashPos);
-        } catch (IndexOutOfBoundsException badName) {
-            return false;
-        }
-        if (name.isEmpty()) {
-            return false;
-        }
-
         mapLock.lock();
         try {
-            IntegerTree nameTree;
-            nameTree = registeredNames.get(name);
-            if (nameTree != null) {
-                nameTree.remove(id);
+            final IntegerTree tree = registeredNames.get(parts.name());
+            if (tree == null || !tree.contains(parts.id())) {
+                return false;
             }
+            tree.remove(parts.id());
+            return true;
         } finally {
             mapLock.unlock();
         }
-
-        return true;
     }
 }

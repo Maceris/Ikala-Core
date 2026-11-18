@@ -57,7 +57,7 @@ public class IntArrayList extends AbstractList<Integer>
         } else {
             this.contents = new int[array.length];
             for (int i = 0; i < array.length; ++i) {
-                this.contents[i] = (int) array[i];
+                this.contents[i] = ((Number) array[i]).intValue();
             }
         }
     }
@@ -300,7 +300,7 @@ public class IntArrayList extends AbstractList<Integer>
 
     @Override
     public void add(int index, Integer element) {
-        Objects.checkIndex(index, size - 1);
+        checkPositionIndex(index, size);
         ++modCount;
         final int localSize = size;
         int[] localContents = this.contents;
@@ -314,7 +314,7 @@ public class IntArrayList extends AbstractList<Integer>
     }
 
     public void addInt(int index, int element) {
-        Objects.checkIndex(index, size - 1);
+        checkPositionIndex(index, size);
         ++modCount;
         final int localSize = size;
         int[] localContents = this.contents;
@@ -363,7 +363,7 @@ public class IntArrayList extends AbstractList<Integer>
             return false;
         }
 
-        final int localModCount = otherList.modCount;
+        final int localModCount = modCount;
         final int otherModCount = otherList.modCount;
         final int localSize = size;
         final int otherSize = otherList.size;
@@ -467,13 +467,13 @@ public class IntArrayList extends AbstractList<Integer>
             // Java, why can't you be normal?
             localContents[localSize + i] = (Integer) array[i];
         }
-        size = localSize + 1;
+        size = localSize + newItemCount;
         return true;
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends Integer> c) {
-        Objects.checkIndex(index, size - 1);
+        checkPositionIndex(index, size);
 
         Object[] array = c.toArray();
         ++modCount;
@@ -494,7 +494,7 @@ public class IntArrayList extends AbstractList<Integer>
         for (int i = 0; i < newItemCount; ++i) {
             localContents[index + i] = (Integer) array[i];
         }
-        size = localSize + 1;
+        size = localSize + newItemCount;
         return true;
     }
 
@@ -513,7 +513,7 @@ public class IntArrayList extends AbstractList<Integer>
             if (position == end) {
                 return false;
             }
-            if (c.contains(localContents[position]) == invert) {
+            if (c.contains(localContents[position]) != invert) {
                 break;
             }
         }
@@ -523,7 +523,7 @@ public class IntArrayList extends AbstractList<Integer>
             int value;
             for (; position < end; position++) {
                 value = localContents[position];
-                if (c.contains(value) != invert) {
+                if (c.contains(value) == invert) {
                     localContents[removed++] = value;
                 }
             }
@@ -534,6 +534,7 @@ public class IntArrayList extends AbstractList<Integer>
         } finally {
             modCount += end - removed;
             System.arraycopy(localContents, end, localContents, removed, size - end);
+            size -= end - removed;
         }
         return true;
     }
@@ -574,7 +575,7 @@ public class IntArrayList extends AbstractList<Integer>
 
     @Override
     public @NonNull ListIterator<Integer> listIterator(int index) {
-        Objects.checkIndex(index, size - 1);
+        checkPositionIndex(index, size);
         return new ListItr(index);
     }
 
@@ -719,6 +720,17 @@ public class IntArrayList extends AbstractList<Integer>
         return new SubList(this, fromIndex, toIndex);
     }
 
+    /**
+     * Check a position that may be one past the last element, like an insertion point.
+     *
+     * @param index The position.
+     * @param size The size of the list.
+     * @throws IndexOutOfBoundsException If the position is negative or past the size.
+     */
+    private static void checkPositionIndex(int index, int size) {
+        Objects.checkFromToIndex(index, index, size);
+    }
+
     private static void subListRangeCheck(int fromIndex, int toIndex, int size) {
         if (fromIndex < 0) {
             throw new IndexOutOfBoundsException("from index must be >=0, but is " + fromIndex);
@@ -778,7 +790,7 @@ public class IntArrayList extends AbstractList<Integer>
 
         @Override
         public void add(int index, Integer element) {
-            Objects.checkIndex(index, size);
+            checkPositionIndex(index, size);
             checkForConcurrentModification();
             root.add(offset + index, element);
             updateSizeAndModCount(1);
@@ -807,7 +819,7 @@ public class IntArrayList extends AbstractList<Integer>
 
         @Override
         public boolean addAll(int index, Collection<? extends Integer> c) {
-            Objects.checkIndex(index, size - 1);
+            checkPositionIndex(index, size);
             final int toAdd = c.size();
             if (toAdd == 0) {
                 return false;
@@ -939,7 +951,7 @@ public class IntArrayList extends AbstractList<Integer>
 
         @Override
         public @NonNull ListIterator<Integer> listIterator(int index) {
-            Objects.checkIndex(index, size - 1);
+            checkPositionIndex(index, size);
             checkForConcurrentModification();
 
             return new ListIterator<>() {
@@ -1316,7 +1328,7 @@ public class IntArrayList extends AbstractList<Integer>
     public void sort(Comparator<? super Integer> c) {
         final int expectedModCount = modCount;
         if (c == null) {
-            Arrays.sort(contents);
+            Arrays.sort(contents, 0, size);
         } else {
             // Seriously we need better Arrays or Stream APIs for this
             Integer[] results =

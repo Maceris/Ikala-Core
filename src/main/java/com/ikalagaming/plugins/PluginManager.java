@@ -1783,7 +1783,17 @@ public class PluginManager {
             plLogCallbackException(pluginName, "getListeners", e);
             return false;
         }
-        listeners.forEach(eventManager::registerEventListeners);
+        try {
+            listeners.forEach(eventManager::registerEventListeners);
+        } catch (RuntimeException | LinkageError e) {
+            /*
+             * Like a second handler for the same command. Leave nothing half registered;
+             * unregistering a listener that never got registered does nothing.
+             */
+            listeners.forEach(eventManager::unregisterEventListeners);
+            plLogCallbackException(pluginName, "registerEventListeners", e);
+            return false;
+        }
         details.setListeners(listeners);
         String msg = SafeResourceLoader.getString("ALERT_REG_EVENT_LISTENERS", resourceBundle);
         log.debug(msg, pluginName);

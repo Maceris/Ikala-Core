@@ -111,9 +111,11 @@ public class EventManager {
             if (handlerAnnotation == null) {
                 continue;
             }
+            if (method.getParameterCount() != 1) {
+                continue;
+            }
             final Class<?> checkClass = method.getParameterTypes()[0];
-            if (method.getParameterTypes().length != 1
-                    || !Event.class.isAssignableFrom(checkClass)) {
+            if (!Event.class.isAssignableFrom(checkClass)) {
                 continue;
             }
             final Class<? extends Event> eventClass = checkClass.asSubclass(Event.class);
@@ -156,9 +158,11 @@ public class EventManager {
             if (handlerAnnotation == null) {
                 continue;
             }
+            if (method.getParameterCount() != 1) {
+                continue;
+            }
             final Class<?> checkClass = method.getParameterTypes()[0];
-            if (method.getParameterTypes().length != 1
-                    || !Command.class.isAssignableFrom(checkClass)) {
+            if (!Command.class.isAssignableFrom(checkClass)) {
                 continue;
             }
             final Class<? extends Command> eventClass = checkClass.asSubclass(Command.class);
