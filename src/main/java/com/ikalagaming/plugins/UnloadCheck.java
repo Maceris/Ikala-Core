@@ -1,8 +1,10 @@
 package com.ikalagaming.plugins;
 
+import com.sun.management.HotSpotDiagnosticMXBean;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.management.ManagementFactory;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +16,12 @@ import java.util.Map;
  * then reports whether the plugin's class loader was freed. If it wasn't, it lists threads still
  * running the plugin's code; anything else holding it (a static field in another plugin, a listener
  * list, a cache) needs a heap dump to find.
+ *
+ * <p>Garbage collection doesn't clear soft references unless memory runs low, and the JDK keeps
+ * some to a plugin's classes, such as the method handles behind its records' {@code equals} and
+ * {@code hashCode}, so a plugin can linger until then without anything holding it for good. Run
+ * with {@code -XX:SoftRefLRUPolicyMSPerMB=0}, which clears them at every collection, to rule that
+ * out; the warning says when the check ran without it.
  *
  * <p>It runs on its own thread so unloading isn't slowed down, and asking for garbage collection
  * causes a pause, so it is off by default.
@@ -33,6 +41,16 @@ final class UnloadCheck {
 
     /** How long to wait between attempts. */
     private static final long ATTEMPT_WAIT_MILLIS = 500;
+
+    /** The JVM option that makes every collection clear soft references when it is 0. */
+    private static final String SOFT_POLICY = "SoftRefLRUPolicyMSPerMB";
+
+    /** What the warning adds when soft references may be what still holds the plugin. */
+    private static final String SOFT_HINT =
+            " It may only be held by soft references, like the JDK's method handle caches, which"
+                    + " are cleared when memory runs low; run with -XX:"
+                    + SOFT_POLICY
+                    + "=0 to rule that out.";
 
     /**
      * Whether the check is turned on.
@@ -87,18 +105,38 @@ final class UnloadCheck {
             return;
         }
         List<String> threads = threadsRunning(loaderName, reference.get());
+        final String hint = softReferencesKept() ? SOFT_HINT : "";
         if (threads.isEmpty()) {
             log.warn(
                     "Unload check: {} is still in memory after unloading, but no thread is running"
                             + " its code. Something else holds it, like a static field, a"
-                            + " listener or a cache; a heap dump will show what.",
-                    plugin);
+                            + " listener or a cache; a heap dump will show what.{}",
+                    plugin,
+                    hint);
         } else {
             log.warn(
                     "Unload check: {} is still in memory after unloading. Threads still using"
-                            + " it: {}",
+                            + " it: {}.{}",
                     plugin,
-                    threads);
+                    threads,
+                    hint);
+        }
+    }
+
+    /**
+     * Whether garbage collection may keep softly reachable objects, as it does unless the JVM was
+     * started with {@code -XX:SoftRefLRUPolicyMSPerMB=0}.
+     *
+     * @return True unless every collection clears soft references, or if that can't be told.
+     */
+    private static boolean softReferencesKept() {
+        try {
+            final HotSpotDiagnosticMXBean diagnostics =
+                    ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean.class);
+            return diagnostics == null
+                    || !"0".equals(diagnostics.getVMOption(SOFT_POLICY).getValue());
+        } catch (IllegalArgumentException e) {
+            return true;
         }
     }
 

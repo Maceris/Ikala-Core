@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.IntSupplier;
+import javax.imageio.spi.IIORegistry;
 
 /**
  * Contains functionality for controlling the lifecycle of the framework, and the main method for
@@ -108,6 +109,11 @@ public class Launcher {
         log.info("=====================================================");
         log.info(SafeResourceLoader.getString("STARTING_MESSAGE", Launcher.bundle));
         log.info("=====================================================");
+        // ImageIO's registry keeps the call stack's access context for each reader and writer it
+        // registers, and with it the class loader of any plugin on the stack, for the life of
+        // the JVM. Making it here, before any plugin loads, means the first plugin to read or
+        // write an image doesn't stay in memory after it unloads.
+        IIORegistry.getDefaultInstance();
         // creates all the static instances
         EventManager.getInstance();
         PluginManager.getInstance();
