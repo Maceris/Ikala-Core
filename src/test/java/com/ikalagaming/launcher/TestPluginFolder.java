@@ -7,6 +7,7 @@ import com.ikalagaming.launcher.PluginFolder.ResourceType;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +25,7 @@ class TestPluginFolder {
     @AfterEach
     void afterTest() {
         PluginFolder.deleteFolder(PLUGIN);
+        PluginFolder.forgetLastVersionUsed(PLUGIN);
         // Don't leave behind an empty plugin folder that the tests created
         Path pluginsFolder =
                 PluginFolder.getResource(PLUGIN, ResourceType.CONFIG, "")
@@ -38,18 +40,15 @@ class TestPluginFolder {
     }
 
     /**
-     * Write the last version file directly.
+     * Write the test plugin's last version into the versions file directly.
      *
-     * @param contents The contents of the file.
+     * @param version The version, as written in the file.
      * @throws IOException If the file can't be written.
      */
-    private void writeVersionFile(String contents) throws IOException {
-        PluginFolder.createFolder(PLUGIN);
-        Path file =
-                Path.of(
-                        System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH + PLUGIN,
-                        Constants.PLUGIN_VERSION_FILE);
-        Files.writeString(file, contents);
+    private void writeVersionFile(String version) throws IOException {
+        Path file = PluginFolder.versionsFile();
+        Files.createDirectories(file.getParent());
+        Files.writeString(file, PLUGIN + ": '" + version + "'\n");
     }
 
     @Test
@@ -60,13 +59,40 @@ class TestPluginFolder {
 
     @Test
     void testLastVersionWhitespaceIgnored() throws IOException {
-        writeVersionFile("  1.2.3\r\n");
+        writeVersionFile("  1.2.3 ");
         assertEquals("1.2.3", PluginFolder.getLastVersionUsed(PLUGIN));
     }
 
     @Test
     void testMissingLastVersion() {
         assertEquals("0.0.0", PluginFolder.getLastVersionUsed(PLUGIN));
+    }
+
+    @Test
+    void testForgetLastVersion() {
+        assertTrue(PluginFolder.setLastVersionUsed(PLUGIN, "1.0.0"));
+        assertTrue(PluginFolder.forgetLastVersionUsed(PLUGIN));
+        assertEquals("0.0.0", PluginFolder.getLastVersionUsed(PLUGIN));
+    }
+
+    @Test
+    void testResourcesNextToRegisteredJar(@TempDir Path jarFolder) {
+        PluginFolder.setParentFolder(PLUGIN, jarFolder);
+        assertEquals(
+                jarFolder.resolve(PLUGIN).resolve("data").resolve("a.txt").toFile(),
+                PluginFolder.getResource(PLUGIN, ResourceType.DATA, "a.txt"));
+        PluginFolder.setParentFolder(PLUGIN, AppPaths.plugins());
+    }
+
+    @Test
+    void testUserConfigInHome() {
+        assertEquals(
+                AppPaths.settings()
+                        .resolve("plugins")
+                        .resolve(PLUGIN)
+                        .resolve("config.yml")
+                        .toFile(),
+                PluginFolder.getUserConfig(PLUGIN, "config.yml"));
     }
 
     @Test

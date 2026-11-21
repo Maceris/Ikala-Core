@@ -22,6 +22,8 @@ import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Tests for how the Plugin Manager handles dependencies between plugins while loading, unloading,
@@ -297,5 +299,67 @@ class TestPluginDependencies {
         assertTrue(pluginManager.unloadPlugin("Listening"));
         verify(eventManager, times(2)).unregisterEventListeners(listener);
         verify(eventManager, times(2)).registerEventListeners(listener);
+    }
+
+    @Test
+    void testDependencyVersionAccepted() throws IOException {
+        PluginJars.write(folder, TARGET, RecordingPlugin.class);
+        PluginJars.write(folder, TOP, RecordingPlugin.class, "'Target >=0.0.1 <1.0.0'");
+
+        pluginManager.loadAllPlugins(folder.toString());
+
+        assertTrue(pluginManager.isLoaded(TARGET));
+        assertTrue(pluginManager.isLoaded(TOP));
+    }
+
+    @Test
+    void testDependencyVersionRejected() throws IOException {
+        PluginJars.write(folder, TARGET, RecordingPlugin.class);
+        PluginJars.write(folder, MIDDLE, RecordingPlugin.class, "'Target >=0.1.0'");
+        PluginJars.write(folder, TOP, RecordingPlugin.class, MIDDLE);
+
+        pluginManager.loadAllPlugins(folder.toString());
+
+        assertTrue(pluginManager.isLoaded(TARGET));
+        assertFalse(pluginManager.isLoaded(MIDDLE));
+        // Nothing that depends on a rejected plugin can load either
+        assertFalse(pluginManager.isLoaded(TOP));
+    }
+
+    @Test
+    void testSoftDependencyVersionRejected() throws IOException {
+        PluginJars.write(folder, TARGET, RecordingPlugin.class);
+        PluginJars.write(
+                folder,
+                TOP,
+                RecordingPlugin.class.getName(),
+                List.of(),
+                List.of("'Target <0.0.1'"),
+                Map.of());
+        PluginJars.write(
+                folder,
+                MIDDLE,
+                RecordingPlugin.class.getName(),
+                List.of(),
+                List.of("'Absent >=1.0.0'"),
+                Map.of());
+
+        pluginManager.loadAllPlugins(folder.toString());
+
+        // Present with a version it doesn't accept, so it would use a version it doesn't support
+        assertFalse(pluginManager.isLoaded(TOP));
+        // A soft dependency that isn't there is still fine
+        assertTrue(pluginManager.isLoaded(MIDDLE));
+    }
+
+    @Test
+    void testInvalidVersionBoundRejectsPlugin() throws IOException {
+        PluginJars.write(folder, TARGET, RecordingPlugin.class);
+        PluginJars.write(folder, TOP, RecordingPlugin.class, "'Target >=1.0'");
+
+        pluginManager.loadAllPlugins(folder.toString());
+
+        assertTrue(pluginManager.isLoaded(TARGET));
+        assertFalse(pluginManager.isLoaded(TOP));
     }
 }

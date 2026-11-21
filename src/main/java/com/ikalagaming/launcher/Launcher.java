@@ -6,7 +6,6 @@ import com.ikalagaming.event.Listener;
 import com.ikalagaming.event.Order;
 import com.ikalagaming.launcher.events.Shutdown;
 import com.ikalagaming.localization.Localization;
-import com.ikalagaming.plugins.Plugin;
 import com.ikalagaming.plugins.PluginManager;
 import com.ikalagaming.plugins.events.AllPluginsEnabled;
 import com.ikalagaming.plugins.events.PluginCommandSent;
@@ -24,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -135,22 +133,16 @@ public class Launcher {
             return;
         }
         log.trace("Processed arguments");
-        Launcher.setupMainFolders();
-        log.trace("Processed main folders");
         Launcher.initialize();
         log.trace("Initialized globals");
+        Launcher.setupMainFolders();
+        log.trace("Processed main folders");
         PluginManager.getInstance().setCommandLine(true);
-        PluginManager.getInstance()
-                .loadAllLibraries(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
+        PluginManager.getInstance().loadAllLibraries(AppPaths.libraries().toString());
         log.trace("Loaded libraries");
-        PluginManager.getInstance()
-                .loadAllPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
+        PluginManager.getInstance().loadAllPlugins(AppPaths.plugins().toString());
         new AllPluginsEnabled().fire();
         log.trace("Loaded plugins");
-        Launcher.setupPluginFolders();
-        log.trace("Set up plugin folders");
-        Launcher.setupPluginConfigs();
-        log.trace("Set up plugin configs");
 
         Launcher.stopCommand =
                 SafeResourceLoader.getString("STOP_COMMAND", Launcher.bundle, "stop");
@@ -222,6 +214,10 @@ public class Launcher {
                 "\t-l, --language <language>\tSets the language to use for localization");
         System.out.println(
                 "\t-c, --country <country>\t\tSets the country to use for localization (please also provide language)");
+        System.out.println("\t--home <folder>\t\t\tWhere settings, saves and logs go");
+        System.out.println("\t--cache <folder>\t\tWhere caches go");
+        System.out.println(
+                "\t--instance <folder>\t\tThe instance to run, such as the save a server hosts");
     }
 
     /**
@@ -255,6 +251,18 @@ public class Launcher {
                 }
                 language = args[i + 1];
                 // skip the next argument, we consumed it
+                ++i;
+                continue;
+            }
+            if (Bootstrap.FOLDER_OPTIONS.containsKey(arg)) {
+                // Normally read by the bootstrap; here only when the launcher is started directly
+                if (i >= args.length - 1 || Launcher.isFlag(args[i + 1])) {
+                    System.out.println("Please give a folder after " + arg);
+                    Launcher.printHelp();
+                    return false;
+                }
+                System.setProperty(Bootstrap.FOLDER_OPTIONS.get(arg), args[i + 1]);
+                AppPaths.reset();
                 ++i;
                 continue;
             }
@@ -381,33 +389,31 @@ public class Launcher {
         return true;
     }
 
-    /** Sets up the folders used by the system if they don't exist. */
+    /** Log where the folders are, and create the Home if it doesn't exist. */
     private static void setupMainFolders() {
-        File pluginFolder = new File(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH);
-        if (!pluginFolder.exists() && !pluginFolder.mkdirs()) {
-            log.warn(SafeResourceLoader.getString("ERROR_CREATE_PLUGIN_FOLDER", Launcher.bundle));
+        log.info(
+                SafeResourceLoader.getString("FOLDERS", Launcher.bundle),
+                AppPaths.appName(),
+                AppPaths.install(),
+                AppPaths.home(),
+                AppPaths.cache());
+        AppPaths.instance()
+                .ifPresent(
+                        instance ->
+                                log.info(
+                                        SafeResourceLoader.getString(
+                                                "INSTANCE_FOLDER", Launcher.bundle),
+                                        instance));
+        File home = AppPaths.home().toFile();
+        if (!home.exists() && !home.mkdirs()) {
+            log.warn(
+                    SafeResourceLoader.getString("ERROR_CREATE_HOME_FOLDER", Launcher.bundle),
+                    home);
         }
-        File libraryFolder =
-                new File(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
-        if (!libraryFolder.exists() && !libraryFolder.mkdirs()) {
-            log.warn(SafeResourceLoader.getString("ERROR_CREATE_LIBRARY_FOLDER", Launcher.bundle));
-        }
-    }
-
-    /** Set up the config files for all plugins. */
-    private static void setupPluginConfigs() {
-        Map<String, Plugin> plugins = PluginManager.getInstance().getLoadedPlugins();
-        plugins.values().forEach(Plugin::saveDefaultConfig);
-    }
-
-    /** Set up the resource folders for all plugins. */
-    private static void setupPluginFolders() {
-        Map<String, Plugin> plugins = PluginManager.getInstance().getLoadedPlugins();
-        for (String plugin : plugins.keySet()) {
-            PluginFolder.createFolder(plugin);
-            for (PluginFolder.ResourceType resourceType : PluginFolder.ResourceType.values()) {
-                PluginFolder.createResourceFolder(plugin, resourceType);
-            }
+        if (!AppPaths.plugins().toFile().isDirectory()) {
+            log.warn(
+                    SafeResourceLoader.getString("PLUGIN_FOLDER_MISSING", Launcher.bundle),
+                    AppPaths.plugins());
         }
     }
 

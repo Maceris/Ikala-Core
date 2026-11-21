@@ -66,6 +66,7 @@ class TestPluginRobustness {
      */
     private void deletePluginFolder(String plugin) {
         PluginFolder.deleteFolder(plugin);
+        PluginFolder.forgetLastVersionUsed(plugin);
         Path pluginsFolder =
                 PluginFolder.getResource(plugin, ResourceType.CONFIG, "")
                         .toPath()

@@ -7,6 +7,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,16 +75,33 @@ public class PluginInfo {
      * @return The contents of that entry, as an unmodifiable list. Empty if it is not present.
      * @throws InvalidDescriptionException If the entry is not a list, or has invalid names.
      */
-    private static List<String> makePluginNameList(final Map<?, ?> map, final String key)
+    private static List<String> makePluginNameList(
+            final Map<?, ?> map,
+            final String key,
+            final Map<String, VersionRequirement> requirements)
             throws InvalidDescriptionException {
-        List<String> names = PluginInfo.makeList(map, key);
-        for (String name : names) {
+        List<String> names = new ArrayList<>();
+        for (String entry : PluginInfo.makeList(map, key)) {
+            // A name, optionally followed by version bounds: "Factory-Core >=0.1.0 <0.2.0"
+            List<String> parts = List.of(entry.strip().split("\\s+"));
+            String name = parts.get(0);
             if (!name.matches(PluginInfo.NAME_REGEX)) {
                 throw new InvalidDescriptionException(
                         "Dependency '" + name + "' contains invalid characters.");
             }
+            try {
+                VersionRequirement requirement =
+                        VersionRequirement.parse(parts.subList(1, parts.size()));
+                if (!requirement.isAny()) {
+                    requirements.put(name, requirement);
+                }
+            } catch (IllegalArgumentException e) {
+                throw new InvalidDescriptionException(
+                        "Dependency '" + name + "' has an invalid version: " + e.getMessage());
+            }
+            names.add(name);
         }
-        return names;
+        return List.copyOf(names);
     }
 
     /**
@@ -138,7 +156,8 @@ public class PluginInfo {
     /**
      * Returns a list of plugins this plugin requires in order to run. Use the value of {@link
      * #getName()} for the target plugin to specify it in the dependencies. If any plugin in this
-     * list is not found, this plugin will fail to load at startup.
+     * list is not found, or its version is not accepted by {@link #getVersionRequirements()}, this
+     * plugin will fail to load at startup.
      *
      * @return The list of plugin dependencies.
      */
@@ -207,6 +226,18 @@ public class PluginInfo {
     private final String version;
 
     /**
+     * The versions this plugin accepts for its dependencies and soft dependencies, by plugin name.
+     * In plugin.yml they follow the name, such as {@code Factory-Core >=0.1.0 <0.2.0}. A dependency
+     * without bounds accepts any version, and isn't in this map. A soft dependency whose version
+     * isn't accepted stops this plugin from loading, just like a hard one, since this plugin would
+     * otherwise use a version it doesn't support.
+     *
+     * @return The accepted versions of dependencies.
+     */
+    @SuppressWarnings("javadoc")
+    private final Map<String, VersionRequirement> versionRequirements;
+
+    /**
      * Returns a plugin description loaded by the given InputStream, from a Yaml file. The tags that
      * are required or possible are listed on the wiki.
      *
@@ -235,8 +266,10 @@ public class PluginInfo {
         version = Version.parse(versionString).toString();
 
         mainClass = PluginInfo.required(map, "main-class", "main class");
-        dependencies = PluginInfo.makePluginNameList(map, "dependencies");
-        softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies");
+        Map<String, VersionRequirement> requirements = new HashMap<>();
+        dependencies = PluginInfo.makePluginNameList(map, "dependencies", requirements);
+        softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies", requirements);
+        versionRequirements = Map.copyOf(requirements);
         libraries = PluginInfo.makeLibraryList(map, "libraries");
         authors = PluginInfo.makeList(map, "authors");
         description = map.get("description") == null ? "" : map.get("description").toString();

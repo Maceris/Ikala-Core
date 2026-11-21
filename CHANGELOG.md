@@ -6,12 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Install, Home, cache and instance folders (`AppPaths`), with `--home`, `--cache` and `--instance` options and an
+  `app.yml` that names the application
+- Version bounds for dependencies and soft dependencies in `plugin.yml`, such as `Factory-Core >=0.1.0 <0.2.0`
 - Added logging for issues with creating resource folders
 - Included Mockito for testing
 - Added auto-formatter and code cleanup tool to the build process to enforce standards
 - Commands as a specialized form of Events
 
 ### Changed
+- The install folder is never written to: plugin configs are layered from the jar, the shipped `config/` file and
+  overrides in the Home, saving writes only the changes to the Home, a `config.defaults.yml` beside it lists every
+  default for reference, and logs and the last plugin versions go in the Home
+- `plugins/` and `libs/` are found next to the jar rather than in the working directory
 - Updated resource loader to use SLF4j string formatting
 - Changed plugin commands to use lists instead of arrays
 

@@ -85,6 +85,9 @@ tasks.register('delombok', DelombokTask) {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// Tests write settings and state, so they get a Home and cache of their own
+	systemProperty 'ikala.home', layout.buildDirectory.dir('test-home').get().asFile.absolutePath
+	systemProperty 'ikala.cache', layout.buildDirectory.dir('test-cache').get().asFile.absolutePath
 	jvmArgs += "-javaagent:${configurations.mockitoAgent.asPath}"
 	testLogging {
 		exceptionFormat = 'full'
@@ -111,7 +114,7 @@ tasks.named('clean') {
 
 tasks.named('jar') {
 	manifest {
-		attributes 'Main-Class': 'com.ikalagaming.launcher.Launcher'
+		attributes 'Main-Class': 'com.ikalagaming.launcher.Bootstrap'
 	}
     from {
         [

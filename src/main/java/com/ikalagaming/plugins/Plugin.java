@@ -1,7 +1,6 @@
 package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.Listener;
-import com.ikalagaming.plugins.config.ConfigManager;
 
 import lombok.NonNull;
 
@@ -101,12 +100,4 @@ public abstract class Plugin {
      * @param lastVersion The last known version that was loaded.
      */
     public void onUpgrade(@NonNull String lastVersion) {}
-
-    /**
-     * Save the default configuration file to disk. If there are additional config files that need
-     * to be saved, they can be added here.
-     */
-    public void saveDefaultConfig() {
-        ConfigManager.saveDefaultConfig(this, ConfigManager.DEFAULT_NAME);
-    }
 }

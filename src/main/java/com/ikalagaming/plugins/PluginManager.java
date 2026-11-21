@@ -2,7 +2,7 @@ package com.ikalagaming.plugins;
 
 import com.ikalagaming.event.EventManager;
 import com.ikalagaming.event.Listener;
-import com.ikalagaming.launcher.Constants;
+import com.ikalagaming.launcher.AppPaths;
 import com.ikalagaming.launcher.PluginFolder;
 import com.ikalagaming.localization.Localization;
 import com.ikalagaming.plugins.config.ConfigManager;
@@ -376,6 +376,9 @@ public class PluginManager {
         if (null == pluginInfo) {
             return PluginState.NOT_LOADED;
         }
+        if (plHasVersionConflict(pluginInfo)) {
+            return PluginState.DEPS_MISSING;
+        }
         /*
          * If all dependencies are satisfied (loaded/enabled, DEPS_SATISFIED,
          * generally existing in the system), or it has no dependencies, mark
@@ -464,11 +467,11 @@ public class PluginManager {
             alertMissingArgs();
             return;
         }
-        loadPlugins(System.getProperty("user.dir") + Constants.PLUGIN_FOLDER_PATH, args);
+        loadPlugins(AppPaths.plugins().toString(), args);
     }
 
     private void callbackLoadLibraries(@SuppressWarnings("unused") List<String> args) {
-        loadAllLibraries(System.getProperty("user.dir") + Constants.LIBRARY_FOLDER_PATH);
+        loadAllLibraries(AppPaths.libraries().toString());
     }
 
     private void callbackPrintLibraries(@SuppressWarnings("unused") List<String> args) {
@@ -834,6 +837,34 @@ public class PluginManager {
         HashMap<String, Plugin> ret = new HashMap<>();
         pluginDetails.forEach((key, value) -> ret.put(key, value.getPlugin()));
         return ret;
+    }
+
+    /**
+     * Read a file from a plugin's own jar, such as the default config it ships. Unlike asking the
+     * plugin's class loader, this never finds a file of the same name in another plugin or a
+     * library.
+     *
+     * @param name The name of the plugin.
+     * @param entryName The path of the file in the jar.
+     * @return The file's contents, or empty if the plugin isn't known or its jar doesn't have it.
+     */
+    public Optional<byte[]> readJarEntry(@NonNull final String name, @NonNull String entryName) {
+        PluginDetails details = this.pluginDetails.get(name);
+        if (details == null || details.getJar() == null) {
+            return Optional.empty();
+        }
+        try (JarFile jarFile = new JarFile(details.getJar())) {
+            ZipEntry entry = jarFile.getEntry(entryName);
+            if (entry == null) {
+                return Optional.empty();
+            }
+            try (InputStream stream = jarFile.getInputStream(entry)) {
+                return Optional.of(stream.readAllBytes());
+            }
+        } catch (IOException e) {
+            log.warn("Could not read {} from the jar of {}", entryName, name, e);
+            return Optional.empty();
+        }
     }
 
     /**
@@ -1567,6 +1598,8 @@ public class PluginManager {
                             loader, info, null, PluginState.DISCOVERED, entry.getKey(), Set.of());
 
             pluginDetails.put(info.getName(), details);
+            // Its shipped config, data and scripts are in a folder next to its jar
+            PluginFolder.setParentFolder(info.getName(), entry.getKey().toPath().getParent());
         }
 
         for (Map.Entry<File, PluginInfo> entry : jarInfoMap.entrySet()) {
@@ -1850,6 +1883,10 @@ public class PluginManager {
             currentNode = queue.pollFirst();
 
             PluginInfo info = pluginDetails.get(currentNode.getName()).getInfo();
+            if (plHasVersionConflict(info)) {
+                plMarkMissingUpToRoot(currentNode);
+                return;
+            }
             for (String dependencyName : info.getDependencies()) {
                 switch (PluginManager.dependencyStatus(getPluginState(dependencyName))) {
                     case SATISFIED -> {
@@ -1866,12 +1903,7 @@ public class PluginManager {
                     }
                     case MISSING -> {
                         // propagate failure up to the root and bail
-                        setPluginState(currentNode.getName(), PluginState.DEPS_MISSING);
-                        PluginDependencyNode parent = currentNode.getParent();
-                        while (null != parent) {
-                            setPluginState(parent.getName(), PluginState.DEPS_MISSING);
-                            parent = parent.getParent();
-                        }
+                        plMarkMissingUpToRoot(currentNode);
                         return;
                     }
                 }
@@ -1879,6 +1911,50 @@ public class PluginManager {
         }
 
         plMarkSatisfied(root);
+    }
+
+    /**
+     * Mark a plugin as missing dependencies, along with every plugin above it in the tree, which
+     * all depend on it.
+     *
+     * @param node The plugin that can't load.
+     */
+    private void plMarkMissingUpToRoot(@NonNull PluginDependencyNode node) {
+        PluginDependencyNode current = node;
+        while (null != current) {
+            setPluginState(current.getName(), PluginState.DEPS_MISSING);
+            current = current.getParent();
+        }
+    }
+
+    /**
+     * Check whether any dependency or soft dependency of a plugin is present with a version the
+     * plugin doesn't accept. Dependencies that aren't present are left to the usual checks.
+     *
+     * @param info The plugin.
+     * @return True if a present dependency has a version the plugin doesn't accept.
+     */
+    private boolean plHasVersionConflict(@NonNull PluginInfo info) {
+        for (Entry<String, VersionRequirement> requirement :
+                info.getVersionRequirements().entrySet()) {
+            PluginDetails dependency = pluginDetails.get(requirement.getKey());
+            if (dependency == null || dependency.getInfo() == null) {
+                continue;
+            }
+            String version = dependency.getInfo().getVersion();
+            if (!requirement.getValue().accepts(version)) {
+                String message =
+                        SafeResourceLoader.getString("DEPENDENCY_VERSION_REJECTED", resourceBundle);
+                log.warn(
+                        message,
+                        info.getName(),
+                        requirement.getKey(),
+                        requirement.getValue(),
+                        version);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
