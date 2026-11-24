@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Plugins with no `main-class`, which only bring the files in their folder
 - Install, Home, cache and instance folders (`AppPaths`), with `--home`, `--cache` and `--instance` options and an
   `app.yml` that names the application
 - Version bounds for dependencies and soft dependencies in `plugin.yml`, such as `Factory-Core >=0.1.0 <0.2.0`

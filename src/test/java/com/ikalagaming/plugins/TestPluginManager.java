@@ -93,6 +93,8 @@ class TestPluginManager {
         "TestSoftDependB",
         "TestSoftDependC",
         "TestSoftDependD",
+        // No main class: it only brings its folder, which is valid
+        "TestErrorNoMainClass",
         "TestSoftDependCycleA",
         "TestSoftDependCycleB",
         "TestSoftDependCycleC",
@@ -104,7 +106,6 @@ class TestPluginManager {
         "TestError.InvalidName",
         "TestErrorInvalidVersion",
         "TestErrorMainClassType",
-        "TestErrorNoMainClass",
         "TestErrorNoMainClassFile",
         "TestErrorNoName",
         "TestErrorNoVersion",

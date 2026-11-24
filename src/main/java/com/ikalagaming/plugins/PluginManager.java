@@ -1475,7 +1475,7 @@ public class PluginManager {
 
     /**
      * Attempt to instantiate a plugins main class using the classloader for the jar that contains
-     * it.
+     * it, or a {@link DataPlugin} for a plugin with no main class.
      *
      * @param pluginInfo The plugin info for the plugin.
      * @param classLoader The classloader that can find classes in the plugin jar.
@@ -1487,6 +1487,9 @@ public class PluginManager {
             throws InvalidPluginException {
         final String name = pluginInfo.getName();
         final String mainClass = pluginInfo.getMainClass();
+        if (mainClass.isEmpty()) {
+            return new DataPlugin();
+        }
 
         Class<?> clazz;
         try {

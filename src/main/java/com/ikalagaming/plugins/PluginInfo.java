@@ -20,6 +20,9 @@ import java.util.Map;
 @Getter
 public class PluginInfo {
 
+    /** The key of the main class in plugin.yml. */
+    private static final String MAIN_CLASS = "main-class";
+
     /** The regular expression describing what a valid plugin name looks like. */
     private static final String NAME_REGEX = "^[a-zA-Z0-9_-]+$";
 
@@ -184,9 +187,10 @@ public class PluginInfo {
 
     /**
      * The fully qualified name of the class that extends {@link Plugin} for this plugin. The format
-     * should follow the {@link ClassLoader#loadClass(String)} syntax.
+     * should follow the {@link ClassLoader#loadClass(String)} syntax. Empty for a plugin with no
+     * code, which only brings the files in its folder, such as content for a game.
      *
-     * @return The absolute path to the main plugin class.
+     * @return The absolute path to the main plugin class, or an empty string if it has none.
      */
     @SuppressWarnings("javadoc")
     private final String mainClass;
@@ -265,7 +269,10 @@ public class PluginInfo {
         // Normalized, so equivalent versions are written the same way
         version = Version.parse(versionString).toString();
 
-        mainClass = PluginInfo.required(map, "main-class", "main class");
+        mainClass =
+                map.get(PluginInfo.MAIN_CLASS) == null
+                        ? ""
+                        : PluginInfo.required(map, PluginInfo.MAIN_CLASS, "main class");
         Map<String, VersionRequirement> requirements = new HashMap<>();
         dependencies = PluginInfo.makePluginNameList(map, "dependencies", requirements);
         softDependencies = PluginInfo.makePluginNameList(map, "soft-dependencies", requirements);
