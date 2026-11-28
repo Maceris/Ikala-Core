@@ -10,6 +10,8 @@ public enum FieldKind {
     INTEGER,
     /** True or false, a {@link Boolean}. */
     FLAG,
+    /** An sRGB color, a {@link String} written {@code #RRGGBB} or {@code #RRGGBBAA}. */
+    COLOR,
     /** One of a fixed set of words, a {@link String}. */
     CHOICE,
     /** The ID of something of another kind, a {@link String}. */

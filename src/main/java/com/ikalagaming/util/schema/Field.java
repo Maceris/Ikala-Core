@@ -359,6 +359,28 @@ public record Field(
     }
 
     /**
+     * An sRGB color, {@code #RRGGBB} or {@code #RRGGBBAA}.
+     *
+     * @param name The key.
+     * @param defaultValue The default, or null for none.
+     * @param description What it means.
+     * @return The field.
+     */
+    public static Field color(
+            @NonNull String name, @Nullable String defaultValue, @NonNull String description) {
+        return new Field(
+                name,
+                FieldKind.COLOR,
+                defaultValue,
+                false,
+                description,
+                Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY,
+                List.of(),
+                null);
+    }
+
+    /**
      * True or false.
      *
      * @param name The key.
@@ -499,6 +521,13 @@ public record Field(
             case OBJECT, LIST, TYPED, UNION, MAP ->
                     throw new IllegalStateException(
                             name + " holds other fields; read it through its schema");
+            case COLOR -> {
+                if (raw instanceof String text
+                        && text.matches("#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?")) {
+                    yield text;
+                }
+                throw new IllegalArgumentException(name + " must be a color, like #c8b48a");
+            }
             case TEXT, REFERENCE -> {
                 if (raw instanceof String text) {
                     yield text;

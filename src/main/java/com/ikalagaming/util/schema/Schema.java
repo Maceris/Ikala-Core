@@ -364,7 +364,7 @@ public record Schema(@NonNull String name, @NonNull List<Field> fields) {
         return switch (alternative.kind()) {
             case NUMBER, INTEGER -> raw instanceof Number;
             case FLAG -> raw instanceof Boolean;
-            case TEXT, CHOICE, REFERENCE -> raw instanceof String;
+            case TEXT, CHOICE, REFERENCE, COLOR -> raw instanceof String;
             case TEXT_LIST, NUMBER_LIST, LIST -> raw instanceof List<?>;
             case OBJECT, TYPED, MAP -> raw instanceof Map<?, ?>;
             case UNION -> false;
@@ -390,6 +390,7 @@ public record Schema(@NonNull String name, @NonNull List<Field> fields) {
                                             + Objects.requireNonNullElse(
                                                     alternative.refersTo(), "file");
                             case TEXT, CHOICE -> "text";
+                            case COLOR -> "a color";
                             case TEXT_LIST, NUMBER_LIST, LIST -> "a list";
                             case OBJECT, MAP -> "an object";
                             case TYPED ->
