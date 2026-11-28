@@ -20,5 +20,21 @@ public enum FieldKind {
      */
     TEXT_LIST,
     /** A list of numbers, a {@link java.util.List} of {@link Double}, maybe of a set length. */
-    NUMBER_LIST
+    NUMBER_LIST,
+    /** An object with fields of its own, a {@link java.util.Map} by field name. */
+    OBJECT,
+    /** A list of values each described by an element field, a {@link java.util.List}. */
+    LIST,
+    /**
+     * An object whose type field chooses its fields from a {@link Variants}, a {@link
+     * java.util.Map} with the type first.
+     */
+    TYPED,
+    /** A value of one of several kinds, chosen by its shape. */
+    UNION,
+    /**
+     * An object whose keys are free, like names, each value described by an element field, a {@link
+     * java.util.Map}.
+     */
+    MAP
 }

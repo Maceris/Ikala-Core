@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -165,39 +166,244 @@ public record Schema(@NonNull String name, @NonNull List<Field> fields) {
      * @return The values.
      */
     public Values read(@NonNull Map<String, Object> raw) {
-        final Map<String, Object> given = new LinkedHashMap<>();
         final Map<String, Object> unknown = new LinkedHashMap<>();
         final List<Problem> problems = new ArrayList<>();
-        for (Map.Entry<String, Object> entry : raw.entrySet()) {
-            final Field field = field(entry.getKey());
-            if (field == null) {
-                unknown.put(entry.getKey(), entry.getValue());
-                problems.add(
-                        new Problem(
-                                entry.getKey(),
-                                false,
-                                name + " has no field " + entry.getKey() + "; it is ignored"));
+        final Map<String, Object> given = readObject(this, raw, "", problems, unknown, null);
+        return new Values(this, given, unknown, problems);
+    }
+
+    /**
+     * Read an object's values through a schema, nested objects and lists too.
+     *
+     * @param schema The object's fields.
+     * @param raw Its keys and values, as read.
+     * @param prefix Its path, with a trailing period, or empty for a file's top.
+     * @param problems Gets what is wrong, by path.
+     * @param unknown Gets keys the schema doesn't know, or null to only warn about them.
+     * @param skip A key that is not a field, like a typed object's type, or null.
+     * @return The known values, converted, in field order.
+     */
+    private static Map<String, Object> readObject(
+            Schema schema,
+            Map<?, ?> raw,
+            String prefix,
+            List<Problem> problems,
+            @Nullable Map<String, Object> unknown,
+            @Nullable String skip) {
+        final Map<String, Object> given = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : raw.entrySet()) {
+            final String key = String.valueOf(entry.getKey());
+            if (key.equals(skip)) {
                 continue;
             }
-            try {
-                given.put(field.name(), field.convert(entry.getValue()));
-            } catch (IllegalArgumentException e) {
-                problems.add(new Problem(field.name(), true, e.getMessage()));
+            final Field field = schema.field(key);
+            if (field == null) {
+                if (unknown != null) {
+                    unknown.put(key, entry.getValue());
+                }
+                problems.add(
+                        new Problem(
+                                prefix + key,
+                                false,
+                                schema.name() + " has no field " + key + "; it is ignored"));
+                continue;
+            }
+            final Object value = value(field, entry.getValue(), prefix + key, problems);
+            if (value != null) {
+                given.put(key, value);
             }
         }
-        for (Field field : fields) {
-            if (field.required() && !raw.containsKey(field.name())) {
-                problems.add(new Problem(field.name(), true, field.name() + " is missing"));
-            }
-        }
-        // In field order, as editors show them
         final Map<String, Object> ordered = new LinkedHashMap<>();
-        for (Field field : fields) {
+        for (Field field : schema.fields()) {
             if (given.containsKey(field.name())) {
                 ordered.put(field.name(), given.get(field.name()));
+            } else if (field.required() && !raw.containsKey(field.name())) {
+                problems.add(
+                        new Problem(prefix + field.name(), true, field.name() + " is missing"));
             }
         }
-        return new Values(this, ordered, unknown, problems);
+        return ordered;
+    }
+
+    /**
+     * Read one value through its field.
+     *
+     * @param field The field.
+     * @param raw The value as read.
+     * @param path Where it is, for problems.
+     * @param problems Gets what is wrong.
+     * @return The value, converted, or null if it is wrong.
+     */
+    private static @Nullable Object value(
+            Field field, Object raw, String path, List<Problem> problems) {
+        final Field.Shape shape = field.shape();
+        switch (field.kind()) {
+            case OBJECT -> {
+                final Schema schema = shape == null ? null : shape.objectSchema();
+                if (raw instanceof Map<?, ?> map && schema != null) {
+                    return readObject(schema, map, path + ".", problems, null, null);
+                }
+                problems.add(new Problem(path, true, field.name() + " must be an object"));
+                return null;
+            }
+            case LIST -> {
+                if (!(raw instanceof List<?> list) || shape == null || shape.element() == null) {
+                    problems.add(new Problem(path, true, field.name() + " must be a list"));
+                    return null;
+                }
+                final List<Object> out = new ArrayList<>();
+                for (int i = 0; i < list.size(); ++i) {
+                    final Object element =
+                            value(
+                                    shape.element().named(field.name()),
+                                    list.get(i),
+                                    path + "[" + i + "]",
+                                    problems);
+                    if (element != null) {
+                        out.add(element);
+                    }
+                }
+                return List.copyOf(out);
+            }
+            case TYPED -> {
+                return typed(field, raw, path, problems);
+            }
+            case MAP -> {
+                if (!(raw instanceof Map<?, ?> map) || shape == null || shape.element() == null) {
+                    problems.add(new Problem(path, true, field.name() + " must be an object"));
+                    return null;
+                }
+                final Map<String, Object> out = new LinkedHashMap<>();
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    final String key = String.valueOf(entry.getKey());
+                    final Object value =
+                            value(
+                                    shape.element().named(key),
+                                    entry.getValue(),
+                                    path + "." + key,
+                                    problems);
+                    if (value != null) {
+                        out.put(key, value);
+                    }
+                }
+                return out;
+            }
+            case UNION -> {
+                if (shape != null) {
+                    for (Field alternative : shape.alternatives()) {
+                        if (fits(alternative, raw)) {
+                            return value(alternative.named(field.name()), raw, path, problems);
+                        }
+                    }
+                }
+                problems.add(new Problem(path, true, field.name() + " must be " + describe(field)));
+                return null;
+            }
+            default -> {
+                try {
+                    return field.convert(raw);
+                } catch (IllegalArgumentException e) {
+                    problems.add(new Problem(path, true, e.getMessage()));
+                    return null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Read a typed object: its type, then the fields that type has.
+     *
+     * @param field The field.
+     * @param raw The value as read.
+     * @param path Where it is.
+     * @param problems Gets what is wrong.
+     * @return The object, its type first, or null if it is wrong.
+     */
+    private static @Nullable Object typed(
+            Field field, Object raw, String path, List<Problem> problems) {
+        final Variants variants = field.shape() == null ? null : field.shape().variants();
+        if (!(raw instanceof Map<?, ?> map) || variants == null) {
+            problems.add(new Problem(path, true, field.name() + " must be an object"));
+            return null;
+        }
+        final Object type = map.get(variants.key());
+        if (!(type instanceof String name) || !variants.names().contains(name)) {
+            problems.add(
+                    new Problem(
+                            path + "." + variants.key(),
+                            true,
+                            (type == null
+                                            ? "a " + variants.name() + " needs a type"
+                                            : "no " + variants.name() + " type " + type)
+                                    + ": one of "
+                                    + String.join(", ", variants.names())));
+            return null;
+        }
+        final Map<String, Object> out = new LinkedHashMap<>();
+        out.put(variants.key(), name);
+        final Schema schema = variants.schemaOf(name).orElse(null);
+        if (schema == null) {
+            // A type without a schema takes anything
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                out.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+            return out;
+        }
+        out.putAll(readObject(schema, map, path + ".", problems, null, variants.key()));
+        return out;
+    }
+
+    /**
+     * Whether a value has the shape a union's alternative takes.
+     *
+     * @param alternative The alternative.
+     * @param raw The value.
+     * @return True if it fits.
+     */
+    private static boolean fits(Field alternative, Object raw) {
+        return switch (alternative.kind()) {
+            case NUMBER, INTEGER -> raw instanceof Number;
+            case FLAG -> raw instanceof Boolean;
+            case TEXT, CHOICE, REFERENCE -> raw instanceof String;
+            case TEXT_LIST, NUMBER_LIST, LIST -> raw instanceof List<?>;
+            case OBJECT, TYPED, MAP -> raw instanceof Map<?, ?>;
+            case UNION -> false;
+        };
+    }
+
+    /**
+     * What a union may be, as words for messages.
+     *
+     * @param field The union.
+     * @return The words.
+     */
+    private static String describe(Field field) {
+        final List<String> kinds = new ArrayList<>();
+        if (field.shape() != null) {
+            for (Field alternative : field.shape().alternatives()) {
+                kinds.add(
+                        switch (alternative.kind()) {
+                            case NUMBER, INTEGER -> "a number";
+                            case FLAG -> "true or false";
+                            case REFERENCE ->
+                                    "the ID of a "
+                                            + Objects.requireNonNullElse(
+                                                    alternative.refersTo(), "file");
+                            case TEXT, CHOICE -> "text";
+                            case TEXT_LIST, NUMBER_LIST, LIST -> "a list";
+                            case OBJECT, MAP -> "an object";
+                            case TYPED ->
+                                    "a "
+                                            + (alternative.shape() == null
+                                                            || alternative.shape().variants()
+                                                                    == null
+                                                    ? "typed object"
+                                                    : alternative.shape().variants().name());
+                            case UNION -> "one of several";
+                        });
+            }
+        }
+        return String.join(", or ", kinds);
     }
 
     /**

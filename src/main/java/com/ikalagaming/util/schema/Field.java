@@ -5,6 +5,7 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -22,6 +23,7 @@ import javax.annotation.Nullable;
  * @param choices The words a {@link FieldKind#CHOICE} may be, in order; empty otherwise.
  * @param refersTo The kind of thing a reference or list of references names, like {@code
  *     materials}, or null.
+ * @param shape What an object, list, typed object or union holds, or null for other kinds.
  */
 public record Field(
         @NonNull String name,
@@ -32,11 +34,250 @@ public record Field(
         double min,
         double max,
         @NonNull List<String> choices,
-        @Nullable String refersTo) {
+        @Nullable String refersTo,
+        @Nullable Shape shape) {
+
+    /**
+     * What a field made of other fields holds.
+     *
+     * @param schema An object's fields, or null.
+     * @param element A list's element, described as a field whose name is unused, or null.
+     * @param variants A typed object's types, or null.
+     * @param alternatives A union's kinds, tried by the value's shape, in order; empty otherwise.
+     * @param later An object's fields when they can't be given yet, as a schema that holds itself
+     *     needs, or null.
+     */
+    public record Shape(
+            @Nullable Schema schema,
+            @Nullable Field element,
+            @Nullable Variants variants,
+            @NonNull List<Field> alternatives,
+            @Nullable Supplier<Schema> later) {
+        /** Copy the alternatives so they can't change. */
+        public Shape {
+            alternatives = List.copyOf(alternatives);
+        }
+
+        /**
+         * A shape without fields given later.
+         *
+         * @param schema An object's fields, or null.
+         * @param element A list's or map's element, or null.
+         * @param variants A typed object's types, or null.
+         * @param alternatives A union's kinds.
+         */
+        public Shape(
+                @Nullable Schema schema,
+                @Nullable Field element,
+                @Nullable Variants variants,
+                @NonNull List<Field> alternatives) {
+            this(schema, element, variants, alternatives, null);
+        }
+
+        /**
+         * An object's fields, given now or later.
+         *
+         * @return The schema, or null if this isn't an object's shape.
+         */
+        public @Nullable Schema objectSchema() {
+            return schema != null ? schema : later == null ? null : later.get();
+        }
+    }
 
     /** Copy the choices so they can't change. */
     public Field {
         choices = List.copyOf(choices);
+    }
+
+    /**
+     * A field of a plain kind, holding no other fields.
+     *
+     * @param name The key in files.
+     * @param kind What it holds.
+     * @param defaultValue Its default, or null.
+     * @param required Whether a file must give it.
+     * @param description What it means.
+     * @param min The least number or list length.
+     * @param max The greatest number or list length.
+     * @param choices The words a choice may be.
+     * @param refersTo The kind a reference names, or null.
+     */
+    public Field(
+            @NonNull String name,
+            @NonNull FieldKind kind,
+            @Nullable Object defaultValue,
+            boolean required,
+            @NonNull String description,
+            double min,
+            double max,
+            @NonNull List<String> choices,
+            @Nullable String refersTo) {
+        this(name, kind, defaultValue, required, description, min, max, choices, refersTo, null);
+    }
+
+    /**
+     * A nested object with fields of its own.
+     *
+     * @param name The key.
+     * @param schema Its fields.
+     * @param description What it means.
+     * @return The field, optional with no default.
+     */
+    public static Field object(
+            @NonNull String name, @NonNull Schema schema, @NonNull String description) {
+        return shaped(
+                name, FieldKind.OBJECT, description, new Shape(schema, null, null, List.of()));
+    }
+
+    /**
+     * A nested object whose fields are given later, for a schema that holds objects of itself, like
+     * rules holding rules.
+     *
+     * @param name The key.
+     * @param schema Gives its fields, when first read.
+     * @param description What it means.
+     * @return The field, optional with no default.
+     */
+    public static Field object(
+            @NonNull String name, @NonNull Supplier<Schema> schema, @NonNull String description) {
+        return shaped(
+                name,
+                FieldKind.OBJECT,
+                description,
+                new Shape(null, null, null, List.of(), schema));
+    }
+
+    /**
+     * An object whose keys are free, like names, each value described by an element field.
+     *
+     * @param name The key.
+     * @param element What each value is; its name is unused.
+     * @param description What it means.
+     * @return The field, optional with no default.
+     */
+    public static Field map(
+            @NonNull String name, @NonNull Field element, @NonNull String description) {
+        return shaped(name, FieldKind.MAP, description, new Shape(null, element, null, List.of()));
+    }
+
+    /**
+     * A list of values, each described by an element field, whose name is unused.
+     *
+     * @param name The key.
+     * @param element What each entry is.
+     * @param description What it means.
+     * @return The field, empty by default.
+     */
+    public static Field list(
+            @NonNull String name, @NonNull Field element, @NonNull String description) {
+        return new Field(
+                name,
+                FieldKind.LIST,
+                List.of(),
+                false,
+                description,
+                0,
+                Double.POSITIVE_INFINITY,
+                List.of(),
+                null,
+                new Shape(null, element, null, List.of()));
+    }
+
+    /**
+     * An object whose type field chooses its fields from a set of types.
+     *
+     * @param name The key.
+     * @param variants The types.
+     * @param description What it means.
+     * @return The field, optional with no default.
+     */
+    public static Field typed(
+            @NonNull String name, @NonNull Variants variants, @NonNull String description) {
+        return shaped(
+                name, FieldKind.TYPED, description, new Shape(null, null, variants, List.of()));
+    }
+
+    /**
+     * A value that may be one of several kinds, tried in order by the value's shape: a number, a
+     * text, a list or an object. The alternatives' names are unused.
+     *
+     * @param name The key.
+     * @param description What it means.
+     * @param alternatives The kinds it may be.
+     * @return The field, optional with no default.
+     */
+    public static Field union(
+            @NonNull String name, @NonNull String description, @NonNull Field... alternatives) {
+        return shaped(
+                name,
+                FieldKind.UNION,
+                description,
+                new Shape(null, null, null, List.of(alternatives)));
+    }
+
+    /**
+     * A list of a set number of numbers with no default, like a point or a range.
+     *
+     * @param name The key.
+     * @param count How many numbers.
+     * @param description What it means.
+     * @return The field, optional with no default.
+     */
+    public static Field numbers(@NonNull String name, int count, @NonNull String description) {
+        return new Field(
+                name,
+                FieldKind.NUMBER_LIST,
+                null,
+                false,
+                description,
+                count,
+                count,
+                List.of(),
+                null);
+    }
+
+    /**
+     * A field made of other fields, optional with no default.
+     *
+     * @param name The key.
+     * @param kind Its kind.
+     * @param description What it means.
+     * @param shape What it holds.
+     * @return The field.
+     */
+    private static Field shaped(String name, FieldKind kind, String description, Shape shape) {
+        return new Field(
+                name,
+                kind,
+                null,
+                false,
+                description,
+                Double.NEGATIVE_INFINITY,
+                Double.POSITIVE_INFINITY,
+                List.of(),
+                null,
+                shape);
+    }
+
+    /**
+     * The same field with another name, as an element or alternative is used for a key.
+     *
+     * @param key The name.
+     * @return The renamed field.
+     */
+    public Field named(@NonNull String key) {
+        return new Field(
+                key, kind, defaultValue, required, description, min, max, choices, refersTo, shape);
+    }
+
+    /**
+     * The same field with another default.
+     *
+     * @param value The default, of the kind's Java type.
+     * @return The field.
+     */
+    public Field withDefault(@Nullable Object value) {
+        return new Field(name, kind, value, false, description, min, max, choices, refersTo, shape);
     }
 
     /**
@@ -241,7 +482,7 @@ public record Field(
      * @return The required field.
      */
     public Field asRequired() {
-        return new Field(name, kind, null, true, description, min, max, choices, refersTo);
+        return new Field(name, kind, null, true, description, min, max, choices, refersTo, shape);
     }
 
     /**
@@ -255,6 +496,9 @@ public record Field(
      */
     public Object convert(@NonNull Object raw) {
         return switch (kind) {
+            case OBJECT, LIST, TYPED, UNION, MAP ->
+                    throw new IllegalStateException(
+                            name + " holds other fields; read it through its schema");
             case TEXT, REFERENCE -> {
                 if (raw instanceof String text) {
                     yield text;
